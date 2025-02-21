@@ -1,0 +1,12 @@
+#ifndef IM_LIMITS_H
+#define IM_LIMITS_H
+
+#define IM_MULTILINE_LINES_MAX 16
+
+#define IM_STATES_MAX 48
+
+#define IM_STATE_MEM_SIZE 512
+
+#define IM_KEYCODE_COUNT 256
+
+#endif
