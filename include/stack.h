@@ -21,6 +21,7 @@
 #define STACK_IS_EMPTY(S) (S)->size == 0
 #define STACK_IS_FULL(S) (S)->size == STACK_CAPACITY
 #define STACK_SIZE(S) (S)->size
+#define STACK_AT(S, OFFSET) (S)->elements[(S)->size-OFFSET-1];
 #define STACK_PRINT(S, F) { \
 	printf("Stack %p:\n", S); \
 	if (!(S)->size) { \

@@ -1,4 +1,5 @@
 #include "imgui.h"
+#include "demo.h"
 #include <allegro.h>
 
 // Locked 50 FPS
@@ -89,6 +90,14 @@ static IM_API_RELEASE_BUFFER(alleg4_im_release_buffer) {
   free(buffer);*/
 }
 
+static IM_API_SET_CLIP(alleg4_im_set_clip) {
+  set_clip_rect(buffer, frame.x, frame.y, frame.x + frame.w - 1, frame.y + frame.h - 1);
+}
+
+static IM_API_RESET_CLIP(alleg4_im_reset_clip) {
+  set_clip_rect(buffer, 0, 0, ((BITMAP *)buffer)->w - 1, ((BITMAP *)buffer)->h - 1);
+}
+
 int main(int argc, char *argv[]) {
   if (allegro_init() != 0) {
     return 1;
@@ -140,8 +149,12 @@ int main(int argc, char *argv[]) {
     .allocate_buffer = alleg4_im_allocate_buffer,
     .clear_buffer = alleg4_im_clear_buffer,
     .blit_buffer = alleg4_im_blit_buffer,
-    .release_buffer = alleg4_im_release_buffer
+    .release_buffer = alleg4_im_release_buffer,
+    .set_clip = alleg4_im_set_clip,
+    .reset_clip = alleg4_im_reset_clip
   });
+
+  imgui_reset_internal_state();
 
   while (!keypressed()) {
     if (!pending_main_loop_update) {
@@ -150,41 +163,11 @@ int main(int argc, char *argv[]) {
 
     pending_main_loop_update = false;
 
-    im_begin_layout(buffer, frame_make(0, 0, SCREEN_W, SCREEN_H));
-
-    /*
-     * Push a vertical stack layout. If we don't specify anything about
-     * the height of subframes, the height of the actual frame being
-     * pushed into the frame is used. This allows stacking taller and
-     * shorter elements in one go.
-     */
-    im_push_layout_frame_insets(IM_FILL, insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
-      0,
-      .axis = VERTICAL,
-      .spacing = 4,
-      .height = 100,
-      .options = 0, // IM_CLIP_SUBFRAMES
-    });
-
-    im_make_scrollable();
-
-    for (int i = 0; i < 5; ++i) {
-      if (im_push_frame(IM_FILL)) {
-        im_fill_color(1+i);
-        im_pop_frame();
-      }
-    }
-
-    im_pop_frame(); /* Pop stack layout */
-
-
-
     if (mouse_needs_poll()) {
       poll_mouse();
     }
 
-
-    im_end_layout();
+    demo_ui(buffer);
 
     if (gfx_capabilities & GFX_HW_CURSOR) {
       blit(buffer, screen, 0, 0, 0, 0, SCREEN_W, SCREEN_H);

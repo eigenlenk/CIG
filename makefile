@@ -1,7 +1,7 @@
 CC=gcc
 
 # Dev build
-CFLAGS=-c -std=gnu99 -Wfatal-errors -Wall -g -O0 -I../allegro/include/ -Iinclude/
+CFLAGS=-c -std=gnu99 -Wfatal-errors -Wall -g -O0 -I../allegro/include/ -Iinclude/ -DDEBUG
 LDFLAGS=-lalleg
 
 SOURCES=$(wildcard src/*.c)

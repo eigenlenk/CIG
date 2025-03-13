@@ -27,4 +27,14 @@ typedef struct {
 	} data;
 } im_state_t;
 
+typedef struct im_scroll_state_element_t {
+  IMGUIID id;
+  im_scroll_state_t value;
+} im_scroll_state_element_t;
+
+typedef struct im_clip_element_t {
+  im_buffer_ref buffer;
+  frame_t frame;
+} im_clip_element_t;
+
 #endif

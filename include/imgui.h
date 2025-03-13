@@ -114,6 +114,9 @@ typedef enum {
 )
 #define IM_API_RELEASE_BUFFER(F) void (F)(im_buffer_ref buffer)
 
+#define IM_API_SET_CLIP(N) void (N)(im_buffer_ref buffer, const frame_t frame)
+#define IM_API_RESET_CLIP(N) void (N)(im_buffer_ref buffer)
+
 typedef enum {
 	IM_ANY = 0,
 	IM_MENUBAR,
@@ -158,7 +161,7 @@ typedef enum {
  *
  * width, height - See `IM_EQUALLY_ALONG_AXIS`
  */
-typedef struct {
+typedef struct im_layout_params_t {
 	enum {
 		HORIZONTAL = 1,
 		VERTICAL = 2
@@ -169,16 +172,23 @@ typedef struct {
 	int _count;
 } im_layout_params_t;
 
-typedef struct {
+typedef struct im_scroll_state_t {
+  vec2 offset;
+} im_scroll_state_t;
+
+typedef struct frame_stack_element_t {
 	IMGUIID id;
 	frame_t frame;
-	frame_t (*layout_function)(const frame_t, const frame_t, const insets_t, im_layout_params_t *);
+  insets_t insets;
+	frame_t (*layout_function)(const frame_t, const frame_t, im_layout_params_t *);
 	im_layout_params_t layout_params;
+  bool clipped;
+  im_scroll_state_t *scroll_state;
 } frame_stack_element_t;
 
 DECLARE_STACK(frame_stack_element_t);
 
-IM_INLINE STACK(frame_stack_element_t)* im_frame_stack();
+STACK(frame_stack_element_t)* im_frame_stack();
 
 typedef struct {
 	im_buffer_ref buffer;
@@ -198,6 +208,8 @@ typedef struct im_backend_configuration_t {
 	IM_API_CLEAR_BUFFER(*clear_buffer);
 	IM_API_BLIT_BUFFER(*blit_buffer);
 	IM_API_RELEASE_BUFFER(*release_buffer);
+  IM_API_SET_CLIP(*set_clip);
+  IM_API_RESET_CLIP(*reset_clip);
 } im_backend_configuration_t;
 
 void im_configure(const im_backend_configuration_t config);
@@ -210,6 +222,8 @@ void im_end_layout();
 void imgui_reset_internal_state();
 
 im_buffer_ref imgui_get_buffer();
+
+frame_stack_element_t* im_current_frame();
 
 // Pop last frame element from the stack
 frame_stack_element_t* im_pop_frame();
@@ -352,7 +366,6 @@ bool im_push_layout_frame_insets(
 	frame_t (*layout_function)(
 		const frame_t,
 		const frame_t,
-		const insets_t,
 		im_layout_params_t*
 	),
 	im_layout_params_t
@@ -365,10 +378,23 @@ bool im_push_layout_frame_insets(
 frame_t im_stack_layout_builder(
 	const frame_t container,
 	const frame_t frame,
-	const insets_t insets,
 	im_layout_params_t *params
 );
 
-void im_make_scrollable();
+void im_enable_scroll();
+void im_enable_clip();
+
+
+#ifdef DEBUG
+
+void im_debug_log(const char *);
+
+#define IM_PRINT(...) { char print_buffer[128]; sprintf(print_buffer, __VA_ARGS__); im_debug_log(print_buffer); }
+
+#else
+
+#define IM_PRINT(...)
+
+#endif
 
 #endif

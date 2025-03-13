@@ -3,6 +3,7 @@
 
 #include "macros.h"
 #include "types/vec2.h"
+#include "types/insets.h"
 
 #define T short
 
@@ -31,12 +32,21 @@ FASTFUNC frame_t frame_expand(const frame_t frame, const T n) {
   return frame_make(frame.x - n, frame.y - n, frame.w + 2 * n, frame.h + 2 * n);
 }
 
-FASTFUNC frame_t frame_inset(const frame_t frame, const T n) {
-  return frame_make(frame.x + n, frame.y + n, frame.w - 2 * n, frame.h - 2 * n);
+FASTFUNC frame_t frame_inset(const frame_t frame, const insets_t insets) {
+  return frame_make(
+    frame.x + insets.left,
+    frame.y + insets.top,
+    frame.w - (insets.left + insets.right),
+    frame.h - (insets.top + insets.bottom)
+  );
 }
 
 FASTFUNC frame_t frame_resize(const frame_t frame, const T top, const T left, const T bottom, const T right) {
   return (frame_t){ frame.x - left, frame.y - top, frame.w + right, frame.h + bottom };
+}
+
+FASTFUNC frame_t frame_offset_vec2(const frame_t frame, const vec2 offset) {
+  return (frame_t){ frame.x + offset.x, frame.y + offset.y, frame.w, frame.h };
 }
 
 FASTFUNC frame_t frame_offset(const frame_t frame, const T x, const T y) {
@@ -77,6 +87,16 @@ FASTFUNC frame_t frame_containing(const frame_t a, const frame_t b) {
 	T x = MIN(a.x, b.x), y = MIN(a.y, b.y);
 	T w = MAX(a.x + a.w, b.x + b.w), h = MAX(a.y + a.h, b.y + b.h);
 	return (frame_t) { x, y, w-x, h-y };
+}
+
+FASTFUNC frame_t frame_union(const frame_t a, const frame_t b) {
+  if (frame_intersects(a, b)) {
+    T x0 = MAX(a.x, b.x), y0 = MAX(a.y, b.y);
+    T x1 = MIN(a.x+a.w, b.x+b.w), y1 = MIN(a.y+a.h, b.y+b.h);
+    return (frame_t) { x0, y0, x1-x0, y1-y0 };
+  } else {
+    return frame_zero();
+  }
 }
 
 #undef T

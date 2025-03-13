@@ -20,11 +20,13 @@ typedef im_state_t* im_state_ptr_t;
 DECLARE_STACK(im_state_ptr_t);
 DECLARE_STACK(im_value_t);
 DECLARE_STACK(im_buffer_framestack_t);
+DECLARE_STACK(im_clip_element_t);
 
 // Declare stacks
 static STACK(im_state_ptr_t) widget_states;
 static STACK(im_value_t) options[__IM_OPTION_KEY_COUNT];
 static STACK(im_buffer_framestack_t) buffers;
+static STACK(im_clip_element_t) clip_frames;
 
 static im_backend_configuration_t backend = { NULL };
 
@@ -32,6 +34,8 @@ static struct {
 	im_state_t values[IM_STATES_MAX];
 	size_t size;
 } _state_list;
+
+static im_scroll_state_element_t _scroll_elements[IM_STATES_MAX];
 
 static struct {
 	enum {
@@ -83,13 +87,15 @@ static struct {
 } cached_font;
 
 static im_state_t* 	im_state(const IMGUIID, const imgui_widget_t);
+static im_scroll_state_t* im_scroll_state(const IMGUIID);
 static bool					im_state_record_value(im_state_t*, int);
 static IMGUIID 			im_frame_identity(const frame_t);
-static frame_t 			frame_apply_insets(const frame_t, const insets_t);
 static void 				cache_font(const im_font_ref);
 static void 				im_push_buffer(const im_buffer_ref, const frame_t);
 static void					im_pop_buffer();
 static void					im_blit_buffer(im_buffer_ref);
+static void         im_push_clip(frame_stack_element_t *);
+static void         im_pop_clip();
 
 IM_INLINE STACK(frame_stack_element_t)* im_frame_stack() {
 	return &STACK_TOP(&buffers).frames;
@@ -108,8 +114,11 @@ void im_begin_layout(const im_buffer_ref buffer, const frame_t frame) {
 	debug_info.current_buffer_updated = false;
 #endif
 
+  // IM_PRINT("Begin");
+
 	STACK_INIT(&widget_states);
 	STACK_INIT(&buffers);
+  STACK_INIT(&clip_frames);
 
 	im_push_buffer(buffer, frame);
 
@@ -234,7 +243,11 @@ void im_end_layout() {
 
 void imgui_reset_internal_state() {
 	int i;
-	for (i = 0; i < IM_STATES_MAX; ++i) { _state_list.values[i].id = 0; }
+	for (i = 0; i < IM_STATES_MAX; ++i) {
+    _state_list.values[i].id = 0;
+    _scroll_elements[i].id = 0;
+    _scroll_elements[i].value.offset = vec2_zero();
+  }
 	_state_list.size = 0;
 	mouse.locked_on_element = false;
 	mouse.target_prev_frame = 0;
@@ -251,26 +264,30 @@ im_buffer_ref imgui_get_buffer() {
 
 FASTFUNC frame_t frame_resolve_size(
 	const frame_t frame,
-	const insets_t insets,
-	frame_stack_element_t *top_element
+	frame_stack_element_t *parent
 ) {
+  const frame_t content_frame = frame_inset(parent->frame, parent->insets);
+
 	return frame_make(
-		frame.x + insets.left,
-		frame.y + insets.top,
-		(frame.w == IM_FILL_CONSTANT ? top_element->frame.w : frame.w) - (insets.left + insets.right),
-		(frame.h == IM_FILL_CONSTANT ? top_element->frame.h : frame.h) - (insets.top + insets.bottom)
+		frame.x,
+		frame.y,
+		frame.w == IM_FILL_CONSTANT ? content_frame.w : frame.w,
+		frame.h == IM_FILL_CONSTANT ? content_frame.h : frame.h
 	);
 }
 
 FASTFUNC frame_t next_layout_frame(
 	const frame_t proposed_frame,
-	const insets_t insets,
 	frame_stack_element_t *top_element
 ) {
 	if (top_element->layout_function) {
-		return (*top_element->layout_function)(top_element->frame, proposed_frame, insets, &top_element->layout_params);
+		return (*top_element->layout_function)(
+      frame_inset(top_element->frame, top_element->insets),
+      proposed_frame,
+      &top_element->layout_params
+    );
 	} else {
-		return frame_resolve_size(proposed_frame, insets, top_element);
+		return frame_resolve_size(proposed_frame, top_element);
 	}
 }
 
@@ -279,21 +296,29 @@ FASTFUNC frame_t next_layout_frame(
 FASTFUNC bool _im_push_frame(
 	const frame_t frame,
 	const insets_t insets,
-	frame_t (*layout_function)(const frame_t, const frame_t, const insets_t, im_layout_params_t *),
+	frame_t (*layout_function)(const frame_t, const frame_t, im_layout_params_t *),
 	im_layout_params_t params
 ) {
 	frame_stack_element_t *top = &STACK_TOP(im_frame_stack());
-	const frame_t next = next_layout_frame(frame, insets, top);
+	frame_t next = next_layout_frame(frame, top);
+  const IMGUIID next_id = im_frame_identity(next);
+
+  if (top->scroll_state) {
+    next = frame_offset(next, -top->scroll_state->offset.x, -top->scroll_state->offset.y);
+  }
 
 	if (top->layout_params.options & IM_CLIP_SUBFRAMES && !frame_wholly_contains_relative_frame(top->frame, next)) {
 		return false;
 	}
 
 	STACK_PUSH(im_frame_stack(), ((frame_stack_element_t) {
-		.id = top->id + im_frame_identity(next),
+		.id = top->id + next_id,
 		.frame = next,
+    .insets = insets,
 		.layout_function = layout_function,
-		.layout_params = params
+		.layout_params = params,
+    .clipped = false,
+    .scroll_state = NULL
 	}));
 
 #ifdef DEBUG
@@ -305,20 +330,20 @@ FASTFUNC bool _im_push_frame(
 }
 
 bool im_push_frame(const frame_t frame) {
-	return _im_push_frame(frame, insets_zero(), NULL, (im_layout_params_t){0});
+	return _im_push_frame(frame, insets_zero(), NULL, (im_layout_params_t){ 0 });
 }
 
 bool im_push_frame_insets(
 	const frame_t frame,
 	const insets_t insets
 ) {
-	return _im_push_frame(frame, insets, NULL, (im_layout_params_t){0});
+	return _im_push_frame(frame, insets, NULL, (im_layout_params_t){ 0 });
 }
 
 bool im_push_layout_frame_insets(
 	const frame_t frame,
 	const insets_t insets,
-	frame_t (*layout_function)(const frame_t, const frame_t, const insets_t, im_layout_params_t *),
+	frame_t (*layout_function)(const frame_t, const frame_t, im_layout_params_t *),
 	im_layout_params_t params
 ) {
 	return _im_push_frame(frame, insets, layout_function, params);
@@ -330,7 +355,7 @@ bool im_push_layout_frame_insets(
 frame_stack_element_t* im_pop_frame() {
 #ifdef DEBUG
 	frame_stack_element_t *top = &STACK_TOP(im_frame_stack());
-	if (debug_info.visibility > 1 && top->layout_function == &im_layout_stack) {
+	if (debug_info.visibility > 1 && top->layout_function == &im_stack_layout_builder) {
 		int remaining_space = top->layout_params.axis == VERTICAL
 			? (top->frame.h - MAX(0, (top->layout_params.vertical_position - top->layout_params.spacing)))
 			: (top->frame.w - MAX(0, (top->layout_params.horizontal_position - top->layout_params.spacing)));
@@ -340,15 +365,22 @@ frame_stack_element_t* im_pop_frame() {
 			im_push_frame(top->layout_params.axis == VERTICAL
 				? IM_FILL_H(remaining_space)
 				: IM_FILL_W(remaining_space));
-			imgui_fill_color(COLOR_FUCHSIA, COLOR_NONE);
+			im_fill_color(0);
 			const vec2 c = frame_center(imgui_current_screen_space_frame());
-			(*backend.draw_text)(imgui_get_buffer(), c.x, c.y-(cached_font.info.line_height*0.5), cached_font.ref, TEXT_ALIGN_CENTER, COLOR_BLACK, numbuf);
+			// (*backend.draw_text)(imgui_get_buffer(), c.x, c.y-(cached_font.info.line_height*0.5), cached_font.ref, TEXT_ALIGN_CENTER, COLOR_BLACK, numbuf);
 			top->layout_function = NULL;
 			im_pop_frame();
 		}
 	}
 #endif
-	return &STACK_POP(im_frame_stack());
+  frame_stack_element_t *popped_element = &STACK_POP(im_frame_stack());
+
+  if (popped_element->clipped) {
+    popped_element->clipped = false;
+    im_pop_clip();
+  }
+  
+  return popped_element;
 }
 
 // Current local space frame
@@ -366,8 +398,8 @@ frame_t imgui_current_screen_space_frame() {
 	STACK(frame_stack_element_t) *frames = im_frame_stack();
 	frame_t f = STACK_TOP(frames).frame;
 	for (i = frames->size - 2; i >= 0; --i) {
-		f.x += frames->elements[i].frame.x;
-		f.y += frames->elements[i].frame.y;
+		f.x += frames->elements[i].frame.x + frames->elements[i].insets.left;
+		f.y += frames->elements[i].frame.y + frames->elements[i].insets.top;
 	}
 	return f;
 }
@@ -380,10 +412,10 @@ frame_t imgui_root_frame() {
 frame_t imgui_frame_convert(const frame_t frame) {
 	register int i;
 	STACK(frame_stack_element_t) *frames = im_frame_stack();
-	frame_t f = frame_resolve_size(frame, insets_zero(), &STACK_TOP(frames));
+	frame_t f = frame_resolve_size(frame, &STACK_TOP(frames));
 	for (i = frames->size - 1; i >= 0; --i) {
-		f.x += frames->elements[i].frame.x;
-		f.y += frames->elements[i].frame.y;
+    f.x += frames->elements[i].frame.x + frames->elements[i].insets.left;
+    f.y += frames->elements[i].frame.y + frames->elements[i].insets.top;
 	}
 	return f;
 }
@@ -540,7 +572,7 @@ static bool im_key_id(
 }
 
 static IMGUIID im_frame_identity(const frame_t frame) {
-	return (((33333 ^ (frame.x + 1)) << 5) + ((107007 ^ (frame.y+1)) << 7)) << ((frame.w ^ frame.h) % 16);
+	return (((31313 ^ (frame.x + 1)) << 5) + ((107007 ^ (frame.y+1)) << 16)) << ((frame.w ^ frame.h) % 16);
 }
 
 im_mouse_button_t im_mouse_listener(
@@ -680,24 +712,11 @@ ALWAYS_INLINED void im_insert_spacer(const int size) {
 * Layout functions and convenience elements related to that.
 */
 
-static frame_t frame_apply_insets(
-	const frame_t frame,
-	const insets_t insets
-) {
-	return frame_make(
-		frame.x + insets.left,
-		frame.y + insets.top,
-		frame.w - (insets.left + insets.right),
-		frame.h - (insets.top + insets.bottom)
-	);
-}
-
 frame_t im_stack_layout_builder(
 	/* Frame into which sub-frames are laid out */
 	const frame_t container,
 	/* Proposed sub-frame, generally from IM_FILL, so it's the same size as `container` */
 	const frame_t frame,
-	const insets_t insets,
 	im_layout_params_t *params
 ) {
 	const bool haxis = params->axis & HORIZONTAL;
@@ -762,15 +781,21 @@ frame_t im_stack_layout_builder(
 
 	params->_count ++;
 
-	return frame_apply_insets(result, insets);
+  return result;
 }
 
 /*
  * Scroller
  */
 
-void im_make_scrollable() {
+void im_enable_scroll() {
   frame_stack_element_t *current_frame = im_current_frame();
+  current_frame->scroll_state = im_scroll_state(current_frame->id);
+  im_enable_clip();
+}
+
+void im_enable_clip() {
+  im_push_clip(im_current_frame());
 }
 
 
@@ -827,6 +852,23 @@ static bool	im_state_record_value(
 	return false;
 }
 
+static im_scroll_state_t* im_scroll_state(const IMGUIID id) {
+  register int i, first_available = -1;
+  for (i = 0; i < IM_STATES_MAX; ++i) {
+    if (_scroll_elements[i].id == id) {
+      return &_scroll_elements[i].value;
+    } else if (_scroll_elements[i].id == 0 && first_available < 0) {
+      first_available = i;
+    }
+  }
+  if (first_available < 0) {
+    return NULL;
+  } else {
+    _scroll_elements[first_available].id = id;
+    return &_scroll_elements[first_available].value;
+  }
+}
+
 static void cache_font(const im_font_ref font) {
 	cached_font.ref = font;
 	cached_font.info = (*backend.get_font_info)(font);
@@ -863,7 +905,70 @@ static void im_blit_buffer(im_buffer_ref src) {
 #ifdef DEBUG
 	if(debug_info.visibility > 0 && debug_info.current_buffer_updated) {
 		debug_info.current_buffer_updated = false;
-		(*backend.draw_rect)(dst, f.x, f.y, f.w, f.h, COLOR_NONE, COLOR_FUCHSIA);
+		// (*backend.draw_rect)(dst, f.x, f.y, f.w, f.h, COLOR_NONE, COLOR_FUCHSIA);
 	}
 #endif
 }
+
+static bool find_last_frame(
+  im_buffer_ref *buffer,
+  frame_t *result
+) {
+  register int i;
+  im_clip_element_t *element;
+  for (i = 0; i < STACK_SIZE(&clip_frames); ++i) {
+    element = &STACK_AT(&clip_frames, i);
+    if (element->buffer == buffer) {
+      *result = element->frame;
+      return true;
+    }
+  }
+  return false;
+}
+
+static void im_push_clip(frame_stack_element_t *frame) {
+  if (frame->clipped == false) {
+    frame->clipped = true;
+    im_buffer_ref *buffer = imgui_get_buffer();
+    frame_t frame = imgui_current_screen_space_frame();
+    frame_t last;
+
+    if (find_last_frame(buffer, &last)) {
+      frame = frame_union(frame, last);
+    }    
+
+    (*backend.set_clip)(buffer, frame);
+    
+    STACK_PUSH(&clip_frames, ((im_clip_element_t) {
+      .buffer = buffer,
+      .frame = frame
+    }));
+  }
+}
+
+static void im_pop_clip() {
+  STACK_POP_NORETURN(&clip_frames);
+
+  // Go back to previous clip if present
+  if (STACK_IS_EMPTY(&clip_frames)) {
+    (*backend.reset_clip)(imgui_get_buffer());
+  } else {
+    const im_clip_element_t *top = &STACK_TOP(&clip_frames);
+    (*backend.set_clip)(top->buffer, top->frame);
+  }
+}
+
+#ifdef DEBUG
+
+void im_debug_log(const char *msg) {
+  if (!msg) { return; }
+  FILE *f = fopen("imlog.txt", "a");
+  if (f) {
+    fputs(msg, f);
+    fputs("\n", f);
+    // fflush(log_file);
+    fclose(f);
+  }
+}
+
+#endif
