@@ -5,7 +5,7 @@
 #include "types/vec2.h"
 #include "types/insets.h"
 
-#define T short
+#define T int
 
 typedef struct frame_t {
 	T x, y, w, h;
