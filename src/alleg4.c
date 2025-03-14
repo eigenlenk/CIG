@@ -44,8 +44,13 @@ static IM_API_DRAW_LINE(alleg4_im_draw_line) {
 }
 
 static IM_API_DRAW_RECT(alleg4_im_draw_rect) {
-  rectfill(buffer, x, y, x+w-1, y+h-1, fill);
-  // buffer_draw_rect_2(buffer, x, y, w, h, fill, stroke);
+	if (fill >= 0) {
+		rectfill(buffer, x, y, x+w-1, y+h-1, fill);
+	}
+	
+	if (stroke >= 0) {
+		rect(buffer, x, y, x+w-1, y+h-1, stroke);
+	}
 }
 
 static IM_API_DRAW_TEXT(alleg4_im_draw_text) {
@@ -97,6 +102,11 @@ static IM_API_SET_CLIP(alleg4_im_set_clip) {
 static IM_API_RESET_CLIP(alleg4_im_reset_clip) {
   set_clip_rect(buffer, 0, 0, ((BITMAP *)buffer)->w - 1, ((BITMAP *)buffer)->h - 1);
 }
+
+
+
+
+
 
 int main(int argc, char *argv[]) {
   if (allegro_init() != 0) {

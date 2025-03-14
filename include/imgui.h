@@ -23,6 +23,8 @@
 #define IM_CENTER vec2_make((IM_W * 0.5), (IM_H * 0.5))
 #define IM_R (imgui_current_frame().x + imgui_current_frame().w)
 #define IM_B (imgui_current_frame().y + imgui_current_frame().h)
+#define CIM_SCROLL_LIMIT_X im_current_frame()->scroll_state->content_size.x-im_current_frame()->frame.w+im_current_frame()->insets.left+im_current_frame()->insets.right
+#define CIM_SCROLL_LIMIT_Y im_current_frame()->scroll_state->content_size.y-im_current_frame()->frame.h+im_current_frame()->insets.top+im_current_frame()->insets.bottom
 
 #define IM_INLINE inline __attribute__((always_inline))
 
@@ -145,40 +147,35 @@ typedef struct im_multiline_text_info_t {
 } im_multiline_text_info_t;
 
 typedef enum {
-	/*
-	 * IM_EQUALLY_ALONG_AXIS
-	 * Width or height argument of `imgui_layout_params_t` is used
-	 * to divide container bounds into even sections, rather than use
-	 * these numbers as absolute sizes for these sections.
-	 * This applies to either or both axis provided in the params.
-	 */
-	BITFLAG(0, IM_EQUALLY_ALONG_AXIS),
-	BITFLAG(1, IM_CLIP_SUBFRAMES)
+	BITFLAG(0, IM_CULL_SUBFRAMES),
+	
+	IM_DEFAULT_LAYOUT_FLAGS = IM_CULL_SUBFRAMES
 } im_layout_options_t;
 
 /*
  * Type containing parameters passed to layout function.
- *
- * width, height - See `IM_EQUALLY_ALONG_AXIS`
  */
 typedef struct im_layout_params_t {
 	enum {
 		HORIZONTAL = 1,
 		VERTICAL = 2
 	} axis;
-	int spacing, vertical_position, horizontal_position, width, height;
+	int spacing, width, height, columns, rows;
 	im_layout_options_t options;
 	void *data;
-	int _count;
+	/* Private */
+	int _count, _vertical_position, _horizontal_position;
 } im_layout_params_t;
 
 typedef struct im_scroll_state_t {
   vec2 offset;
+	vec2 content_size;
 } im_scroll_state_t;
 
 typedef struct frame_stack_element_t {
 	IMGUIID id;
 	frame_t frame;
+	frame_t absolute_frame;
   insets_t insets;
 	frame_t (*layout_function)(const frame_t, const frame_t, im_layout_params_t *);
 	im_layout_params_t layout_params;
@@ -238,11 +235,12 @@ frame_t imgui_current_screen_space_frame();
 frame_t imgui_root_frame();
 
 //
-frame_t imgui_frame_convert(const frame_t);
+frame_t imgui_frame_convert(const frame_t, const bool);
 
 // Fills current frame with selected fill style
 void imgui_fill_panel(const int, const short);
 void im_fill_color(im_color_ref);
+void im_stroke_color(im_color_ref);
 
 void im_draw_rect(const int x, const int y, const int w, const int h, const im_color_ref fill, im_color_ref stroke);
 void im_draw_line(const int x1, const int y1, const int x2, const int y2, const im_color_ref color);
@@ -381,7 +379,7 @@ frame_t im_stack_layout_builder(
 	im_layout_params_t *params
 );
 
-void im_enable_scroll();
+void im_enable_scroll(im_scroll_state_t *);
 void im_enable_clip();
 
 

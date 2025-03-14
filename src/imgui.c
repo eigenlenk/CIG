@@ -114,7 +114,7 @@ void im_begin_layout(const im_buffer_ref buffer, const frame_t frame) {
 	debug_info.current_buffer_updated = false;
 #endif
 
-  // IM_PRINT("Begin");
+  // IM_PRINT("--- --- ---");
 
 	STACK_INIT(&widget_states);
 	STACK_INIT(&buffers);
@@ -133,9 +133,6 @@ void im_begin_layout(const im_buffer_ref buffer, const frame_t frame) {
 	// im_push_value(IM_BUTTON_PRESSED_TEXT_COLOR, IM_VALUE_COLOR(COLOR_RED_DARK));
 	// im_push_value(IM_TEXT_COLOR, IM_VALUE_COLOR(COLOR_BLACK));
 	im_push_value(IM_FONT, IM_VALUE_REF(default_font));
-
-	++tick;
-	++caret_tick;
 
 	if (mouse.locked_on_element == false) {
 		mouse.target_prev_frame = mouse.target_this_frame;
@@ -196,10 +193,13 @@ void im_begin_layout(const im_buffer_ref buffer, const frame_t frame) {
 }
 
 void im_end_layout() {
-	register int i = _state_list.size - 1;
+	register int i;
 	register im_state_t *s, *last = NULL;
+	
+	++tick;
+	++caret_tick;
 
-	for (; i >= 0; --i) {
+	for (i = _state_list.size - 1; i >= 0; --i) {
 		s = &_state_list.values[i];
 		if (s->last_tick != tick) {
 			if (last) {
@@ -246,7 +246,6 @@ void imgui_reset_internal_state() {
 	for (i = 0; i < IM_STATES_MAX; ++i) {
     _state_list.values[i].id = 0;
     _scroll_elements[i].id = 0;
-    _scroll_elements[i].value.offset = vec2_zero();
   }
 	_state_list.size = 0;
 	mouse.locked_on_element = false;
@@ -305,15 +304,23 @@ FASTFUNC bool _im_push_frame(
 
   if (top->scroll_state) {
     next = frame_offset(next, -top->scroll_state->offset.x, -top->scroll_state->offset.y);
+		top->scroll_state->content_size.x = MAX(top->scroll_state->content_size.x, next.x + next.w);
+		top->scroll_state->content_size.y = MAX(top->scroll_state->content_size.y, next.y + next.h);
   }
 
-	if (top->layout_params.options & IM_CLIP_SUBFRAMES && !frame_wholly_contains_relative_frame(top->frame, next)) {
+	if (top->layout_params.options & IM_CULL_SUBFRAMES && !frame_intersects(top->frame, frame_offset(next, top->insets.left, top->insets.top))) {
+		
+		
+		
+		// IM_PRINT("top->frame: %d, %d, %d, %d", top->frame.x, top->frame.y, top->frame.w, top->frame.h);
+		// IM_PRINT("  next: %d, %d, %d, %d", next.x, next.y, next.w, next.h);
 		return false;
 	}
 
 	STACK_PUSH(im_frame_stack(), ((frame_stack_element_t) {
 		.id = top->id + next_id,
 		.frame = next,
+		.absolute_frame = imgui_frame_convert(next, true),
     .insets = insets,
 		.layout_function = layout_function,
 		.layout_params = params,
@@ -357,8 +364,8 @@ frame_stack_element_t* im_pop_frame() {
 	frame_stack_element_t *top = &STACK_TOP(im_frame_stack());
 	if (debug_info.visibility > 1 && top->layout_function == &im_stack_layout_builder) {
 		int remaining_space = top->layout_params.axis == VERTICAL
-			? (top->frame.h - MAX(0, (top->layout_params.vertical_position - top->layout_params.spacing)))
-			: (top->frame.w - MAX(0, (top->layout_params.horizontal_position - top->layout_params.spacing)));
+			? (top->frame.h - MAX(0, (top->layout_params._vertical_position - top->layout_params.spacing)))
+			: (top->frame.w - MAX(0, (top->layout_params._horizontal_position - top->layout_params.spacing)));
 		if (remaining_space > 0) {
 			char numbuf[8];
 			sprintf(numbuf, "%d", remaining_space);
@@ -366,7 +373,7 @@ frame_stack_element_t* im_pop_frame() {
 				? IM_FILL_H(remaining_space)
 				: IM_FILL_W(remaining_space));
 			im_fill_color(0);
-			const vec2 c = frame_center(imgui_current_screen_space_frame());
+			// const vec2 c = frame_center(imgui_current_screen_space_frame());
 			// (*backend.draw_text)(imgui_get_buffer(), c.x, c.y-(cached_font.info.line_height*0.5), cached_font.ref, TEXT_ALIGN_CENTER, COLOR_BLACK, numbuf);
 			top->layout_function = NULL;
 			im_pop_frame();
@@ -409,14 +416,20 @@ frame_t imgui_root_frame() {
 }
 
 // Convert a relative/local frame to screen-space
-frame_t imgui_frame_convert(const frame_t frame) {
+frame_t imgui_frame_convert(const frame_t frame, const bool resolve) {
 	register int i;
 	STACK(frame_stack_element_t) *frames = im_frame_stack();
-	frame_t f = frame_resolve_size(frame, &STACK_TOP(frames));
+	frame_t f = resolve
+		? frame_resolve_size(frame, &STACK_TOP(frames))
+		: frame;
+	// IM_PRINT("FRAME STACK SIZE: %d", frames->size);
 	for (i = frames->size - 1; i >= 0; --i) {
+		// IM_PRINT("F[%d] %d, %d - %d, %d", i, frames->elements[i].frame.x, frames->elements[i].frame.y, frames->elements[i].frame.w, frames->elements[i].frame.h);
+		
     f.x += frames->elements[i].frame.x + frames->elements[i].insets.left;
     f.y += frames->elements[i].frame.y + frames->elements[i].insets.top;
 	}
+	//IM_PRINT("F %d, %d", f.x, f.y);
 	return f;
 }
 
@@ -507,9 +520,19 @@ void imgui_fill_panel( const int style, const short flags) {
 	}*/
 }
 
-void im_fill_color(im_color_ref fill) {
+void im_fill_color(im_color_ref color) {
 	const frame_t f = imgui_current_screen_space_frame();
-	im_draw_rect(f.x, f.y, f.w, f.h, fill, 0);
+	im_draw_rect(f.x, f.y, f.w, f.h, color, -1);
+}
+
+void im_stroke_color(im_color_ref color) {
+	const frame_stack_element_t *f = im_current_frame();
+	
+	im_draw_rect(f->absolute_frame.x, f->absolute_frame.y, f->absolute_frame.w, f->absolute_frame.h, -1, color);
+	
+	
+	// const frame_t f = imgui_current_screen_space_frame();
+	// im_draw_rect(f.x, f.y, f.w, f.h, -1, color);
 }
 
 void im_draw_rect(const int x, const int y, const int w, const int h, const im_color_ref fill, im_color_ref stroke) {
@@ -587,7 +610,7 @@ im_mouse_button_t im_mouse_listener(
 	/* Convert relative frame to screen space */
 	const frame_t screen_frame = (flags & IM_MOUSE_NO_CONVERT)
 		? frame
-		: imgui_frame_convert(frame);
+		: imgui_frame_convert(frame, true);
 
 	/* Calculate mouse position relative to current origin */
 	if (mouse_position) {
@@ -719,48 +742,40 @@ frame_t im_stack_layout_builder(
 	const frame_t frame,
 	im_layout_params_t *params
 ) {
-	const bool haxis = params->axis & HORIZONTAL;
-	const bool vaxis = params->axis & VERTICAL;
+	const bool h_axis = params->axis & HORIZONTAL;
+	const bool v_axis = params->axis & VERTICAL;
 
 	frame_t result = frame_make(
-		haxis ? params->horizontal_position : 0,
-		vaxis ? params->vertical_position : 0,
-		vaxis && frame.w == IM_FILL_CONSTANT ? container.w : frame.w,
-		haxis && frame.h == IM_FILL_CONSTANT ? container.h : frame.h
+		h_axis ? params->_horizontal_position : 0,
+		v_axis ? params->_vertical_position : 0,
+		v_axis && frame.w == IM_FILL_CONSTANT ? container.w : frame.w,
+		h_axis && frame.h == IM_FILL_CONSTANT ? container.h : frame.h
 	);
 
-	/*
-	* If `IM_EQUALLY_ALONG_AXIS` option is specified, width or height
-	* argument of `imgui_layout_params_t` is used to divide container bounds
-	* into that number of even sections, rather than use these values as
-	* absolute sizes for these sections. This applies to either or both axis
-	* provided in the params.
-	*/
-
-	if (haxis) {
-		if (params->options & IM_EQUALLY_ALONG_AXIS) {
-			result.w = (container.w - ((params->width - 1) * params->spacing)) / params->width;
+	if (h_axis) {
+		if (params->columns) {
+			result.w = (container.w - ((params->columns - 1) * params->spacing)) / params->columns;
 		} else if (params->width > 0) {
 			result.w = params->width;
 		} else if (frame.w == IM_FILL_CONSTANT) {
-			result.w = container.w - (params->horizontal_position % container.w);
+			result.w = container.w - (params->_horizontal_position % container.w);
 		} else if (frame.w < 0) {
-			result.h = (container.w + frame.w) - params->horizontal_position;
+			result.h = (container.w + frame.w) - params->_horizontal_position;
 		}	else {
 			result.w = frame.w;
 		}
-		params->horizontal_position += (result.w + params->spacing);
+		params->_horizontal_position += (result.w + params->spacing);
 	}
 
-	if (vaxis) {
-		if (params->options & IM_EQUALLY_ALONG_AXIS) {
-			result.h = (container.h - ((params->height - 1) * params->spacing)) / params->height;
+	if (v_axis) {
+		if (params->rows) {
+			result.h = (container.h - ((params->rows - 1) * params->spacing)) / params->rows;
 		} else if (params->height > 0) {
 			result.h = params->height;
 		} else if (frame.h == IM_FILL_CONSTANT) {
-			result.h = container.h - (params->vertical_position % container.h);
+			result.h = container.h - (params->_vertical_position % container.h);
 		} else if (frame.h < 0) {
-			result.h = (container.h + frame.h) - params->vertical_position;
+			result.h = (container.h + frame.h) - params->_vertical_position;
 		}	else {
 			result.h = frame.h;
 		}
@@ -769,13 +784,13 @@ frame_t im_stack_layout_builder(
 		 * axis is also enabled, that axis first has to be filled before it
 		 * jumps to the next line.
 		 */
-		if (haxis) {
-			if (params->horizontal_position >= container.w) {
-				params->horizontal_position = 0;
-				params->vertical_position += (result.h + params->spacing);
+		if (h_axis) {
+			if (params->_horizontal_position >= container.w) {
+				params->_horizontal_position = 0;
+				params->_vertical_position += (result.h + params->spacing);
 			}
 		} else {
-			params->vertical_position += (result.h + params->spacing);
+			params->_vertical_position += (result.h + params->spacing);
 		}
 	}
 
@@ -788,9 +803,9 @@ frame_t im_stack_layout_builder(
  * Scroller
  */
 
-void im_enable_scroll() {
+void im_enable_scroll(im_scroll_state_t *state) {
   frame_stack_element_t *current_frame = im_current_frame();
-  current_frame->scroll_state = im_scroll_state(current_frame->id);
+  current_frame->scroll_state = state ? state : im_scroll_state(current_frame->id);
   im_enable_clip();
 }
 
@@ -856,8 +871,9 @@ static im_scroll_state_t* im_scroll_state(const IMGUIID id) {
   register int i, first_available = -1;
   for (i = 0; i < IM_STATES_MAX; ++i) {
     if (_scroll_elements[i].id == id) {
+			_scroll_elements[i].last_tick = tick;
       return &_scroll_elements[i].value;
-    } else if (_scroll_elements[i].id == 0 && first_available < 0) {
+    } else if ((_scroll_elements[i].id == 0 || _scroll_elements[i].last_tick < tick-1) && first_available < 0) {
       first_available = i;
     }
   }
@@ -865,6 +881,9 @@ static im_scroll_state_t* im_scroll_state(const IMGUIID id) {
     return NULL;
   } else {
     _scroll_elements[first_available].id = id;
+    _scroll_elements[first_available].value.offset = vec2_zero();
+    _scroll_elements[first_available].value.content_size = vec2_zero();
+		_scroll_elements[first_available].last_tick = tick;
     return &_scroll_elements[first_available].value;
   }
 }
@@ -885,8 +904,11 @@ static void im_push_buffer(const im_buffer_ref buffer, const frame_t frame) {
 	
 	STACK_INIT(&buffer_framestack.frames);
 	STACK_PUSH(&buffer_framestack.frames, ((frame_stack_element_t) {
+		0,
 		.id = im_frame_identity(frame),
 		.frame = frame,
+		.absolute_frame = frame,
+		.insets = insets_zero(),
 		.layout_function = NULL
 	}));
 	

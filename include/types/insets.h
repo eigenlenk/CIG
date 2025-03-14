@@ -39,6 +39,10 @@ FASTFUNC insets_t insets_adding_bottom(insets_t insets, T add) {
 	return insets;
 }
 
+FASTFUNC insets_t insets_inverted(insets_t insets) {
+  return (insets_t) { -insets.left, -insets.top, -insets.right, -insets.bottom };
+}
+
 FASTFUNC insets_t insets_zero() {
 	return (insets_t) { 0 };
 }

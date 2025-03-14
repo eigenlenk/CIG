@@ -29,6 +29,7 @@ typedef struct {
 
 typedef struct im_scroll_state_element_t {
   IMGUIID id;
+	unsigned int last_tick;
   im_scroll_state_t value;
 } im_scroll_state_element_t;
 

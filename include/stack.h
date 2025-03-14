@@ -14,7 +14,7 @@
 
 #define STACK(T) stack_##T
 #define STACK_INIT(S) (S)->size = 0;
-#define STACK_PUSH(S, V) (S)->elements[(S)->size++] = V;
+#define STACK_PUSH(S, V) (S)->elements[(S)->size] = V; (S)->size++;
 #define STACK_POP(S) (S)->elements[--(S)->size]
 #define STACK_TOP(S) (S)->elements[(S)->size-1]
 #define STACK_POP_NORETURN(S) (S)->size--
