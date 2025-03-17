@@ -23,8 +23,8 @@
 #define IM_CENTER vec2_make((IM_W * 0.5), (IM_H * 0.5))
 #define IM_R (imgui_current_frame().x + imgui_current_frame().w)
 #define IM_B (imgui_current_frame().y + imgui_current_frame().h)
-#define CIM_SCROLL_LIMIT_X im_current_frame()->scroll_state->content_size.x-im_current_frame()->frame.w+im_current_frame()->insets.left+im_current_frame()->insets.right
-#define CIM_SCROLL_LIMIT_Y im_current_frame()->scroll_state->content_size.y-im_current_frame()->frame.h+im_current_frame()->insets.top+im_current_frame()->insets.bottom
+#define CIM_SCROLL_LIMIT_X im_current_element()->_scroll_state->content_size.x-im_current_element()->frame.w+im_current_element()->insets.left+im_current_element()->insets.right
+#define CIM_SCROLL_LIMIT_Y im_current_element()->_scroll_state->content_size.y-im_current_element()->frame.h+im_current_element()->insets.top+im_current_element()->insets.bottom
 
 #define IM_INLINE inline __attribute__((always_inline))
 
@@ -177,10 +177,11 @@ typedef struct frame_stack_element_t {
 	frame_t frame;
 	frame_t absolute_frame;
   insets_t insets;
-	frame_t (*layout_function)(const frame_t, const frame_t, im_layout_params_t *);
-	im_layout_params_t layout_params;
-  bool clipped;
-  im_scroll_state_t *scroll_state;
+	// Private. Stay away!
+	frame_t (*_layout_function)(const frame_t, const frame_t, im_layout_params_t *);
+	im_layout_params_t _layout_params;
+  bool _clipped;
+  im_scroll_state_t *_scroll_state;
 } frame_stack_element_t;
 
 DECLARE_STACK(frame_stack_element_t);
@@ -220,22 +221,24 @@ void imgui_reset_internal_state();
 
 im_buffer_ref imgui_get_buffer();
 
-frame_stack_element_t* im_current_frame();
+frame_stack_element_t* im_current_element();
 
 // Pop last frame element from the stack
 frame_stack_element_t* im_pop_frame();
 
 // Current local space frame
-frame_t imgui_current_frame();
+frame_t im_relative_frame();
 
 // Current screen space frame
-frame_t imgui_current_screen_space_frame();
+frame_t im_absolute_frame();
 
 //
 frame_t imgui_root_frame();
 
-//
-frame_t imgui_frame_convert(const frame_t, const bool);
+/* Convert a relative frame to an absolute frame */
+frame_t im_convert_relative_frame(const frame_t);
+
+unsigned int im_depth();
 
 // Fills current frame with selected fill style
 void imgui_fill_panel(const int, const short);
@@ -358,7 +361,7 @@ bool im_push_frame_insets(const frame_t frame, const insets_t insets);
 
 /* Push layout builder function to layout stack.
  * @return TRUE if frame is visible within current container, FALSE otherwise. */
-bool im_push_layout_frame_insets(
+bool im_push_frame_builder(
 	const frame_t frame,
 	const insets_t insets,
 	frame_t (*layout_function)(
@@ -381,7 +384,7 @@ frame_t im_stack_layout_builder(
 
 void im_enable_scroll(im_scroll_state_t *);
 void im_enable_clip();
-
+void im_disable_culling();
 
 #ifdef DEBUG
 

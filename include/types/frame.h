@@ -28,10 +28,6 @@ FASTFUNC bool frame_contains(const frame_t frame, const vec2 point) {
   );
 }
 
-FASTFUNC frame_t frame_expand(const frame_t frame, const T n) {
-  return frame_make(frame.x - n, frame.y - n, frame.w + 2 * n, frame.h + 2 * n);
-}
-
 FASTFUNC frame_t frame_inset(const frame_t frame, const insets_t insets) {
   return frame_make(
     frame.x + insets.left,
@@ -39,10 +35,6 @@ FASTFUNC frame_t frame_inset(const frame_t frame, const insets_t insets) {
     frame.w - (insets.left + insets.right),
     frame.h - (insets.top + insets.bottom)
   );
-}
-
-FASTFUNC frame_t frame_resize(const frame_t frame, const T top, const T left, const T bottom, const T right) {
-  return (frame_t){ frame.x - left, frame.y - top, frame.w + right, frame.h + bottom };
 }
 
 FASTFUNC frame_t frame_offset_vec2(const frame_t frame, const vec2 offset) {
@@ -58,7 +50,7 @@ FASTFUNC bool frame_wholly_contains_relative_frame(const frame_t frame, const fr
 }
 
 FASTFUNC bool frame_intersects(const frame_t a, const frame_t b) {
-	return !(a.x + a.w < b.x || a.y + a.h < b.y || a.x > b.x + b.w || a.y > b.y + b.h);
+	return !(a.x + a.w - 1 < b.x || a.y + a.h - 1 < b.y || a.x > b.x + b.w - 1 || a.y > b.y + b.h - 1);
 }
 
 FASTFUNC bool frame_cmp(const frame_t lh, const frame_t rh) {
@@ -67,20 +59,6 @@ FASTFUNC bool frame_cmp(const frame_t lh, const frame_t rh) {
 
 FASTFUNC vec2 frame_center(const frame_t frame) {
 	return VEC2(frame.x + frame.w * 0.5, frame.y + frame.h * 0.5);
-}
-
-/*FASTFUNC bool frame_is_empty(const frame_t frame) {
-	return !(frame.w > 0 || frame.h > 0);
-}*/
-
-FASTFUNC bool frames_touching(const frame_t a, const frame_t b) {
-	// if (a.y + a.h == b.y
-	
-	if (a.x <= b.x + b.w && a.x + a.w >= b.x && a.y <= b.y + b.h && a.y + a.h >= b.y) {
-		return true;
-	}
-	
-	return false;
 }
 
 FASTFUNC frame_t frame_containing(const frame_t a, const frame_t b) {

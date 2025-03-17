@@ -4,7 +4,7 @@
 static int ticks = 0;
 
 void demo_ui(BITMAP *buffer) {
-	static int autoscroll_direction = 1;
+	static int autoscroll_direction = 1, grid_autoscroll_direction = 1;
 	
   im_begin_layout(buffer, frame_make(0, 0, SCREEN_W, SCREEN_H));
 
@@ -13,7 +13,7 @@ void demo_ui(BITMAP *buffer) {
 
   im_push_frame_insets(IM_FILL, insets_uniform(10));
 
-  im_push_layout_frame_insets(IM_FILL, insets_uniform(10), &im_stack_layout_builder, (im_layout_params_t) {
+  im_push_frame_builder(IM_FILL, insets_uniform(10), &im_stack_layout_builder, (im_layout_params_t) {
     0,
     .axis = HORIZONTAL,
     .spacing = 10,
@@ -22,14 +22,14 @@ void demo_ui(BITMAP *buffer) {
   });
 	
 	im_stroke_color(10);
+	
+	/* Left content */
 
-	// /* Left content */
-
-  im_push_layout_frame_insets(IM_FILL, insets_uniform(10), &im_stack_layout_builder, (im_layout_params_t) {
+  im_push_frame_builder(IM_FILL, insets_uniform(10), &im_stack_layout_builder, (im_layout_params_t) {
     0,
     .axis = VERTICAL,
     .spacing = 10,
-    .height = 64,
+    .height = 32,
     .options = IM_DEFAULT_LAYOUT_FLAGS
   });
 
@@ -38,14 +38,14 @@ void demo_ui(BITMAP *buffer) {
   im_enable_scroll(NULL);
 	
 	if (autoscroll_direction == 1) { /* Scroll until the bottom of the content */
-		if (im_current_frame()->scroll_state->offset.y < CIM_SCROLL_LIMIT_Y) {
-			im_current_frame()->scroll_state->offset.y += 1;
+		if (im_current_element()->_scroll_state->offset.y < CIM_SCROLL_LIMIT_Y) {
+			im_current_element()->_scroll_state->offset.y += 1;
 		} else {
 			autoscroll_direction = -1;
 		}
 	} else { /* Scroll back top */
-		if (im_current_frame()->scroll_state->offset.y > 0) {
-			im_current_frame()->scroll_state->offset.y -= 1;
+		if (im_current_element()->_scroll_state->offset.y > 0) {
+			im_current_element()->_scroll_state->offset.y -= 1;
 		} else {
 			autoscroll_direction = 1;
 		}
@@ -56,12 +56,13 @@ void demo_ui(BITMAP *buffer) {
       
       if (i % 2) {
         im_enable_scroll(NULL);
-        im_current_frame()->scroll_state->offset.x -= 1;
+        im_current_element()->_scroll_state->offset.x -= 1;
       }
       
-      im_push_frame(IM_FILL);
-      im_fill_color(i);
-      im_pop_frame();
+      if (im_push_frame(IM_FILL)) {
+				im_fill_color(i);
+				im_pop_frame();
+			}
 
       im_pop_frame();
     }
@@ -70,23 +71,55 @@ void demo_ui(BITMAP *buffer) {
 	im_stroke_color(12);
 
   im_pop_frame(); /* Pop left vertical stack layout */
+	
 
   /* Right content (a grid) */
 
-	im_push_layout_frame_insets(IM_FILL, insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
+	im_push_frame_builder(IM_FILL, insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
     0,
     .axis = HORIZONTAL | VERTICAL,
-    .spacing = 1,
+    .spacing = 5,
 		.columns = 4,
-    .rows = 4,
+		.height = 50,
     .options = IM_DEFAULT_LAYOUT_FLAGS
   });
+	
+	im_enable_scroll(NULL);
+	
+	if (grid_autoscroll_direction == 1) { /* Scroll until the bottom of the content */
+		if (im_current_element()->_scroll_state->offset.y < CIM_SCROLL_LIMIT_Y) {
+			im_current_element()->_scroll_state->offset.y += 1;
+		} else {
+			grid_autoscroll_direction = -1;
+		}
+	} else { /* Scroll back top */
+		if (im_current_element()->_scroll_state->offset.y > 0) {
+			im_current_element()->_scroll_state->offset.y -= 1;
+		} else {
+			grid_autoscroll_direction = 1;
+		}
+	}
 
-	im_fill_color(7);
+	im_fill_color(8);
 	
 	for (int i = 0; i < 10; ++i) {
 		if (im_push_frame(IM_FILL)) {
-      im_fill_color(i);
+      im_stroke_color(15);
+      im_pop_frame();
+    }
+	}
+	
+	/*
+	We can do funky(TM) things as well. Midway through, we can change the grid
+	to a stack by removing one of the axis, horizontal in this case. The number
+	of columns no longer applies, width is set to fill but height is still 50 units.
+	*/
+	im_current_element()->_layout_params.axis &= ~HORIZONTAL;
+	
+	// im_insert_spacer(IM_FILL_CONSTANT);
+	
+	for (int i = 0; i < 5; ++i) {
+		if (im_push_frame(IM_FILL)) {
       im_stroke_color(15);
       im_pop_frame();
     }
