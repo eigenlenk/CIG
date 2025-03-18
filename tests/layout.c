@@ -1,14 +1,7 @@
 #include "unity.h"
 #include "fixture.h"
 #include "imgui.h"
-
-static void assert_frame_equal(const frame_t exp, const frame_t act, unsigned int line) {
-	char message[48];
-	sprintf(message, "(%d, %d, %d, %d) != (%d, %d, %d, %d)", exp.x, exp.y, exp.w, exp.h, act.x, act.y, act.w, act.h);
-	TEST_ASSERT_MESSAGE(frame_cmp(exp, act), message);
-}
-
-#define TEST_ASSERT_EQUAL_FRAME(expected, actual) assert_frame_equal(expected, actual, __LINE__)
+#include "asserts.h"
 
 TEST_GROUP(layout);
 

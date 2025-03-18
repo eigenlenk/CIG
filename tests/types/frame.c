@@ -1,6 +1,7 @@
 #include "unity.h"
 #include "fixture.h"
 #include "imgui.h"
+#include "asserts.h"
 
 TEST_GROUP(types_frame);
 
@@ -63,6 +64,38 @@ TEST(types_frame, intersections) {
 	TEST_ASSERT_FALSE(frame_intersects(frame_make(50, 50, 100, 100), frame_make(0, 0, 50, 50)));
 }
 
+TEST(types_frame, center) {
+	TEST_ASSERT_EQUAL_VEC2(vec2_make(50, 50), frame_center(frame_make(0, 0, 100, 100)));
+}
+
+TEST(types_frame, containing) {
+	TEST_ASSERT_EQUAL_FRAME(
+		frame_make(0, 0, 60, 60),
+		frame_containing(
+			frame_make(0, 0, 30, 30),
+			frame_make(50, 20, 10, 40)
+		)
+	);
+}
+
+TEST(types_frame, union) {
+	TEST_ASSERT_EQUAL_FRAME(
+		frame_make(40, 20, 10, 10),
+		frame_union(
+			frame_make(0, 0, 50, 30),
+			frame_make(40, 20, 10, 40)
+		)
+	);
+	
+	TEST_ASSERT_EQUAL_FRAME(
+		frame_make(0, 0, 0, 0),
+		frame_union(
+			frame_make(0, 0, 50, 30),
+			frame_make(40, 40, 10, 40)
+		)
+	);
+}
+
 TEST_GROUP_RUNNER(types_frame) {
   RUN_TEST_CASE(types_frame, constructors);
   RUN_TEST_CASE(types_frame, comparator);
@@ -71,4 +104,7 @@ TEST_GROUP_RUNNER(types_frame) {
   RUN_TEST_CASE(types_frame, inset);
   RUN_TEST_CASE(types_frame, contains_relative_frame);
   RUN_TEST_CASE(types_frame, intersections);
+  RUN_TEST_CASE(types_frame, center);
+  RUN_TEST_CASE(types_frame, containing);
+  RUN_TEST_CASE(types_frame, union);
 }

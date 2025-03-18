@@ -21,6 +21,7 @@ int main(int argc, char **argv)
 			"-Wfatal-errors",
 			// "-Wall",
 			"-I"INCLUDE_FOLDER,
+			"-I"TESTS_FOLDER,
 			"-I"DEPS_FOLDER,
 			"-I"DEPS_FOLDER"unity/src/",
 			"-I"DEPS_FOLDER"unity/extras/fixture/src/",
