@@ -2,11 +2,10 @@
 #include "fixture.h"
 #include "imgui.h"
 
-static void assert_frame_equal(const frame_t expected, const frame_t actual, unsigned int line) {
-	UNITY_TEST_ASSERT_EQUAL_INT(expected.x, actual.x, line, "X mismatch");
-	UNITY_TEST_ASSERT_EQUAL_INT(expected.y, actual.y, line, "Y mismatch");
-	UNITY_TEST_ASSERT_EQUAL_INT(expected.w, actual.w, line, "W mismatch");
-	UNITY_TEST_ASSERT_EQUAL_INT(expected.h, actual.h, line, "H mismatch");
+static void assert_frame_equal(const frame_t exp, const frame_t act, unsigned int line) {
+	char message[48];
+	sprintf(message, "(%d, %d, %d, %d) != (%d, %d, %d, %d)", exp.x, exp.y, exp.w, exp.h, act.x, act.y, act.w, act.h);
+	TEST_ASSERT_MESSAGE(frame_cmp(exp, act), message);
 }
 
 #define TEST_ASSERT_EQUAL_FRAME(expected, actual) assert_frame_equal(expected, actual, __LINE__)
@@ -26,7 +25,7 @@ TEST_TEAR_DOWN(layout) {
 
 TEST(layout, basic_check) {
 	/* Nothing really to test here, just checking nothing crashes =) */
-	TEST_ASSERT(frame_cmp(im_current_element()->frame, frame_make(0, 0, 640, 480)));
+	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 640, 480), im_current_element()->frame);
 }
 
 TEST(layout, push_pop) {
@@ -68,14 +67,14 @@ TEST(layout, insets) {
 	the coordinates directly - it's applied when calculating the absolute (on-screen)
 	frame when rendering. Width and height, however, already take padding(s) into account.
 	*/
-	TEST_ASSERT(frame_cmp(im_current_element()->frame, frame_make(0, 0, 620, 460)));
-	TEST_ASSERT(frame_cmp(im_absolute_frame(), frame_make(10, 10, 620, 460)));
+	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 620, 460), im_current_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(frame_make(10, 10, 620, 460), im_absolute_frame());
 	
 	/* Push another frame. This time there's padding only on the left as set by the previously pushed frame */
 	im_push_frame(IM_FILL);
 	
-	TEST_ASSERT(frame_cmp(im_current_element()->frame, frame_make(0, 0, 570, 460)));
-	TEST_ASSERT(frame_cmp(im_absolute_frame(), frame_make(60, 10, 570, 460)));
+	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 570, 460), im_current_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(frame_make(60, 10, 570, 460), im_absolute_frame());
 	
 	/*
 	Here's what our layout looks like:
@@ -148,14 +147,14 @@ TEST(layout, vstack_layout) {
 	
 	/* Width is calculated, but height is fixed at 50pt */
 	im_push_frame(IM_FILL_H(50));
-	TEST_ASSERT(frame_cmp(im_current_element()->frame, frame_make(0, 0, 640, 50)));
+	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 640, 50), im_current_element()->frame);
 	im_pop_frame();
 	
 	im_push_frame(IM_FILL_H(100));
-	TEST_ASSERT(frame_cmp(im_current_element()->frame, frame_make(0, 50+10, 640, 100)));
+	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 50+10, 640, 100), im_current_element()->frame);
 	im_pop_frame();
 	
-	TEST_ASSERT(im_current_element()->_layout_params._vertical_position == 170);
+	TEST_ASSERT_EQUAL_INT(170, im_current_element()->_layout_params._vertical_position);
 	
 	im_pop_frame(); /* Not really necessary in testing, but.. */
 }
@@ -173,23 +172,23 @@ TEST(layout, hstack_layout) {
 	
 	/* Width is calculated, but height is fixed at 50pt */
 	im_push_frame(IM_FILL_W(200));
-	TEST_ASSERT(frame_cmp(im_current_element()->frame, frame_make(0, 0, 200, 480-2*10)));
+	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 200, 480-2*10), im_current_element()->frame);
 	im_pop_frame();
 	
 	im_push_frame(IM_FILL_W(100));
-	TEST_ASSERT(frame_cmp(im_current_element()->frame, frame_make(200, 0, 100, 480-2*10)));
+	TEST_ASSERT_EQUAL_FRAME(frame_make(200, 0, 100, 480-2*10), im_current_element()->frame);
 	im_pop_frame();
 	
-	TEST_ASSERT(im_current_element()->_layout_params._horizontal_position == 300);
+	TEST_ASSERT_EQUAL_INT(300, im_current_element()->_layout_params._horizontal_position);
 	
 	im_pop_frame(); /* Not really necessary in testing, but.. */
 }
 
 /*
 	- Grid is the same stack layout builder but with both axis enabled.
-	- Grid will start adding frames horizontally, until the position exceeds
-	the width or when the next proposed frame can't fit. Then the vertical position
-	changes and horizontal positions wraps back around to 0.
+	- Grid will start adding frames horizontally/vertically, until the position exceeds
+	  the width/height or when the next proposed frame can't fit.
+	  Then the position moves to the next row/column.
 */
 
 TEST(layout, grid_with_fixed_rows_and_columns) {
@@ -365,26 +364,23 @@ TEST(layout, grid_with_down_direction) {
 	}
 	
 	/* Add 3 elements with increasing height and width. They should fit in the first column */
-	im_push_frame(frame_make(0, 0, 100, 120));
+	im_push_frame(frame_make(0, 0, 100, 120)); /* (1) */
 	TEST_ASSERT_EQUAL_INT(0,		im_current_element()->frame.y);
 	im_pop_frame();
 	
 	TEST_ASSERT_EQUAL_INT(120,	im_current_element()->_layout_params._vertical_position);
 	
-	im_push_frame(frame_make(0, 0, 150, 160));
+	im_push_frame(frame_make(0, 0, 150, 160)); /* (2) */
 	TEST_ASSERT_EQUAL_INT(120,	im_current_element()->frame.y);
 	im_pop_frame();
 	
 	TEST_ASSERT_EQUAL_INT(280, 	im_current_element()->_layout_params._vertical_position);
 	
-	im_push_frame(frame_make(0, 0, 200, 200));
+	im_push_frame(frame_make(0, 0, 200, 200)); /* (3) */
 	TEST_ASSERT_EQUAL_INT(280, 	im_current_element()->frame.y);
 	im_pop_frame();
 	
-	/*
-	No remaining space vertically - position moves back to top and to the left
-	by the widest element in the last column.
-	*/
+	/* No remaining space vertically - position moves back to the top and to the next column */
 	TEST_ASSERT_EQUAL_INT(200,	im_current_element()->_layout_params._horizontal_position);
 	TEST_ASSERT_EQUAL_INT(0,		im_current_element()->_layout_params._vertical_position);
 	
@@ -392,7 +388,7 @@ TEST(layout, grid_with_down_direction) {
 	Without anything else configured on the grid, the next element will fill
 	the remaining space on the right.
 	*/
-	im_push_frame(IM_FILL);
+	im_push_frame(IM_FILL); /* (4) */
 	TEST_ASSERT_EQUAL_FRAME(frame_make(200, 0, 440, 480), im_current_element()->frame);
 	im_pop_frame();
 	
