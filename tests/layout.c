@@ -2,6 +2,15 @@
 #include "fixture.h"
 #include "imgui.h"
 
+static void assert_frame_equal(const frame_t expected, const frame_t actual, unsigned int line) {
+	UNITY_TEST_ASSERT_EQUAL_INT(expected.x, actual.x, line, "X mismatch");
+	UNITY_TEST_ASSERT_EQUAL_INT(expected.y, actual.y, line, "Y mismatch");
+	UNITY_TEST_ASSERT_EQUAL_INT(expected.w, actual.w, line, "W mismatch");
+	UNITY_TEST_ASSERT_EQUAL_INT(expected.h, actual.h, line, "H mismatch");
+}
+
+#define TEST_ASSERT_EQUAL_FRAME(expected, actual) assert_frame_equal(expected, actual, __LINE__)
+
 TEST_GROUP(layout);
 
 TEST_SETUP(layout) {
@@ -206,7 +215,7 @@ TEST(layout, grid_with_fixed_rows_and_columns) {
 		int row = (i / 5);
 		int column = i - (row * 5);
 		im_push_frame(IM_FILL);
-		TEST_ASSERT(frame_cmp(im_current_element()->frame, frame_make(128*column, 96*row, 128, 96)));
+		TEST_ASSERT_EQUAL_FRAME(frame_make(128*column, 96*row, 128, 96), im_current_element()->frame);
 		im_pop_frame();
 	}
 
@@ -258,7 +267,7 @@ TEST(layout, grid_with_fixed_cell_size) {
 	/* Second row */
 	for (i = 0; i < 3; ++i) {
 		im_push_frame(IM_FILL);
-		TEST_ASSERT_TRUE(im_current_element()->frame.y == 200);
+		TEST_ASSERT_EQUAL_INT(200, im_current_element()->frame.y);
 		im_pop_frame();
 	}
 	
@@ -325,8 +334,7 @@ TEST(layout, grid_with_varying_cell_size) {
 	im_pop_frame();
 	
 	/*
-	What we should have at this point:
-	
+	For visualisation:
 	┌─────────────────────┐
 	│┌──┐┌─────┐┌───────┐.│
 	││1 ││  2  ││   3   │.│
@@ -341,7 +349,7 @@ TEST(layout, grid_with_varying_cell_size) {
 	*/
 }
 
-TEST(layout, grid_with_vertical_direction) {
+TEST(layout, grid_with_down_direction) {
 	/*
 	Grids support horizontal (default) and vertical layout direction. In vertical mode,
 	instead of filling and adding rows, columns are filled and added instead. Otherwise
@@ -350,11 +358,62 @@ TEST(layout, grid_with_vertical_direction) {
 	if (!im_push_frame_builder(IM_FILL, insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
     0,
     .axis = HORIZONTAL | VERTICAL,
-		.direction = DIR_VERTICAL,
+		.direction = DIR_DOWN,
     .options = IM_DEFAULT_LAYOUT_FLAGS
   })) {
 		TEST_FAIL_MESSAGE("Unable to add layout builder frame");
 	}
+	
+	/* Add 3 elements with increasing height and width. They should fit in the first column */
+	im_push_frame(frame_make(0, 0, 100, 120));
+	TEST_ASSERT_EQUAL_INT(0,		im_current_element()->frame.y);
+	im_pop_frame();
+	
+	TEST_ASSERT_EQUAL_INT(120,	im_current_element()->_layout_params._vertical_position);
+	
+	im_push_frame(frame_make(0, 0, 150, 160));
+	TEST_ASSERT_EQUAL_INT(120,	im_current_element()->frame.y);
+	im_pop_frame();
+	
+	TEST_ASSERT_EQUAL_INT(280, 	im_current_element()->_layout_params._vertical_position);
+	
+	im_push_frame(frame_make(0, 0, 200, 200));
+	TEST_ASSERT_EQUAL_INT(280, 	im_current_element()->frame.y);
+	im_pop_frame();
+	
+	/*
+	No remaining space vertically - position moves back to top and to the left
+	by the widest element in the last column.
+	*/
+	TEST_ASSERT_EQUAL_INT(200,	im_current_element()->_layout_params._horizontal_position);
+	TEST_ASSERT_EQUAL_INT(0,		im_current_element()->_layout_params._vertical_position);
+	
+	/*
+	Without anything else configured on the grid, the next element will fill
+	the remaining space on the right.
+	*/
+	im_push_frame(IM_FILL);
+	TEST_ASSERT_EQUAL_FRAME(frame_make(200, 0, 440, 480), im_current_element()->frame);
+	im_pop_frame();
+	
+	TEST_ASSERT_EQUAL_INT(640, 	im_current_element()->_layout_params._horizontal_position);
+	
+	/*
+	For visualisation:
+	┌────────────────────────┐
+	│┌───┐....┌─────────────┐│
+	││ 1 │....│             ││
+	│└───┘....│             ││
+	│┌─────┐..│             ││
+	││  2  │..│             ││
+	│└─────┘..│      4      ││
+	│┌───────┐│             ││
+	││       ││             ││
+	││   3   ││             ││
+	││       ││             ││
+	│└───────┘└─────────────┘│
+	└────────────────────────┘
+	*/
 }
 
 TEST_GROUP_RUNNER(layout) {
@@ -367,5 +426,5 @@ TEST_GROUP_RUNNER(layout) {
   RUN_TEST_CASE(layout, grid_with_fixed_rows_and_columns);
   RUN_TEST_CASE(layout, grid_with_fixed_cell_size);
   RUN_TEST_CASE(layout, grid_with_varying_cell_size);
-  RUN_TEST_CASE(layout, grid_with_vertical_direction);
+  RUN_TEST_CASE(layout, grid_with_down_direction);
 }

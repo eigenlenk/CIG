@@ -733,7 +733,127 @@ frame_t im_stack_layout_builder(
 ) {
 	const bool h_axis = params->axis & HORIZONTAL;
 	const bool v_axis = params->axis & VERTICAL;
+	const bool is_grid = h_axis && v_axis;
+	
+	int x = params->_horizontal_position, y = params->_vertical_position, w, h;
 
+	int resolve_width() {
+		return frame.w == IM_FILL_CONSTANT
+			? container.w - params->_horizontal_position /*params->_h_size == IM_FILL_CONSTANT || !params->_h_size
+				? container.w - params->_horizontal_position
+				: params->_h_size*/
+			: frame.w;
+	}
+	
+	int resolve_height() {
+		return frame.h == IM_FILL_CONSTANT
+			? container.h - params->_vertical_position /*params->_v_size == IM_FILL_CONSTANT || !params->_v_size
+				? container.h - params->_vertical_position
+				: params->_v_size*/
+			: frame.h;
+	}
+	
+	void move_to_next_row() {
+		params->_horizontal_position = 0;
+		params->_vertical_position += (params->_v_size + params->spacing);
+		params->_h_size = IM_FILL_CONSTANT;
+		params->_v_size = IM_FILL_CONSTANT;
+	}
+	
+	void move_to_next_column() {
+		params->_vertical_position = 0;
+		params->_horizontal_position += (params->_h_size + params->spacing);
+		params->_h_size = IM_FILL_CONSTANT;
+		params->_v_size = IM_FILL_CONSTANT;
+	}
+	
+	if (h_axis) {
+		if (params->width > 0) {
+			w = params->width;
+		} else if (params->columns) {
+			w = (container.w - ((params->columns - 1) * params->spacing)) / params->columns;
+		} else if (frame.w == IM_FILL_CONSTANT && params->_h_size && params->direction == DIR_DOWN) {
+			w = params->_h_size;
+		}	else {
+			w = resolve_width();
+		}
+	} else {
+		w = resolve_width();
+		
+		/* Reset any remaining horizontal positioning in case we modify axis mid-layout */
+		params->_horizontal_position = 0;
+		params->_h_size = IM_FILL_CONSTANT;
+	}
+	
+	if (v_axis) {
+		if (params->height > 0) {
+			h = params->height;
+		} else if (params->rows) {
+			h = (container.h - ((params->rows - 1) * params->spacing)) / params->rows;
+		} else if (frame.h == IM_FILL_CONSTANT && params->_v_size && params->direction == DIR_LEFT) {
+			h = params->_v_size;
+		}	else {
+			h = resolve_height();
+		}
+	} else {
+		h = resolve_height();
+		
+		/* Reset any remaining vertical positioning in case we modify axis mid-layout */
+		params->_vertical_position = 0;
+		params->_v_size = IM_FILL_CONSTANT;
+	}
+	
+	if (h_axis && v_axis) {
+		/* Can we fit the new frame onto current axis? */
+		switch (params->direction) {
+			case DIR_LEFT: {
+				if (params->_horizontal_position + w > container.w) {
+					move_to_next_row();
+					x = 0;
+					y = params->_vertical_position;
+				}
+				
+				params->_horizontal_position += (w + params->spacing);
+				
+				params->_h_size = MAX(params->_h_size, w);
+				params->_v_size = MAX(params->_v_size, h);
+				
+				if (params->_horizontal_position >= container.w) {
+					move_to_next_row();
+				}
+			} break;
+			case DIR_DOWN: {
+				if (params->_vertical_position + h > container.h) {
+					move_to_next_column();
+					y = 0;
+					x = params->_horizontal_position;
+				}
+				
+				params->_vertical_position += (h + params->spacing);
+				
+				params->_h_size = MAX(params->_h_size, w);
+				params->_v_size = MAX(params->_v_size, h);
+				
+				if (params->_vertical_position >= container.h) {
+					move_to_next_column();
+				}
+			} break;
+			default: break;
+		}
+	} else if (h_axis) {
+		params->_horizontal_position += (w + params->spacing);
+		params->_h_size = MAX(params->_h_size, w);
+	} else if (v_axis) {
+		params->_vertical_position += (h + params->spacing);
+		params->_v_size = MAX(params->_v_size, h);
+	}
+
+	params->_count ++;
+	
+	return frame_make(x, y, w, h);
+	
+#ifdef OLD12345
+	
 	frame_t result = frame_make(
 		params->_horizontal_position,
 		params->_vertical_position,
@@ -799,6 +919,7 @@ frame_t im_stack_layout_builder(
 	params->_count ++;
 
   return result;
+#endif
 }
 
 /*

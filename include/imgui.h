@@ -161,8 +161,8 @@ typedef struct im_layout_params_t {
 		CASEFLAG(2, VERTICAL),
 	} axis;
 	enum {
-		CASE(0, DIR_HORIZONTAL),
-		CASE(1, DIR_VERTICAL)
+		CASE(0, DIR_LEFT),
+		CASE(1, DIR_DOWN)
 	} direction; /* Direction in which the layout flows.
 									Only applies to grids (axis = VERTICAL | HORIZONTAL) */
 	int spacing, width, height, columns, rows;
