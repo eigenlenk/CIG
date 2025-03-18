@@ -739,17 +739,13 @@ frame_t im_stack_layout_builder(
 
 	int resolve_width() {
 		return frame.w == IM_FILL_CONSTANT
-			? container.w - params->_horizontal_position /*params->_h_size == IM_FILL_CONSTANT || !params->_h_size
-				? container.w - params->_horizontal_position
-				: params->_h_size*/
+			? container.w - params->_horizontal_position
 			: frame.w;
 	}
 	
 	int resolve_height() {
 		return frame.h == IM_FILL_CONSTANT
-			? container.h - params->_vertical_position /*params->_v_size == IM_FILL_CONSTANT || !params->_v_size
-				? container.h - params->_vertical_position
-				: params->_v_size*/
+			? container.h - params->_vertical_position
 			: frame.h;
 	}
 	
@@ -768,17 +764,23 @@ frame_t im_stack_layout_builder(
 	}
 	
 	if (h_axis) {
-		if (params->width > 0) {
-			w = params->width;
-		} else if (params->columns) {
-			w = (container.w - ((params->columns - 1) * params->spacing)) / params->columns;
-		} else if (frame.w == IM_FILL_CONSTANT && params->_h_size && params->direction == DIR_DOWN) {
-			w = params->_h_size;
-		}	else {
-			w = resolve_width();
+		if (frame.w == IM_FILL_CONSTANT) {
+			if (params->width > 0) {
+				w = params->width;
+			} else if (params->columns) {
+				w = (container.w - ((params->columns - 1) * params->spacing)) / params->columns;
+			} else if (params->_h_size && params->direction == DIR_DOWN) {
+				w = params->_h_size;
+			}	else {
+				w = container.w - params->_horizontal_position;
+			}
+		} else {
+			w = frame.w;
 		}
 	} else {
-		w = resolve_width();
+		w = frame.w == IM_FILL_CONSTANT
+			? container.w - params->_horizontal_position
+			: frame.w;;
 		
 		/* Reset any remaining horizontal positioning in case we modify axis mid-layout */
 		params->_horizontal_position = 0;
@@ -786,17 +788,23 @@ frame_t im_stack_layout_builder(
 	}
 	
 	if (v_axis) {
-		if (params->height > 0) {
-			h = params->height;
-		} else if (params->rows) {
-			h = (container.h - ((params->rows - 1) * params->spacing)) / params->rows;
-		} else if (frame.h == IM_FILL_CONSTANT && params->_v_size && params->direction == DIR_LEFT) {
-			h = params->_v_size;
-		}	else {
-			h = resolve_height();
+		if (frame.h == IM_FILL_CONSTANT) {
+			if (params->height > 0) {
+				h = params->height;
+			} else if (params->rows) {
+				h = (container.h - ((params->rows - 1) * params->spacing)) / params->rows;
+			} else if (params->_v_size && params->direction == DIR_LEFT) {
+				h = params->_v_size;
+			}	else {
+				h = container.h - params->_vertical_position;
+			}
+		} else {
+			h = frame.h;
 		}
 	} else {
-		h = resolve_height();
+		h = frame.h == IM_FILL_CONSTANT
+			? container.h - params->_vertical_position
+			: frame.h;
 		
 		/* Reset any remaining vertical positioning in case we modify axis mid-layout */
 		params->_vertical_position = 0;
@@ -848,7 +856,7 @@ frame_t im_stack_layout_builder(
 		params->_v_size = MAX(params->_v_size, h);
 	}
 
-	params->_count ++;
+	params->count.total ++;
 	
 	return frame_make(x, y, w, h);
 	

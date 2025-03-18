@@ -166,10 +166,16 @@ typedef struct im_layout_params_t {
 	} direction; /* Direction in which the layout flows.
 									Only applies to grids (axis = VERTICAL | HORIZONTAL) */
 	int spacing, width, height, columns, rows;
+	struct {
+		int horizontal, vertical, total;
+	} limit;
 	im_layout_options_t options;
 	void *data;
 	/* Private. Keep out! */
-	int _count, _horizontal_position, _vertical_position, _h_size, _v_size;
+	int _horizontal_position, _vertical_position, _h_size, _v_size;
+	struct {
+		int h_cur, v_cur, total; /* h_ and v_cur are only counted in stacks/grids */
+	} count;
 } im_layout_params_t;
 
 typedef struct im_scroll_state_t {

@@ -7,7 +7,7 @@ void demo_ui(BITMAP *buffer) {
 	static int grid_demo = 0, grid_demo_cycler;
 	static int autoscroll_direction = 1, grid_autoscroll_direction = 1;
 	
-	if (grid_demo_cycler++ > 50) {
+	if (grid_demo_cycler++ > 60) {
 		grid_demo_cycler = 0;
 		grid_demo = (grid_demo + 1) % 4;
 	}
@@ -200,6 +200,8 @@ void demo_ui(BITMAP *buffer) {
 			.options = IM_DEFAULT_LAYOUT_FLAGS
 		});
 		
+		im_fill_color(8);
+		
 		/* We'll add some elements with increasing height */
 		
 		if (im_push_frame(frame_make(0, 0, 73, 50))) {
@@ -238,6 +240,8 @@ void demo_ui(BITMAP *buffer) {
 			.spacing = 5,
 			.options = IM_DEFAULT_LAYOUT_FLAGS
 		});
+		
+		im_fill_color(8);
 		
 		/* We'll add some elements with increasing height */
 		

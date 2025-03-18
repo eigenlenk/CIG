@@ -69,6 +69,12 @@ TEST(layout, insets) {
 	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 570, 460), im_current_element()->frame);
 	TEST_ASSERT_EQUAL_FRAME(frame_make(60, 10, 570, 460), im_absolute_frame());
 	
+	/* Another relative frame, this time off-set from the origin */
+	im_push_frame(frame_make(30, 40, 100, 100));
+	
+	TEST_ASSERT_EQUAL_FRAME(frame_make(30, 40, 100, 100), im_current_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(frame_make(90, 50, 100, 100), im_absolute_frame());
+	
 	/*
 	Here's what our layout looks like:
 
@@ -78,17 +84,60 @@ TEST(layout, insets) {
 	│  │                  0           │  │ 
 	│  │        ┌0x0─(Second)───570w┐ │  │   
 	│  │        │                   │ │  │   
-	│  │        │                   │ │  │   
-	│  │        │                   │0│  │   
-	│10│ <-50-> │                   │ │10│   
-	│  │        │                   4 │  │   
-	│  │        │                   6 │  │   
+	│  │        │   ┌30x40──┐       │ │  │   
+	│  │        │   │       │       │0│  │   
+	│10│ <-50-> │   │       │       │ │10│   
+	│  │        │   │       │       4 │  │   
+	│  │        │   └───────┘       6 │  │   
 	│  │        │                   0 4  │   
 	│  │        └───────────────────┘ 6  │
 	│  │                  0           0  4
 	│  └──────────────────────────────┘  8   
 	│                 10                 0   
 	└────────────────────────────────────┘
+	*/
+}
+
+TEST(layout, overlay) {
+	/* Frames don't have to be nested to be overlap or appear to be contained */
+	
+	/*
+	In this case relative and absolute frames are the same
+	because they're directly in root's coordinate system.
+	*/
+	im_push_frame(frame_make(50, 50, 540, 380));
+	
+	TEST_ASSERT_EQUAL_FRAME(frame_make(50, 50, 540, 380), im_current_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(frame_make(50, 50, 540, 380), im_absolute_frame());
+	
+	im_pop_frame();
+	
+	im_push_frame(frame_make(100, 100, 440, 280));
+	
+	TEST_ASSERT_EQUAL_FRAME(frame_make(100, 100, 440, 280), im_current_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(frame_make(100, 100, 440, 280), im_absolute_frame());
+	
+	im_pop_frame();
+	
+	/*
+	On screen these 2 frames would appear nested but they're not. They could be
+	modal windows for example:
+
+	╔═════════════════════════════════╗  
+	║                                 ║  
+	║  ┌[Window]────────────────[x]┐  ║  
+	║  │                           │  ║  
+	║  │    ┌[Window]──────[x]┐    │  ║  
+	║  │    │                 │    │  ║  
+	║  │    │                 │    │  ║  
+	║  │    │                 │    │  ║  
+	║  │    │                 │    │  ║  
+	║  │    │                 │    │  ║  
+	║  │    └─────────────────┘    │  ║  
+	║  │                           │  ║  
+	║  └───────────────────────────┘  ║  
+	║                                 ║  
+	╚═════════════════════════════════╝ 
 	*/
 }
 
@@ -276,25 +325,26 @@ TEST(layout, grid_with_varying_cell_size) {
 	if (!im_push_frame_builder(IM_FILL, insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
     0,
     .axis = HORIZONTAL | VERTICAL,
+		// .columns = 3,
     .options = IM_DEFAULT_LAYOUT_FLAGS
   })) {
 		TEST_FAIL_MESSAGE("Unable to add layout builder frame");
 	}
 
 	/* Add 3 elements with increasing width. They should fit on the first row */
-	im_push_frame(frame_make(0, 0, 100, 160));
+	im_push_frame(frame_make(0, 0, 100, 160)); /* (1) */
 	TEST_ASSERT_EQUAL_INT(0, im_current_element()->frame.x);
 	im_pop_frame();
 	
 	TEST_ASSERT_EQUAL_INT(100, im_current_element()->_layout_params._horizontal_position);
 	
-	im_push_frame(frame_make(0, 0, 200, 160));
+	im_push_frame(frame_make(0, 0, 200, 160)); /* (2) */
 	TEST_ASSERT_EQUAL_INT(100, im_current_element()->frame.x);
 	im_pop_frame();
 	
 	TEST_ASSERT_EQUAL_INT(300, im_current_element()->_layout_params._horizontal_position);
 	
-	im_push_frame(frame_make(0, 0, 300, 160));
+	im_push_frame(frame_make(0, 0, 300, 160)); /* (3) */
 	TEST_ASSERT_EQUAL_INT(300, im_current_element()->frame.x);
 	im_pop_frame();
 	
@@ -310,34 +360,34 @@ TEST(layout, grid_with_varying_cell_size) {
 	// TEST_ASSERT_EQUAL_INT(160, 	im_current_element()->frame.y);
 	// im_pop_frame();
 	
-	/* Fifth one should be inserted normally onto the second row */
-	im_push_frame(frame_make(0, 0, 400, 160));
+	/* This one should be inserted normally onto the second row */
+	im_push_frame(frame_make(0, 0, 400, 160)); /* (5) */
 	TEST_ASSERT_EQUAL_INT(0, 		im_current_element()->frame.x);
 	TEST_ASSERT_EQUAL_INT(160,	im_current_element()->frame.y);
 	im_pop_frame();
 	
-	/* Fills the remaining space on the second row. Internally this is just a frame push + pop */
+	/* Spacer fills the remaining space on the second row. Internally this is just a frame push + pop */
 	im_insert_spacer(IM_FILL_CONSTANT /* === 0 */);
 	
-	/* Insert a sixth cell to fill all the space on the third row (since it doesn't fit on second) */
-	im_push_frame(IM_FILL);
+	/* Insert an element to fill all the space on the third row */
+	im_push_frame(IM_FILL); /* (6) */
 	TEST_ASSERT_EQUAL_INT(640, 	im_current_element()->frame.w);
 	TEST_ASSERT_EQUAL_INT(160, 	im_current_element()->frame.h);
 	im_pop_frame();
 	
 	/*
 	For visualisation:
-	┌─────────────────────┐
-	│┌──┐┌─────┐┌───────┐.│
-	││1 ││  2  ││   3   │.│
-	│└──┘└─────┘└───────┘.│
-	│┌─┐┌────────────┐┌  ┐│
-	││4││    5       │    │
-	│└─┘└────────────┘└  ┘│
-	│┌───────────────────┐│
-	││         6         ││
-	│└───────────────────┘│
-	└─────────────────────┘
+	┌──────────────────────┐
+	│┌──┐┌─────┐┌───────┐..│
+	││1 ││  2  ││   3   │..│ <- (4) could go here but we've
+	│└──┘└─────┘└───────┘..│    set a limit on 3 columns, or
+	│┌─┐┌────────────┐┌   ┐│    3 elements per row more precisely
+	││4││    5       │     │
+	│└─┘└────────────┘└   ┘│
+	│┌────────────────────┐│
+	││         6          ││
+	│└────────────────────┘│
+	└──────────────────────┘
 	*/
 }
 
@@ -409,6 +459,7 @@ TEST_GROUP_RUNNER(layout) {
   RUN_TEST_CASE(layout, basic_check);
   RUN_TEST_CASE(layout, push_pop);
   RUN_TEST_CASE(layout, insets);
+  RUN_TEST_CASE(layout, overlay);
   RUN_TEST_CASE(layout, culling);
   RUN_TEST_CASE(layout, vstack_layout);
   RUN_TEST_CASE(layout, hstack_layout);
