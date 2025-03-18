@@ -157,14 +157,19 @@ typedef enum {
  */
 typedef struct im_layout_params_t {
 	enum {
-		HORIZONTAL = 1,
-		VERTICAL = 2
+		CASEFLAG(1, HORIZONTAL),
+		CASEFLAG(2, VERTICAL),
 	} axis;
+	enum {
+		CASE(0, DIR_HORIZONTAL),
+		CASE(1, DIR_VERTICAL)
+	} direction; /* Direction in which the layout flows.
+									Only applies to grids (axis = VERTICAL | HORIZONTAL) */
 	int spacing, width, height, columns, rows;
 	im_layout_options_t options;
 	void *data;
-	/* Private */
-	int _count, _vertical_position, _horizontal_position;
+	/* Private. Keep out! */
+	int _count, _horizontal_position, _vertical_position, _h_size, _v_size;
 } im_layout_params_t;
 
 typedef struct im_scroll_state_t {
@@ -177,7 +182,7 @@ typedef struct frame_stack_element_t {
 	frame_t frame;
 	frame_t absolute_frame;
   insets_t insets;
-	// Private. Stay away!
+	/* Private. Keep out! */
 	frame_t (*_layout_function)(const frame_t, const frame_t, im_layout_params_t *);
 	im_layout_params_t _layout_params;
   bool _clipped;

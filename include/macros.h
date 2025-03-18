@@ -9,5 +9,6 @@
 #define UNUSED(x) (void)(x)
 #define CASE(I, NAME) NAME = I
 #define BITFLAG(B, NAME) NAME = (1 << B)
+#define CASEFLAG(B, NAME) NAME = (1 << B)
 
 #endif

@@ -737,53 +737,63 @@ frame_t im_stack_layout_builder(
 	frame_t result = frame_make(
 		params->_horizontal_position,
 		params->_vertical_position,
-		frame.w == IM_FILL_CONSTANT ? container.w - params->_horizontal_position : frame.w,
-		frame.h == IM_FILL_CONSTANT ? container.h - params->_vertical_position : frame.h
+		frame.w == IM_FILL_CONSTANT
+			? params->_h_size == IM_FILL_CONSTANT
+				? container.w - params->_horizontal_position
+				: container.w - params->_h_size
+			: frame.w,
+		frame.h == IM_FILL_CONSTANT
+			? params->_v_size == IM_FILL_CONSTANT
+				? container.h - params->_vertical_position
+				: params->_v_size
+			: frame.h
 	);
 
 	if (h_axis) {
-		if (params->columns) {
-			result.w = (container.w - ((params->columns - 1) * params->spacing)) / params->columns;
-		} else if (params->width > 0) {
+		if (params->width > 0) {
 			result.w = params->width;
-		} else if (frame.w == IM_FILL_CONSTANT) {
-			result.w = container.w - (params->_horizontal_position % container.w);
-		} else if (frame.w < 0) {
-			result.h = (container.w + frame.w) - params->_horizontal_position;
-		}	else {
+		} else if (params->columns) {
+			result.w = (container.w - ((params->columns - 1) * params->spacing)) / params->columns;
+		} else if (frame.w > 0) {
 			result.w = frame.w;
 		}
-		params->_horizontal_position += (result.w + params->spacing);
+		params->_h_size = MAX(params->_h_size, result.w);
 	} else {
 		/* Reset any remaining horizontal positioning in case we modify axis mid-layout */
 		params->_horizontal_position = 0;
+		params->_h_size = IM_FILL_CONSTANT;
 	}
 
 	if (v_axis) {
-		if (params->rows) {
-			result.h = (container.h - ((params->rows - 1) * params->spacing)) / params->rows;
-		} else if (params->height > 0) {
+		if (params->height > 0) {
 			result.h = params->height;
-		} else if (frame.h == IM_FILL_CONSTANT) {
-			result.h = container.h - (params->_vertical_position % container.h);
-		} else if (frame.h < 0) {
-			result.h = (container.h + frame.h) - params->_vertical_position;
-		}	else {
+		} else if (params->rows) {
+			result.h = (container.h - ((params->rows - 1) * params->spacing)) / params->rows;
+		} else if (frame.h > 0) {
 			result.h = frame.h;
 		}
-		/*
-		 * Normally, vertical axis grows with each new element, but if horizontal
-		 * axis is also enabled, that axis first has to be filled before it
-		 * jumps to the next line.
-		 */
-		if (h_axis) {
-			if (params->_horizontal_position >= container.w || params->_horizontal_position + result.w > container.w) {
+		params->_v_size = MAX(params->_v_size, result.h);
+	}
+
+	if (h_axis && v_axis) {
+		// IM_PRINT("(%d) H: %d, V: %d | W: %d", params->_count, params->_horizontal_position, params->_vertical_position, container.w);
+		if (params->_horizontal_position + result.w > container.w) {
+			params->_h_size = params->_horizontal_position = (result.w + params->spacing);
+			params->_vertical_position += (result.h + params->spacing);
+			result.x = 0;
+			result.y = params->_vertical_position;
+		} else {
+			params->_horizontal_position += (result.w + params->spacing);
+			if (params->_horizontal_position >= container.w) {
+				params->_h_size = IM_FILL_CONSTANT;
 				params->_horizontal_position = 0;
 				params->_vertical_position += (result.h + params->spacing);
 			}
-		} else {
-			params->_vertical_position += (result.h + params->spacing);
 		}
+	} else if (h_axis) {
+		params->_horizontal_position += (result.w + params->spacing);
+	} else if (v_axis) {
+		params->_vertical_position += (result.h + params->spacing);
 	}
 
 	params->_count ++;

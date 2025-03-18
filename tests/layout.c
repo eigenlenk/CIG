@@ -16,7 +16,7 @@ TEST_TEAR_DOWN(layout) {
 /* (( TEST CASES )) */
 
 TEST(layout, basic_check) {
-	/* Nothing really to assert here, just checking nothing crashes =) */
+	/* Nothing really to test here, just checking nothing crashes =) */
 	TEST_ASSERT(frame_cmp(im_current_element()->frame, frame_make(0, 0, 640, 480)));
 }
 
@@ -65,7 +65,7 @@ TEST(layout, insets) {
 	/* Push another frame. This time there's padding only on the left as set by the previously pushed frame */
 	im_push_frame(IM_FILL);
 	
-	TEST_ASSERT(frame_cmp(im_current_element()->frame, frame_make(0, 0 ,570, 460)));
+	TEST_ASSERT(frame_cmp(im_current_element()->frame, frame_make(0, 0, 570, 460)));
 	TEST_ASSERT(frame_cmp(im_absolute_frame(), frame_make(60, 10, 570, 460)));
 	
 	/*
@@ -94,24 +94,25 @@ TEST(layout, insets) {
 TEST(layout, culling) {
 	/*
 	Frames that are wholly outside of visible area are not added.
-	`im_push_frame_*` functions return a BOOL for that.
+	`im_push_frame_*` functions return a BOOL for that. If the frame
+	is added successfully you are expected to pop it at some point.
 	*/
 	
 	/* This one is wholly outside the parent's top edge */
 	if (im_push_frame(frame_make(0, -50, 100, 50))) {
-		TEST_FAIL_MESSAGE("Frame should have been culled!");
+		TEST_FAIL_MESSAGE("Frame should have been culled");
 	}
 	
 	/* This one is wholly outside the parent's right edge */
 	if (im_push_frame(frame_make(640, 0, 100, 50))) {
-		TEST_FAIL_MESSAGE("Frame should have been culled!");
+		TEST_FAIL_MESSAGE("Frame should have been culled");
 	}
 	
 	/* This one partially intersects the parent */
 	if (im_push_frame(frame_make(0, -25, 100, 50))) {
 		im_pop_frame();
 	} else {
-		TEST_FAIL_MESSAGE("Frame should NOT have been culled!");
+		TEST_FAIL_MESSAGE("Frame should NOT have been culled");
 	}
 	
 	/* Culling is enabled by default. We can disable it. */
@@ -121,7 +122,238 @@ TEST(layout, culling) {
 	if (im_push_frame(frame_make(0, -50, 100, 25))) {
 		im_pop_frame();
 	} else {
-		TEST_FAIL_MESSAGE("Frame should NOT have been culled!");
+		TEST_FAIL_MESSAGE("Frame should NOT have been culled");
+	}
+}
+
+TEST(layout, vstack_layout) {
+	/* Pushing a stack that lays out frames vertically with a 10pt spacing */
+	if (!im_push_frame_builder(IM_FILL, insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
+    0,
+    .axis = VERTICAL,
+    .spacing = 10,
+    .options = IM_DEFAULT_LAYOUT_FLAGS
+  })) {
+		TEST_FAIL_MESSAGE("Unable to add layout builder frame");
+	}
+	
+	/* Width is calculated, but height is fixed at 50pt */
+	im_push_frame(IM_FILL_H(50));
+	TEST_ASSERT(frame_cmp(im_current_element()->frame, frame_make(0, 0, 640, 50)));
+	im_pop_frame();
+	
+	im_push_frame(IM_FILL_H(100));
+	TEST_ASSERT(frame_cmp(im_current_element()->frame, frame_make(0, 50+10, 640, 100)));
+	im_pop_frame();
+	
+	TEST_ASSERT(im_current_element()->_layout_params._vertical_position == 170);
+	
+	im_pop_frame(); /* Not really necessary in testing, but.. */
+}
+
+TEST(layout, hstack_layout) {
+	/* Pushing a stack that lays out frames horizontally with no spacing, but everything is inset by 10pt */
+	if (!im_push_frame_builder(IM_FILL, insets_uniform(10), &im_stack_layout_builder, (im_layout_params_t) {
+    0,
+    .axis = HORIZONTAL,
+    .spacing = 0,
+    .options = IM_DEFAULT_LAYOUT_FLAGS
+  })) {
+		TEST_FAIL_MESSAGE("Unable to add layout builder frame");
+	}
+	
+	/* Width is calculated, but height is fixed at 50pt */
+	im_push_frame(IM_FILL_W(200));
+	TEST_ASSERT(frame_cmp(im_current_element()->frame, frame_make(0, 0, 200, 480-2*10)));
+	im_pop_frame();
+	
+	im_push_frame(IM_FILL_W(100));
+	TEST_ASSERT(frame_cmp(im_current_element()->frame, frame_make(200, 0, 100, 480-2*10)));
+	im_pop_frame();
+	
+	TEST_ASSERT(im_current_element()->_layout_params._horizontal_position == 300);
+	
+	im_pop_frame(); /* Not really necessary in testing, but.. */
+}
+
+/*
+	- Grid is the same stack layout builder but with both axis enabled.
+	- Grid will start adding frames horizontally, until the position exceeds
+	the width or when the next proposed frame can't fit. Then the vertical position
+	changes and horizontal positions wraps back around to 0.
+*/
+
+TEST(layout, grid_with_fixed_rows_and_columns) {
+	/*
+	We are specifying a number of rows and columns - this will tell
+	how large each child needs to be by default (we *can* override).
+	Here it's a 5x5 grid, meaning on our 640x480 screen,
+	each cell would be 128x96.
+	*/
+	if (!im_push_frame_builder(IM_FILL, insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
+    0,
+    .axis = HORIZONTAL | VERTICAL,
+    .spacing = 0,
+		.columns = 5,
+		.rows = 5,
+    .options = IM_DEFAULT_LAYOUT_FLAGS
+  })) {
+		TEST_FAIL_MESSAGE("Unable to add layout builder frame");
+	}
+	
+	int i;
+	for (i = 0; i < 25; ++i) {
+		int row = (i / 5);
+		int column = i - (row * 5);
+		im_push_frame(IM_FILL);
+		TEST_ASSERT(frame_cmp(im_current_element()->frame, frame_make(128*column, 96*row, 128, 96)));
+		im_pop_frame();
+	}
+
+	TEST_ASSERT_EQUAL_INT(0, im_current_element()->_layout_params._horizontal_position);
+	TEST_ASSERT_EQUAL_INT(480, im_current_element()->_layout_params._vertical_position);
+}
+
+TEST(layout, grid_with_fixed_cell_size) {
+	/*
+	Here we are defining a grid where each cell's width and height is fixed.
+	If columns and rows are not set, there will be as many cells horizontally
+	as could be fitted, in this case 640 / 200 = 3 and the remaining space will
+	be unused. Same vertically (480 / 200) = 2, 6 in total, looking something like this:
+	
+	┌─────────────────────────────────┐
+	│┌────────┐┌────────┐┌────────┐...│
+	││        ││        ││        │...│
+	││        ││        ││        │...│
+	││        ││        ││        │...│
+	│└────────┘└────────┘└────────┘...│
+	│┌────────┐┌────────┐┌────────┐...│
+	││        ││        ││        │...│
+	││        ││        ││        │...│
+	││        ││        ││        │...│
+	│└────────┘└────────┘└────────┘...│
+	│.................................│
+	└─────────────────────────────────┘
+	*/
+	if (!im_push_frame_builder(IM_FILL, insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
+    0,
+    .axis = HORIZONTAL | VERTICAL,
+    .width = 200,
+		.height = 200,
+    .options = IM_DEFAULT_LAYOUT_FLAGS
+  })) {
+		TEST_FAIL_MESSAGE("Unable to add layout builder frame");
+	}
+	
+	int i;
+	
+	/* First row */
+	for (i = 0; i < 3; ++i) {
+		im_push_frame(IM_FILL);
+		im_pop_frame();
+	}
+	
+	TEST_ASSERT_EQUAL_INT(600, im_current_element()->_layout_params._horizontal_position);
+	
+	/* Second row */
+	for (i = 0; i < 3; ++i) {
+		im_push_frame(IM_FILL);
+		TEST_ASSERT_TRUE(im_current_element()->frame.y == 200);
+		im_pop_frame();
+	}
+	
+	TEST_ASSERT_EQUAL_INT(200, im_current_element()->_layout_params._vertical_position);
+}
+
+TEST(layout, grid_with_varying_cell_size) {
+	/*
+	Third option is to specify a size for each of the cells at insertion time.
+	Then, again depending on the remaining space, cell will be inserted into the
+	current row or pushed to the next. In addition, you can still specify the number
+	of rows and columns, and these will now be used to limit number of cells on each axis.
+	*/
+	if (!im_push_frame_builder(IM_FILL, insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
+    0,
+    .axis = HORIZONTAL | VERTICAL,
+    .options = IM_DEFAULT_LAYOUT_FLAGS
+  })) {
+		TEST_FAIL_MESSAGE("Unable to add layout builder frame");
+	}
+
+	/* Add 3 elements with increasing width. They should fit on the first row */
+	im_push_frame(frame_make(0, 0, 100, 160));
+	TEST_ASSERT_EQUAL_INT(0, im_current_element()->frame.x);
+	im_pop_frame();
+	
+	TEST_ASSERT_EQUAL_INT(100, im_current_element()->_layout_params._horizontal_position);
+	
+	im_push_frame(frame_make(0, 0, 200, 160));
+	TEST_ASSERT_EQUAL_INT(100, im_current_element()->frame.x);
+	im_pop_frame();
+	
+	TEST_ASSERT_EQUAL_INT(300, im_current_element()->_layout_params._horizontal_position);
+	
+	im_push_frame(frame_make(0, 0, 300, 160));
+	TEST_ASSERT_EQUAL_INT(300, im_current_element()->frame.x);
+	im_pop_frame();
+	
+	TEST_ASSERT_EQUAL_INT(600, im_current_element()->_layout_params._horizontal_position);
+	
+	/*
+	Let's try to insert another cell that should fit width-wise,
+	but the grid would exceed the number of columns we set, so it's
+	pushed onto the next row.
+	*/
+	// im_push_frame(frame_make(0, 0, 40, 160));
+	// TEST_ASSERT_EQUAL_INT(0, 		im_current_element()->frame.x);
+	// TEST_ASSERT_EQUAL_INT(160, 	im_current_element()->frame.y);
+	// im_pop_frame();
+	
+	/* Fifth one should be inserted normally onto the second row */
+	im_push_frame(frame_make(0, 0, 400, 160));
+	TEST_ASSERT_EQUAL_INT(0, 		im_current_element()->frame.x);
+	TEST_ASSERT_EQUAL_INT(160,	im_current_element()->frame.y);
+	im_pop_frame();
+	
+	/* Fills the remaining space on the second row. Internally this is just a frame push + pop */
+	im_insert_spacer(IM_FILL_CONSTANT /* === 0 */);
+	
+	/* Insert a sixth cell to fill all the space on the third row (since it doesn't fit on second) */
+	im_push_frame(IM_FILL);
+	TEST_ASSERT_EQUAL_INT(640, 	im_current_element()->frame.w);
+	TEST_ASSERT_EQUAL_INT(160, 	im_current_element()->frame.h);
+	im_pop_frame();
+	
+	/*
+	What we should have at this point:
+	
+	┌─────────────────────┐
+	│┌──┐┌─────┐┌───────┐.│
+	││1 ││  2  ││   3   │.│
+	│└──┘└─────┘└───────┘.│
+	│┌─┐┌────────────┐┌  ┐│
+	││4││    5       │    │
+	│└─┘└────────────┘└  ┘│
+	│┌───────────────────┐│
+	││         6         ││
+	│└───────────────────┘│
+	└─────────────────────┘
+	*/
+}
+
+TEST(layout, grid_with_vertical_direction) {
+	/*
+	Grids support horizontal (default) and vertical layout direction. In vertical mode,
+	instead of filling and adding rows, columns are filled and added instead. Otherwise
+	they behave the same.
+	*/
+	if (!im_push_frame_builder(IM_FILL, insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
+    0,
+    .axis = HORIZONTAL | VERTICAL,
+		.direction = DIR_VERTICAL,
+    .options = IM_DEFAULT_LAYOUT_FLAGS
+  })) {
+		TEST_FAIL_MESSAGE("Unable to add layout builder frame");
 	}
 }
 
@@ -130,4 +362,10 @@ TEST_GROUP_RUNNER(layout) {
   RUN_TEST_CASE(layout, push_pop);
   RUN_TEST_CASE(layout, insets);
   RUN_TEST_CASE(layout, culling);
+  RUN_TEST_CASE(layout, vstack_layout);
+  RUN_TEST_CASE(layout, hstack_layout);
+  RUN_TEST_CASE(layout, grid_with_fixed_rows_and_columns);
+  RUN_TEST_CASE(layout, grid_with_fixed_cell_size);
+  RUN_TEST_CASE(layout, grid_with_varying_cell_size);
+  RUN_TEST_CASE(layout, grid_with_vertical_direction);
 }
