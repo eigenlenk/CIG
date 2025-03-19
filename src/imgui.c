@@ -92,7 +92,6 @@ static im_scroll_state_t* get_scroll_state(const IMGUIID);
 static bool					im_state_record_value(im_state_t*, int);
 static IMGUIID 			im_frame_identity(const frame_t);
 static void 				cache_font(const im_font_ref);
-static void 				handle_element_interaction(frame_stack_element_t *);
 static void 				im_push_buffer(const im_buffer_ref, const frame_t);
 static void					im_pop_buffer();
 static void					im_blit_buffer(im_buffer_ref);
@@ -336,7 +335,7 @@ FASTFUNC bool _im_push_frame(
 
 	top->_layout_params._count.total ++;
 	
-	frame_stack_element_t element = {
+	STACK_PUSH(im_frame_stack(), ((frame_stack_element_t) {
 		.id = next_id ? next_id : (top->id + tinyhash(top->id+top->_id_counter++, im_depth())),
 		.frame = next,
 		.absolute_frame = im_convert_relative_frame(next),
@@ -345,11 +344,7 @@ FASTFUNC bool _im_push_frame(
 		._layout_params = params,
     ._clipped = false,
     ._scroll_state = NULL
-	};
-	
-	handle_element_interaction(&element);
-
-	STACK_PUSH(im_frame_stack(), element);
+	}));
 	
 	next_id = 0;
 
@@ -461,12 +456,36 @@ unsigned int im_depth() {
 	return STACK_SIZE(im_frame_stack());
 }
 
-bool im_pressed(
+bool im_hovered() {
+	/*
+	My approach for mouse hit detection in immediate-mode GUI:
+	Due to immediate processing of elements, checking mouse position
+	and drawing highlighted/pressed states right away can lead to multiple
+	overlapping elements showing those states.
+	To address this, we track the most recent (topmost) element the cursor
+	touches each frame. On subsequent frame, we compare the currently drawn
+	element (ID) with the previous result. This introduces a one-frame delay
+	between mouse detection and response but in reality it's imperceptible.
+	*/
+	const frame_stack_element_t* element = im_current_element();
+	
+	if (frame_contains(element->absolute_frame, mouse.position)) {
+		mouse.target_this_frame = element->id;
+
+		if (mouse.locked_on_element == false && element->id == mouse.target_prev_frame) {
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+im_mouse_button_t im_pressed(
 	const im_mouse_button_t buttons,
-	const im_pressed_options_t options
+	const im_press_options_t options
 ) {
-	if (!im_current_element()->_input_state.hovered) {
-		return false;
+	if (!im_hovered()) {
+		return 0;
 	}
 	
 	/*
@@ -475,10 +494,39 @@ bool im_pressed(
 	outside and element reflects pressed state as soon as mouse
 	moves onto it.
 	*/
-	return buttons & mouse.button_mask && (
-		(options & IM_MOUSE_PRESS_INSIDE) == false || (options & IM_MOUSE_PRESS_INSIDE && mouse.press_target_id == im_current_element()->id)
-	);
+	const im_mouse_button_t button_mask = buttons & mouse.button_mask;
+	
+	if (button_mask && ((options & IM_MOUSE_PRESS_INSIDE) == false || (options & IM_MOUSE_PRESS_INSIDE && mouse.press_target_id == im_current_element()->id))) {
+		return button_mask;
+	} else {
+		return 0;
+	}
 }
+
+im_mouse_button_t im_clicked(
+	const im_mouse_button_t buttons,
+	const im_click_options_t options
+) {
+	if (!im_hovered()) {
+		return 0;
+	}
+	
+	if (options & IM_CLICK_ON_BUTTON_DOWN) {
+		im_mouse_button_t result;
+		if (mouse.click_state == BEGAN && (result = buttons & mouse.button_mask)) {
+			return result;
+		}
+	} else {
+		im_mouse_button_t result;
+		if ((mouse.click_state == ENDED || (mouse.click_state == FAILED && !(options & IM_MOUSE_CLICK_EXPIRE))) && (result = buttons & mouse.last_button)) {
+			return result;
+		}
+	}
+	
+	return 0;
+}
+
+
 
 // ------
 
@@ -591,68 +639,6 @@ void im_draw_line(const int x1, const int y1, const int x2, const int y2, const 
 }
 
 // Private
-
-static void handle_element_interaction(frame_stack_element_t *element) {
-	/*
-	My approach for mouse hit detection in immediate-mode GUI:
-	Due to immediate processing of elements, checking mouse position
-	and drawing highlighted/pressed states right away can lead to multiple
-	overlapping elements showing those states.
-	To address this, we track the most recent (topmost) element the cursor
-	touches each frame. On subsequent frame, we compare the currently drawn
-	element (ID) with the previous result. This introduces a one-frame delay
-	between mouse detection and response but in reality it's imperceptible.
-	*/
-	if (frame_contains(element->absolute_frame, mouse.position)) {
-		mouse.target_this_frame = element->id;
-
-		if (mouse.locked_on_element == false && element->id == mouse.target_prev_frame) {
-			element->_input_state.hovered = true;
-		}
-	} else {
-		element->_input_state.hovered = false;
-	}
-	
-#ifdef OLDM
-	if (frame_contains(screen_frame, mouse.position)) {
-		mouse.target_this_frame = id;
-
-		if (mouse.locked_on_element == false && id == mouse.target_prev_frame) {
-			if (hovered) { *hovered = true; }
-			if (pressed) {
-				/*
-				 * If `IM_MOUSE_PRESS_INSIDE` option is specified, the press has start
-				 * within the bounds of this element. Otherwise it can start
-				 * outside and element reflects pressed state as soon as mouse
-				 * moves onto it.
-				 */
-				*pressed = buttons & mouse.button_mask && (
-					(flags & IM_MOUSE_PRESS_INSIDE) == false || (flags & IM_MOUSE_PRESS_INSIDE && mouse.press_target_id == id)
-				);
-			}
-
-			/*
-			 * A click is detected either when mouse button is first pressed down,
-			 * or when it's released, depending on the option.
-			 */
-			if (flags & IM_MOUSE_CLICK_ON_PRESS) {
-				im_mouse_button_t result;
-				if (mouse.click_state == BEGAN && (result = buttons & mouse.button_mask)) {
-					return result;
-				}
-			} else {
-				im_mouse_button_t result;
-				if ((mouse.click_state == ENDED || (mouse.click_state == FAILED && !(flags & IM_MOUSE_CLICK_EXPIRE))) && (result = buttons & mouse.last_button)) {
-					return result;
-				}
-			}
-
-			return 0;
-		}
-	}
-#endif
-}
-
 
 // V2
 

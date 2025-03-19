@@ -200,9 +200,9 @@ typedef struct frame_stack_element_t {
   bool _clipped;
   im_scroll_state_t *_scroll_state;
 	unsigned int _id_counter;
-	struct {
-		bool hovered, clicked;
-	} _input_state;
+	/*struct {
+		bool hovered;
+	} _input_state;*/
 } frame_stack_element_t;
 
 DECLARE_STACK(frame_stack_element_t);
@@ -264,15 +264,20 @@ void im_next_id(IMGUIID);
 
 unsigned int im_depth();
 
-IM_INLINE bool im_hovered() {
-	return im_current_element()->_input_state.hovered;
-}
+bool im_hovered();
 
 typedef enum {
 	CASEFLAG(0, IM_MOUSE_PRESS_INSIDE)
-} im_pressed_options_t;
+} im_press_options_t;
 
-bool im_pressed(const im_mouse_button_t, const im_pressed_options_t);
+im_mouse_button_t im_pressed(const im_mouse_button_t, const im_press_options_t);
+
+typedef enum {
+	CASEFLAG(0, IM_CLICK_ON_BUTTON_DOWN),
+	CASEFLAG(1, IM_CLICK_EXPIRE)
+} im_click_options_t;
+
+im_mouse_button_t im_clicked(const im_mouse_button_t, const im_click_options_t);
 
 // Fills current frame with selected fill style
 void imgui_fill_panel(const int, const short);

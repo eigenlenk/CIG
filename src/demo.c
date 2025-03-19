@@ -4,13 +4,13 @@
 static int ticks = 0;
 
 void demo_ui(BITMAP *buffer) {
-	static int grid_demo = 0, grid_demo_cycler;
+	static int grid_demo = 0;
 	static int autoscroll_direction = 1;
 	
-	if (grid_demo_cycler++ > 80) {
+	/*if (grid_demo_cycler++ > 80) {
 		grid_demo_cycler = 0;
 		grid_demo = (grid_demo + 1) % 4;
-	}
+	}*/
 	
   im_begin_layout(buffer, frame_make(0, 0, SCREEN_W, SCREEN_H));
 	
@@ -207,7 +207,10 @@ void demo_ui(BITMAP *buffer) {
 	/* Some sort of a floating footer on top of the content */
 	{
 		im_push_frame(frame_make(100, IM_B - 110, 440, 60));
-		if (im_pressed(IM_MOUSE_BUTTON_ANY, IM_MOUSE_PRESS_INSIDE)) {
+		if (im_clicked(IM_MOUSE_BUTTON_ANY, 0)) {
+			grid_demo = (grid_demo + 1) % 4;
+			im_fill_color(50);
+		} else if (im_pressed(IM_MOUSE_BUTTON_ANY, IM_MOUSE_PRESS_INSIDE)) {
 			im_fill_color(9);
 		} else if (im_hovered()) {
 			im_fill_color(10);
