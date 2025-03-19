@@ -45,6 +45,22 @@ TEST(layout, push_pop) {
 	TEST_ASSERT_EQUAL(im_depth(), 1); /* Just the root again */
 }
 
+TEST(layout, limits) {
+	/* We can insert a total of 2 elements into this one. Further push_frame calls will return FALSE */
+	im_push_frame_insets_params(IM_FILL, insets_zero(), (im_layout_params_t) {
+    0,
+    .limit.total = 2,
+    .options = IM_DEFAULT_LAYOUT_FLAGS
+  });
+	
+	if (im_push_frame(IM_FILL)) { im_pop_frame(); }
+	if (im_push_frame(IM_FILL)) { im_pop_frame(); }
+	
+	if (im_push_frame(IM_FILL)) { TEST_FAIL_MESSAGE("Limit exceeded"); }
+	
+	im_pop_frame();
+}
+
 TEST(layout, insets) {
 	/* We are changing root frame insets directly. Insets only apply to the children */
 	im_current_element()->insets = insets_uniform(10);
@@ -182,6 +198,7 @@ TEST(layout, vstack_layout) {
     0,
     .axis = VERTICAL,
     .spacing = 10,
+		.limit.vertical = 2,
     .options = IM_DEFAULT_LAYOUT_FLAGS
   })) {
 		TEST_FAIL_MESSAGE("Unable to add layout builder frame");
@@ -197,6 +214,8 @@ TEST(layout, vstack_layout) {
 	im_pop_frame();
 	
 	TEST_ASSERT_EQUAL_INT(170, im_current_element()->_layout_params._vertical_position);
+	
+	if (im_push_frame(IM_FILL)) { TEST_FAIL_MESSAGE("Vertical limit exceeded"); }
 	
 	im_pop_frame(); /* Not really necessary in testing, but.. */
 }
@@ -325,7 +344,7 @@ TEST(layout, grid_with_varying_cell_size) {
 	if (!im_push_frame_builder(IM_FILL, insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
     0,
     .axis = HORIZONTAL | VERTICAL,
-		// .columns = 3,
+		.limit.horizontal = 3,
     .options = IM_DEFAULT_LAYOUT_FLAGS
   })) {
 		TEST_FAIL_MESSAGE("Unable to add layout builder frame");
@@ -351,18 +370,18 @@ TEST(layout, grid_with_varying_cell_size) {
 	TEST_ASSERT_EQUAL_INT(600, im_current_element()->_layout_params._horizontal_position);
 	
 	/*
-	Let's try to insert another cell that should fit width-wise,
-	but the grid would exceed the number of columns we set, so it's
-	pushed onto the next row.
+	Let's try to insert another cell that should fit width wise,
+	but the grid would exceed the number of horizontal elements,
+	so it's pushed onto the next row.
 	*/
-	// im_push_frame(frame_make(0, 0, 40, 160));
-	// TEST_ASSERT_EQUAL_INT(0, 		im_current_element()->frame.x);
-	// TEST_ASSERT_EQUAL_INT(160, 	im_current_element()->frame.y);
-	// im_pop_frame();
+	im_push_frame(frame_make(0, 0, 40, 160));
+	TEST_ASSERT_EQUAL_INT(0, 		im_current_element()->frame.x);
+	TEST_ASSERT_EQUAL_INT(160, 	im_current_element()->frame.y);
+	im_pop_frame();
 	
 	/* This one should be inserted normally onto the second row */
 	im_push_frame(frame_make(0, 0, 400, 160)); /* (5) */
-	TEST_ASSERT_EQUAL_INT(0, 		im_current_element()->frame.x);
+	TEST_ASSERT_EQUAL_INT(40, 	im_current_element()->frame.x);
 	TEST_ASSERT_EQUAL_INT(160,	im_current_element()->frame.y);
 	im_pop_frame();
 	
@@ -458,6 +477,7 @@ TEST(layout, grid_with_down_direction) {
 TEST_GROUP_RUNNER(layout) {
   RUN_TEST_CASE(layout, basic_check);
   RUN_TEST_CASE(layout, push_pop);
+  RUN_TEST_CASE(layout, limits);
   RUN_TEST_CASE(layout, insets);
   RUN_TEST_CASE(layout, overlay);
   RUN_TEST_CASE(layout, culling);

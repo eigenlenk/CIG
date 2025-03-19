@@ -175,7 +175,7 @@ typedef struct im_layout_params_t {
 	int _horizontal_position, _vertical_position, _h_size, _v_size;
 	struct {
 		int h_cur, v_cur, total; /* h_ and v_cur are only counted in stacks/grids */
-	} count;
+	} _count;
 } im_layout_params_t;
 
 typedef struct im_scroll_state_t {
@@ -189,7 +189,7 @@ typedef struct frame_stack_element_t {
 	frame_t absolute_frame;
   insets_t insets;
 	/* Private. Keep out! */
-	frame_t (*_layout_function)(const frame_t, const frame_t, im_layout_params_t *);
+	bool (*_layout_function)(const frame_t, const frame_t, im_layout_params_t *, frame_t *);
 	im_layout_params_t _layout_params;
   bool _clipped;
   im_scroll_state_t *_scroll_state;
@@ -370,27 +370,29 @@ bool im_push_frame(const frame_t);
  * @return TRUE if frame is visible within current container, FALSE otherwise. */
 bool im_push_frame_insets(const frame_t frame, const insets_t insets);
 
+/* Push a new frame with custom insets and params to layout stack.
+ * @return TRUE if frame is visible within current container, FALSE otherwise. */
+bool im_push_frame_insets_params(const frame_t frame, const insets_t insets, const im_layout_params_t);
+
 /* Push layout builder function to layout stack.
  * @return TRUE if frame is visible within current container, FALSE otherwise. */
 bool im_push_frame_builder(
 	const frame_t frame,
 	const insets_t insets,
-	frame_t (*layout_function)(
+	bool (*layout_function)(
 		const frame_t,
 		const frame_t,
-		im_layout_params_t*
+		im_layout_params_t *,
+		frame_t *
 	),
 	im_layout_params_t
 );
 
-/*
- * Simple horizontal, vertical (or both) stack that lays out subframes
- * in linear order.
- */
-frame_t im_stack_layout_builder(
+bool im_stack_layout_builder(
 	const frame_t container,
 	const frame_t frame,
-	im_layout_params_t *params
+	im_layout_params_t *params,
+	frame_t *result
 );
 
 void im_enable_scroll(im_scroll_state_t *);

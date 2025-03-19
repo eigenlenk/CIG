@@ -277,18 +277,21 @@ FASTFUNC frame_t frame_resolve_size(
 	);
 }
 
-FASTFUNC frame_t next_layout_frame(
+FASTFUNC bool next_layout_frame(
 	const frame_t proposed_frame,
-	frame_stack_element_t *top_element
+	frame_stack_element_t *top_element,
+	frame_t *result
 ) {
 	if (top_element->_layout_function) {
 		return (*top_element->_layout_function)(
       frame_inset(top_element->frame, top_element->insets),
       proposed_frame,
-      &top_element->_layout_params
+      &top_element->_layout_params,
+			result
     );
 	} else {
-		return frame_resolve_size(proposed_frame, top_element);
+		*result = frame_resolve_size(proposed_frame, top_element);
+		return true;
 	}
 }
 
@@ -297,11 +300,20 @@ FASTFUNC frame_t next_layout_frame(
 FASTFUNC bool _im_push_frame(
 	const frame_t frame,
 	const insets_t insets,
-	frame_t (*layout_function)(const frame_t, const frame_t, im_layout_params_t *),
+	bool (*layout_function)(const frame_t, const frame_t, im_layout_params_t *, frame_t *),
 	im_layout_params_t params
 ) {
 	frame_stack_element_t *top = &STACK_TOP(im_frame_stack());
-	frame_t next = next_layout_frame(frame, top);
+	
+	if (top->_layout_params.limit.total > 0 && top->_layout_params._count.total == top->_layout_params.limit.total) {
+		return false;
+	}
+	
+	frame_t next;
+	if (!next_layout_frame(frame, top, &next)) {
+		return false;
+	}
+	
   const IMGUIID next_id = im_frame_identity(next);
 
   if (top->_scroll_state) {
@@ -314,6 +326,8 @@ FASTFUNC bool _im_push_frame(
 		&& !frame_intersects(top->frame, frame_offset(next, top->frame.x+top->insets.left, top->frame.y+top->insets.top))) {
 		return false;
 	}
+
+	top->_layout_params._count.total ++;
 
 	STACK_PUSH(im_frame_stack(), ((frame_stack_element_t) {
 		.id = top->id + next_id,
@@ -345,10 +359,18 @@ bool im_push_frame_insets(
 	return _im_push_frame(frame, insets, NULL, (im_layout_params_t){ 0, .options = IM_DEFAULT_LAYOUT_FLAGS });
 }
 
+bool im_push_frame_insets_params(
+	const frame_t frame,
+	const insets_t insets,
+	const im_layout_params_t params
+) {
+	return _im_push_frame(frame, insets, NULL, params);
+}
+
 bool im_push_frame_builder(
 	const frame_t frame,
 	const insets_t insets,
-	frame_t (*layout_function)(const frame_t, const frame_t, im_layout_params_t *),
+	bool (*layout_function)(const frame_t, const frame_t, im_layout_params_t *, frame_t *),
 	im_layout_params_t params
 ) {
 	return _im_push_frame(frame, insets, layout_function, params);
@@ -724,210 +746,152 @@ ALWAYS_INLINED void im_insert_spacer(const int size) {
 * Layout functions and convenience elements related to that.
 */
 
-frame_t im_stack_layout_builder(
+bool im_stack_layout_builder(
 	/* Frame into which sub-frames are laid out */
 	const frame_t container,
 	/* Proposed sub-frame, generally from IM_FILL */
 	const frame_t frame,
-	im_layout_params_t *params
+	im_layout_params_t *prm,
+	frame_t *result
 ) {
-	const bool h_axis = params->axis & HORIZONTAL;
-	const bool v_axis = params->axis & VERTICAL;
+	const bool h_axis = prm->axis & HORIZONTAL;
+	const bool v_axis = prm->axis & VERTICAL;
 	const bool is_grid = h_axis && v_axis;
 	
-	int x = params->_horizontal_position, y = params->_vertical_position, w, h;
+	int x = prm->_horizontal_position, y = prm->_vertical_position, w, h;
 
 	int resolve_width() {
 		return frame.w == IM_FILL_CONSTANT
-			? container.w - params->_horizontal_position
+			? container.w - prm->_horizontal_position
 			: frame.w;
 	}
 	
 	int resolve_height() {
 		return frame.h == IM_FILL_CONSTANT
-			? container.h - params->_vertical_position
+			? container.h - prm->_vertical_position
 			: frame.h;
 	}
 	
 	void move_to_next_row() {
-		params->_horizontal_position = 0;
-		params->_vertical_position += (params->_v_size + params->spacing);
-		params->_h_size = IM_FILL_CONSTANT;
-		params->_v_size = IM_FILL_CONSTANT;
+		prm->_horizontal_position = 0;
+		prm->_vertical_position += (prm->_v_size + prm->spacing);
+		prm->_h_size = IM_FILL_CONSTANT;
+		prm->_v_size = IM_FILL_CONSTANT;
+		prm->_count.h_cur = 0;
 	}
 	
 	void move_to_next_column() {
-		params->_vertical_position = 0;
-		params->_horizontal_position += (params->_h_size + params->spacing);
-		params->_h_size = IM_FILL_CONSTANT;
-		params->_v_size = IM_FILL_CONSTANT;
+		prm->_vertical_position = 0;
+		prm->_horizontal_position += (prm->_h_size + prm->spacing);
+		prm->_h_size = IM_FILL_CONSTANT;
+		prm->_v_size = IM_FILL_CONSTANT;
+		prm->_count.v_cur = 0;
 	}
 	
 	if (h_axis) {
 		if (frame.w == IM_FILL_CONSTANT) {
-			if (params->width > 0) {
-				w = params->width;
-			} else if (params->columns) {
-				w = (container.w - ((params->columns - 1) * params->spacing)) / params->columns;
-			} else if (params->_h_size && params->direction == DIR_DOWN) {
-				w = params->_h_size;
+			if (prm->width > 0) {
+				w = prm->width;
+			} else if (prm->columns) {
+				w = (container.w - ((prm->columns - 1) * prm->spacing)) / prm->columns;
+			} else if (prm->_h_size && prm->direction == DIR_DOWN) {
+				w = prm->_h_size;
 			}	else {
-				w = container.w - params->_horizontal_position;
+				w = container.w - prm->_horizontal_position;
 			}
 		} else {
 			w = frame.w;
 		}
 	} else {
 		w = frame.w == IM_FILL_CONSTANT
-			? container.w - params->_horizontal_position
-			: frame.w;;
+			? container.w - prm->_horizontal_position
+			: frame.w;
 		
 		/* Reset any remaining horizontal positioning in case we modify axis mid-layout */
-		params->_horizontal_position = 0;
-		params->_h_size = IM_FILL_CONSTANT;
+		prm->_horizontal_position = 0;
+		prm->_h_size = IM_FILL_CONSTANT;
 	}
 	
 	if (v_axis) {
 		if (frame.h == IM_FILL_CONSTANT) {
-			if (params->height > 0) {
-				h = params->height;
-			} else if (params->rows) {
-				h = (container.h - ((params->rows - 1) * params->spacing)) / params->rows;
-			} else if (params->_v_size && params->direction == DIR_LEFT) {
-				h = params->_v_size;
+			if (prm->height > 0) {
+				h = prm->height;
+			} else if (prm->rows) {
+				h = (container.h - ((prm->rows - 1) * prm->spacing)) / prm->rows;
+			} else if (prm->_v_size && prm->direction == DIR_LEFT) {
+				h = prm->_v_size;
 			}	else {
-				h = container.h - params->_vertical_position;
+				h = container.h - prm->_vertical_position;
 			}
 		} else {
 			h = frame.h;
 		}
 	} else {
 		h = frame.h == IM_FILL_CONSTANT
-			? container.h - params->_vertical_position
+			? container.h - prm->_vertical_position
 			: frame.h;
 		
 		/* Reset any remaining vertical positioning in case we modify axis mid-layout */
-		params->_vertical_position = 0;
-		params->_v_size = IM_FILL_CONSTANT;
+		prm->_vertical_position = 0;
+		prm->_v_size = IM_FILL_CONSTANT;
 	}
 	
 	if (h_axis && v_axis) {
 		/* Can we fit the new frame onto current axis? */
-		switch (params->direction) {
+		switch (prm->direction) {
 			case DIR_LEFT: {
-				if (params->_horizontal_position + w > container.w) {
+				if ((prm->limit.horizontal && prm->_count.h_cur == prm->limit.horizontal) || prm->_horizontal_position + w > container.w) {
 					move_to_next_row();
 					x = 0;
-					y = params->_vertical_position;
+					y = prm->_vertical_position;
 				}
 				
-				params->_horizontal_position += (w + params->spacing);
+				prm->_horizontal_position += (w + prm->spacing);
+				prm->_h_size = MAX(prm->_h_size, w);
+				prm->_v_size = MAX(prm->_v_size, h);
+				prm->_count.h_cur ++;
 				
-				params->_h_size = MAX(params->_h_size, w);
-				params->_v_size = MAX(params->_v_size, h);
-				
-				if (params->_horizontal_position >= container.w) {
+				if (prm->_horizontal_position >= container.w) {
 					move_to_next_row();
 				}
 			} break;
 			case DIR_DOWN: {
-				if (params->_vertical_position + h > container.h) {
+				if ((prm->limit.vertical && prm->_count.v_cur == prm->limit.vertical) || prm->_vertical_position + h > container.h) {
 					move_to_next_column();
 					y = 0;
-					x = params->_horizontal_position;
+					x = prm->_horizontal_position;
 				}
 				
-				params->_vertical_position += (h + params->spacing);
+				prm->_vertical_position += (h + prm->spacing);
+				prm->_h_size = MAX(prm->_h_size, w);
+				prm->_v_size = MAX(prm->_v_size, h);
+				prm->_count.v_cur ++;
 				
-				params->_h_size = MAX(params->_h_size, w);
-				params->_v_size = MAX(params->_v_size, h);
-				
-				if (params->_vertical_position >= container.h) {
+				if (prm->_vertical_position >= container.h) {
 					move_to_next_column();
 				}
 			} break;
 			default: break;
 		}
 	} else if (h_axis) {
-		params->_horizontal_position += (w + params->spacing);
-		params->_h_size = MAX(params->_h_size, w);
+		if (prm->limit.horizontal && prm->_count.h_cur == prm->limit.horizontal) {
+			return false;
+		}
+		prm->_horizontal_position += (w + prm->spacing);
+		prm->_h_size = MAX(prm->_h_size, w);
+		prm->_count.h_cur ++;
 	} else if (v_axis) {
-		params->_vertical_position += (h + params->spacing);
-		params->_v_size = MAX(params->_v_size, h);
-	}
-
-	params->count.total ++;
-	
-	return frame_make(x, y, w, h);
-	
-#ifdef OLD12345
-	
-	frame_t result = frame_make(
-		params->_horizontal_position,
-		params->_vertical_position,
-		frame.w == IM_FILL_CONSTANT
-			? params->_h_size == IM_FILL_CONSTANT
-				? container.w - params->_horizontal_position
-				: container.w - params->_h_size
-			: frame.w,
-		frame.h == IM_FILL_CONSTANT
-			? params->_v_size == IM_FILL_CONSTANT
-				? container.h - params->_vertical_position
-				: params->_v_size
-			: frame.h
-	);
-
-	if (h_axis) {
-		if (params->width > 0) {
-			result.w = params->width;
-		} else if (params->columns) {
-			result.w = (container.w - ((params->columns - 1) * params->spacing)) / params->columns;
-		} else if (frame.w > 0) {
-			result.w = frame.w;
+		if (prm->limit.vertical && prm->_count.v_cur == prm->limit.vertical) {
+			return false;
 		}
-		params->_h_size = MAX(params->_h_size, result.w);
-	} else {
-		/* Reset any remaining horizontal positioning in case we modify axis mid-layout */
-		params->_horizontal_position = 0;
-		params->_h_size = IM_FILL_CONSTANT;
+		prm->_vertical_position += (h + prm->spacing);
+		prm->_v_size = MAX(prm->_v_size, h);
+		prm->_count.v_cur ++;
 	}
 
-	if (v_axis) {
-		if (params->height > 0) {
-			result.h = params->height;
-		} else if (params->rows) {
-			result.h = (container.h - ((params->rows - 1) * params->spacing)) / params->rows;
-		} else if (frame.h > 0) {
-			result.h = frame.h;
-		}
-		params->_v_size = MAX(params->_v_size, result.h);
-	}
-
-	if (h_axis && v_axis) {
-		// IM_PRINT("(%d) H: %d, V: %d | W: %d", params->_count, params->_horizontal_position, params->_vertical_position, container.w);
-		if (params->_horizontal_position + result.w > container.w) {
-			params->_h_size = params->_horizontal_position = (result.w + params->spacing);
-			params->_vertical_position += (result.h + params->spacing);
-			result.x = 0;
-			result.y = params->_vertical_position;
-		} else {
-			params->_horizontal_position += (result.w + params->spacing);
-			if (params->_horizontal_position >= container.w) {
-				params->_h_size = IM_FILL_CONSTANT;
-				params->_horizontal_position = 0;
-				params->_vertical_position += (result.h + params->spacing);
-			}
-		}
-	} else if (h_axis) {
-		params->_horizontal_position += (result.w + params->spacing);
-	} else if (v_axis) {
-		params->_vertical_position += (result.h + params->spacing);
-	}
-
-	params->_count ++;
-
-  return result;
-#endif
+	*result = frame_make(x, y, w, h);
+	
+	return true;
 }
 
 /*
