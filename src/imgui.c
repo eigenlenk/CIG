@@ -461,6 +461,25 @@ unsigned int im_depth() {
 	return STACK_SIZE(im_frame_stack());
 }
 
+bool im_pressed(
+	const im_mouse_button_t buttons,
+	const im_pressed_options_t options
+) {
+	if (!im_current_element()->_input_state.hovered) {
+		return false;
+	}
+	
+	/*
+	If `IM_MOUSE_PRESS_INSIDE` option is specified, the press has start
+	within the bounds of this element. Otherwise it can start
+	outside and element reflects pressed state as soon as mouse
+	moves onto it.
+	*/
+	return buttons & mouse.button_mask && (
+		(options & IM_MOUSE_PRESS_INSIDE) == false || (options & IM_MOUSE_PRESS_INSIDE && mouse.press_target_id == im_current_element()->id)
+	);
+}
+
 // ------
 
 void imgui_fill_panel( const int style, const short flags) {
@@ -592,7 +611,6 @@ static void handle_element_interaction(frame_stack_element_t *element) {
 		}
 	} else {
 		element->_input_state.hovered = false;
-		element->_input_state.pressed = false;
 	}
 	
 #ifdef OLDM
@@ -697,6 +715,7 @@ im_mouse_button_t im_mouse_listener(
 	bool *pressed,
 	vec2 *mouse_position
 ) {
+#ifdef OLD
 	/* Convert relative frame to screen space */
 	const frame_t screen_frame = (flags & IM_MOUSE_NO_CONVERT)
 		? frame
@@ -756,6 +775,7 @@ im_mouse_button_t im_mouse_listener(
 
 	if (hovered) { *hovered = false; }
 	if (pressed) { *pressed = false; }
+#endif
 
 	return 0;
 }

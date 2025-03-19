@@ -152,6 +152,12 @@ typedef enum {
 	IM_DEFAULT_LAYOUT_FLAGS = IM_CULL_SUBFRAMES
 } im_layout_options_t;
 
+typedef enum {
+	CASEFLAG(0, IM_MOUSE_BUTTON_LEFT),
+	CASEFLAG(1, IM_MOUSE_BUTTON_RIGHT),
+	IM_MOUSE_BUTTON_ANY = IM_MOUSE_BUTTON_LEFT | IM_MOUSE_BUTTON_RIGHT
+} im_mouse_button_t;
+
 /*
  * Type containing parameters passed to layout function.
  */
@@ -195,7 +201,7 @@ typedef struct frame_stack_element_t {
   im_scroll_state_t *_scroll_state;
 	unsigned int _id_counter;
 	struct {
-		bool hovered, pressed, clicked;
+		bool hovered, clicked;
 	} _input_state;
 } frame_stack_element_t;
 
@@ -262,6 +268,12 @@ IM_INLINE bool im_hovered() {
 	return im_current_element()->_input_state.hovered;
 }
 
+typedef enum {
+	CASEFLAG(0, IM_MOUSE_PRESS_INSIDE)
+} im_pressed_options_t;
+
+bool im_pressed(const im_mouse_button_t, const im_pressed_options_t);
+
 // Fills current frame with selected fill style
 void imgui_fill_panel(const int, const short);
 void im_fill_color(im_color_ref);
@@ -325,16 +337,11 @@ typedef struct {
 } im_mouse_result_t;
 
 typedef enum {
-	BITFLAG(0, IM_MOUSE_PRESS_INSIDE),
+	BITFLAG(0, _IM_MOUSE_PRESS_INSIDE),
 	BITFLAG(1, IM_MOUSE_CLICK_ON_PRESS),
 	BITFLAG(2, IM_MOUSE_NO_CONVERT),
 	BITFLAG(3, IM_MOUSE_CLICK_EXPIRE)
 } im_mouse_listener_option_t;
-
-typedef enum {
-	BITFLAG(0, IM_MOUSE_BUTTON_LEFT),
-	BITFLAG(1, IM_MOUSE_BUTTON_RIGHT)
-} im_mouse_button_t;
 
 im_mouse_button_t im_mouse_listener(
 	IMGUIID id,
