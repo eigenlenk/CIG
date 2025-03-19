@@ -3,25 +3,25 @@
 #include "imgui.h"
 #include "asserts.h"
 
-TEST_GROUP(layout);
+TEST_GROUP(core_layout);
 
-TEST_SETUP(layout) {
+TEST_SETUP(core_layout) {
 	/* Begin laying out a screen that's 640 by 480 */
 	im_begin_layout(NULL, frame_make(0, 0, 640, 480));
 }
 
-TEST_TEAR_DOWN(layout) {
+TEST_TEAR_DOWN(core_layout) {
 	im_end_layout();
 }
 
 /* (( TEST CASES )) */
 
-TEST(layout, basic_check) {
+TEST(core_layout, basic_check) {
 	/* Nothing really to test here, just checking nothing crashes =) */
 	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 640, 480), im_current_element()->frame);
 }
 
-TEST(layout, push_pop) {
+TEST(core_layout, push_pop) {
 	TEST_ASSERT_EQUAL(im_depth(), 1); /* Just the root */
 	
 	im_push_frame(IM_FILL);
@@ -45,7 +45,7 @@ TEST(layout, push_pop) {
 	TEST_ASSERT_EQUAL(im_depth(), 1); /* Just the root again */
 }
 
-TEST(layout, identifiers) {
+TEST(core_layout, identifiers) {
 	register int a, b, c, d;
 	struct {
 		int n;
@@ -106,7 +106,7 @@ TEST(layout, identifiers) {
 	TEST_ASSERT_EQUAL_UINT32(333l, im_current_element()->id);
 }
 
-TEST(layout, limits) {
+TEST(core_layout, limits) {
 	/* We can insert a total of 2 elements into this one. Further push_frame calls will return FALSE */
 	im_push_frame_insets_params(IM_FILL, insets_zero(), (im_layout_params_t) {
     0,
@@ -122,7 +122,7 @@ TEST(layout, limits) {
 	im_pop_frame();
 }
 
-TEST(layout, insets) {
+TEST(core_layout, insets) {
 	/* We are changing root frame insets directly. Insets only apply to the children */
 	im_current_element()->insets = insets_uniform(10);
 	
@@ -175,7 +175,7 @@ TEST(layout, insets) {
 	*/
 }
 
-TEST(layout, overlay) {
+TEST(core_layout, overlay) {
 	/* Frames don't have to be nested to be overlap or appear to be contained */
 	
 	/*
@@ -218,7 +218,7 @@ TEST(layout, overlay) {
 	*/
 }
 
-TEST(layout, culling) {
+TEST(core_layout, culling) {
 	/*
 	Frames that are wholly outside of visible area are not added.
 	`im_push_frame_*` functions return a BOOL for that. If the frame
@@ -253,7 +253,7 @@ TEST(layout, culling) {
 	}
 }
 
-TEST(layout, vstack_layout) {
+TEST(core_layout, vstack_layout) {
 	/* Pushing a stack that lays out frames vertically with a 10pt spacing */
 	if (!im_push_frame_builder(IM_FILL, insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
     0,
@@ -281,7 +281,7 @@ TEST(layout, vstack_layout) {
 	im_pop_frame(); /* Not really necessary in testing, but.. */
 }
 
-TEST(layout, hstack_layout) {
+TEST(core_layout, hstack_layout) {
 	/* Pushing a stack that lays out frames horizontally with no spacing, but everything is inset by 10pt */
 	if (!im_push_frame_builder(IM_FILL, insets_uniform(10), &im_stack_layout_builder, (im_layout_params_t) {
     0,
@@ -313,7 +313,7 @@ TEST(layout, hstack_layout) {
 	  Then the position moves to the next row/column.
 */
 
-TEST(layout, grid_with_fixed_rows_and_columns) {
+TEST(core_layout, grid_with_fixed_rows_and_columns) {
 	/*
 	We are specifying a number of rows and columns - this will tell
 	how large each child needs to be by default (we *can* override).
@@ -344,7 +344,7 @@ TEST(layout, grid_with_fixed_rows_and_columns) {
 	TEST_ASSERT_EQUAL_INT(480, im_current_element()->_layout_params._vertical_position);
 }
 
-TEST(layout, grid_with_fixed_cell_size) {
+TEST(core_layout, grid_with_fixed_cell_size) {
 	/*
 	Here we are defining a grid where each cell's width and height is fixed.
 	If columns and rows are not set, there will be as many cells horizontally
@@ -395,7 +395,7 @@ TEST(layout, grid_with_fixed_cell_size) {
 	TEST_ASSERT_EQUAL_INT(200, im_current_element()->_layout_params._vertical_position);
 }
 
-TEST(layout, grid_with_varying_cell_size) {
+TEST(core_layout, grid_with_varying_cell_size) {
 	/*
 	Third option is to specify a size for each of the cells at insertion time.
 	Then, again depending on the remaining space, cell will be inserted into the
@@ -471,7 +471,7 @@ TEST(layout, grid_with_varying_cell_size) {
 	*/
 }
 
-TEST(layout, grid_with_down_direction) {
+TEST(core_layout, grid_with_down_direction) {
 	/*
 	Grids support horizontal (default) and vertical layout direction. In vertical mode,
 	instead of filling and adding rows, columns are filled and added instead. Otherwise
@@ -535,18 +535,18 @@ TEST(layout, grid_with_down_direction) {
 	*/
 }
 
-TEST_GROUP_RUNNER(layout) {
-  RUN_TEST_CASE(layout, basic_check);
-  RUN_TEST_CASE(layout, push_pop);
-  RUN_TEST_CASE(layout, identifiers);
-  RUN_TEST_CASE(layout, limits);
-  RUN_TEST_CASE(layout, insets);
-  RUN_TEST_CASE(layout, overlay);
-  RUN_TEST_CASE(layout, culling);
-  RUN_TEST_CASE(layout, vstack_layout);
-  RUN_TEST_CASE(layout, hstack_layout);
-  RUN_TEST_CASE(layout, grid_with_fixed_rows_and_columns);
-  RUN_TEST_CASE(layout, grid_with_fixed_cell_size);
-  RUN_TEST_CASE(layout, grid_with_varying_cell_size);
-  RUN_TEST_CASE(layout, grid_with_down_direction);
+TEST_GROUP_RUNNER(core_layout) {
+  RUN_TEST_CASE(core_layout, basic_check);
+  RUN_TEST_CASE(core_layout, push_pop);
+  RUN_TEST_CASE(core_layout, identifiers);
+  RUN_TEST_CASE(core_layout, limits);
+  RUN_TEST_CASE(core_layout, insets);
+  RUN_TEST_CASE(core_layout, overlay);
+  RUN_TEST_CASE(core_layout, culling);
+  RUN_TEST_CASE(core_layout, vstack_layout);
+  RUN_TEST_CASE(core_layout, hstack_layout);
+  RUN_TEST_CASE(core_layout, grid_with_fixed_rows_and_columns);
+  RUN_TEST_CASE(core_layout, grid_with_fixed_cell_size);
+  RUN_TEST_CASE(core_layout, grid_with_varying_cell_size);
+  RUN_TEST_CASE(core_layout, grid_with_down_direction);
 }

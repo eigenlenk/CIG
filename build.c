@@ -35,7 +35,8 @@ int main(int argc, char **argv)
 			DEPS_FOLDER"unity/extras/fixture/src/fixture.c",
 			SRC_FOLDER"imgui.c",
 			TESTS_FOLDER"main.c",
-			TESTS_FOLDER"layout.c",
+			TESTS_FOLDER"core/layout.c",
+			TESTS_FOLDER"core/input.c",
 			TESTS_FOLDER"types/frame.c",
 		);
 		
