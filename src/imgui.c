@@ -64,6 +64,7 @@ static struct {
 	bool any_consumer;
 } keyboard = { 0 };
 
+static IMGUIID next_id = 0;
 static unsigned int tick = 0, caret_tick = 0;
 static im_font_ref default_font = NULL;
 
@@ -255,6 +256,7 @@ void imgui_reset_internal_state() {
 	mouse.target_this_frame = 0;
 	mouse.drag.active = false;
   tick = 0;
+	next_id = 0;
 }
 
 im_buffer_ref imgui_get_buffer() {
@@ -311,11 +313,10 @@ FASTFUNC bool _im_push_frame(
 	
 	frame_t next;
 	if (!next_layout_frame(frame, top, &next)) {
+		top->_id_counter ++;
 		return false;
 	}
 	
-  const IMGUIID next_id = im_frame_identity(next);
-
   if (top->_scroll_state) {
     next = frame_offset(next, -top->_scroll_state->offset.x, -top->_scroll_state->offset.y);
 		top->_scroll_state->content_size.x = MAX(top->_scroll_state->content_size.x, next.x + next.w);
@@ -324,13 +325,14 @@ FASTFUNC bool _im_push_frame(
 
 	if (top->_layout_params.options & IM_CULL_SUBFRAMES
 		&& !frame_intersects(top->frame, frame_offset(next, top->frame.x+top->insets.left, top->frame.y+top->insets.top))) {
+		top->_id_counter ++;
 		return false;
 	}
 
 	top->_layout_params._count.total ++;
 
 	STACK_PUSH(im_frame_stack(), ((frame_stack_element_t) {
-		.id = top->id + next_id,
+		.id = next_id ? next_id : (top->id + (im_depth() << 16) + (++top->_id_counter) << 8),
 		.frame = next,
 		.absolute_frame = im_convert_relative_frame(next),
     .insets = insets,
@@ -339,6 +341,8 @@ FASTFUNC bool _im_push_frame(
     ._clipped = false,
     ._scroll_state = NULL
 	}));
+	
+	next_id = 0;
 
 #ifdef DEBUG
 	debug_info.total_frames ++;
@@ -438,6 +442,10 @@ frame_t im_convert_relative_frame(const frame_t frame) {
     f.y += frames->elements[i].frame.y + frames->elements[i].insets.top;
 	}
 	return f;
+}
+
+void im_next_id(IMGUIID id) {
+	next_id = id;
 }
 
 unsigned int im_depth() {
@@ -1001,13 +1009,15 @@ static void im_push_buffer(const im_buffer_ref buffer, const frame_t frame) {
 	STACK_INIT(&buffer_framestack.frames);
 	STACK_PUSH(&buffer_framestack.frames, ((frame_stack_element_t) {
 		0,
-		.id = im_frame_identity(frame),
+		.id = next_id ? next_id : (im_hash("buffer") + STACK_SIZE(&buffers) << 8),
 		.frame = frame,
 		.absolute_frame = frame,
 		.insets = insets_zero(),
 		._layout_function = NULL,
 		._layout_params = (im_layout_params_t){ 0, .options = IM_DEFAULT_LAYOUT_FLAGS }
 	}));
+	
+	next_id = 0;
 	
 	STACK_PUSH(&buffers, buffer_framestack);
 }

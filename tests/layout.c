@@ -45,6 +45,65 @@ TEST(layout, push_pop) {
 	TEST_ASSERT_EQUAL(im_depth(), 1); /* Just the root again */
 }
 
+TEST(layout, identifiers) {
+	register int a, b, c;
+	struct {
+		int n;
+		IMGUIID recorded[2048];
+	} ids = { 0 };
+	
+	bool assert_unique(const IMGUIID id) {
+		register int i;
+		for (i = 0; i < ids.n; ++i) {
+			if (ids.recorded[i] == id) {
+				TEST_PRINTF("ID %lu is not unique!", id);
+				TEST_FAIL();
+				break;
+			}
+		}
+	}
+	
+	TEST_ASSERT_EQUAL_UINT32(4151533312l, im_current_element()->id);
+	
+	const int n0 = 15;
+	
+	for (a = 0; a < n0; ++a) {
+		if (im_push_frame(IM_FILL)) {
+			assert_unique(im_current_element()->id);
+			ids.recorded[ids.n++] = im_current_element()->id;
+			
+			const int n1 = 10;
+			
+			for (b = 0; b < n1; ++b) {
+				if (im_push_frame(IM_FILL)) {
+					assert_unique(im_current_element()->id);
+					ids.recorded[ids.n++] = im_current_element()->id;
+					
+					const int n2 = 5;
+					
+					for (c = 0; c < n2; ++c) {
+						if (im_push_frame(IM_FILL)) {
+							assert_unique(im_current_element()->id);
+							ids.recorded[ids.n++] = im_current_element()->id;
+							im_pop_frame();
+						}
+					}
+					
+					im_pop_frame();
+				}
+			}
+					
+			im_pop_frame();
+		}
+	}
+	
+	/* In special cases you can specify the next ID to be used */
+	im_next_id(333l);
+	im_push_frame(IM_FILL);
+	
+	TEST_ASSERT_EQUAL_UINT32(333l, im_current_element()->id);
+}
+
 TEST(layout, limits) {
 	/* We can insert a total of 2 elements into this one. Further push_frame calls will return FALSE */
 	im_push_frame_insets_params(IM_FILL, insets_zero(), (im_layout_params_t) {
@@ -477,6 +536,7 @@ TEST(layout, grid_with_down_direction) {
 TEST_GROUP_RUNNER(layout) {
   RUN_TEST_CASE(layout, basic_check);
   RUN_TEST_CASE(layout, push_pop);
+  RUN_TEST_CASE(layout, identifiers);
   RUN_TEST_CASE(layout, limits);
   RUN_TEST_CASE(layout, insets);
   RUN_TEST_CASE(layout, overlay);

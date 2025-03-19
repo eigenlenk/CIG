@@ -193,6 +193,7 @@ typedef struct frame_stack_element_t {
 	im_layout_params_t _layout_params;
   bool _clipped;
   im_scroll_state_t *_scroll_state;
+	unsigned int _id_counter;
 } frame_stack_element_t;
 
 DECLARE_STACK(frame_stack_element_t);
@@ -248,6 +249,8 @@ frame_t imgui_root_frame();
 
 /* Convert a relative frame to an absolute frame */
 frame_t im_convert_relative_frame(const frame_t);
+
+void im_next_id(IMGUIID);
 
 unsigned int im_depth();
 
