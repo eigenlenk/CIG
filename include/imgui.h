@@ -15,14 +15,14 @@
 #define IM_FILL frame_make(0, 0, IM_FILL_CONSTANT, IM_FILL_CONSTANT)
 #define IM_FILL_W(W) frame_make(0, 0, W, IM_FILL_CONSTANT)
 #define IM_FILL_H(H) frame_make(0, 0, IM_FILL_CONSTANT, H)
-#define IM_W imgui_current_frame().w
-#define IM_H imgui_current_frame().h
-#define IM_X imgui_current_frame().x
-#define IM_Y imgui_current_frame().y
+#define IM_X im_current_element()->frame.x
+#define IM_Y im_current_element()->frame.y
+#define IM_W im_current_element()->frame.w
+#define IM_H im_current_element()->frame.h
 #define IM_CENTER_WH(W, H) frame_make((IM_W * 0.5) - (W * 0.5), (IM_H * 0.5) - (H * 0.5), W, H)
 #define IM_CENTER vec2_make((IM_W * 0.5), (IM_H * 0.5))
-#define IM_R (imgui_current_frame().x + imgui_current_frame().w)
-#define IM_B (imgui_current_frame().y + imgui_current_frame().h)
+#define IM_R (IM_X + IM_W)
+#define IM_B (IM_Y + IM_H)
 #define CIM_SCROLL_LIMIT_X im_current_element()->_scroll_state->content_size.x-im_current_element()->frame.w+im_current_element()->insets.left+im_current_element()->insets.right
 #define CIM_SCROLL_LIMIT_Y im_current_element()->_scroll_state->content_size.y-im_current_element()->frame.h+im_current_element()->insets.top+im_current_element()->insets.bottom
 
@@ -194,6 +194,9 @@ typedef struct frame_stack_element_t {
   bool _clipped;
   im_scroll_state_t *_scroll_state;
 	unsigned int _id_counter;
+	struct {
+		bool hovered, pressed, clicked;
+	} _input_state;
 } frame_stack_element_t;
 
 DECLARE_STACK(frame_stack_element_t);
@@ -224,12 +227,13 @@ typedef struct im_backend_configuration_t {
 
 void im_configure(const im_backend_configuration_t config);
 
-void imgui_prepare_resources();
-
 void im_begin_layout(const im_buffer_ref, const frame_t);
+
 void im_end_layout();
 
 void imgui_reset_internal_state();
+
+void im_set_input_state(const vec2, unsigned int);
 
 im_buffer_ref imgui_get_buffer();
 
@@ -253,6 +257,10 @@ frame_t im_convert_relative_frame(const frame_t);
 void im_next_id(IMGUIID);
 
 unsigned int im_depth();
+
+IM_INLINE bool im_hovered() {
+	return im_current_element()->_input_state.hovered;
+}
 
 // Fills current frame with selected fill style
 void imgui_fill_panel(const int, const short);

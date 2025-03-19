@@ -92,6 +92,7 @@ static im_scroll_state_t* im_scroll_state(const IMGUIID);
 static bool					im_state_record_value(im_state_t*, int);
 static IMGUIID 			im_frame_identity(const frame_t);
 static void 				cache_font(const im_font_ref);
+static void 				handle_element_interaction(frame_stack_element_t *);
 static void 				im_push_buffer(const im_buffer_ref, const frame_t);
 static void					im_pop_buffer();
 static void					im_blit_buffer(im_buffer_ref);
@@ -136,57 +137,6 @@ void im_begin_layout(const im_buffer_ref buffer, const frame_t frame) {
 	// im_push_value(IM_BUTTON_PRESSED_TEXT_COLOR, IM_VALUE_COLOR(COLOR_RED_DARK));
 	// im_push_value(IM_TEXT_COLOR, IM_VALUE_COLOR(COLOR_BLACK));
 	im_push_value(IM_FONT, IM_VALUE_REF(default_font));
-
-	if (mouse.locked_on_element == false) {
-		mouse.target_prev_frame = mouse.target_this_frame;
-		mouse.target_this_frame = 0;
-	}
-	
-	const im_mouse_button_t previous_button_mask = mouse.button_mask;
-
-	/*mouse.position = input_position();
-	mouse.button_mask = input_mouse_button_held(MOUSE_BUTTON_LEFT, NULL) ? IM_MOUSE_BUTTON_LEFT : 0
-		| input_mouse_button_held(MOUSE_BUTTON_RIGHT, NULL) ? IM_MOUSE_BUTTON_RIGHT : 0;
-	mouse.click_state = (!mouse.button_mask && previous_button_mask)
-		? (tick - mouse.press_start_tick) < 12
-			? ENDED
-			: FAILED
-		: input_click(MOUSE_BUTTON_LEFT) || input_click(MOUSE_BUTTON_RIGHT)
-			? BEGAN
-			: NEITHER;*/
-			
-	if (previous_button_mask & IM_MOUSE_BUTTON_LEFT && !(mouse.button_mask & IM_MOUSE_BUTTON_LEFT)) {
-		mouse.last_button = IM_MOUSE_BUTTON_LEFT;
-	} else if (previous_button_mask & IM_MOUSE_BUTTON_RIGHT && !(mouse.button_mask & IM_MOUSE_BUTTON_RIGHT)) {
-		mouse.last_button = IM_MOUSE_BUTTON_RIGHT;
-	} else {
-		mouse.last_button = 0;
-	}
-
-	if (mouse.click_state == BEGAN) {
-		mouse.press_start_tick = tick;
-		mouse.press_target_id = mouse.target_prev_frame;
-	} else if (mouse.click_state == ENDED || mouse.click_state == FAILED) {
-		mouse.press_target_id = 0;
-	}
-
-	if (mouse.button_mask & IM_MOUSE_BUTTON_LEFT) {
-		if (!mouse.drag.active) {
-			mouse.drag.active = true;
-			mouse.drag.start = mouse.position;
-			mouse.drag.delta = vec2_zero();
-		} else {
-			mouse.drag.delta = vec2_sub(mouse.position, mouse.drag.start);
-		}
-	} else if (mouse.drag.active) {
-		mouse.drag.active = false;
-		mouse.drag.delta = vec2_zero();
-	}
-	
-	memcpy(&keyboard.keycode_target[1][0], &keyboard.keycode_target[0][0], IM_KEYCODE_COUNT * sizeof(IMGUIID));
-	memset(&keyboard.keycode_target[0][0], 0, IM_KEYCODE_COUNT * (sizeof(IMGUIID) / sizeof(char)));
-	
-	keyboard.any_consumer = false;
 
 #ifdef DEBUG
 	/*if (input_key_modifier(K_MODIFIER_SHIFT) && input_key(K_D)) {
@@ -244,6 +194,57 @@ void im_end_layout() {
 #endif
 }
 
+void im_set_input_state(
+	const vec2 position,
+	unsigned int button_mask
+) {
+	if (mouse.locked_on_element == false) {
+		mouse.target_prev_frame = mouse.target_this_frame;
+		mouse.target_this_frame = 0;
+	}
+	
+	const im_mouse_button_t previous_button_mask = mouse.button_mask;
+
+	mouse.position = position;
+	mouse.button_mask = button_mask;
+
+	mouse.click_state = (!mouse.button_mask && previous_button_mask)
+		? (tick - mouse.press_start_tick) < 12
+			? ENDED
+			: FAILED
+		: (button_mask & IM_MOUSE_BUTTON_LEFT && !(previous_button_mask & IM_MOUSE_BUTTON_LEFT)) || (button_mask & IM_MOUSE_BUTTON_RIGHT && !(previous_button_mask & IM_MOUSE_BUTTON_RIGHT))
+			? BEGAN
+			: NEITHER;
+			
+	if (previous_button_mask & IM_MOUSE_BUTTON_LEFT && !(mouse.button_mask & IM_MOUSE_BUTTON_LEFT)) {
+		mouse.last_button = IM_MOUSE_BUTTON_LEFT;
+	} else if (previous_button_mask & IM_MOUSE_BUTTON_RIGHT && !(mouse.button_mask & IM_MOUSE_BUTTON_RIGHT)) {
+		mouse.last_button = IM_MOUSE_BUTTON_RIGHT;
+	} else {
+		mouse.last_button = 0;
+	}
+
+	if (mouse.click_state == BEGAN) {
+		mouse.press_start_tick = tick;
+		mouse.press_target_id = mouse.target_prev_frame;
+	} else if (mouse.click_state == ENDED || mouse.click_state == FAILED) {
+		mouse.press_target_id = 0;
+	}
+
+	if (mouse.button_mask & IM_MOUSE_BUTTON_LEFT) {
+		if (!mouse.drag.active) {
+			mouse.drag.active = true;
+			mouse.drag.start = mouse.position;
+			mouse.drag.delta = vec2_zero();
+		} else {
+			mouse.drag.delta = vec2_sub(mouse.position, mouse.drag.start);
+		}
+	} else if (mouse.drag.active) {
+		mouse.drag.active = false;
+		mouse.drag.delta = vec2_zero();
+	}
+}
+
 void imgui_reset_internal_state() {
 	int i;
 	for (i = 0; i < IM_STATES_MAX; ++i) {
@@ -299,6 +300,10 @@ FASTFUNC bool next_layout_frame(
 
 /* Frame pushing */
 
+static unsigned int tinyhash(int a, int b) {
+	return (a * 31) ^ (b * 17);
+}
+
 FASTFUNC bool _im_push_frame(
 	const frame_t frame,
 	const insets_t insets,
@@ -330,9 +335,9 @@ FASTFUNC bool _im_push_frame(
 	}
 
 	top->_layout_params._count.total ++;
-
-	STACK_PUSH(im_frame_stack(), ((frame_stack_element_t) {
-		.id = next_id ? next_id : (top->id + (im_depth() << 16) + (++top->_id_counter) << 8),
+	
+	frame_stack_element_t element = {
+		.id = next_id ? next_id : (top->id + tinyhash(top->id+top->_id_counter++, im_depth())),
 		.frame = next,
 		.absolute_frame = im_convert_relative_frame(next),
     .insets = insets,
@@ -340,7 +345,11 @@ FASTFUNC bool _im_push_frame(
 		._layout_params = params,
     ._clipped = false,
     ._scroll_state = NULL
-	}));
+	};
+	
+	handle_element_interaction(&element);
+
+	STACK_PUSH(im_frame_stack(), element);
 	
 	next_id = 0;
 
@@ -563,6 +572,68 @@ void im_draw_line(const int x1, const int y1, const int x2, const int y2, const 
 }
 
 // Private
+
+static void handle_element_interaction(frame_stack_element_t *element) {
+	/*
+	My approach for mouse hit detection in immediate-mode GUI:
+	Due to immediate processing of elements, checking mouse position
+	and drawing highlighted/pressed states right away can lead to multiple
+	overlapping elements showing those states.
+	To address this, we track the most recent (topmost) element the cursor
+	touches each frame. On subsequent frame, we compare the currently drawn
+	element (ID) with the previous result. This introduces a one-frame delay
+	between mouse detection and response but in reality it's imperceptible.
+	*/
+	if (frame_contains(element->absolute_frame, mouse.position)) {
+		mouse.target_this_frame = element->id;
+
+		if (mouse.locked_on_element == false && element->id == mouse.target_prev_frame) {
+			element->_input_state.hovered = true;
+		}
+	} else {
+		element->_input_state.hovered = false;
+		element->_input_state.pressed = false;
+	}
+	
+#ifdef OLDM
+	if (frame_contains(screen_frame, mouse.position)) {
+		mouse.target_this_frame = id;
+
+		if (mouse.locked_on_element == false && id == mouse.target_prev_frame) {
+			if (hovered) { *hovered = true; }
+			if (pressed) {
+				/*
+				 * If `IM_MOUSE_PRESS_INSIDE` option is specified, the press has start
+				 * within the bounds of this element. Otherwise it can start
+				 * outside and element reflects pressed state as soon as mouse
+				 * moves onto it.
+				 */
+				*pressed = buttons & mouse.button_mask && (
+					(flags & IM_MOUSE_PRESS_INSIDE) == false || (flags & IM_MOUSE_PRESS_INSIDE && mouse.press_target_id == id)
+				);
+			}
+
+			/*
+			 * A click is detected either when mouse button is first pressed down,
+			 * or when it's released, depending on the option.
+			 */
+			if (flags & IM_MOUSE_CLICK_ON_PRESS) {
+				im_mouse_button_t result;
+				if (mouse.click_state == BEGAN && (result = buttons & mouse.button_mask)) {
+					return result;
+				}
+			} else {
+				im_mouse_button_t result;
+				if ((mouse.click_state == ENDED || (mouse.click_state == FAILED && !(flags & IM_MOUSE_CLICK_EXPIRE))) && (result = buttons & mouse.last_button)) {
+					return result;
+				}
+			}
+
+			return 0;
+		}
+	}
+#endif
+}
 
 
 // V2

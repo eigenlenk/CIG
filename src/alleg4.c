@@ -166,7 +166,9 @@ int main(int argc, char *argv[]) {
 
   imgui_reset_internal_state();
 
-  while (!keypressed()) {
+	int running = 1;
+
+  while (running) {
     if (!pending_main_loop_update) {
       continue;
     }
@@ -176,6 +178,13 @@ int main(int argc, char *argv[]) {
     if (mouse_needs_poll()) {
       poll_mouse();
     }
+		
+		if (keypressed()) {
+			switch (readkey() >> 8) {
+				case KEY_ESC: running = 0; break;
+				default: break;
+			}
+		}
 
     demo_ui(buffer);
 

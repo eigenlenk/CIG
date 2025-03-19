@@ -46,17 +46,17 @@ TEST(layout, push_pop) {
 }
 
 TEST(layout, identifiers) {
-	register int a, b, c;
+	register int a, b, c, d;
 	struct {
 		int n;
 		IMGUIID recorded[2048];
 	} ids = { 0 };
 	
-	bool assert_unique(const IMGUIID id) {
+	bool assert_unique(const IMGUIID id, int line) {
 		register int i;
 		for (i = 0; i < ids.n; ++i) {
 			if (ids.recorded[i] == id) {
-				TEST_PRINTF("ID %lu is not unique!", id);
+				TEST_PRINTF("Line %d: ID %lu is not unique! [%d] = %lu", line, id, i, ids.recorded[i]);
 				TEST_FAIL();
 				break;
 			}
@@ -65,34 +65,36 @@ TEST(layout, identifiers) {
 	
 	TEST_ASSERT_EQUAL_UINT32(4151533312l, im_current_element()->id);
 	
-	const int n0 = 15;
+	const int n0 = 8;
 	
 	for (a = 0; a < n0; ++a) {
 		if (im_push_frame(IM_FILL)) {
-			assert_unique(im_current_element()->id);
+			assert_unique(im_current_element()->id, __LINE__);
 			ids.recorded[ids.n++] = im_current_element()->id;
-			
-			const int n1 = 10;
-			
+			const int n1 = 8;
 			for (b = 0; b < n1; ++b) {
 				if (im_push_frame(IM_FILL)) {
-					assert_unique(im_current_element()->id);
+					assert_unique(im_current_element()->id, __LINE__);
 					ids.recorded[ids.n++] = im_current_element()->id;
-					
-					const int n2 = 5;
-					
+					const int n2 = 8;
 					for (c = 0; c < n2; ++c) {
 						if (im_push_frame(IM_FILL)) {
-							assert_unique(im_current_element()->id);
+							assert_unique(im_current_element()->id, __LINE__);
 							ids.recorded[ids.n++] = im_current_element()->id;
+							const int n3 = 8;
+							for (d = 0; d < n3; ++d) {
+								if (im_push_frame(IM_FILL)) {
+									assert_unique(im_current_element()->id, __LINE__);
+									ids.recorded[ids.n++] = im_current_element()->id;
+									im_pop_frame();
+								}
+							}
 							im_pop_frame();
 						}
 					}
-					
 					im_pop_frame();
 				}
 			}
-					
 			im_pop_frame();
 		}
 	}

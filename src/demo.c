@@ -5,14 +5,21 @@ static int ticks = 0;
 
 void demo_ui(BITMAP *buffer) {
 	static int grid_demo = 0, grid_demo_cycler;
-	static int autoscroll_direction = 1, grid_autoscroll_direction = 1;
+	static int autoscroll_direction = 1;
 	
-	if (grid_demo_cycler++ > 60) {
+	if (grid_demo_cycler++ > 80) {
 		grid_demo_cycler = 0;
 		grid_demo = (grid_demo + 1) % 4;
 	}
 	
   im_begin_layout(buffer, frame_make(0, 0, SCREEN_W, SCREEN_H));
+	
+	/* Pass cursor position and mouse button states */
+	im_set_input_state(
+		vec2_make(mouse_x, mouse_y),
+		(mouse_b & 1 ? IM_MOUSE_BUTTON_LEFT : 0) +
+		(mouse_b & 2 ? IM_MOUSE_BUTTON_RIGHT : 0)
+	);
 
   // Whole screen color
   im_fill_color(16); // Black
@@ -92,26 +99,11 @@ void demo_ui(BITMAP *buffer) {
 			.options = IM_DEFAULT_LAYOUT_FLAGS
 		});
 		
-		im_enable_scroll(NULL);
-		
-		if (grid_autoscroll_direction == 1) { /* Scroll until the bottom of the content */
-			if (im_current_element()->_scroll_state->offset.y < CIM_SCROLL_LIMIT_Y) {
-				im_current_element()->_scroll_state->offset.y += 1;
-			} else {
-				grid_autoscroll_direction = -1;
-			}
-		} else { /* Scroll back top */
-			if (im_current_element()->_scroll_state->offset.y > 0) {
-				im_current_element()->_scroll_state->offset.y -= 1;
-			} else {
-				grid_autoscroll_direction = 1;
-			}
-		}
-
 		im_fill_color(8);
 		
 		for (int i = 0; i < 10; ++i) {
 			if (im_push_frame(IM_FILL)) {
+				if (im_hovered()) { im_fill_color(7); }
 				im_stroke_color(15);
 				im_pop_frame();
 			}
@@ -126,7 +118,8 @@ void demo_ui(BITMAP *buffer) {
 		im_current_element()->_layout_params.height = 0;
 		
 		if (im_push_frame(IM_FILL)) {
-			im_stroke_color(14);
+			if (im_hovered()) { im_fill_color(7); }
+			im_stroke_color(15);
 			im_pop_frame();
 		}
 		
@@ -134,7 +127,8 @@ void demo_ui(BITMAP *buffer) {
 		im_current_element()->_layout_params.columns = 0;
 		
 		if (im_push_frame(IM_FILL)) {
-			im_stroke_color(13);
+			if (im_hovered()) { im_fill_color(7); }
+			im_stroke_color(15);
 			im_pop_frame();
 		}
 		
@@ -149,26 +143,11 @@ void demo_ui(BITMAP *buffer) {
 			.options = IM_DEFAULT_LAYOUT_FLAGS
 		});
 		
-		im_enable_scroll(NULL);
-		
-		if (grid_autoscroll_direction == 1) { /* Scroll until the bottom of the content */
-			if (im_current_element()->_scroll_state->offset.y < CIM_SCROLL_LIMIT_Y) {
-				im_current_element()->_scroll_state->offset.y += 1;
-			} else {
-				grid_autoscroll_direction = -1;
-			}
-		} else { /* Scroll back top */
-			if (im_current_element()->_scroll_state->offset.y > 0) {
-				im_current_element()->_scroll_state->offset.y -= 1;
-			} else {
-				grid_autoscroll_direction = 1;
-			}
-		}
-
 		im_fill_color(8);
 		
 		for (int i = 0; i < 10; ++i) {
 			if (im_push_frame(IM_FILL)) {
+				if (im_hovered()) { im_fill_color(7); }
 				im_stroke_color(15);
 				im_pop_frame();
 			}
@@ -182,12 +161,14 @@ void demo_ui(BITMAP *buffer) {
 		im_current_element()->_layout_params.columns = 0;
 		
 		if (im_push_frame(IM_FILL)) {
-			im_stroke_color(14);
+			if (im_hovered()) { im_fill_color(7); }
+			im_stroke_color(15);
 			im_pop_frame();
 		}
 
 		if (im_push_frame(IM_FILL)) {
-			im_stroke_color(13);
+			if (im_hovered()) { im_fill_color(7); }
+			im_stroke_color(15);
 			im_pop_frame();
 		}
 		
@@ -205,21 +186,25 @@ void demo_ui(BITMAP *buffer) {
 		/* We'll add some elements with increasing height */
 		
 		if (im_push_frame(frame_make(0, 0, 73, 50))) {
+			if (im_hovered()) { im_fill_color(7); }
 			im_stroke_color(15);
 			im_pop_frame();
 		}
 		
 		if (im_push_frame(frame_make(0, 0, 73, 75))) {
+			if (im_hovered()) { im_fill_color(7); }
 			im_stroke_color(15);
 			im_pop_frame();
 		}
 		
 		if (im_push_frame(frame_make(0, 0, 73, 100))) {
+			if (im_hovered()) { im_fill_color(7); }
 			im_stroke_color(15);
 			im_pop_frame();
 		}
 		
 		if (im_push_frame(frame_make(0, 0, 73, 125))) {
+			if (im_hovered()) { im_fill_color(7); }
 			im_stroke_color(15);
 			im_pop_frame();
 		}
@@ -227,7 +212,8 @@ void demo_ui(BITMAP *buffer) {
 		/* Next row will start just below the longest element (the 4th one) */
 		
 		if (im_push_frame(IM_FILL)) {
-			im_stroke_color(14);
+			if (im_hovered()) { im_fill_color(7); }
+			im_stroke_color(15);
 			im_pop_frame();
 		}
 		
@@ -246,26 +232,31 @@ void demo_ui(BITMAP *buffer) {
 		/* We'll add some elements with increasing height */
 		
 		if (im_push_frame(frame_make(0, 0, 50, 84))) {
+			if (im_hovered()) { im_fill_color(7); }
 			im_stroke_color(15);
 			im_pop_frame();
 		}
 		
 		if (im_push_frame(frame_make(0, 0, 60, 84))) {
+			if (im_hovered()) { im_fill_color(7); }
 			im_stroke_color(15);
 			im_pop_frame();
 		}
 		
 		if (im_push_frame(frame_make(0, 0, 70, 84))) {
+			if (im_hovered()) { im_fill_color(7); }
 			im_stroke_color(15);
 			im_pop_frame();
 		}
 		
 		if (im_push_frame(frame_make(0, 0, 80, 84))) {
+			if (im_hovered()) { im_fill_color(7); }
 			im_stroke_color(15);
 			im_pop_frame();
 		}
 		
 		if (im_push_frame(frame_make(0, 0, 90, 84))) {
+			if (im_hovered()) { im_fill_color(7); }
 			im_stroke_color(15);
 			im_pop_frame();
 		}
@@ -273,7 +264,8 @@ void demo_ui(BITMAP *buffer) {
 		/* Next columns will start just after the widest element (the 5th one) */
 		
 		if (im_push_frame(IM_FILL)) {
-			im_stroke_color(14);
+			if (im_hovered()) { im_fill_color(7); }
+			im_stroke_color(15);
 			im_pop_frame();
 		}
 		
@@ -281,6 +273,16 @@ void demo_ui(BITMAP *buffer) {
 	}
 
   im_pop_frame(); /* Pop horizontal stack layout */
+	
+	/* Some sort of a floating footer on top of the content */
+	{
+		im_push_frame(frame_make(100, IM_B - 110, 440, 60));
+		if (im_hovered()) {
+			im_fill_color(10);
+		}
+		im_stroke_color(15);
+		im_pop_frame();
+	}
 
   im_pop_frame(); /* Pop outermost inset frame */
 
