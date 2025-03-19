@@ -242,7 +242,7 @@ TEST(core_layout, culling) {
 		TEST_FAIL_MESSAGE("Frame should NOT have been culled");
 	}
 	
-	/* Culling is enabled by default. We can disable it. */
+	/* Culling is enabled by default. We can disable it (for current element) */
 	im_disable_culling();
 	
 	/* Even though it lays outside the parent, it's still added */
@@ -535,6 +535,45 @@ TEST(core_layout, grid_with_down_direction) {
 	*/
 }
 
+TEST(core_layout, vstack_scroll) {
+	/* Any element can be made scrollable, but it makes most sense for stacks/grids */
+	if (!im_push_frame_builder(IM_FILL, insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
+    0,
+    .axis = VERTICAL,
+		.height = 100,
+    .options = IM_DEFAULT_LAYOUT_FLAGS
+  })) {
+		TEST_FAIL_MESSAGE("Unable to add layout builder frame");
+	}
+	
+	/* Scrolling is not enabled by default */
+	TEST_ASSERT_NULL(im_current_element()->_scroll_state);
+	TEST_ASSERT_FALSE(im_current_element()->_clipped);
+	
+	im_enable_scroll(NULL);
+	
+	/* Scrolling also enables clipping */
+	TEST_ASSERT_TRUE(im_current_element()->_clipped);
+	
+	im_scroll_state_t *scroll = im_scroll_state();
+	
+	TEST_ASSERT_EQUAL_VEC2(vec2_zero(), scroll->offset);
+	TEST_ASSERT_EQUAL_VEC2(vec2_zero(), scroll->content_size);
+	
+	scroll->offset.y = 220;
+	
+	/* Let's add some content to the stack */
+	for (int i = 0; i < 10; ++i) {
+		if (im_push_frame(IM_FILL)) {
+			/* Elements should be offset by scroll amount on the Y axis */
+			TEST_ASSERT_EQUAL_INT(i*100-220, im_current_element()->frame.y);
+			im_pop_frame();
+		}
+	}
+	
+	TEST_ASSERT_EQUAL_VEC2(vec2_make(640, 100*10), scroll->content_size);
+}
+
 TEST_GROUP_RUNNER(core_layout) {
   RUN_TEST_CASE(core_layout, basic_check);
   RUN_TEST_CASE(core_layout, push_pop);
@@ -549,4 +588,5 @@ TEST_GROUP_RUNNER(core_layout) {
   RUN_TEST_CASE(core_layout, grid_with_fixed_cell_size);
   RUN_TEST_CASE(core_layout, grid_with_varying_cell_size);
   RUN_TEST_CASE(core_layout, grid_with_down_direction);
+  RUN_TEST_CASE(core_layout, vstack_scroll);
 }

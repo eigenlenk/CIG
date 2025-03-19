@@ -413,6 +413,8 @@ bool im_stack_layout_builder(
 	frame_t *result
 );
 
+IM_INLINE im_scroll_state_t* im_scroll_state() { return im_current_element()->_scroll_state; }
+
 void im_enable_scroll(im_scroll_state_t *);
 void im_enable_clip();
 void im_disable_culling();

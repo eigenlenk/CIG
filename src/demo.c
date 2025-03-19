@@ -64,7 +64,7 @@ void demo_ui(BITMAP *buffer) {
 		}
 	}
 		
-  for (int i = 0; i < 256; ++i) {
+  for (int i = 0; i < 24; ++i) {
     if (im_push_frame(IM_FILL)) {
       
       if (i % 2) {

@@ -88,7 +88,7 @@ static struct {
 } cached_font;
 
 static im_state_t* 	im_state(const IMGUIID, const imgui_widget_t);
-static im_scroll_state_t* im_scroll_state(const IMGUIID);
+static im_scroll_state_t* get_scroll_state(const IMGUIID);
 static bool					im_state_record_value(im_state_t*, int);
 static IMGUIID 			im_frame_identity(const frame_t);
 static void 				cache_font(const im_font_ref);
@@ -323,9 +323,9 @@ FASTFUNC bool _im_push_frame(
 	}
 	
   if (top->_scroll_state) {
-    next = frame_offset(next, -top->_scroll_state->offset.x, -top->_scroll_state->offset.y);
 		top->_scroll_state->content_size.x = MAX(top->_scroll_state->content_size.x, next.x + next.w);
 		top->_scroll_state->content_size.y = MAX(top->_scroll_state->content_size.y, next.y + next.h);
+	  next = frame_offset(next, -top->_scroll_state->offset.x, -top->_scroll_state->offset.y);
   }
 
 	if (top->_layout_params.options & IM_CULL_SUBFRAMES
@@ -999,7 +999,7 @@ bool im_stack_layout_builder(
 
 void im_enable_scroll(im_scroll_state_t *state) {
   frame_stack_element_t *current_frame = im_current_element();
-  current_frame->_scroll_state = state ? state : im_scroll_state(current_frame->id);
+  current_frame->_scroll_state = state ? state : get_scroll_state(current_frame->id);
   im_enable_clip();
 }
 
@@ -1065,7 +1065,7 @@ static bool	im_state_record_value(
 	return false;
 }
 
-static im_scroll_state_t* im_scroll_state(const IMGUIID id) {
+static im_scroll_state_t* get_scroll_state(const IMGUIID id) {
   register int i, first_available = -1;
   for (i = 0; i < IM_STATES_MAX; ++i) {
     if (_scroll_elements[i].id == id) {
@@ -1157,8 +1157,10 @@ static void im_push_clip(frame_stack_element_t *frame) {
       frame = frame_union(frame, last);
     }    
 
-    (*backend.set_clip)(buffer, frame);
-    
+		if (backend.set_clip) {
+			(*backend.set_clip)(buffer, frame);
+    }
+		
     STACK_PUSH(&clip_frames, ((im_clip_element_t) {
       .buffer = buffer,
       .frame = frame
@@ -1171,10 +1173,14 @@ static void im_pop_clip() {
 
   // Go back to previous clip if present
   if (STACK_IS_EMPTY(&clip_frames)) {
-    (*backend.reset_clip)(imgui_get_buffer());
+		if (backend.reset_clip) {
+			(*backend.reset_clip)(imgui_get_buffer());
+		}
   } else {
-    const im_clip_element_t *top = &STACK_TOP(&clip_frames);
-    (*backend.set_clip)(top->buffer, top->frame);
+		if (backend.set_clip) {
+			const im_clip_element_t *top = &STACK_TOP(&clip_frames);
+			(*backend.set_clip)(top->buffer, top->frame);
+		}
   }
 }
 
