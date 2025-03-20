@@ -4,6 +4,11 @@
 #include "types/vec2.h"
 
 typedef struct {
+	im_buffer_ref buffer;
+	STACK(im_element_t) elments;
+} im_buffer_elements_t;
+
+typedef struct {
 	IMGUIID id;
 	imgui_widget_t type;
 	int internal_record;
@@ -27,13 +32,13 @@ typedef struct {
 	} data;
 } im_state_t;
 
-typedef struct im_scroll_state_element_t {
+typedef struct {
   IMGUIID id;
 	unsigned int last_tick;
   im_scroll_state_t value;
 } im_scroll_state_element_t;
 
-typedef struct im_clip_element_t {
+typedef struct {
   im_buffer_ref buffer;
   frame_t frame;
 } im_clip_element_t;

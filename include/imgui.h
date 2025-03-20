@@ -1,13 +1,11 @@
-#ifndef IMGUI_H
-#define IMGUI_H
+#ifndef IM_UMBRELLA_H
+#define IM_UMBRELLA_H
 
 #include "imlimits.h"
 #include "imguim.h"
-// #include "types.h"
 #include "stack.h"
 #include "types/frame.h"
 #include "types/insets.h"
-// #include "backend/keys.h"
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -19,7 +17,7 @@
 #define IM_Y im_current_element()->frame.y
 #define IM_W im_current_element()->frame.w
 #define IM_H im_current_element()->frame.h
-#define IM_CENTER_WH(W, H) frame_make((IM_W * 0.5) - (W * 0.5), (IM_H * 0.5) - (H * 0.5), W, H)
+#define IM_CENTERED(W, H) frame_make((IM_W * 0.5) - (W * 0.5), (IM_H * 0.5) - (H * 0.5), W, H)
 #define IM_CENTER vec2_make((IM_W * 0.5), (IM_H * 0.5))
 #define IM_R (IM_X + IM_W)
 #define IM_B (IM_Y + IM_H)
@@ -28,123 +26,16 @@
 
 #define IM_INLINE inline __attribute__((always_inline))
 
+/* ╔══════════════════════════════╗
+   ║   PUBLIC TYPE DECLARATIONS   ║
+   ╚══════════════════════════════╝ */
+
+
 typedef unsigned long IMGUIID;
 
+
 typedef void* im_buffer_ref;
-typedef void* im_image_ref;
-typedef void* im_font_ref;
-typedef int im_color_ref;
-typedef int im_keycode;
-typedef unsigned char im_char_t;
 
-typedef struct {
-	short line_height, line_spacing, baseline_offset;
-} im_font_info_t;
-
-typedef enum {
-  IM_TEXT_ALIGN_LEFT = 0,
-  IM_TEXT_ALIGN_CENTER,
-  IM_TEXT_ALIGN_RIGHT
-} im_text_horizontal_alignment_t;
-
-typedef enum {
-  IM_TEXT_ALIGN_TOP = 0,
-  IM_TEXT_ALIGN_MIDDLE,
-  IM_TEXT_ALIGN_BOTTOM
-} im_text_vertical_alignment_t;
-
-#define IM_API_DRAW_IMAGE(F) void (F)( \
-	const im_buffer_ref buffer, \
-	const im_image_ref image, \
-	const frame_t frame, \
-	const bool flip_horizontally, \
-	const bool flip_vertically, \
-	const bool center \
-)
-
-#define IM_API_DRAW_IMAGE_REGION(F) void (F)( \
-	const im_buffer_ref buffer, \
-	const im_image_ref image, \
-	const frame_t frame, \
-	const vec2 offset \
-)
-
-#define IM_API_DRAW_LINE(F) void (F)( \
-	const im_buffer_ref buffer, \
-	const int x1, \
-	const int y1, \
-	const int x2, \
-	const int y2, \
-	const im_color_ref color \
-)
-
-#define IM_API_DRAW_RECT(F) void (F)( \
-	const im_buffer_ref buffer, \
-	const int x, \
-	const int y, \
-	const int w, \
-	const int h, \
-	const im_color_ref fill, \
-	const im_color_ref stroke \
-)
-
-#define IM_API_DRAW_TEXT(F) void (F)( \
-	const im_buffer_ref buffer, \
-	const int x, \
-	const int y, \
-	const im_font_ref font, \
-	const im_text_horizontal_alignment_t alignment, \
-	const im_color_ref color, \
-	const char *text \
-)
-
-#define IM_API_GET_TEXT_SIZE(F) int (F)( \
-	const im_font_ref font, \
-	const char *string \
-)
-
-#define IM_API_GET_FONT_INFO(F) im_font_info_t (F)(const im_font_ref font)
-
-#define IM_API_GET_NEXT_INPUT_CHARACTER(F) im_char_t (F)()
-
-#define IM_API_ALLOCATE_BUFFER(F) im_buffer_ref (F)(const int w, const int h)
-#define IM_API_CLEAR_BUFFER(F) void (F)(const im_buffer_ref buffer)
-#define IM_API_BLIT_BUFFER(F) void (F)( \
-	const im_buffer_ref dst, \
-	const im_buffer_ref src, \
-	const frame_t frame \
-)
-#define IM_API_RELEASE_BUFFER(F) void (F)(im_buffer_ref buffer)
-
-#define IM_API_SET_CLIP(N) void (N)(im_buffer_ref buffer, const frame_t frame)
-#define IM_API_RESET_CLIP(N) void (N)(im_buffer_ref buffer)
-
-typedef enum {
-	IM_ANY = 0,
-	IM_MENUBAR,
-	IM_MENU,
-	IM_LIST,
-	IM_WINDOW,
-	IM_TEXT,
-	IM_INPUT,
-	IM_SLIDER,
-  IM_SCROLLER
-} imgui_widget_t;
-
-typedef struct im_multiline_text_line_t {
-	size_t index;
-	size_t length;
-	char *begin;
-	char *end;
-} im_multiline_text_line_t;
-
-typedef struct im_multiline_text_info_t {
-	char *str;
-	unsigned char number_of_lines;
-	size_t length;
-	im_multiline_text_line_t lines[IM_MULTILINE_LINES_MAX];
-	vec2 bounds;
-} im_multiline_text_info_t;
 
 typedef enum {
 	BITFLAG(0, IM_CULL_SUBFRAMES),
@@ -152,16 +43,9 @@ typedef enum {
 	IM_DEFAULT_LAYOUT_FLAGS = IM_CULL_SUBFRAMES
 } im_layout_options_t;
 
-typedef enum {
-	CASEFLAG(0, IM_MOUSE_BUTTON_LEFT),
-	CASEFLAG(1, IM_MOUSE_BUTTON_RIGHT),
-	IM_MOUSE_BUTTON_ANY = IM_MOUSE_BUTTON_LEFT | IM_MOUSE_BUTTON_RIGHT
-} im_mouse_button_t;
 
-/*
- * Type containing parameters passed to layout function.
- */
-typedef struct im_layout_params_t {
+/* Structure containing parameters passed to layout function */
+typedef struct {
 	enum {
 		CASEFLAG(1, HORIZONTAL),
 		CASEFLAG(2, VERTICAL),
@@ -176,7 +60,8 @@ typedef struct im_layout_params_t {
 		int horizontal, vertical, total;
 	} limit;
 	im_layout_options_t options;
-	void *data;
+	void *user_data;
+	
 	/* Private. Keep out! */
 	int _horizontal_position, _vertical_position, _h_size, _v_size;
 	struct {
@@ -184,90 +69,42 @@ typedef struct im_layout_params_t {
 	} _count;
 } im_layout_params_t;
 
-typedef struct im_scroll_state_t {
+
+typedef struct {
   vec2 offset;
 	vec2 content_size;
 } im_scroll_state_t;
 
-typedef struct frame_stack_element_t {
+
+typedef struct {
 	IMGUIID id;
 	frame_t frame;
 	frame_t absolute_frame;
   insets_t insets;
+	
 	/* Private. Keep out! */
 	bool (*_layout_function)(const frame_t, const frame_t, im_layout_params_t *, frame_t *);
 	im_layout_params_t _layout_params;
   bool _clipped, _interaction_enabled;
   im_scroll_state_t *_scroll_state;
 	unsigned int _id_counter;
-} frame_stack_element_t;
+} im_element_t;
 
-DECLARE_STACK(frame_stack_element_t);
 
-STACK(frame_stack_element_t)* im_frame_stack();
+DECLARE_STACK(im_element_t);
 
-typedef struct {
-	im_buffer_ref buffer;
-	STACK(frame_stack_element_t) frames;
-} im_buffer_framestack_t;
 
-typedef struct im_backend_configuration_t {
-	IM_API_DRAW_IMAGE(*draw_image);
-	IM_API_DRAW_IMAGE_REGION(*draw_image_region);
-	IM_API_DRAW_LINE(*draw_line);
-	IM_API_DRAW_RECT(*draw_rect);
-	IM_API_DRAW_TEXT(*draw_text);
-	IM_API_GET_TEXT_SIZE(*get_text_size);
-	IM_API_GET_FONT_INFO(*get_font_info);
-	IM_API_GET_NEXT_INPUT_CHARACTER(*get_next_input_character);
-	IM_API_ALLOCATE_BUFFER(*allocate_buffer);
-	IM_API_CLEAR_BUFFER(*clear_buffer);
-	IM_API_BLIT_BUFFER(*blit_buffer);
-	IM_API_RELEASE_BUFFER(*release_buffer);
-  IM_API_SET_CLIP(*set_clip);
-  IM_API_RESET_CLIP(*reset_clip);
-} im_backend_configuration_t;
+typedef enum {
+	CASEFLAG(0, IM_MOUSE_BUTTON_LEFT),
+	CASEFLAG(1, IM_MOUSE_BUTTON_RIGHT),
+	IM_MOUSE_BUTTON_ANY = IM_MOUSE_BUTTON_LEFT | IM_MOUSE_BUTTON_RIGHT
+} im_mouse_button_t;
 
-void im_configure(const im_backend_configuration_t config);
-
-void im_begin_layout(const im_buffer_ref, const frame_t);
-
-void im_end_layout();
-
-void imgui_reset_internal_state();
-
-void im_set_input_state(const vec2, unsigned int);
-
-im_buffer_ref imgui_get_buffer();
-
-frame_stack_element_t* im_current_element();
-
-// Pop last frame element from the stack
-frame_stack_element_t* im_pop_frame();
-
-// Current local space frame
-frame_t im_relative_frame();
-
-// Current screen space frame
-frame_t im_absolute_frame();
-
-//
-frame_t imgui_root_frame();
-
-/* Convert a relative frame to an absolute frame */
-frame_t im_convert_relative_frame(const frame_t);
-
-void im_next_id(IMGUIID);
-
-unsigned int im_depth();
-
-bool im_hovered();
 
 typedef enum {
 	CASEFLAG(0, IM_MOUSE_PRESS_INSIDE)
 } im_press_options_t;
 
-im_mouse_button_t im_pressed(const im_mouse_button_t, const im_press_options_t);
 
 typedef enum {
 	CASEFLAG(0, IM_CLICK_STARTS_INSIDE),
@@ -275,128 +112,141 @@ typedef enum {
 	CASEFLAG(2, IM_CLICK_EXPIRE)
 } im_click_options_t;
 
-im_mouse_button_t im_clicked(const im_mouse_button_t, const im_click_options_t);
 
-// Fills current frame with selected fill style
-void imgui_fill_panel(const int, const short);
-void im_fill_color(im_color_ref);
-void im_stroke_color(im_color_ref);
+/* ╔════════════════╗
+   ║   PUBLIC API   ║
+   ╚════════════════╝ */
 
-void im_draw_rect(const int x, const int y, const int w, const int h, const im_color_ref fill, im_color_ref stroke);
-void im_draw_line(const int x1, const int y1, const int x2, const int y2, const im_color_ref color);
 
-// V2
+/* (( LAYOUT FUNCTIONS )) */
 
-/* -----------------------------------------------------------------------------
-* Configuration stacks
-*/
+/* */
+void im_begin_layout(im_buffer_ref, frame_t);
 
-typedef enum {
-	IM_PANEL = 0,
-	IM_TEXT_BASELINE_OFFSET,
-	IM_BUTTON_NORMAL_TEXT_COLOR, // TODO: read from panel style?
-	IM_BUTTON_PRESSED_TEXT_COLOR,
-	IM_TEXT_COLOR,
-	IM_FONT
-} im_option_key_t;
 
-typedef union {
-	im_color_ref color;
-	int i;
-	void *ref;
-} im_value_t;
+/* */
+void im_end_layout();
 
-#define __IM_OPTION_KEY_COUNT 16
-#define IM_VALUE_COLOR(V) (im_value_t){ .color = V }
-#define IM_VALUE_INT(V) (im_value_t){ .i = V }
-#define IM_VALUE_REF(V) (im_value_t){ .ref = V }
 
-void im_push_value(const im_option_key_t, const im_value_t);
+/* Pass mouse coordinates and button press state(s) */
+void im_set_input_state(vec2, im_mouse_button_t);
 
-im_value_t im_pop_value(const im_option_key_t);
 
-im_color_ref im_color_value(const im_option_key_t k);
-int im_int_value(const im_option_key_t k);
-void* im_ref_value(const im_option_key_t k);
+/* Resets internal values. Useful for when transitioning to a different
+   game state or screen where you lay out a completely different UI */
+void imgui_reset_internal_state();
 
-#define IM_REF(TYPE, K) ((TYPE)im_ref_value(K))
 
-/* -----------------------------------------------------------------------------
- * ((( Buttons )))
- */
+/* Returns an opaque pointer to the current buffer where drawing operations would take place */
+im_buffer_ref im_buffer();
 
-void im_set_default_font(im_font_ref);
 
-/* -----------------------------------------------------------------------------
- * Input building blocks.
- */
+/* Pushes a new frame with zero insets to layout stack.
+   @return TRUE if frame is visible within current container, FALSE otherwise */
+bool im_push_frame(frame_t);
 
-void im_key_handler(void (*handler)(const im_keycode));
-
-bool im_key(const im_keycode key);
-bool im_key_repeat(const im_keycode key, const int rate);
-
-/* -----------------------------------------------------------------------------
-* Misc. & utils
-*/
-
-/*
- * Pushes and pops an empty frame to trigger a layout function
- * to allocate space. Useful when you have a stack or grid and
- * want to add empty space.
- */
-void im_empty();
-
-void im_separator();
-
-void im_insert_spacer(const int size);
-
-/*
- *
- */
-IMGUIID im_hash(const char *str);
-
-/* ((( Layout functions and convenience elements related to that ))) */
-
-/* Push a new frame with zero insets to layout stack.
- * @return TRUE if frame is visible within current container, FALSE otherwise. */
-bool im_push_frame(const frame_t);
 
 /* Push a new frame with custom insets to layout stack.
- * @return TRUE if frame is visible within current container, FALSE otherwise. */
-bool im_push_frame_insets(const frame_t frame, const insets_t insets);
+   @return TRUE if frame is visible within current container, FALSE otherwise */
+bool im_push_frame_insets(frame_t frame, insets_t insets);
+
 
 /* Push a new frame with custom insets and params to layout stack.
- * @return TRUE if frame is visible within current container, FALSE otherwise. */
-bool im_push_frame_insets_params(const frame_t frame, const insets_t insets, const im_layout_params_t);
+   @return TRUE if frame is visible within current container, FALSE otherwise */
+bool im_push_frame_insets_params(frame_t frame, insets_t insets, im_layout_params_t);
+
 
 /* Push layout builder function to layout stack.
- * @return TRUE if frame is visible within current container, FALSE otherwise. */
-bool im_push_frame_builder(
-	const frame_t frame,
-	const insets_t insets,
-	bool (*layout_function)(
-		const frame_t,
-		const frame_t,
-		im_layout_params_t *,
-		frame_t *
-	),
-	im_layout_params_t
+   @return TRUE if frame is visible within current container, FALSE otherwise */
+bool im_push_frame_function(
+	frame_t frame,
+	insets_t insets,
+	im_layout_params_t,
+	bool (*)(frame_t, frame_t, im_layout_params_t*, frame_t*)
 );
 
-bool im_stack_layout_builder(
-	const frame_t container,
-	const frame_t frame,
-	im_layout_params_t *params,
-	frame_t *result
-);
+
+/* Pop and return the last element in the layout stack */
+im_element_t* im_pop_frame();
+
+
+/* Returns current layout element */
+im_element_t* im_element();
+
+
+/* Returns current local frame relative to its parent */
+IM_INLINE frame_t im_relative_frame();
+
+
+/* Returns current screen-space frame */
+IM_INLINE frame_t im_absolute_frame();
+
+
+/* Returns root frame for the current buffer */
+frame_t imgui_root_frame();
+
+
+/* Converts a relative frame to a screen-space frame */
+frame_t im_convert_relative_frame(frame_t);
+
+
+/* Returns a pointer to the current layout element stack. Avoid if possible. */
+STACK(im_element_t)* im_frame_stack();
+
+
+/* (( LAYOUT HELPERS )) */
+
+/* Normally element ID is auto-calculated and may vary from frame to frame.
+   This sets an explicit Id for the next `im_push_*` call.
+   See: `im_hash` for generating an ID from a string */
+void im_next_id(IMGUIID);
+
+/* Returns the depth of the layout stack currently */
+unsigned int im_depth();
+
+/* Generates an ID from a string */
+IMGUIID im_hash(const char *str);
+
+/* Default layout function for stack and grid type */
+bool im_default_layout_builder(frame_t, frame_t, im_layout_params_t*, frame_t*);
+
+/* Pushes and pops an empty frame to trigger a layout function to allocate space.
+   Useful when you have a stack or grid and want to trigger a new line or column */
+IM_INLINE void im_empty();
+
+
+/* */
+IM_INLINE void im_insert_spacer(const int size);
+
+
+
+/* (( MOUSE INTERACTION )) */
+
+/* Enables mouse tracking for the current layout element.
+   Call this after a successful `im_push_*` call */
+void im_enable_interaction();
+
+/* Checks if the current layout element is the topmost element under the cursor */
+bool im_hovered();
+
+im_mouse_button_t im_pressed(const im_mouse_button_t, const im_press_options_t);
+
+im_mouse_button_t im_clicked(const im_mouse_button_t, const im_click_options_t);
+
+
+
+
+
+
+
+
+
 
 IM_INLINE im_scroll_state_t* im_scroll_state() { return im_current_element()->_scroll_state; }
 
 void im_enable_scroll(im_scroll_state_t *);
 void im_enable_clip();
 void im_disable_culling();
-void im_enable_interaction();
 
 #ifdef DEBUG
 

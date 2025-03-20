@@ -733,10 +733,6 @@ void im_key_handler(void (*handler)(const im_keycode)) {
  */
 
 void im_empty() {
-	/*
-	 * Trigger currently top layout function to allocate the next frame.
-	 * If a regular frame is currently at top, this call does nothing.
-	 */
 	im_push_frame(IM_FILL);
 	im_pop_frame();
 }
@@ -751,12 +747,9 @@ ALWAYS_INLINED IMGUIID im_hash(const char *str) {
 	return hash;
 }
 
-ALWAYS_INLINED void im_separator() {
-	// IM_ARRANGE(frame_make(0, (IM_H * 0.5), IM_W, 1), imgui_fill_color(COLOR_GRAY, COLOR_NONE))
-}
-
 ALWAYS_INLINED void im_insert_spacer(const int size) {
-	IM_ARRANGE(IM_FILL_H(size), IM_BODY());
+	im_push_frame(IM_FILL_H(size));
+	im_pop_frame();
 }
 
 /* -----------------------------------------------------------------------------
@@ -1083,9 +1076,9 @@ static void im_push_clip(frame_stack_element_t *frame) {
       frame = frame_union(frame, last);
     }    
 
-		if (backend.set_clip) {
+		/*if (backend.set_clip) {
 			(*backend.set_clip)(buffer, frame);
-    }
+    }*/
 		
     STACK_PUSH(&clip_frames, ((im_clip_element_t) {
       .buffer = buffer,
@@ -1099,14 +1092,14 @@ static void im_pop_clip() {
 
   // Go back to previous clip if present
   if (STACK_IS_EMPTY(&clip_frames)) {
-		if (backend.reset_clip) {
+		/*if (backend.reset_clip) {
 			(*backend.reset_clip)(imgui_get_buffer());
-		}
+		}*/
   } else {
-		if (backend.set_clip) {
+		/*if (backend.set_clip) {
 			const im_clip_element_t *top = &STACK_TOP(&clip_frames);
 			(*backend.set_clip)(top->buffer, top->frame);
-		}
+		}*/
   }
 }
 
