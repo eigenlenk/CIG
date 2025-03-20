@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 			TESTS_FOLDER"main.c",
 			TESTS_FOLDER"core/layout.c",
 			TESTS_FOLDER"core/input.c",
-			TESTS_FOLDER"types/frame.c",
+			TESTS_FOLDER"types.c",
 		);
 		
 		if (!nob_cmd_run_sync_and_reset(&cmd)) return 1;

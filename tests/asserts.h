@@ -4,7 +4,7 @@
 #include "unity.h"
 
 static void assert_frame_equal(const frame_t exp, const frame_t act, unsigned int line) {
-	char message[48];
+	char message[64];
 	sprintf(message, "(%d, %d, %d, %d) != (%d, %d, %d, %d)", exp.x, exp.y, exp.w, exp.h, act.x, act.y, act.w, act.h);
 	UNITY_TEST_ASSERT(frame_cmp(exp, act), line, message);
 }
@@ -18,5 +18,18 @@ static void assert_vec2_equal(const vec2 exp, const vec2 act, unsigned int line)
 }
 
 #define TEST_ASSERT_EQUAL_VEC2(expected, actual) assert_vec2_equal(expected, actual, __LINE__)
+
+static void assert_insets_equal(const int left, const int top, const int right, const int bottom, const insets_t act, unsigned int line) {
+	char message[64];
+	sprintf(
+		message,
+		"(%d, %d, %d, %d) != (%d, %d, %d, %d)",
+		left, top, right, bottom,
+		act.left, act.top, act.right, act.bottom
+	);
+	UNITY_TEST_ASSERT(left == act.left && top == act.top && right == act.right && bottom == act.bottom, line, message);
+}
+
+#define TEST_ASSERT_EQUAL_INSETS(t, l, r, b, actual) assert_insets_equal(t, l, r, b, actual, __LINE__)
 
 #endif // CIM_CUSTOM_TYPE_ASSERTS_H
