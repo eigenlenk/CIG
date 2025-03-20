@@ -18,31 +18,31 @@ TEST_TEAR_DOWN(core_layout) {
 
 TEST(core_layout, basic_check) {
 	/* Nothing really to test here, just checking nothing crashes =) */
-	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 640, 480), im_current_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 640, 480), im_get_element()->frame);
 }
 
 TEST(core_layout, push_pop) {
-	TEST_ASSERT_EQUAL(im_depth(), 1); /* Just the root */
+	TEST_ASSERT_EQUAL(im_get_depth(), 1); /* Just the root */
 	
 	im_push_frame(IM_FILL);
 		im_push_frame(IM_FILL);
 			im_push_frame(IM_FILL);
 			
-				TEST_ASSERT_EQUAL(im_depth(), 4);
+				TEST_ASSERT_EQUAL(im_get_depth(), 4);
 				
 			im_pop_frame();
 		im_pop_frame();
 	
-		TEST_ASSERT_EQUAL(im_depth(), 2);
+		TEST_ASSERT_EQUAL(im_get_depth(), 2);
 
 		im_push_frame(IM_FILL);
 		
-			TEST_ASSERT_EQUAL(im_depth(), 3);
+			TEST_ASSERT_EQUAL(im_get_depth(), 3);
 			
 		im_pop_frame();
 	im_pop_frame();
 	
-	TEST_ASSERT_EQUAL(im_depth(), 1); /* Just the root again */
+	TEST_ASSERT_EQUAL(im_get_depth(), 1); /* Just the root again */
 }
 
 TEST(core_layout, identifiers) {
@@ -63,29 +63,29 @@ TEST(core_layout, identifiers) {
 		}
 	}
 	
-	TEST_ASSERT_EQUAL_UINT32(4151533312l, im_current_element()->id);
+	TEST_ASSERT_EQUAL_UINT32(4151533312l, im_get_element()->id);
 	
 	const int n0 = 8;
 	
 	for (a = 0; a < n0; ++a) {
 		if (im_push_frame(IM_FILL)) {
-			assert_unique(im_current_element()->id, __LINE__);
-			ids.recorded[ids.n++] = im_current_element()->id;
+			assert_unique(im_get_element()->id, __LINE__);
+			ids.recorded[ids.n++] = im_get_element()->id;
 			const int n1 = 8;
 			for (b = 0; b < n1; ++b) {
 				if (im_push_frame(IM_FILL)) {
-					assert_unique(im_current_element()->id, __LINE__);
-					ids.recorded[ids.n++] = im_current_element()->id;
+					assert_unique(im_get_element()->id, __LINE__);
+					ids.recorded[ids.n++] = im_get_element()->id;
 					const int n2 = 8;
 					for (c = 0; c < n2; ++c) {
 						if (im_push_frame(IM_FILL)) {
-							assert_unique(im_current_element()->id, __LINE__);
-							ids.recorded[ids.n++] = im_current_element()->id;
+							assert_unique(im_get_element()->id, __LINE__);
+							ids.recorded[ids.n++] = im_get_element()->id;
 							const int n3 = 8;
 							for (d = 0; d < n3; ++d) {
 								if (im_push_frame(IM_FILL)) {
-									assert_unique(im_current_element()->id, __LINE__);
-									ids.recorded[ids.n++] = im_current_element()->id;
+									assert_unique(im_get_element()->id, __LINE__);
+									ids.recorded[ids.n++] = im_get_element()->id;
 									im_pop_frame();
 								}
 							}
@@ -100,10 +100,10 @@ TEST(core_layout, identifiers) {
 	}
 	
 	/* In special cases you can specify the next ID to be used */
-	im_next_id(333l);
+	im_set_next_id(333l);
 	im_push_frame(IM_FILL);
 	
-	TEST_ASSERT_EQUAL_UINT32(333l, im_current_element()->id);
+	TEST_ASSERT_EQUAL_UINT32(333l, im_get_element()->id);
 }
 
 TEST(core_layout, limits) {
@@ -124,7 +124,7 @@ TEST(core_layout, limits) {
 
 TEST(core_layout, insets) {
 	/* We are changing root frame insets directly. Insets only apply to the children */
-	im_current_element()->insets = insets_uniform(10);
+	im_get_element()->insets = insets_uniform(10);
 	
 	/*
 	The next frame should be smaller by 10 units on each side as set by its parent.
@@ -137,20 +137,20 @@ TEST(core_layout, insets) {
 	the coordinates directly - it's applied when calculating the absolute (on-screen)
 	frame when rendering. Width and height, however, already take padding(s) into account.
 	*/
-	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 620, 460), im_current_element()->frame);
-	TEST_ASSERT_EQUAL_FRAME(frame_make(10, 10, 620, 460), im_absolute_frame());
+	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 620, 460), im_get_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(frame_make(10, 10, 620, 460), im_get_absolute_frame());
 	
 	/* Push another frame. This time there's padding only on the left as set by the previously pushed frame */
 	im_push_frame(IM_FILL);
 	
-	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 570, 460), im_current_element()->frame);
-	TEST_ASSERT_EQUAL_FRAME(frame_make(60, 10, 570, 460), im_absolute_frame());
+	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 570, 460), im_get_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(frame_make(60, 10, 570, 460), im_get_absolute_frame());
 	
 	/* Another relative frame, this time off-set from the origin */
 	im_push_frame(frame_make(30, 40, 100, 100));
 	
-	TEST_ASSERT_EQUAL_FRAME(frame_make(30, 40, 100, 100), im_current_element()->frame);
-	TEST_ASSERT_EQUAL_FRAME(frame_make(90, 50, 100, 100), im_absolute_frame());
+	TEST_ASSERT_EQUAL_FRAME(frame_make(30, 40, 100, 100), im_get_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(frame_make(90, 50, 100, 100), im_get_absolute_frame());
 	
 	/*
 	Here's what our layout looks like:
@@ -184,15 +184,15 @@ TEST(core_layout, overlay) {
 	*/
 	im_push_frame(frame_make(50, 50, 540, 380));
 	
-	TEST_ASSERT_EQUAL_FRAME(frame_make(50, 50, 540, 380), im_current_element()->frame);
-	TEST_ASSERT_EQUAL_FRAME(frame_make(50, 50, 540, 380), im_absolute_frame());
+	TEST_ASSERT_EQUAL_FRAME(frame_make(50, 50, 540, 380), im_get_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(frame_make(50, 50, 540, 380), im_get_absolute_frame());
 	
 	im_pop_frame();
 	
 	im_push_frame(frame_make(100, 100, 440, 280));
 	
-	TEST_ASSERT_EQUAL_FRAME(frame_make(100, 100, 440, 280), im_current_element()->frame);
-	TEST_ASSERT_EQUAL_FRAME(frame_make(100, 100, 440, 280), im_absolute_frame());
+	TEST_ASSERT_EQUAL_FRAME(frame_make(100, 100, 440, 280), im_get_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(frame_make(100, 100, 440, 280), im_get_absolute_frame());
 	
 	im_pop_frame();
 	
@@ -255,7 +255,7 @@ TEST(core_layout, culling) {
 
 TEST(core_layout, vstack_layout) {
 	/* Pushing a stack that lays out frames vertically with a 10pt spacing */
-	if (!im_push_frame_builder(IM_FILL, insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
+	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, insets_zero(), (im_layout_params_t) {
     0,
     .axis = VERTICAL,
     .spacing = 10,
@@ -267,14 +267,14 @@ TEST(core_layout, vstack_layout) {
 	
 	/* Width is calculated, but height is fixed at 50pt */
 	im_push_frame(IM_FILL_H(50));
-	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 640, 50), im_current_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 640, 50), im_get_element()->frame);
 	im_pop_frame();
 	
 	im_push_frame(IM_FILL_H(100));
-	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 50+10, 640, 100), im_current_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 50+10, 640, 100), im_get_element()->frame);
 	im_pop_frame();
 	
-	TEST_ASSERT_EQUAL_INT(170, im_current_element()->_layout_params._vertical_position);
+	TEST_ASSERT_EQUAL_INT(170, im_get_element()->_layout_params._vertical_position);
 	
 	if (im_push_frame(IM_FILL)) { TEST_FAIL_MESSAGE("Vertical limit exceeded"); }
 	
@@ -283,7 +283,7 @@ TEST(core_layout, vstack_layout) {
 
 TEST(core_layout, hstack_layout) {
 	/* Pushing a stack that lays out frames horizontally with no spacing, but everything is inset by 10pt */
-	if (!im_push_frame_builder(IM_FILL, insets_uniform(10), &im_stack_layout_builder, (im_layout_params_t) {
+	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, insets_uniform(10), (im_layout_params_t) {
     0,
     .axis = HORIZONTAL,
     .spacing = 0,
@@ -294,14 +294,14 @@ TEST(core_layout, hstack_layout) {
 	
 	/* Width is calculated, but height is fixed at 50pt */
 	im_push_frame(IM_FILL_W(200));
-	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 200, 480-2*10), im_current_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 200, 480-2*10), im_get_element()->frame);
 	im_pop_frame();
 	
 	im_push_frame(IM_FILL_W(100));
-	TEST_ASSERT_EQUAL_FRAME(frame_make(200, 0, 100, 480-2*10), im_current_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(frame_make(200, 0, 100, 480-2*10), im_get_element()->frame);
 	im_pop_frame();
 	
-	TEST_ASSERT_EQUAL_INT(300, im_current_element()->_layout_params._horizontal_position);
+	TEST_ASSERT_EQUAL_INT(300, im_get_element()->_layout_params._horizontal_position);
 	
 	im_pop_frame(); /* Not really necessary in testing, but.. */
 }
@@ -320,7 +320,7 @@ TEST(core_layout, grid_with_fixed_rows_and_columns) {
 	Here it's a 5x5 grid, meaning on our 640x480 screen,
 	each cell would be 128x96.
 	*/
-	if (!im_push_frame_builder(IM_FILL, insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
+	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, insets_zero(), (im_layout_params_t) {
     0,
     .axis = HORIZONTAL | VERTICAL,
     .spacing = 0,
@@ -336,12 +336,12 @@ TEST(core_layout, grid_with_fixed_rows_and_columns) {
 		int row = (i / 5);
 		int column = i - (row * 5);
 		im_push_frame(IM_FILL);
-		TEST_ASSERT_EQUAL_FRAME(frame_make(128*column, 96*row, 128, 96), im_current_element()->frame);
+		TEST_ASSERT_EQUAL_FRAME(frame_make(128*column, 96*row, 128, 96), im_get_element()->frame);
 		im_pop_frame();
 	}
 
-	TEST_ASSERT_EQUAL_INT(0, im_current_element()->_layout_params._horizontal_position);
-	TEST_ASSERT_EQUAL_INT(480, im_current_element()->_layout_params._vertical_position);
+	TEST_ASSERT_EQUAL_INT(0, im_get_element()->_layout_params._horizontal_position);
+	TEST_ASSERT_EQUAL_INT(480, im_get_element()->_layout_params._vertical_position);
 }
 
 TEST(core_layout, grid_with_fixed_cell_size) {
@@ -365,7 +365,7 @@ TEST(core_layout, grid_with_fixed_cell_size) {
 	│.................................│
 	└─────────────────────────────────┘
 	*/
-	if (!im_push_frame_builder(IM_FILL, insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
+	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, insets_zero(), (im_layout_params_t) {
     0,
     .axis = HORIZONTAL | VERTICAL,
     .width = 200,
@@ -383,16 +383,16 @@ TEST(core_layout, grid_with_fixed_cell_size) {
 		im_pop_frame();
 	}
 	
-	TEST_ASSERT_EQUAL_INT(600, im_current_element()->_layout_params._horizontal_position);
+	TEST_ASSERT_EQUAL_INT(600, im_get_element()->_layout_params._horizontal_position);
 	
 	/* Second row */
 	for (i = 0; i < 3; ++i) {
 		im_push_frame(IM_FILL);
-		TEST_ASSERT_EQUAL_INT(200, im_current_element()->frame.y);
+		TEST_ASSERT_EQUAL_INT(200, im_get_element()->frame.y);
 		im_pop_frame();
 	}
 	
-	TEST_ASSERT_EQUAL_INT(200, im_current_element()->_layout_params._vertical_position);
+	TEST_ASSERT_EQUAL_INT(200, im_get_element()->_layout_params._vertical_position);
 }
 
 TEST(core_layout, grid_with_varying_cell_size) {
@@ -402,7 +402,7 @@ TEST(core_layout, grid_with_varying_cell_size) {
 	current row or pushed to the next. In addition, you can still specify the number
 	of rows and columns, and these will now be used to limit number of cells on each axis.
 	*/
-	if (!im_push_frame_builder(IM_FILL, insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
+	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, insets_zero(), (im_layout_params_t) {
     0,
     .axis = HORIZONTAL | VERTICAL,
 		.limit.horizontal = 3,
@@ -413,22 +413,22 @@ TEST(core_layout, grid_with_varying_cell_size) {
 
 	/* Add 3 elements with increasing width. They should fit on the first row */
 	im_push_frame(frame_make(0, 0, 100, 160)); /* (1) */
-	TEST_ASSERT_EQUAL_INT(0, im_current_element()->frame.x);
+	TEST_ASSERT_EQUAL_INT(0, im_get_element()->frame.x);
 	im_pop_frame();
 	
-	TEST_ASSERT_EQUAL_INT(100, im_current_element()->_layout_params._horizontal_position);
+	TEST_ASSERT_EQUAL_INT(100, im_get_element()->_layout_params._horizontal_position);
 	
 	im_push_frame(frame_make(0, 0, 200, 160)); /* (2) */
-	TEST_ASSERT_EQUAL_INT(100, im_current_element()->frame.x);
+	TEST_ASSERT_EQUAL_INT(100, im_get_element()->frame.x);
 	im_pop_frame();
 	
-	TEST_ASSERT_EQUAL_INT(300, im_current_element()->_layout_params._horizontal_position);
+	TEST_ASSERT_EQUAL_INT(300, im_get_element()->_layout_params._horizontal_position);
 	
 	im_push_frame(frame_make(0, 0, 300, 160)); /* (3) */
-	TEST_ASSERT_EQUAL_INT(300, im_current_element()->frame.x);
+	TEST_ASSERT_EQUAL_INT(300, im_get_element()->frame.x);
 	im_pop_frame();
 	
-	TEST_ASSERT_EQUAL_INT(600, im_current_element()->_layout_params._horizontal_position);
+	TEST_ASSERT_EQUAL_INT(600, im_get_element()->_layout_params._horizontal_position);
 	
 	/*
 	Let's try to insert another cell that should fit width wise,
@@ -436,23 +436,23 @@ TEST(core_layout, grid_with_varying_cell_size) {
 	so it's pushed onto the next row.
 	*/
 	im_push_frame(frame_make(0, 0, 40, 160));
-	TEST_ASSERT_EQUAL_INT(0, 		im_current_element()->frame.x);
-	TEST_ASSERT_EQUAL_INT(160, 	im_current_element()->frame.y);
+	TEST_ASSERT_EQUAL_INT(0, 		im_get_element()->frame.x);
+	TEST_ASSERT_EQUAL_INT(160, 	im_get_element()->frame.y);
 	im_pop_frame();
 	
 	/* This one should be inserted normally onto the second row */
 	im_push_frame(frame_make(0, 0, 400, 160)); /* (5) */
-	TEST_ASSERT_EQUAL_INT(40, 	im_current_element()->frame.x);
-	TEST_ASSERT_EQUAL_INT(160,	im_current_element()->frame.y);
+	TEST_ASSERT_EQUAL_INT(40, 	im_get_element()->frame.x);
+	TEST_ASSERT_EQUAL_INT(160,	im_get_element()->frame.y);
 	im_pop_frame();
 	
 	/* Spacer fills the remaining space on the second row. Internally this is just a frame push + pop */
-	im_insert_spacer(IM_FILL_CONSTANT /* === 0 */);
+	im_spacer(IM_FILL_CONSTANT /* === 0 */);
 	
 	/* Insert an element to fill all the space on the third row */
 	im_push_frame(IM_FILL); /* (6) */
-	TEST_ASSERT_EQUAL_INT(640, 	im_current_element()->frame.w);
-	TEST_ASSERT_EQUAL_INT(160, 	im_current_element()->frame.h);
+	TEST_ASSERT_EQUAL_INT(640, 	im_get_element()->frame.w);
+	TEST_ASSERT_EQUAL_INT(160, 	im_get_element()->frame.h);
 	im_pop_frame();
 	
 	/*
@@ -477,7 +477,7 @@ TEST(core_layout, grid_with_down_direction) {
 	instead of filling and adding rows, columns are filled and added instead. Otherwise
 	they behave the same.
 	*/
-	if (!im_push_frame_builder(IM_FILL, insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
+	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, insets_zero(), (im_layout_params_t) {
     0,
     .axis = HORIZONTAL | VERTICAL,
 		.direction = DIR_DOWN,
@@ -488,34 +488,34 @@ TEST(core_layout, grid_with_down_direction) {
 	
 	/* Add 3 elements with increasing height and width. They should fit in the first column */
 	im_push_frame(frame_make(0, 0, 100, 120)); /* (1) */
-	TEST_ASSERT_EQUAL_INT(0,		im_current_element()->frame.y);
+	TEST_ASSERT_EQUAL_INT(0,		im_get_element()->frame.y);
 	im_pop_frame();
 	
-	TEST_ASSERT_EQUAL_INT(120,	im_current_element()->_layout_params._vertical_position);
+	TEST_ASSERT_EQUAL_INT(120,	im_get_element()->_layout_params._vertical_position);
 	
 	im_push_frame(frame_make(0, 0, 150, 160)); /* (2) */
-	TEST_ASSERT_EQUAL_INT(120,	im_current_element()->frame.y);
+	TEST_ASSERT_EQUAL_INT(120,	im_get_element()->frame.y);
 	im_pop_frame();
 	
-	TEST_ASSERT_EQUAL_INT(280, 	im_current_element()->_layout_params._vertical_position);
+	TEST_ASSERT_EQUAL_INT(280, 	im_get_element()->_layout_params._vertical_position);
 	
 	im_push_frame(frame_make(0, 0, 200, 200)); /* (3) */
-	TEST_ASSERT_EQUAL_INT(280, 	im_current_element()->frame.y);
+	TEST_ASSERT_EQUAL_INT(280, 	im_get_element()->frame.y);
 	im_pop_frame();
 	
 	/* No remaining space vertically - position moves back to the top and to the next column */
-	TEST_ASSERT_EQUAL_INT(200,	im_current_element()->_layout_params._horizontal_position);
-	TEST_ASSERT_EQUAL_INT(0,		im_current_element()->_layout_params._vertical_position);
+	TEST_ASSERT_EQUAL_INT(200,	im_get_element()->_layout_params._horizontal_position);
+	TEST_ASSERT_EQUAL_INT(0,		im_get_element()->_layout_params._vertical_position);
 	
 	/*
 	Without anything else configured on the grid, the next element will fill
 	the remaining space on the right.
 	*/
 	im_push_frame(IM_FILL); /* (4) */
-	TEST_ASSERT_EQUAL_FRAME(frame_make(200, 0, 440, 480), im_current_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(frame_make(200, 0, 440, 480), im_get_element()->frame);
 	im_pop_frame();
 	
-	TEST_ASSERT_EQUAL_INT(640, 	im_current_element()->_layout_params._horizontal_position);
+	TEST_ASSERT_EQUAL_INT(640, 	im_get_element()->_layout_params._horizontal_position);
 	
 	/*
 	For visualisation:
@@ -537,7 +537,7 @@ TEST(core_layout, grid_with_down_direction) {
 
 TEST(core_layout, vstack_scroll) {
 	/* Any element can be made scrollable, but it makes most sense for stacks/grids */
-	if (!im_push_frame_builder(IM_FILL, insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
+	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, insets_zero(), (im_layout_params_t) {
     0,
     .axis = VERTICAL,
 		.height = 100,
@@ -547,15 +547,15 @@ TEST(core_layout, vstack_scroll) {
 	}
 	
 	/* Scrolling is not enabled by default */
-	TEST_ASSERT_NULL(im_current_element()->_scroll_state);
-	TEST_ASSERT_FALSE(im_current_element()->_clipped);
+	TEST_ASSERT_NULL(im_get_element()->_scroll_state);
+	TEST_ASSERT_FALSE(im_get_element()->_clipped);
 	
 	im_enable_scroll(NULL);
 	
 	/* Scrolling also enables clipping */
-	TEST_ASSERT_TRUE(im_current_element()->_clipped);
+	TEST_ASSERT_TRUE(im_get_element()->_clipped);
 	
-	im_scroll_state_t *scroll = im_scroll_state();
+	im_scroll_state_t *scroll = im_get_scroll_state();
 	
 	TEST_ASSERT_EQUAL_VEC2(vec2_zero(), scroll->offset);
 	TEST_ASSERT_EQUAL_VEC2(vec2_zero(), scroll->content_size);
@@ -566,12 +566,68 @@ TEST(core_layout, vstack_scroll) {
 	for (int i = 0; i < 10; ++i) {
 		if (im_push_frame(IM_FILL)) {
 			/* Elements should be offset by scroll amount on the Y axis */
-			TEST_ASSERT_EQUAL_INT(i*100-220, im_current_element()->frame.y);
+			TEST_ASSERT_EQUAL_INT(i*100-220, im_get_element()->frame.y);
 			im_pop_frame();
 		}
 	}
 	
 	TEST_ASSERT_EQUAL_VEC2(vec2_make(640, 100*10), scroll->content_size);
+}
+
+TEST(core_layout, clipping) {
+	/* Clipping is partially a graphical feature implemented in the backend,
+	   but the layout elements also calculate a relative frame that's been clipped.
+		 
+		 Clipping is OFF by default, but every layout element is eventually clipped
+		 against the root element (the screen itself) because things are clipped
+		 automatically by most renderers when drawing out of bounds */ 
+		 
+	/* An element that's partially outside the root bounds gets clipped */
+	im_push_frame(frame_make(100, -100, 440, 200));
+	TEST_ASSERT_EQUAL_FRAME(frame_make(100, 0, 440, 100), im_get_element()->clipped_frame);
+	im_pop_frame();
+	
+	/* Some element filling the whole root */
+	im_push_frame(IM_FILL);
+			
+	/* Clipping is now turned ON for the current layout element */
+	im_enable_clipping();
+	
+	im_push_frame(frame_make(600, 400, 100, 100));
+	
+	TEST_ASSERT_EQUAL_FRAME(frame_make(600, 400, 40, 80), im_get_element()->clipped_frame);
+		
+		im_push_frame(frame_make(30, 70, 20, 20));
+		TEST_ASSERT_EQUAL_FRAME(frame_make(30, 70, 10, 10), im_get_element()->clipped_frame);
+		im_pop_frame();
+		
+	im_pop_frame();
+	
+	
+	im_push_frame(frame_make(-75, -50, 200, 200));
+	
+	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 125, 150), im_get_element()->clipped_frame);
+		
+		im_push_frame(frame_make(0, 0, 100, 100));
+		TEST_ASSERT_EQUAL_FRAME(frame_make(75, 50, 25, 50), im_get_element()->clipped_frame);
+		im_pop_frame();
+		
+		im_push_frame(frame_make(-25, -50, 100, 100));
+		TEST_ASSERT_EQUAL_FRAME(frame_make(75, 50, 0, 0), im_get_element()->clipped_frame);
+		im_pop_frame();
+		
+	im_pop_frame();
+	
+	im_push_frame(frame_make(100, 100, 440, 280));
+	im_enable_clipping();
+	
+		im_push_frame(frame_make(-10, -50, 460, 100));
+		TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 440, 50), im_get_element()->clipped_frame);
+		im_pop_frame();
+	
+	im_pop_frame();
+
+	im_pop_frame();
 }
 
 TEST_GROUP_RUNNER(core_layout) {
@@ -589,4 +645,5 @@ TEST_GROUP_RUNNER(core_layout) {
   RUN_TEST_CASE(core_layout, grid_with_varying_cell_size);
   RUN_TEST_CASE(core_layout, grid_with_down_direction);
   RUN_TEST_CASE(core_layout, vstack_scroll);
+  RUN_TEST_CASE(core_layout, clipping);
 }

@@ -3,16 +3,16 @@
 
 #include "types/vec2.h"
 
+DECLARE_STACK(frame_t);
+
 typedef struct {
 	im_buffer_ref buffer;
-	STACK(im_element_t) elments;
+	STACK(im_element_t) elements;
+	STACK(frame_t) clip_frames;
 } im_buffer_elements_t;
 
 typedef struct {
 	IMGUIID id;
-	imgui_widget_t type;
-	int internal_record;
-	im_buffer_ref buffer;
 	enum {
 		INACTIVE = 0,
 		ACTIVATED,
@@ -21,14 +21,6 @@ typedef struct {
 	unsigned int last_tick;
 	union {
 		unsigned char bytes[IM_STATE_MEM_SIZE];
-		/*im_menubar_dt menubar;
-		im_menu_dt menu;
-		im_window_dt window;
-		im_multiline_text_info_t text;
-		im_input_dt input;
-		im_scroller_dt scroller;
-		im_slider_dt slider;
-		im_dynamic_list_dt dynamic_list;*/
 	} data;
 } im_state_t;
 
@@ -37,10 +29,5 @@ typedef struct {
 	unsigned int last_tick;
   im_scroll_state_t value;
 } im_scroll_state_element_t;
-
-typedef struct {
-  im_buffer_ref buffer;
-  frame_t frame;
-} im_clip_element_t;
 
 #endif
