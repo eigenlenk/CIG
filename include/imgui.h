@@ -197,12 +197,9 @@ typedef struct frame_stack_element_t {
 	/* Private. Keep out! */
 	bool (*_layout_function)(const frame_t, const frame_t, im_layout_params_t *, frame_t *);
 	im_layout_params_t _layout_params;
-  bool _clipped;
+  bool _clipped, _interaction_enabled;
   im_scroll_state_t *_scroll_state;
 	unsigned int _id_counter;
-	/*struct {
-		bool hovered;
-	} _input_state;*/
 } frame_stack_element_t;
 
 DECLARE_STACK(frame_stack_element_t);
@@ -273,8 +270,9 @@ typedef enum {
 im_mouse_button_t im_pressed(const im_mouse_button_t, const im_press_options_t);
 
 typedef enum {
-	CASEFLAG(0, IM_CLICK_ON_BUTTON_DOWN),
-	CASEFLAG(1, IM_CLICK_EXPIRE)
+	CASEFLAG(0, IM_CLICK_STARTS_INSIDE),
+	CASEFLAG(1, IM_CLICK_ON_BUTTON_DOWN),
+	CASEFLAG(2, IM_CLICK_EXPIRE)
 } im_click_options_t;
 
 im_mouse_button_t im_clicked(const im_mouse_button_t, const im_click_options_t);
@@ -332,31 +330,6 @@ void im_set_default_font(im_font_ref);
 /* -----------------------------------------------------------------------------
  * Input building blocks.
  */
-
-typedef struct {
-	short index;
-	bool hover;
-	bool press;
-	bool click;
-	vec2 position;
-} im_mouse_result_t;
-
-typedef enum {
-	BITFLAG(0, _IM_MOUSE_PRESS_INSIDE),
-	BITFLAG(1, IM_MOUSE_CLICK_ON_PRESS),
-	BITFLAG(2, IM_MOUSE_NO_CONVERT),
-	BITFLAG(3, IM_MOUSE_CLICK_EXPIRE)
-} im_mouse_listener_option_t;
-
-im_mouse_button_t im_mouse_listener(
-	IMGUIID id,
-	const frame_t frame,
-	const unsigned int flags,
-	const im_mouse_button_t buttons,
-	bool *hovered,
-	bool *pressed,
-	vec2 *mouse_position
-);
 
 void im_key_handler(void (*handler)(const im_keycode));
 
@@ -423,6 +396,7 @@ IM_INLINE im_scroll_state_t* im_scroll_state() { return im_current_element()->_s
 void im_enable_scroll(im_scroll_state_t *);
 void im_enable_clip();
 void im_disable_culling();
+void im_enable_interaction();
 
 #ifdef DEBUG
 

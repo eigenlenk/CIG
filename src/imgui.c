@@ -42,7 +42,7 @@ static struct {
 		NEITHER,	/* Button was neither pressed or released this frame */
 		BEGAN,		/* Button was pressed down this frame (click started) */
 		ENDED,		/* Button was released this frame (click ended) */
-		FAILED		/* Button was held longer than deemed appropriate */
+		EXPIRED		/* Button was held longer than deemed appropriate */
 	} click_state;
 	struct {
 		bool active;
@@ -56,6 +56,7 @@ static struct {
 	unsigned int target_prev_frame;
 	unsigned int target_this_frame;
 	IMGUIID press_target_id; /* Element that was focused when button press began */
+	IMGUIID last_press_target_id; /* Element that was focused when the button press last began */
 	bool locked_on_element;
 } mouse = { 0 };
 
@@ -92,6 +93,7 @@ static im_scroll_state_t* get_scroll_state(const IMGUIID);
 static bool					im_state_record_value(im_state_t*, int);
 static IMGUIID 			im_frame_identity(const frame_t);
 static void 				cache_font(const im_font_ref);
+static void 				handle_element_hover(frame_stack_element_t *);
 static void 				im_push_buffer(const im_buffer_ref, const frame_t);
 static void					im_pop_buffer();
 static void					im_blit_buffer(im_buffer_ref);
@@ -210,7 +212,7 @@ void im_set_input_state(
 	mouse.click_state = (!mouse.button_mask && previous_button_mask)
 		? (tick - mouse.press_start_tick) < 12
 			? ENDED
-			: FAILED
+			: EXPIRED
 		: (button_mask & IM_MOUSE_BUTTON_LEFT && !(previous_button_mask & IM_MOUSE_BUTTON_LEFT)) || (button_mask & IM_MOUSE_BUTTON_RIGHT && !(previous_button_mask & IM_MOUSE_BUTTON_RIGHT))
 			? BEGAN
 			: NEITHER;
@@ -226,7 +228,9 @@ void im_set_input_state(
 	if (mouse.click_state == BEGAN) {
 		mouse.press_start_tick = tick;
 		mouse.press_target_id = mouse.target_prev_frame;
-	} else if (mouse.click_state == ENDED || mouse.click_state == FAILED) {
+		mouse.last_press_target_id = 0;
+	} else if (mouse.click_state == ENDED || mouse.click_state == EXPIRED) {
+		mouse.last_press_target_id = mouse.press_target_id;
 		mouse.press_target_id = 0;
 	}
 
@@ -334,8 +338,9 @@ FASTFUNC bool _im_push_frame(
 	}
 
 	top->_layout_params._count.total ++;
-	
-	STACK_PUSH(im_frame_stack(), ((frame_stack_element_t) {
+
+	STACK_PUSH(im_frame_stack(), ((frame_stack_element_t){
+		0,
 		.id = next_id ? next_id : (top->id + tinyhash(top->id+top->_id_counter++, im_depth())),
 		.frame = next,
 		.absolute_frame = im_convert_relative_frame(next),
@@ -457,27 +462,10 @@ unsigned int im_depth() {
 }
 
 bool im_hovered() {
-	/*
-	My approach for mouse hit detection in immediate-mode GUI:
-	Due to immediate processing of elements, checking mouse position
-	and drawing highlighted/pressed states right away can lead to multiple
-	overlapping elements showing those states.
-	To address this, we track the most recent (topmost) element the cursor
-	touches each frame. On subsequent frame, we compare the currently drawn
-	element (ID) with the previous result. This introduces a one-frame delay
-	between mouse detection and response but in reality it's imperceptible.
-	*/
-	const frame_stack_element_t* element = im_current_element();
-	
-	if (frame_contains(element->absolute_frame, mouse.position)) {
-		mouse.target_this_frame = element->id;
-
-		if (mouse.locked_on_element == false && element->id == mouse.target_prev_frame) {
-			return true;
-		}
-	}
-	
-	return false;
+	/* See `handle_element_hover` */
+	return mouse.locked_on_element == false &&
+		im_current_element()->_interaction_enabled &&
+		im_current_element()->id == mouse.target_prev_frame;
 }
 
 im_mouse_button_t im_pressed(
@@ -517,9 +505,11 @@ im_mouse_button_t im_clicked(
 			return result;
 		}
 	} else {
-		im_mouse_button_t result;
-		if ((mouse.click_state == ENDED || (mouse.click_state == FAILED && !(options & IM_MOUSE_CLICK_EXPIRE))) && (result = buttons & mouse.last_button)) {
-			return result;
+		if (mouse.click_state == ENDED || (mouse.click_state == EXPIRED && !(options & IM_CLICK_EXPIRE))) {
+			if (options & IM_CLICK_STARTS_INSIDE && mouse.last_press_target_id != im_current_element()->id) {
+				return 0;
+			}
+			return buttons & mouse.last_button;
 		}
 	}
 	
@@ -640,6 +630,22 @@ void im_draw_line(const int x1, const int y1, const int x2, const int y2, const 
 
 // Private
 
+static void handle_element_hover(frame_stack_element_t *element) {
+	/*
+	My approach for mouse hit detection in immediate-mode GUI:
+	Due to immediate processing of elements, checking mouse position
+	and drawing highlighted/pressed states right away can lead to multiple
+	overlapping elements showing those states.
+	To address this, we track the most recent (topmost) element the cursor
+	touches each frame. On subsequent frame, we compare the currently drawn
+	element (ID) with the previous result. This introduces a one-frame delay
+	between mouse detection and response but in reality it's imperceptible.
+	*/
+	if (frame_contains(element->absolute_frame, mouse.position)) {
+		mouse.target_this_frame = element->id;
+	}
+}
+
 // V2
 
 void im_push_value(const im_option_key_t k, const im_value_t o) {
@@ -690,80 +696,6 @@ static bool im_key_id(
 
 static IMGUIID im_frame_identity(const frame_t frame) {
 	return (((31313 ^ (frame.x + 1)) << 5) + ((107007 ^ (frame.y+1)) << 16));
-}
-
-im_mouse_button_t im_mouse_listener(
-	IMGUIID id,
-	const frame_t frame,
-	const unsigned int flags,
-	const im_mouse_button_t buttons,
-	bool *hovered,
-	bool *pressed,
-	vec2 *mouse_position
-) {
-#ifdef OLD
-	/* Convert relative frame to screen space */
-	const frame_t screen_frame = (flags & IM_MOUSE_NO_CONVERT)
-		? frame
-		: im_convert_relative_frame(frame);
-
-	/* Calculate mouse position relative to current origin */
-	if (mouse_position) {
-		*mouse_position = vec2_sub(mouse.position, vec2_make(screen_frame.x, screen_frame.y));
-	}
-
-	/*
-	 * My approach for mouse hit detection in immediate-mode GUI:
-	 * Due to immediate processing of elements, checking mouse position
-	 * and drawing highlighted/pressed states right away can lead to multiple
-	 * overlapping elements showing those states.
-	 * To address this, we track the most recent (topmost) element the cursor
-	 * touches each frame. On subsequent frame, we compare the currently drawn
-	 * element (ID) with the previous result. This introduces a one-frame delay
-	 * between mouse detection and response but in reality it's imperceptible.
-	 */
-	if (frame_contains(screen_frame, mouse.position)) {
-		mouse.target_this_frame = id;
-
-		if (mouse.locked_on_element == false && id == mouse.target_prev_frame) {
-			if (hovered) { *hovered = true; }
-			if (pressed) {
-				/*
-				 * If `IM_MOUSE_PRESS_INSIDE` option is specified, the press has start
-				 * within the bounds of this element. Otherwise it can start
-				 * outside and element reflects pressed state as soon as mouse
-				 * moves onto it.
-				 */
-				*pressed = buttons & mouse.button_mask && (
-					(flags & IM_MOUSE_PRESS_INSIDE) == false || (flags & IM_MOUSE_PRESS_INSIDE && mouse.press_target_id == id)
-				);
-			}
-
-			/*
-			 * A click is detected either when mouse button is first pressed down,
-			 * or when it's released, depending on the option.
-			 */
-			if (flags & IM_MOUSE_CLICK_ON_PRESS) {
-				im_mouse_button_t result;
-				if (mouse.click_state == BEGAN && (result = buttons & mouse.button_mask)) {
-					return result;
-				}
-			} else {
-				im_mouse_button_t result;
-				if ((mouse.click_state == ENDED || (mouse.click_state == FAILED && !(flags & IM_MOUSE_CLICK_EXPIRE))) && (result = buttons & mouse.last_button)) {
-					return result;
-				}
-			}
-
-			return 0;
-		}
-	}
-
-	if (hovered) { *hovered = false; }
-	if (pressed) { *pressed = false; }
-#endif
-
-	return 0;
 }
 
 bool im_key(const im_keycode key) {
@@ -984,8 +916,8 @@ bool im_stack_layout_builder(
  */
 
 void im_enable_scroll(im_scroll_state_t *state) {
-  frame_stack_element_t *current_frame = im_current_element();
-  current_frame->_scroll_state = state ? state : get_scroll_state(current_frame->id);
+  frame_stack_element_t *element = im_current_element();
+  element->_scroll_state = state ? state : get_scroll_state(element->id);
   im_enable_clip();
 }
 
@@ -997,6 +929,14 @@ void im_disable_culling() {
 	im_current_element()->_layout_params.options &= ~IM_CULL_SUBFRAMES;
 }
 
+void im_enable_interaction() {
+	frame_stack_element_t *element = im_current_element();
+	if (element->_interaction_enabled) {
+		return;
+	}
+	element->_interaction_enabled = true;
+	handle_element_hover(element);
+}
 
 /* -----------------------------------------------------------------------------
 * Internal functions

@@ -49,18 +49,21 @@ void demo_ui(BITMAP *buffer) {
   im_fill_color(3);
 	
   im_enable_scroll(NULL);
+	im_enable_interaction();
 	
-	if (autoscroll_direction == 1) { /* Scroll until the bottom of the content */
-		if (im_current_element()->_scroll_state->offset.y < CIM_SCROLL_LIMIT_Y) {
-			im_current_element()->_scroll_state->offset.y += 1;
-		} else {
-			autoscroll_direction = -1;
-		}
-	} else { /* Scroll back top */
-		if (im_current_element()->_scroll_state->offset.y > 0) {
-			im_current_element()->_scroll_state->offset.y -= 1;
-		} else {
-			autoscroll_direction = 1;
+	if (!im_hovered()) {
+		if (autoscroll_direction == 1) { /* Scroll until the bottom of the content */
+			if (im_current_element()->_scroll_state->offset.y < CIM_SCROLL_LIMIT_Y) {
+				im_current_element()->_scroll_state->offset.y += 1;
+			} else {
+				autoscroll_direction = -1;
+			}
+		} else { /* Scroll back top */
+			if (im_current_element()->_scroll_state->offset.y > 0) {
+				im_current_element()->_scroll_state->offset.y -= 1;
+			} else {
+				autoscroll_direction = 1;
+			}
 		}
 	}
 		
@@ -90,6 +93,7 @@ void demo_ui(BITMAP *buffer) {
 	
 	void demo_grid_element(const frame_t frame) {
 		if (im_push_frame(frame)) {
+			im_enable_interaction();
 			if (im_pressed(IM_MOUSE_BUTTON_ANY, 0)) {
 				im_fill_color(75);
 			} else if (im_hovered()) {
@@ -204,18 +208,23 @@ void demo_ui(BITMAP *buffer) {
 
   im_pop_frame(); /* Pop horizontal stack layout */
 	
-	/* Some sort of a floating footer on top of the content */
+	/* Some sort of a floating footer button on top of the content */
 	{
-		im_push_frame(frame_make(100, IM_B - 110, 440, 60));
-		if (im_clicked(IM_MOUSE_BUTTON_ANY, 0)) {
+		im_push_frame(frame_make(200, IM_B - 100, 240, 50));
+		
+		im_enable_interaction();
+		
+		if (im_clicked(IM_MOUSE_BUTTON_ANY, IM_CLICK_STARTS_INSIDE)) {
 			grid_demo = (grid_demo + 1) % 4;
-			im_fill_color(50);
+			im_fill_color(3);
 		} else if (im_pressed(IM_MOUSE_BUTTON_ANY, IM_MOUSE_PRESS_INSIDE)) {
 			im_fill_color(9);
 		} else if (im_hovered()) {
 			im_fill_color(10);
 		}
+		
 		im_stroke_color(15);
+		
 		im_pop_frame();
 	}
 
