@@ -28,6 +28,7 @@ int main(int argc, char **argv)
 			
 			"-DDEBUG",
 			"-DUNITY_INCLUDE_PRINT_FORMATTED",
+			"-DUNITY_INCLUDE_DOUBLE",
 			
 			"-o", OUT_FOLDER"tests",
 			

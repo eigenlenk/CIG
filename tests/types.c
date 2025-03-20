@@ -97,11 +97,54 @@ TEST(types, frame_union) {
 }
 
 TEST(types, insets_constructors) {
-	TEST_ASSERT_EQUAL_INSETS(10, 20, 30, 40, insets_make(10, 20, 30, 40));
-	TEST_ASSERT_EQUAL_INSETS(0, 0, 0, 0, insets_zero());
-	TEST_ASSERT_EQUAL_INSETS(5, 5, 5, 5, insets_uniform(5));
-	TEST_ASSERT_EQUAL_INSETS(8, 0, 8, 0, insets_horizontal(8));
-	TEST_ASSERT_EQUAL_INSETS(0, 1, 0, 1, insets_vertical(1));
+	const insets_t i0 = insets_zero();
+	const insets_t i1 = insets_make(10, 20, 30, 40);
+	const insets_t i2 = insets_uniform(5);
+	const insets_t i3 = insets_horizontal(8);
+	const insets_t i4 = insets_vertical(1);
+	
+	TEST_ASSERT(i0.left == 0  && i0.top == 0  && i0.right == 0  && i0.bottom == 0 );
+	TEST_ASSERT(i1.left == 10 && i1.top == 20 && i1.right == 30 && i1.bottom == 40);
+	TEST_ASSERT(i2.left == 5  && i2.top == 5  && i2.right == 5  && i2.bottom == 5 );
+	TEST_ASSERT(i3.left == 8  && i3.top == 0  && i3.right == 8  && i3.bottom == 0 );
+	TEST_ASSERT(i4.left == 0  && i4.top == 1  && i4.right == 0  && i4.bottom == 1 );
+}
+
+TEST(types, vec2_constructors_and_validity) {
+	const vec2 v0 = vec2_zero();
+	const vec2 v1 = vec2_make(1, 2);
+	const vec2 v2 = vec2_invalid();
+	
+	TEST_ASSERT(v0.x == 0 && v0.y == 0);
+	TEST_ASSERT(v1.x == 1 && v1.y == 2);
+	TEST_ASSERT_TRUE(vec2_valid(v0));
+	TEST_ASSERT_TRUE(vec2_valid(v1));
+	TEST_ASSERT_FALSE(vec2_valid(v2));
+}
+
+TEST(types, vec2_operations) {
+	TEST_ASSERT_EQUAL_VEC2(vec2_make(5, 7), vec2_add(vec2_make(3, 4), vec2_make(2, 3)));
+	TEST_ASSERT_EQUAL_VEC2(vec2_make(8, 0), vec2_sub(vec2_make(9, 5), vec2_make(1, 5)));
+	TEST_ASSERT_EQUAL_VEC2(vec2_make(6, 10), vec2_mul(vec2_make(3, 5), 2));
+	TEST_ASSERT_EQUAL_VEC2(vec2_make(8, 4), vec2_div(vec2_make(16, 8), 2));
+}
+
+TEST(types, vec2_comparator) {
+	const vec2 a = vec2_make(10, 10);
+	const vec2 b = vec2_make(10, 10);
+	const vec2 c = vec2_make(20, 20);
+	
+	TEST_ASSERT_TRUE(vec2_cmp(a, b));
+	TEST_ASSERT_FALSE(vec2_cmp(b, c));
+}
+
+TEST(types, vec2_math_utils) {
+	TEST_ASSERT_GREATER_THAN(0, vec2_sign(vec2_make(10, 14), vec2_make(2, 3), vec2_make(5, 7)));
+	TEST_ASSERT_LESS_THAN(0, vec2_sign(vec2_make(4, 2), vec2_make(1, 3), vec2_make(5, 7)));
+	TEST_ASSERT_EQUAL_INT(0, vec2_sign(vec2_make(5, 2), vec2_make(0, 2), vec2_make(10, 2)));
+	TEST_ASSERT_DOUBLE_WITHIN(0.001, 2.828, vec2_dist(vec2_make(1, 1), vec2_make(3, 3)));
+	TEST_ASSERT_EQUAL_INT(32, vec2_distsq(vec2_make(1, 1), vec2_make(5, 5)));
+	TEST_ASSERT_EQUAL_VEC2(vec2_make(5, 5), vec2_abs(vec2_make(-5, -5)));
 }
 
 TEST_GROUP_RUNNER(types) {
@@ -116,4 +159,8 @@ TEST_GROUP_RUNNER(types) {
   RUN_TEST_CASE(types, frame_containing);
   RUN_TEST_CASE(types, frame_union);
 	RUN_TEST_CASE(types, insets_constructors);
+	RUN_TEST_CASE(types, vec2_constructors_and_validity);
+	RUN_TEST_CASE(types, vec2_operations);
+	RUN_TEST_CASE(types, vec2_comparator);
+	RUN_TEST_CASE(types, vec2_math_utils);
 }

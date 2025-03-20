@@ -29,19 +29,19 @@ FASTFUNC vec2 vec2_invalid() {
 }
 
 FASTFUNC vec2 vec2_add(vec2 a, vec2 b) {
-	return (vec2){a.x + b.x, a.y + b.y};
+	return (vec2){ a.x + b.x, a.y + b.y };
 }
 
 FASTFUNC vec2 vec2_sub(vec2 a, vec2 b) {
-	return (vec2){a.x - b.x, a.y - b.y};
+	return (vec2){ a.x - b.x, a.y - b.y };
 }
 
 FASTFUNC vec2 vec2_mul(vec2 a, T f) {
-	return (vec2){a.x * f, a.y * f};
+	return (vec2){ a.x * f, a.y * f };
 }
 
 FASTFUNC vec2 vec2_div(vec2 a, T f) {
-	return (vec2){a.x / f, a.y / f};
+	return (vec2){ a.x / f, a.y / f };
 }
 
 FASTFUNC bool vec2_valid(vec2 a) {
@@ -54,6 +54,10 @@ FASTFUNC bool vec2_cmp(vec2 a, vec2 b) {
 
 FASTFUNC int vec2_sign(const vec2 P, const vec2 A, const vec2 B) {
   return (P.x - B.x) * (A.y - B.y) - (A.x - B.x) * (P.y - B.y);
+}
+
+FASTFUNC double vec2_dist(const vec2 A, const vec2 B) {
+	return sqrt(pow(fabs((double)(B.x-A.x)), 2) + pow(fabs((double)(B.y-A.y)), 2));
 }
 
 FASTFUNC int vec2_distsq(const vec2 A, const vec2 B) {
