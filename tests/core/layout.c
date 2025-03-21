@@ -667,17 +667,17 @@ TEST(core_layout, main_screen_subregion) {
 	/* Let's end the original layout added by the test harness .. */
 	im_end_layout();
 	
-	/* .. and start a new image. Lets imagine we have a larger game screen but only want to render
+	/* .. and start a new UI. Lets imagine we have a larger game screen but only want to render
 	   the UI in the bottom half of it. So on our 640x480 screen the Y and H would both be 240 */
 	im_begin_layout(&main_buffer, frame_make(0, 240, 640, 240));
 	
 	/* The UI should be clipped within that larger screen */
 	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 240, 640, 240), im_get_element()->clipped_frame);
 	
-	/* And the element absolute frames should be offset as well, while the relative frames stay the same */
 	
 	im_push_frame(IM_FILL);
 	
+	/* The absolute frame should be offset as well, while the relative frames stay the same */
 	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 640, 240), im_get_element()->frame);
 	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 640, 240), im_get_element()->clipped_frame);
 	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 240, 640, 240), im_get_element()->absolute_frame);
