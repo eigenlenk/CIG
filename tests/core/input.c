@@ -165,7 +165,7 @@ TEST(core_input, simple_drag) {
 		if (i == 0) {
 			im_set_input_state(vec2_make(25, 25), IM_MOUSE_BUTTON_LEFT);
 			
-			/* Taking exlusive ownership of the mouse */
+			/* Taking exlusive ownership of the mouse. See `im_mouse_state_t` for more info */
 			im_mouse_state()->locked = true;
 			
 			/* Drag is activated on mouse button down */
@@ -183,7 +183,9 @@ TEST(core_input, simple_drag) {
 			TEST_ASSERT_FALSE(im_mouse_state()->drag.active);
 		}
 		
-		im_push_frame(frame_make(40, 40, 20, 20));
+		
+		im_push_frame(frame_make(0, 0, 100, 100));
+		im_enable_interaction();
 		
 		if (i == 1) {
 			/* Even though the mouse is over this element at this point, lock
@@ -197,6 +199,33 @@ TEST(core_input, simple_drag) {
 	}
 }
 
+TEST(core_input, button_states) {
+	im_set_input_state(vec2_zero(), IM_MOUSE_BUTTON_LEFT);
+	
+	TEST_ASSERT_TRUE(im_mouse_state()->button_mask & IM_MOUSE_BUTTON_LEFT);
+	TEST_ASSERT_EQUAL(IM_MOUSE_BUTTON_LEFT, im_mouse_state()->last_button_down);
+	TEST_ASSERT_EQUAL(0, im_mouse_state()->last_button_up);
+	
+	
+	im_set_input_state(vec2_zero(), IM_MOUSE_BUTTON_LEFT | IM_MOUSE_BUTTON_RIGHT);
+	
+	TEST_ASSERT_TRUE(im_mouse_state()->button_mask & IM_MOUSE_BUTTON_ANY);
+	TEST_ASSERT_EQUAL(IM_MOUSE_BUTTON_RIGHT, im_mouse_state()->last_button_down);
+	TEST_ASSERT_EQUAL(0, im_mouse_state()->last_button_up);
+	
+	
+	im_set_input_state(vec2_zero(), IM_MOUSE_BUTTON_RIGHT);
+	
+	TEST_ASSERT_TRUE(im_mouse_state()->button_mask & IM_MOUSE_BUTTON_RIGHT);
+	TEST_ASSERT_EQUAL(IM_MOUSE_BUTTON_LEFT, im_mouse_state()->last_button_up);
+	
+	
+	im_set_input_state(vec2_zero(), 0);
+	
+	TEST_ASSERT_EQUAL(0, im_mouse_state()->button_mask);
+	TEST_ASSERT_EQUAL(IM_MOUSE_BUTTON_RIGHT, im_mouse_state()->last_button_up);
+}
+
 TEST_GROUP_RUNNER(core_input) {
 	RUN_TEST_CASE(core_input, hover_and_press);
 	RUN_TEST_CASE(core_input, overlapping_hover_and_press);
@@ -204,4 +233,5 @@ TEST_GROUP_RUNNER(core_input) {
 	RUN_TEST_CASE(core_input, click_on_button_down);
 	RUN_TEST_CASE(core_input, click_starts_outside);
 	RUN_TEST_CASE(core_input, simple_drag);
+	RUN_TEST_CASE(core_input, button_states);
 }

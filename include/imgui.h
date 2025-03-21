@@ -107,7 +107,8 @@ typedef enum {
 
 typedef struct {
 	im_mouse_button_t button_mask;
-	im_mouse_button_t last_button;
+	im_mouse_button_t last_button_down;
+	im_mouse_button_t last_button_up;
 	vec2 position;
 	enum {
 		NEITHER,	/* Button was neither pressed or released this frame */

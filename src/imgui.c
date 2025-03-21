@@ -200,13 +200,21 @@ void im_set_input_state(
 		: (button_mask & IM_MOUSE_BUTTON_LEFT && !(previous_button_mask & IM_MOUSE_BUTTON_LEFT)) || (button_mask & IM_MOUSE_BUTTON_RIGHT && !(previous_button_mask & IM_MOUSE_BUTTON_RIGHT))
 			? BEGAN
 			: NEITHER;
-			
-	if (previous_button_mask & IM_MOUSE_BUTTON_LEFT && !(mouse.button_mask & IM_MOUSE_BUTTON_LEFT)) {
-		mouse.last_button = IM_MOUSE_BUTTON_LEFT;
-	} else if (previous_button_mask & IM_MOUSE_BUTTON_RIGHT && !(mouse.button_mask & IM_MOUSE_BUTTON_RIGHT)) {
-		mouse.last_button = IM_MOUSE_BUTTON_RIGHT;
+		
+	if (mouse.button_mask & IM_MOUSE_BUTTON_LEFT && !(previous_button_mask & IM_MOUSE_BUTTON_LEFT)) {
+		mouse.last_button_down = IM_MOUSE_BUTTON_LEFT;
+	} else if (mouse.button_mask & IM_MOUSE_BUTTON_RIGHT && !(previous_button_mask & IM_MOUSE_BUTTON_RIGHT)) {
+		mouse.last_button_down = IM_MOUSE_BUTTON_RIGHT;
 	} else {
-		mouse.last_button = 0;
+		mouse.last_button_down = 0;
+	}
+	
+	if (previous_button_mask & IM_MOUSE_BUTTON_LEFT && !(mouse.button_mask & IM_MOUSE_BUTTON_LEFT)) {
+		mouse.last_button_up = IM_MOUSE_BUTTON_LEFT;
+	} else if (previous_button_mask & IM_MOUSE_BUTTON_RIGHT && !(mouse.button_mask & IM_MOUSE_BUTTON_RIGHT)) {
+		mouse.last_button_up = IM_MOUSE_BUTTON_RIGHT;
+	} else {
+		mouse.last_button_up = 0;
 	}
 
 	if (mouse.click_state == BEGAN) {
@@ -281,7 +289,7 @@ im_mouse_button_t im_clicked(
 			if (options & IM_CLICK_STARTS_INSIDE && mouse._press_target_id != im_get_element()->id) {
 				return 0;
 			}
-			return buttons & mouse.last_button;
+			return buttons & mouse.last_button_up;
 		}
 	}
 	
