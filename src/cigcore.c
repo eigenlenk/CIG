@@ -1,5 +1,4 @@
-#include "imgui.h"
-#include "imprivt.h"
+#include "cigcore.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -7,18 +6,45 @@
 #include <assert.h>
 #include <math.h>
 
+/* Declare internal types */
+
+DECLARE_STACK(frame_t);
+
+typedef struct {
+	im_buffer_ref buffer;
+	vec2 origin;
+	STACK(frame_t) clip_frames;
+} im_buffer_element_t;
+
+typedef struct {
+  IMGUIID id;
+	unsigned int last_tick;
+  im_scroll_state_t value;
+} im_scroll_state_element_t;
+
+typedef struct {
+	IMGUIID id;
+	enum {
+		INACTIVE = 0,
+		ACTIVATED,
+		ACTIVE
+	} activation_state;
+	unsigned int last_tick;
+	union {
+		unsigned char bytes[IM_STATE_MEM_SIZE];
+	} data;
+} im_state_t;
+
 typedef im_state_t* im_state_ptr_t;
 
-/* Define stack types */
 DECLARE_STACK(im_state_ptr_t);
 DECLARE_STACK(im_buffer_element_t);
 
-/* Declare stacks */
+/* Define internal state */
+
 static STACK(im_state_ptr_t) widget_states;
 static STACK(im_element_t) elements;
 static STACK(im_buffer_element_t) buffers;
-
-/* Internal state members */
 static struct {
 	im_state_t values[IM_STATES_MAX];
 	size_t size;
@@ -29,6 +55,7 @@ static IMGUIID next_id = 0;
 static unsigned int tick = 0;
 
 /* Forward delcarations */
+
 // static im_state_t* 				im_state(const IMGUIID, const imgui_widget_t);
 
 static im_scroll_state_t* get_scroll_state(IMGUIID);
@@ -45,7 +72,7 @@ static bool next_layout_frame(frame_t, im_element_t *, frame_t *);
 
 static bool push_frame(frame_t, insets_t, im_layout_params_t, bool (*)(frame_t, frame_t, im_layout_params_t*, frame_t*));
 
-static inline __attribute__((always_inline)) int tinyhash(int a, int b) { return (a * 31) ^ (b * 17); }
+static inline  __attribute__((always_inline)) int tinyhash(int a, int b) { return (a * 31) ^ (b * 17); }
 
 
 /* ┌───────────────┐
@@ -500,8 +527,8 @@ bool im_default_layout_builder(
 				}
 				
 				prm->_horizontal_position += (w + prm->spacing);
-				prm->_h_size = MAX(prm->_h_size, w);
-				prm->_v_size = MAX(prm->_v_size, h);
+				prm->_h_size = CIG_MAX(prm->_h_size, w);
+				prm->_v_size = CIG_MAX(prm->_v_size, h);
 				prm->_count.h_cur ++;
 				
 				if (prm->_horizontal_position >= container.w) {
@@ -516,8 +543,8 @@ bool im_default_layout_builder(
 				}
 				
 				prm->_vertical_position += (h + prm->spacing);
-				prm->_h_size = MAX(prm->_h_size, w);
-				prm->_v_size = MAX(prm->_v_size, h);
+				prm->_h_size = CIG_MAX(prm->_h_size, w);
+				prm->_v_size = CIG_MAX(prm->_v_size, h);
 				prm->_count.v_cur ++;
 				
 				if (prm->_vertical_position >= container.h) {
@@ -531,14 +558,14 @@ bool im_default_layout_builder(
 			return false;
 		}
 		prm->_horizontal_position += (w + prm->spacing);
-		prm->_h_size = MAX(prm->_h_size, w);
+		prm->_h_size = CIG_MAX(prm->_h_size, w);
 		prm->_count.h_cur ++;
 	} else if (v_axis) {
 		if (prm->limit.vertical && prm->_count.v_cur == prm->limit.vertical) {
 			return false;
 		}
 		prm->_vertical_position += (h + prm->spacing);
-		prm->_v_size = MAX(prm->_v_size, h);
+		prm->_v_size = CIG_MAX(prm->_v_size, h);
 		prm->_count.v_cur ++;
 	}
 
@@ -601,8 +628,8 @@ static bool push_frame(
 	}
 	
   if (top->_scroll_state) {
-		top->_scroll_state->content_size.x = MAX(top->_scroll_state->content_size.x, next.x + next.w);
-		top->_scroll_state->content_size.y = MAX(top->_scroll_state->content_size.y, next.y + next.h);
+		top->_scroll_state->content_size.x = CIG_MAX(top->_scroll_state->content_size.x, next.x + next.w);
+		top->_scroll_state->content_size.y = CIG_MAX(top->_scroll_state->content_size.y, next.y + next.h);
 	  next = frame_offset(next, -top->_scroll_state->offset.x, -top->_scroll_state->offset.y);
   }
 

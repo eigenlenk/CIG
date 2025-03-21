@@ -1,33 +1,18 @@
-#ifndef IM_UMBRELLA_H
-#define IM_UMBRELLA_H
+#ifndef CIG_CORE_INCLUDED
+#define CIG_CORE_INCLUDED
 
-#include "imlimits.h"
-#include "imguim.h"
-#include "stack.h"
+#include "ciglimit.h"
+#include "cigmac.h"
+#include "cigcorem.h"
 #include "types/frame.h"
 #include "types/insets.h"
+#include "types/stack.h"
 #include <stdbool.h>
 #include <stddef.h>
 
-#define IM_FILL_CONSTANT 0
-#define IM_FILL frame_make(0, 0, IM_FILL_CONSTANT, IM_FILL_CONSTANT)
-#define IM_FILL_W(W) frame_make(0, 0, W, IM_FILL_CONSTANT)
-#define IM_FILL_H(H) frame_make(0, 0, IM_FILL_CONSTANT, H)
-#define IM_X im_current_element()->frame.x
-#define IM_Y im_current_element()->frame.y
-#define IM_W im_current_element()->frame.w
-#define IM_H im_current_element()->frame.h
-#define IM_CENTERED(W, H) frame_make((IM_W * 0.5) - (W * 0.5), (IM_H * 0.5) - (H * 0.5), W, H)
-#define IM_CENTER vec2_make((IM_W * 0.5), (IM_H * 0.5))
-#define IM_R (IM_X + IM_W)
-#define IM_B (IM_Y + IM_H)
-#define CIM_SCROLL_LIMIT_X im_current_element()->_scroll_state->content_size.x-im_current_element()->frame.w+im_current_element()->insets.left+im_current_element()->insets.right
-#define CIM_SCROLL_LIMIT_Y im_current_element()->_scroll_state->content_size.y-im_current_element()->frame.h+im_current_element()->insets.top+im_current_element()->insets.bottom
-
-
-/* ╔══════════════════════════════════════════════════╗
-   ║            PUBLIC TYPE DECLARATIONS              ║
-   ╚══════════════════════════════════════════════════╝ */
+/* ╔══════════════════════════╗
+   ║ PUBLIC TYPE DECLARATIONS ║
+   ╚══════════════════════════╝ */
 
 
 /* All layout element get a unique ID that tries to be unique across frames, but no promises.
@@ -41,7 +26,7 @@ typedef void* im_buffer_ref;
 
 /* */
 typedef enum {
-	BITFLAG(0, IM_CULL_SUBFRAMES),
+	CASEFLAG(0, IM_CULL_SUBFRAMES),
 	
 	IM_DEFAULT_LAYOUT_FLAGS = IM_CULL_SUBFRAMES
 } im_layout_options_t;
@@ -57,7 +42,7 @@ typedef struct {
 		CASE(0, DIR_LEFT),
 		CASE(1, DIR_DOWN)
 	} direction; /* Direction in which the layout flows.
-									Only applies to grids (axis = VERTICAL | HORIZONTAL) */
+	                Only applies to grids (axis = VERTICAL | HORIZONTAL) */
 	int spacing, width, height, columns, rows;
 	struct {
 		int horizontal, vertical, total;
@@ -73,12 +58,14 @@ typedef struct {
 } im_layout_params_t;
 
 
+/* */
 typedef struct {
   vec2 offset;
 	vec2 content_size;
 } im_scroll_state_t;
 
 
+/* */
 typedef struct {
 	IMGUIID id;
 	frame_t frame; /* Relative frame */
@@ -93,9 +80,6 @@ typedef struct {
   im_scroll_state_t *_scroll_state;
 	unsigned int _id_counter;
 } im_element_t;
-
-
-DECLARE_STACK(im_element_t);
 
 
 typedef enum {
@@ -146,6 +130,9 @@ typedef enum {
 	CASEFLAG(2, IM_CLICK_EXPIRE),
 	IM_CLICK_DEFAULT_OPTIONS = IM_CLICK_STARTS_INSIDE
 } im_click_options_t;
+
+
+DECLARE_STACK(im_element_t);
 
 
 

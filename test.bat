@@ -1,2 +1,2 @@
 @ECHO off
-out\tests.exe
+bin\tests.exe

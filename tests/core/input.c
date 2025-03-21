@@ -1,6 +1,6 @@
 #include "unity.h"
 #include "fixture.h"
-#include "imgui.h"
+#include "cigcore.h"
 #include "asserts.h"
 
 TEST_GROUP(core_input);

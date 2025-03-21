@@ -1,6 +1,5 @@
 #include "unity.h"
 #include "fixture.h"
-#include "imgui.h"
 #include "asserts.h"
 
 TEST_GROUP(types);

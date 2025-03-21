@@ -1,6 +1,6 @@
 #include "unity.h"
 #include "fixture.h"
-#include "imgui.h"
+#include "cigcore.h"
 #include "asserts.h"
 
 TEST_GROUP(core_layout);
@@ -63,8 +63,9 @@ TEST(core_layout, identifiers) {
 		register int i;
 		for (i = 0; i < ids.n; ++i) {
 			if (ids.recorded[i] == id) {
-				TEST_PRINTF("Line %d: ID %lu is not unique! [%d] = %lu", line, id, i, ids.recorded[i]);
-				TEST_FAIL();
+				char failure_message[128];
+				sprintf(failure_message, "Line %d: ID %lu is not unique! [%d] = %lu", line, id, i, ids.recorded[i]);
+				TEST_FAIL_MESSAGE(failure_message);
 				break;
 			}
 		}

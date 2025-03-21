@@ -1,9 +1,41 @@
 #ifndef IM_MACROS_H
 #define IM_MACROS_H
 
-/*
- * Collection of (in)convenience macros for dealing with layout and sizing.
- */
+/* ╔══════════════════════════════════════════╗
+   ║ BASIC CORE MACROS                        ║
+	 ║                                          ║
+	 ║ Collection of (in)convenience macros for ║
+	 ║ dealing with layout and sizing           ║
+   ╚══════════════════════════════════════════╝ */
+	 
+
+#define IM_FILL_CONSTANT 0
+
+#define IM_FILL frame_make(0, 0, IM_FILL_CONSTANT, IM_FILL_CONSTANT)
+
+#define IM_FILL_W(W) frame_make(0, 0, W, IM_FILL_CONSTANT)
+
+#define IM_FILL_H(H) frame_make(0, 0, IM_FILL_CONSTANT, H)
+
+#define IM_X im_current_element()->frame.x
+
+#define IM_Y im_current_element()->frame.y
+
+#define IM_W im_current_element()->frame.w
+
+#define IM_H im_current_element()->frame.h
+
+#define IM_CENTER vec2_make((IM_W * 0.5), (IM_H * 0.5))
+
+#define IM_CENTERED(W, H) frame_make((IM_W * 0.5) - (W * 0.5), (IM_H * 0.5) - (H * 0.5), W, H)
+
+#define IM_R (IM_X + IM_W)
+
+#define IM_B (IM_Y + IM_H)
+
+#define CIM_SCROLL_LIMIT_X im_current_element()->_scroll_state->content_size.x-im_current_element()->frame.w+im_current_element()->insets.left+im_current_element()->insets.right
+
+#define CIM_SCROLL_LIMIT_Y im_current_element()->_scroll_state->content_size.y-im_current_element()->frame.h+im_current_element()->insets.top+im_current_element()->insets.bottom
 
 #define IM_ARRANGE(FRAME, BODY) \
 	if (im_push_frame(FRAME)) { \
@@ -18,7 +50,7 @@
 		im_pop_frame(); \
 	}
 	
-#define IM_ARRANGE_FILL(BODY) \
+#define IM_FILLED(BODY) \
 	if (im_push_frame(IM_FILL)) { \
 		BODY; \
 		im_pop_frame(); \
@@ -26,18 +58,6 @@
 	
 #define IM_BODY(CONTENT) CONTENT
 
-/*
- * WINDOW MACROS
- */
-#define IM_WINDOW(TITLE, POS, SIZE, DECORATIONS, VISIBLE, BUTTONS, BODY) \
-	if (im_begin_window(TITLE, POS, SIZE, DECORATIONS, VISIBLE, BUTTONS)) { \
-		BODY \
-		im_end_window(); \
-	}
-#define IM_WINDOW_BUTTONS_EMPTY (im_window_button_t) { 0 }
-#define IM_WINDOW_BUTTONS(BTNS...) BTNS, IM_WINDOW_BUTTONS_EMPTY
-#define IM_WINDOW_BUTTON(TITLE, CALLBACK) (im_window_button_t) { .title = TITLE, .click = CALLBACK }
-#define IM_WINDOW_CONTENT_SIZE(W, H) vec2_make(W, H)
 
 #define IM_GRID(ID, COLUMNS, ROWS, SPACING, MOUSE, BODY) \
 	im_begin_grid(ID, COLUMNS, ROWS, SPACING, MOUSE); \
@@ -79,14 +99,6 @@
 #define IM_STACK_COLUMNS(N) .width = N
 #define IM_STACK_OPTIONS(F) .options = F
 
-#define IM_MENU_SEPARATOR "-"
-
 #define IM_LAYOUT_PARAMS(PARAMS...) (im_layout_params_t) { 0, PARAMS }
-
-#define IM_MOUSE_LISTENER(ID, BODY, CLICKBODY) \
-	if (im_mouse_listener(ID, IM_FILL, IM_MOUSE_PRESS_INSIDE, IM_MOUSE_BUTTON_LEFT, NULL, NULL, NULL)) { \
-		CLICKBODY; \
-	} \
-	BODY;
 
 #endif
