@@ -7,9 +7,9 @@ DECLARE_STACK(frame_t);
 
 typedef struct {
 	im_buffer_ref buffer;
-	STACK(im_element_t) elements;
+	vec2 origin;
 	STACK(frame_t) clip_frames;
-} im_buffer_elements_t;
+} im_buffer_element_t;
 
 typedef struct {
 	IMGUIID id;

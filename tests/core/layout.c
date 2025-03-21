@@ -70,7 +70,7 @@ TEST(core_layout, identifiers) {
 		}
 	}
 	
-	TEST_ASSERT_EQUAL_UINT32(4151533312l, im_get_element()->id);
+	TEST_ASSERT_EQUAL_UINT32(2090695081l, im_get_element()->id); // im_hash("root")
 	
 	const int n0 = 8;
 	
@@ -637,6 +637,54 @@ TEST(core_layout, clipping) {
 	im_pop_frame();
 }
 
+TEST(core_layout, additional_buffers) {
+	int secondary_buffer = 2;
+	
+	im_push_frame(frame_make(100, 100, 440, 280));
+	im_push_buffer(&secondary_buffer);
+	
+	TEST_ASSERT_EQUAL(&secondary_buffer, im_get_buffer());
+	TEST_ASSERT_EQUAL_FRAME(frame_make(100, 100, 440, 280), im_get_element()->clipped_frame);
+	TEST_ASSERT_EQUAL_FRAME(frame_make(100, 100, 440, 280), im_get_element()->absolute_frame);
+	
+	
+	/* Another child within that new buffer */
+	im_push_frame(frame_make(100, 100, 240, 80));
+
+	TEST_ASSERT_EQUAL_FRAME(frame_make(100, 100, 240, 80), im_get_element()->frame);
+	
+	/* Absolute frame is now in the coordinate space of the new buffer, rather than the main buffer */
+	TEST_ASSERT_EQUAL_FRAME(frame_make(100, 100, 240, 80), im_get_element()->absolute_frame);
+
+	im_pop_frame();
+	
+	
+	im_pop_buffer();
+	im_pop_frame();
+}
+
+TEST(core_layout, main_screen_subregion) {
+	/* Let's end the original layout added by the test harness .. */
+	im_end_layout();
+	
+	/* .. and start a new image. Lets imagine we have a larger game screen but only want to render
+	   the UI in the bottom half of it. So on our 640x480 screen the Y and H would both be 240 */
+	im_begin_layout(&main_buffer, frame_make(0, 240, 640, 240));
+	
+	/* The UI should be clipped within that larger screen */
+	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 240, 640, 240), im_get_element()->clipped_frame);
+	
+	/* And the element absolute frames should be offset as well, while the relative frames stay the same */
+	
+	im_push_frame(IM_FILL);
+	
+	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 640, 240), im_get_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 640, 240), im_get_element()->clipped_frame);
+	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 240, 640, 240), im_get_element()->absolute_frame);
+	
+	im_pop_frame();
+}
+
 TEST_GROUP_RUNNER(core_layout) {
   RUN_TEST_CASE(core_layout, basic_checks);
   RUN_TEST_CASE(core_layout, push_pop);
@@ -653,4 +701,6 @@ TEST_GROUP_RUNNER(core_layout) {
   RUN_TEST_CASE(core_layout, grid_with_down_direction);
   RUN_TEST_CASE(core_layout, vstack_scroll);
   RUN_TEST_CASE(core_layout, clipping);
+  RUN_TEST_CASE(core_layout, additional_buffers);
+  RUN_TEST_CASE(core_layout, main_screen_subregion);
 }

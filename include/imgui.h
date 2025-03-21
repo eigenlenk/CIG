@@ -227,6 +227,27 @@ STACK(im_element_t)* im_get_frame_stack();
 
 
 
+/* ┌────────────────────────────────┐
+───┤  TEMPORARY BUFFERS (ADVANCED)  │
+   └────────────────────────────────┘ */
+	 
+
+/* Similar to `im_begin_layout` where you start rendering into a new buffer,
+   in the current element's coordinate system. All subsequent elements `absolute_frame`-s
+	 are relative to this buffer/screen/texture.
+	 
+	 This is mostly when you want to cache
+   some more complex widget, like a large text view or similar. You can internally
+   check whether you need to redraw or just re-render the old buffer/screen/texture */	 
+void im_push_buffer(im_buffer_ref);
+
+
+/* Pops the previously pushed buffer. Does not reset anything else about the state
+   of the UI, unline `im_end_layout` */
+void im_pop_buffer();
+
+
+
 /* ┌─────────────────────┐
 ───┤  MOUSE INTERACTION  │
    └─────────────────────┘ */

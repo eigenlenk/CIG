@@ -200,30 +200,37 @@ TEST(core_input, simple_drag) {
 }
 
 TEST(core_input, button_states) {
+	/* (Time 0) */
 	im_set_input_state(vec2_zero(), IM_MOUSE_BUTTON_LEFT);
 	
 	TEST_ASSERT_TRUE(im_mouse_state()->button_mask & IM_MOUSE_BUTTON_LEFT);
 	TEST_ASSERT_EQUAL(IM_MOUSE_BUTTON_LEFT, im_mouse_state()->last_button_down);
 	TEST_ASSERT_EQUAL(0, im_mouse_state()->last_button_up);
+	TEST_ASSERT_EQUAL(BEGAN, im_mouse_state()->click_state);
 	
-	
+	/* (T1) */
 	im_set_input_state(vec2_zero(), IM_MOUSE_BUTTON_LEFT | IM_MOUSE_BUTTON_RIGHT);
 	
 	TEST_ASSERT_TRUE(im_mouse_state()->button_mask & IM_MOUSE_BUTTON_ANY);
 	TEST_ASSERT_EQUAL(IM_MOUSE_BUTTON_RIGHT, im_mouse_state()->last_button_down);
 	TEST_ASSERT_EQUAL(0, im_mouse_state()->last_button_up);
+	/* Maybe this should report a failed case or something because you're not
+	   pressing down both mouse buttons and expecting a click event normally? */
+	TEST_ASSERT_EQUAL(NEITHER, im_mouse_state()->click_state);
 	
-	
+	/* (T2) */
 	im_set_input_state(vec2_zero(), IM_MOUSE_BUTTON_RIGHT);
 	
 	TEST_ASSERT_TRUE(im_mouse_state()->button_mask & IM_MOUSE_BUTTON_RIGHT);
 	TEST_ASSERT_EQUAL(IM_MOUSE_BUTTON_LEFT, im_mouse_state()->last_button_up);
+	TEST_ASSERT_EQUAL(NEITHER, im_mouse_state()->click_state);
 	
-	
+	/* (T3) */
 	im_set_input_state(vec2_zero(), 0);
 	
 	TEST_ASSERT_EQUAL(0, im_mouse_state()->button_mask);
 	TEST_ASSERT_EQUAL(IM_MOUSE_BUTTON_RIGHT, im_mouse_state()->last_button_up);
+	TEST_ASSERT_EQUAL(ENDED, im_mouse_state()->click_state);
 }
 
 TEST_GROUP_RUNNER(core_input) {

@@ -10,13 +10,12 @@ typedef im_state_t* im_state_ptr_t;
 
 /* Define stack types */
 DECLARE_STACK(im_state_ptr_t);
-DECLARE_STACK(im_buffer_elements_t);
-
+DECLARE_STACK(im_buffer_element_t);
 
 /* Declare stacks */
 static STACK(im_state_ptr_t) widget_states;
-static STACK(im_buffer_elements_t) buffers;
-
+static STACK(im_element_t) elements;
+static STACK(im_buffer_element_t) buffers;
 
 /* Internal state members */
 static struct {
@@ -34,10 +33,6 @@ static unsigned int tick = 0;
 static im_scroll_state_t* get_scroll_state(IMGUIID);
 
 static void handle_element_hover(im_element_t*);
-
-static void im_push_buffer(im_buffer_ref, frame_t);
-
-static void	im_pop_buffer();
 
 static void im_push_clip(im_element_t*);
 
@@ -58,9 +53,25 @@ static inline __attribute__((always_inline)) int tinyhash(int a, int b) { return
 
 void im_begin_layout(const im_buffer_ref buffer, const frame_t frame) {
 	STACK_INIT(&widget_states);
+	STACK_INIT(&elements);
 	STACK_INIT(&buffers);
 
-	im_push_buffer(buffer, frame);
+	STACK_PUSH(&elements, ((im_element_t) {
+		0,
+		.id = next_id ? next_id : im_hash("root"),
+		.frame = frame_make(0, 0, frame.w, frame.h),
+		.clipped_frame = frame,
+		.absolute_frame = frame,
+		.insets = insets_zero(),
+		._layout_function = NULL,
+		._layout_params = (im_layout_params_t){ 0, .options = IM_DEFAULT_LAYOUT_FLAGS }
+	}));
+	
+	im_push_buffer(buffer);
+	
+	im_enable_clipping();
+	
+	next_id = 0;
 }
 
 void im_end_layout() {
@@ -161,17 +172,40 @@ frame_t im_get_absolute_frame() {
 }
 
 frame_t im_convert_relative_frame(const frame_t frame) {
-	const im_element_t *top = im_get_element();
+	const im_buffer_element_t *buffer = &STACK_TOP(&buffers);
+	const im_element_t *element = im_get_element();
 	
 	return frame_offset(
-		resolve_size(frame, top),
-		top->absolute_frame.x + top->insets.left,
-		top->absolute_frame.y + top->insets.top
+		resolve_size(frame, element),
+		element->absolute_frame.x + element->insets.left - buffer->origin.x,
+		element->absolute_frame.y + element->insets.top - buffer->origin.y
 	);
 }
 
 STACK(im_element_t)* im_get_frame_stack() {
-	return &STACK_TOP(&buffers).elements;
+	return &elements;
+}
+
+
+/* ┌────────────────────────────────┐
+───┤  TEMPORARY BUFFERS (ADVANCED)  │
+   └────────────────────────────────┘ */
+	 
+void im_push_buffer(const im_buffer_ref buffer) {
+	im_buffer_element_t buffer_element = {
+		.buffer = buffer,
+		.origin = STACK_IS_EMPTY(&buffers)
+			? vec2_zero()
+			: vec2_make(im_get_element()->absolute_frame.x, im_get_element()->absolute_frame.y)
+	};
+	STACK_INIT(&buffer_element.clip_frames);
+	
+	STACK_PUSH(&buffer_element.clip_frames, im_get_element()->absolute_frame);
+	STACK_PUSH(&buffers, buffer_element);
+}
+
+void im_pop_buffer() {
+	STACK_POP_NORETURN(&buffers);
 }
 
 
@@ -198,7 +232,9 @@ void im_set_input_state(
 			? ENDED
 			: EXPIRED
 		: (button_mask & IM_MOUSE_BUTTON_LEFT && !(previous_button_mask & IM_MOUSE_BUTTON_LEFT)) || (button_mask & IM_MOUSE_BUTTON_RIGHT && !(previous_button_mask & IM_MOUSE_BUTTON_RIGHT))
-			? BEGAN
+			? mouse.click_state == BEGAN
+				? NEITHER
+				: BEGAN
 			: NEITHER;
 		
 	if (mouse.button_mask & IM_MOUSE_BUTTON_LEFT && !(previous_button_mask & IM_MOUSE_BUTTON_LEFT)) {
@@ -542,8 +578,8 @@ static bool push_frame(
 	im_layout_params_t params,
 	bool (*layout_function)(frame_t, frame_t, im_layout_params_t*, frame_t*)
 ) {
-	im_buffer_elements_t *current_buffer = &STACK_TOP(&buffers);
-	im_element_t *top = &STACK_TOP(&current_buffer->elements);
+	im_buffer_element_t *current_buffer = &STACK_TOP(&buffers);
+	im_element_t *top = im_get_element();
 	
 	if (top->_layout_params.limit.total > 0 && top->_layout_params._count.total == top->_layout_params.limit.total) {
 		return false;
@@ -572,7 +608,7 @@ static bool push_frame(
 	frame_t absolute_frame = im_convert_relative_frame(next);
 	frame_t current_clip_frame = STACK_TOP(&current_buffer->clip_frames);
 
-	STACK_PUSH(&current_buffer->elements, ((im_element_t){
+	STACK_PUSH(&elements, ((im_element_t){
 		0,
 		.id = next_id ? next_id : (top->id + tinyhash(top->id+top->_id_counter++, im_get_depth())),
 		.frame = next,
@@ -662,36 +698,6 @@ static im_scroll_state_t* get_scroll_state(const IMGUIID id) {
 		
     return &_scroll_elements[first_available].value;
   }
-}
-
-static void im_push_buffer(const im_buffer_ref buffer, const frame_t frame) {
-	im_buffer_elements_t buffer_framestack;
-	buffer_framestack.buffer = buffer;
-	
-	STACK_INIT(&buffer_framestack.elements);
-	STACK_INIT(&buffer_framestack.clip_frames);
-	
-	STACK_PUSH(&buffer_framestack.elements, ((im_element_t) {
-		0,
-		.id = next_id ? next_id : (im_hash("buffer") + STACK_SIZE(&buffers) << 8),
-		.frame = frame,
-		.clipped_frame = frame,
-		.absolute_frame = frame,
-		.insets = insets_zero(),
-		._layout_function = NULL,
-		._layout_params = (im_layout_params_t){ 0, .options = IM_DEFAULT_LAYOUT_FLAGS },
-		._clipped = true
-	}));
-	
-	STACK_PUSH(&buffer_framestack.clip_frames, frame);
-	
-	next_id = 0;
-	
-	STACK_PUSH(&buffers, buffer_framestack);
-}
-
-static void	im_pop_buffer() {
-	STACK_POP_NORETURN(&buffers);
 }
 
 static void im_push_clip(im_element_t *element) {
