@@ -174,7 +174,7 @@ void im_reset_internal_state();
 
 
 /* Returns an opaque pointer to the current buffer where drawing operations would take place */
-im_buffer_ref im_get_buffer();
+im_buffer_ref im_buffer();
 
 
 /* Pushes a new frame with zero insets to layout stack.
@@ -207,23 +207,23 @@ im_element_t* im_pop_frame();
 
 
 /* Returns current layout element */
-im_element_t* im_get_element();
+im_element_t* im_element();
 
 
 /* Returns current local frame relative to its parent */
-frame_t im_get_relative_frame();
+frame_t im_relative_frame();
 
 
 /* Returns current screen-space frame */
-frame_t im_get_absolute_frame();
+frame_t im_absolute_frame();
 
 
 /* Converts a relative frame to a screen-space frame */
 frame_t im_convert_relative_frame(frame_t);
 
 
-/* Returns a pointer to the current layout element stack. Avoid if possible. */
-STACK(im_element_t)* im_get_frame_stack();
+/* Returns a pointer to the current layout element stack. Avoid accessing if possible. */
+STACK(im_element_t)* im_element_stack();
 
 
 
@@ -301,20 +301,24 @@ im_mouse_button_t im_clicked(im_mouse_button_t, im_click_options_t);
 bool im_enable_scroll(im_scroll_state_t *);
 
 
-/* Set scroll values */
-void im_set_scroll(vec2);
+/* Set scroll offset values */
+void im_set_offset(vec2);
 
 
-/* Change scroll values */
-void im_scroll(vec2);
+/* Change scroll offset values */
+void im_change_offset(vec2);
 
 
-/* Get scroll values */
-vec2 im_get_scroll();
+/* Get scroll offset values */
+vec2 im_offset();
+
+
+/* Get scroll content size */
+vec2 im_content_size();
 
 
 /* Returns the current scroll state objet, NULL if scrolling is not enabled */
-im_scroll_state_t* im_get_scroll_state();
+im_scroll_state_t* im_scroll_state();
 
 
 
@@ -340,7 +344,7 @@ void im_set_next_id(IMGUIID);
 
 
 /* Returns the depth of the layout stack currently */
-unsigned int im_get_depth();
+unsigned int im_depth();
 
 
 /* Generates an ID from a string */

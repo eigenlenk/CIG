@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <assert.h>
 #include <math.h>
 
 typedef im_state_t* im_state_ptr_t;
@@ -116,7 +117,7 @@ void im_reset_internal_state() {
 	next_id = 0;
 }
 
-im_buffer_ref im_get_buffer() {
+im_buffer_ref im_buffer() {
 	return STACK_TOP(&buffers).buffer;
 }
 
@@ -149,7 +150,7 @@ bool im_push_frame_function(
 }
 
 im_element_t* im_pop_frame() {
-  im_element_t *popped_element = &STACK_POP(im_get_frame_stack());
+  im_element_t *popped_element = &STACK_POP(im_element_stack());
 
   if (popped_element->_clipped) {
     popped_element->_clipped = false;
@@ -159,21 +160,21 @@ im_element_t* im_pop_frame() {
   return popped_element;
 }
 
-im_element_t* im_get_element() {
-	return &STACK_TOP(im_get_frame_stack());
+im_element_t* im_element() {
+	return &STACK_TOP(im_element_stack());
 }
 
-frame_t im_get_relative_frame() {
-	return im_get_element()->frame;
+frame_t im_relative_frame() {
+	return im_element()->frame;
 }
 
-frame_t im_get_absolute_frame() {
-	return im_get_element()->absolute_frame;
+frame_t im_absolute_frame() {
+	return im_element()->absolute_frame;
 }
 
 frame_t im_convert_relative_frame(const frame_t frame) {
 	const im_buffer_element_t *buffer = &STACK_TOP(&buffers);
-	const im_element_t *element = im_get_element();
+	const im_element_t *element = im_element();
 	
 	return frame_offset(
 		resolve_size(frame, element),
@@ -182,7 +183,7 @@ frame_t im_convert_relative_frame(const frame_t frame) {
 	);
 }
 
-STACK(im_element_t)* im_get_frame_stack() {
+STACK(im_element_t)* im_element_stack() {
 	return &elements;
 }
 
@@ -196,11 +197,11 @@ void im_push_buffer(const im_buffer_ref buffer) {
 		.buffer = buffer,
 		.origin = STACK_IS_EMPTY(&buffers)
 			? vec2_zero()
-			: vec2_make(im_get_element()->absolute_frame.x, im_get_element()->absolute_frame.y)
+			: vec2_make(im_element()->absolute_frame.x, im_element()->absolute_frame.y)
 	};
 	STACK_INIT(&buffer_element.clip_frames);
 	
-	STACK_PUSH(&buffer_element.clip_frames, im_get_element()->absolute_frame);
+	STACK_PUSH(&buffer_element.clip_frames, im_element()->absolute_frame);
 	STACK_PUSH(&buffers, buffer_element);
 }
 
@@ -277,7 +278,7 @@ im_mouse_state_t *im_mouse_state() {
 }
 
 void im_enable_interaction() {
-	im_element_t *element = im_get_element();
+	im_element_t *element = im_element();
 	if (element->_interaction_enabled) {
 		return;
 	}
@@ -287,7 +288,7 @@ void im_enable_interaction() {
 
 bool im_hovered() {
 	/* See `handle_element_hover` */
-	return mouse.locked == false && im_get_element()->_interaction_enabled && im_get_element()->id == mouse._target_prev_frame;
+	return mouse.locked == false && im_element()->_interaction_enabled && im_element()->id == mouse._target_prev_frame;
 }
 
 im_mouse_button_t im_pressed(
@@ -300,7 +301,7 @@ im_mouse_button_t im_pressed(
 	
 	const im_mouse_button_t button_mask = buttons & mouse.button_mask;
 	
-	if (button_mask && ((options & IM_MOUSE_PRESS_INSIDE) == false || (options & IM_MOUSE_PRESS_INSIDE && mouse._press_target_id == im_get_element()->id))) {
+	if (button_mask && ((options & IM_MOUSE_PRESS_INSIDE) == false || (options & IM_MOUSE_PRESS_INSIDE && mouse._press_target_id == im_element()->id))) {
 		return button_mask;
 	} else {
 		return 0;
@@ -322,7 +323,7 @@ im_mouse_button_t im_clicked(
 		}
 	} else {
 		if (mouse.click_state == ENDED || (mouse.click_state == EXPIRED && !(options & IM_CLICK_EXPIRE))) {
-			if (options & IM_CLICK_STARTS_INSIDE && mouse._press_target_id != im_get_element()->id) {
+			if (options & IM_CLICK_STARTS_INSIDE && mouse._press_target_id != im_element()->id) {
 				return 0;
 			}
 			return buttons & mouse.last_button_up;
@@ -338,26 +339,34 @@ im_mouse_button_t im_clicked(
    └─────────────┘ */
 
 bool im_enable_scroll(im_scroll_state_t *state) {
-  im_element_t *element = im_get_element();
+  im_element_t *element = im_element();
   element->_scroll_state = state ? state : get_scroll_state(element->id);
 	im_enable_clipping();
 	return element->_scroll_state != NULL;
 }
 
-void im_set_scroll(vec2 offset) {
-	im_get_scroll_state()->offset = offset;
+void im_set_offset(vec2 offset) {
+	assert(im_scroll_state());
+	im_scroll_state()->offset = offset;
 }
 
- void im_scroll(vec2 delta) {
-	im_get_scroll_state()->offset = vec2_add(im_get_scroll_state()->offset, delta);
+void im_change_offset(vec2 delta) {
+	assert(im_scroll_state());
+	im_scroll_state()->offset = vec2_add(im_scroll_state()->offset, delta);
 }
 
-vec2 im_get_scroll() {
-	return im_get_scroll_state()->offset;
+vec2 im_offset() {
+	assert(im_scroll_state());
+	return im_scroll_state()->offset;
 }
 
-im_scroll_state_t* im_get_scroll_state() {
-	return im_get_element()->_scroll_state;
+vec2 im_content_size() {
+	assert(im_scroll_state());
+	return im_scroll_state()->content_size;
+}
+
+im_scroll_state_t* im_scroll_state() {
+	return im_element()->_scroll_state;
 }
 
 
@@ -366,19 +375,19 @@ im_scroll_state_t* im_get_scroll_state() {
    └──────────────────┘ */
 	 
 void im_disable_culling() {
-	im_get_element()->_layout_params.options &= ~IM_CULL_SUBFRAMES;
+	im_element()->_layout_params.options &= ~IM_CULL_SUBFRAMES;
 }
 
 void im_enable_clipping() {
-  im_push_clip(im_get_element());
+  im_push_clip(im_element());
 }
 
 void im_set_next_id(IMGUIID id) {
 	next_id = id;
 }
 
-unsigned int im_get_depth() {
-	return STACK_SIZE(im_get_frame_stack());
+unsigned int im_depth() {
+	return STACK_SIZE(im_element_stack());
 }
 
 IMGUIID im_hash(const char *str) {
@@ -579,7 +588,7 @@ static bool push_frame(
 	bool (*layout_function)(frame_t, frame_t, im_layout_params_t*, frame_t*)
 ) {
 	im_buffer_element_t *current_buffer = &STACK_TOP(&buffers);
-	im_element_t *top = im_get_element();
+	im_element_t *top = im_element();
 	
 	if (top->_layout_params.limit.total > 0 && top->_layout_params._count.total == top->_layout_params.limit.total) {
 		return false;
@@ -610,7 +619,7 @@ static bool push_frame(
 
 	STACK_PUSH(&elements, ((im_element_t){
 		0,
-		.id = next_id ? next_id : (top->id + tinyhash(top->id+top->_id_counter++, im_get_depth())),
+		.id = next_id ? next_id : (top->id + tinyhash(top->id+top->_id_counter++, im_depth())),
 		.frame = next,
 		.clipped_frame = frame_offset(frame_union(absolute_frame, current_clip_frame), -absolute_frame.x + next.x, -absolute_frame.y + next.y),
 		.absolute_frame = absolute_frame,
