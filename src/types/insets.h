@@ -6,7 +6,7 @@
 #define DECLARE_INSETS_T(T, DECLNAME)                                          \
                                                                                \
 typedef struct {                                                               \
-	T left, top, right, bottom;                                                  \
+  T left, top, right, bottom;                                                  \
 } DECLNAME##_t;                                                                \
                                                                                \
 CIG_INLINED  DECLNAME##_t  DECLNAME##_make(T left, T top, T right, T bottom) { \
@@ -14,7 +14,7 @@ CIG_INLINED  DECLNAME##_t  DECLNAME##_make(T left, T top, T right, T bottom) { \
 }                                                                              \
                                                                                \
 CIG_INLINED  DECLNAME##_t  DECLNAME##_zero() {                                 \
-	return (DECLNAME##_t) { 0 };                                                 \
+  return (DECLNAME##_t) { 0 };                                                 \
 }                                                                              \
                                                                                \
 CIG_INLINED  DECLNAME##_t  DECLNAME##_uniform(T inset) {                       \

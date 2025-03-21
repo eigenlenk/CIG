@@ -30,8 +30,8 @@ TEST(types, frame_comparator) {
 TEST(types, frame_point_check) {
 	const frame_t f = frame_make(40, 40, 50, 30);
 	
-	TEST_ASSERT_TRUE(frame_contains(f, vec2_make(50, 50)));
-	TEST_ASSERT_FALSE(frame_contains(f, vec2_make(30, 50)));
+	TEST_ASSERT_TRUE(frame_contains(f, cig_vec2_make(50, 50)));
+	TEST_ASSERT_FALSE(frame_contains(f, cig_vec2_make(30, 50)));
 }
 
 TEST(types, frame_offset) {
@@ -65,7 +65,7 @@ TEST(types, frame_intersections) {
 }
 
 TEST(types, frame_center) {
-	TEST_ASSERT_EQUAL_VEC2(vec2_make(50, 50), frame_center(frame_make(0, 0, 100, 100)));
+	TEST_ASSERT_EQUAL_VEC2(cig_vec2_make(50, 50), frame_center(frame_make(0, 0, 100, 100)));
 }
 
 TEST(types, frame_containing) {
@@ -111,40 +111,40 @@ TEST(types, insets_constructors) {
 }
 
 TEST(types, vec2_constructors_and_validity) {
-	const vec2 v0 = vec2_zero();
-	const vec2 v1 = vec2_make(1, 2);
-	const vec2 v2 = vec2_invalid();
+	const cig_vec2_t v0 = cig_vec2_zero();
+	const cig_vec2_t v1 = cig_vec2_make(1, 2);
+	const cig_vec2_t v2 = cig_vec2_invalid();
 	
 	TEST_ASSERT(v0.x == 0 && v0.y == 0);
 	TEST_ASSERT(v1.x == 1 && v1.y == 2);
-	TEST_ASSERT_TRUE(vec2_valid(v0));
-	TEST_ASSERT_TRUE(vec2_valid(v1));
-	TEST_ASSERT_FALSE(vec2_valid(v2));
+	TEST_ASSERT_TRUE(cig_vec2_valid(v0));
+	TEST_ASSERT_TRUE(cig_vec2_valid(v1));
+	TEST_ASSERT_FALSE(cig_vec2_valid(v2));
 }
 
 TEST(types, vec2_operations) {
-	TEST_ASSERT_EQUAL_VEC2(vec2_make(5, 7), vec2_add(vec2_make(3, 4), vec2_make(2, 3)));
-	TEST_ASSERT_EQUAL_VEC2(vec2_make(8, 0), vec2_sub(vec2_make(9, 5), vec2_make(1, 5)));
-	TEST_ASSERT_EQUAL_VEC2(vec2_make(6, 10), vec2_mul(vec2_make(3, 5), 2));
-	TEST_ASSERT_EQUAL_VEC2(vec2_make(8, 4), vec2_div(vec2_make(16, 8), 2));
+	TEST_ASSERT_EQUAL_VEC2(cig_vec2_make(5, 7), cig_vec2_add(cig_vec2_make(3, 4), cig_vec2_make(2, 3)));
+	TEST_ASSERT_EQUAL_VEC2(cig_vec2_make(8, 0), cig_vec2_sub(cig_vec2_make(9, 5), cig_vec2_make(1, 5)));
+	TEST_ASSERT_EQUAL_VEC2(cig_vec2_make(6, 10), cig_vec2_mul(cig_vec2_make(3, 5), 2));
+	TEST_ASSERT_EQUAL_VEC2(cig_vec2_make(8, 4), cig_vec2_div(cig_vec2_make(16, 8), 2));
 }
 
 TEST(types, vec2_comparator) {
-	const vec2 a = vec2_make(10, 10);
-	const vec2 b = vec2_make(10, 10);
-	const vec2 c = vec2_make(20, 20);
+	const cig_vec2_t a = cig_vec2_make(10, 10);
+	const cig_vec2_t b = cig_vec2_make(10, 10);
+	const cig_vec2_t c = cig_vec2_make(20, 20);
 	
-	TEST_ASSERT_TRUE(vec2_cmp(a, b));
-	TEST_ASSERT_FALSE(vec2_cmp(b, c));
+	TEST_ASSERT_TRUE(cig_vec2_cmp(a, b));
+	TEST_ASSERT_FALSE(cig_vec2_cmp(b, c));
 }
 
 TEST(types, vec2_math_utils) {
-	TEST_ASSERT_GREATER_THAN(0, vec2_sign(vec2_make(10, 14), vec2_make(2, 3), vec2_make(5, 7)));
-	TEST_ASSERT_LESS_THAN(0, vec2_sign(vec2_make(4, 2), vec2_make(1, 3), vec2_make(5, 7)));
-	TEST_ASSERT_EQUAL_INT(0, vec2_sign(vec2_make(5, 2), vec2_make(0, 2), vec2_make(10, 2)));
-	TEST_ASSERT_DOUBLE_WITHIN(0.001, 2.828, vec2_dist(vec2_make(1, 1), vec2_make(3, 3)));
-	TEST_ASSERT_EQUAL_INT(32, vec2_distsq(vec2_make(1, 1), vec2_make(5, 5)));
-	TEST_ASSERT_EQUAL_VEC2(vec2_make(5, 5), vec2_abs(vec2_make(-5, -5)));
+	TEST_ASSERT_GREATER_THAN(0, cig_vec2_sign(cig_vec2_make(10, 14), cig_vec2_make(2, 3), cig_vec2_make(5, 7)));
+	TEST_ASSERT_LESS_THAN(0, cig_vec2_sign(cig_vec2_make(4, 2), cig_vec2_make(1, 3), cig_vec2_make(5, 7)));
+	TEST_ASSERT_EQUAL_INT(0, cig_vec2_sign(cig_vec2_make(5, 2), cig_vec2_make(0, 2), cig_vec2_make(10, 2)));
+	TEST_ASSERT_DOUBLE_WITHIN(0.001, 2.828, cig_vec2_dist(cig_vec2_make(1, 1), cig_vec2_make(3, 3)));
+	TEST_ASSERT_EQUAL_INT(32, cig_vec2_distsq(cig_vec2_make(1, 1), cig_vec2_make(5, 5)));
+	TEST_ASSERT_EQUAL_VEC2(cig_vec2_make(5, 5), cig_vec2_abs(cig_vec2_make(-5, -5)));
 }
 
 TEST_GROUP_RUNNER(types) {

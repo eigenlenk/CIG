@@ -1,2 +1,4 @@
+@ECHO off
 echo Preparing the builder...
-gcc -Wall -o build build.c -std=gnu99
+gcc -o build build.c -std=gnu99
+echo Done! Run 'build' and enjoy CIG :)

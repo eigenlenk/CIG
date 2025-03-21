@@ -12,7 +12,7 @@ DECLARE_STACK(frame_t);
 
 typedef struct {
 	im_buffer_ref buffer;
-	vec2 origin;
+	cig_vec2_t origin;
 	STACK(frame_t) clip_frames;
 } im_buffer_element_t;
 
@@ -138,8 +138,8 @@ void im_reset_internal_state() {
 	mouse._target_this_frame = 0;
 	mouse._press_start_tick = 0;
 	mouse.drag.active = false;
-	mouse.drag.start_position = vec2_zero();
-	mouse.drag.change = vec2_zero();
+	mouse.drag.start_position = cig_vec2_zero();
+	mouse.drag.change = cig_vec2_zero();
   tick = 0;
 	next_id = 0;
 }
@@ -223,8 +223,8 @@ void im_push_buffer(const im_buffer_ref buffer) {
 	im_buffer_element_t buffer_element = {
 		.buffer = buffer,
 		.origin = STACK_IS_EMPTY(&buffers)
-			? vec2_zero()
-			: vec2_make(im_element()->absolute_frame.x, im_element()->absolute_frame.y)
+			? cig_vec2_zero()
+			: cig_vec2_make(im_element()->absolute_frame.x, im_element()->absolute_frame.y)
 	};
 	STACK_INIT(&buffer_element.clip_frames);
 	
@@ -242,7 +242,7 @@ void im_pop_buffer() {
    └─────────────────────┘ */
 	 
 void im_set_input_state(
-	const vec2 position,
+	const cig_vec2_t position,
 	unsigned int button_mask
 ) {
 	if (mouse.locked == false) {
@@ -290,13 +290,13 @@ void im_set_input_state(
 		if (!mouse.drag.active) {
 			mouse.drag.active = true;
 			mouse.drag.start_position = mouse.position;
-			mouse.drag.change = vec2_zero();
+			mouse.drag.change = cig_vec2_zero();
 		} else {
-			mouse.drag.change = vec2_sub(mouse.position, mouse.drag.start_position);
+			mouse.drag.change = cig_vec2_sub(mouse.position, mouse.drag.start_position);
 		}
 	} else if (mouse.drag.active) {
 		mouse.drag.active = false;
-		mouse.drag.change = vec2_zero();
+		mouse.drag.change = cig_vec2_zero();
 	}
 }
 
@@ -372,22 +372,22 @@ bool im_enable_scroll(im_scroll_state_t *state) {
 	return element->_scroll_state != NULL;
 }
 
-void im_set_offset(vec2 offset) {
+void im_set_offset(cig_vec2_t offset) {
 	assert(im_scroll_state());
 	im_scroll_state()->offset = offset;
 }
 
-void im_change_offset(vec2 delta) {
+void im_change_offset(cig_vec2_t delta) {
 	assert(im_scroll_state());
-	im_scroll_state()->offset = vec2_add(im_scroll_state()->offset, delta);
+	im_scroll_state()->offset = cig_vec2_add(im_scroll_state()->offset, delta);
 }
 
-vec2 im_offset() {
+cig_vec2_t im_offset() {
 	assert(im_scroll_state());
 	return im_scroll_state()->offset;
 }
 
-vec2 im_content_size() {
+cig_vec2_t im_content_size() {
 	assert(im_scroll_state());
 	return im_scroll_state()->content_size;
 }
@@ -728,8 +728,8 @@ static im_scroll_state_t* get_scroll_state(const IMGUIID id) {
     return NULL;
   } else {
     _scroll_elements[first_available].id = id;
-    _scroll_elements[first_available].value.offset = vec2_zero();
-    _scroll_elements[first_available].value.content_size = vec2_zero();
+    _scroll_elements[first_available].value.offset = cig_vec2_zero();
+    _scroll_elements[first_available].value.content_size = cig_vec2_zero();
 		_scroll_elements[first_available].last_tick = tick;
 		
     return &_scroll_elements[first_available].value;

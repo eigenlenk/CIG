@@ -565,8 +565,8 @@ TEST(core_layout, vstack_scroll) {
 	
 	im_scroll_state_t *scroll = im_scroll_state();
 	
-	TEST_ASSERT_EQUAL_VEC2(vec2_zero(), scroll->offset);
-	TEST_ASSERT_EQUAL_VEC2(vec2_zero(), scroll->content_size);
+	TEST_ASSERT_EQUAL_VEC2(cig_vec2_zero(), scroll->offset);
+	TEST_ASSERT_EQUAL_VEC2(cig_vec2_zero(), scroll->content_size);
 	
 	scroll->offset.y = 220;
 	
@@ -579,7 +579,7 @@ TEST(core_layout, vstack_scroll) {
 		}
 	}
 	
-	TEST_ASSERT_EQUAL_VEC2(vec2_make(640, 100*10), scroll->content_size);
+	TEST_ASSERT_EQUAL_VEC2(cig_vec2_make(640, 100*10), scroll->content_size);
 }
 
 TEST(core_layout, clipping) {

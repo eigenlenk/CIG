@@ -17,9 +17,9 @@
 	 
 	 
 /* These macros declare a foo<int> type essentially */
-DECLARE_VEC2_T(int, vec2, -999999)
-DECLARE_INSETS_T(int, insets)
-DECLARE_FRAME_T(int, frame, vec2, insets_t)
+DECLARE_VEC2_T(int, cig_vec2, -999999) /* Declares `cig_vec2_t` */
+DECLARE_INSETS_T(int, insets) /* Declares `insets_t` */
+DECLARE_FRAME_T(int, frame, cig_vec2, insets) /* Declares `frame_t` */
 
 
 /* All layout element get a unique ID that tries to be unique across frames, but no promises.
@@ -67,8 +67,8 @@ typedef struct {
 
 /* */
 typedef struct {
-  vec2 offset;
-	vec2 content_size;
+  cig_vec2_t offset;
+	cig_vec2_t content_size;
 } im_scroll_state_t;
 
 
@@ -100,7 +100,7 @@ typedef struct {
 	im_mouse_button_t button_mask;
 	im_mouse_button_t last_button_down;
 	im_mouse_button_t last_button_up;
-	vec2 position;
+	cig_vec2_t position;
 	enum {
 		NEITHER,	/* Button was neither pressed or released this frame */
 		BEGAN,		/* Button was pressed down this frame (click started) */
@@ -109,8 +109,8 @@ typedef struct {
 	} click_state;
 	struct {
 		bool active;
-		vec2 start_position;
-		vec2 change;
+		cig_vec2_t start_position;
+		cig_vec2_t change;
 	} drag;
 	bool locked; /* Elements are not tracked. Set to TRUE by widgets that want exclusive
 	                use of drag state. A scrollbar thumb for example where buttons and
@@ -248,7 +248,7 @@ void im_pop_buffer();
 	 
 
 /* Pass mouse coordinates and button press state(s) */
-void im_set_input_state(vec2, im_mouse_button_t);
+void im_set_input_state(cig_vec2_t, im_mouse_button_t);
 
 
 /* Returns the current mouse state as updated by last  `im_set_input_state` call */
@@ -296,19 +296,19 @@ bool im_enable_scroll(im_scroll_state_t *);
 
 
 /* Set scroll offset values */
-void im_set_offset(vec2);
+void im_set_offset(cig_vec2_t);
 
 
 /* Change scroll offset values */
-void im_change_offset(vec2);
+void im_change_offset(cig_vec2_t);
 
 
 /* Get scroll offset values */
-vec2 im_offset();
+cig_vec2_t im_offset();
 
 
 /* Get scroll content size */
-vec2 im_content_size();
+cig_vec2_t im_content_size();
 
 
 /* Returns the current scroll state objet, NULL if scrolling is not enabled */
