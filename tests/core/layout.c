@@ -5,9 +5,11 @@
 
 TEST_GROUP(core_layout);
 
+static int main_buffer = 1;
+
 TEST_SETUP(core_layout) {
 	/* Begin laying out a screen that's 640 by 480 */
-	im_begin_layout(NULL, frame_make(0, 0, 640, 480));
+	im_begin_layout(&main_buffer, frame_make(0, 0, 640, 480));
 }
 
 TEST_TEAR_DOWN(core_layout) {
@@ -16,9 +18,14 @@ TEST_TEAR_DOWN(core_layout) {
 
 /* (( TEST CASES )) */
 
-TEST(core_layout, basic_check) {
-	/* Nothing really to test here, just checking nothing crashes =) */
+TEST(core_layout, basic_checks) {
+	TEST_ASSERT_NOT_NULL(im_get_element());
+	TEST_ASSERT_EQUAL(&main_buffer, im_get_buffer());
 	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 640, 480), im_get_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 640, 480), im_get_element()->clipped_frame);
+	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 640, 480), im_get_element()->absolute_frame);
+	TEST_ASSERT(im_get_element()->insets.left == 0 && im_get_element()->insets.top == 0 &&
+		im_get_element()->insets.right == 0 && im_get_element()->insets.bottom == 0);
 }
 
 TEST(core_layout, push_pop) {
@@ -631,7 +638,7 @@ TEST(core_layout, clipping) {
 }
 
 TEST_GROUP_RUNNER(core_layout) {
-  RUN_TEST_CASE(core_layout, basic_check);
+  RUN_TEST_CASE(core_layout, basic_checks);
   RUN_TEST_CASE(core_layout, push_pop);
   RUN_TEST_CASE(core_layout, identifiers);
   RUN_TEST_CASE(core_layout, limits);

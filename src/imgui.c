@@ -12,9 +12,11 @@ typedef im_state_t* im_state_ptr_t;
 DECLARE_STACK(im_state_ptr_t);
 DECLARE_STACK(im_buffer_elements_t);
 
+
 /* Declare stacks */
 static STACK(im_state_ptr_t) widget_states;
 static STACK(im_buffer_elements_t) buffers;
+
 
 /* Internal state members */
 static struct {
@@ -22,33 +24,11 @@ static struct {
 	size_t size;
 } _state_list = { 0 };
 static im_scroll_state_element_t _scroll_elements[IM_STATES_MAX];
+static im_mouse_state_t mouse = { 0 };
 static IMGUIID next_id = 0;
 static unsigned int tick = 0;
-static struct {
-	enum {
-		NEITHER,	/* Button was neither pressed or released this frame */
-		BEGAN,		/* Button was pressed down this frame (click started) */
-		ENDED,		/* Button was released this frame (click ended) */
-		EXPIRED		/* Button was held longer than deemed appropriate */
-	} click_state;
-	struct {
-		bool active;
-		vec2 start;
-		vec2 delta;
-	} drag;
-	im_mouse_button_t button_mask;
-	im_mouse_button_t last_button;
-	vec2 position;
-	unsigned int press_start_tick;
-	unsigned int target_prev_frame;
-	unsigned int target_this_frame;
-	IMGUIID press_target_id; /* Element that was focused when button press began */
-	
-	// TODO: ! just use press_target_id and not set it to zero after click !
-	IMGUIID last_press_target_id; /* Element that was focused when the button press last began */
-	bool locked_on_element;
-} mouse = { 0 };
 
+/* Forward delcarations */
 // static im_state_t* 				im_state(const IMGUIID, const imgui_widget_t);
 
 static im_scroll_state_t* get_scroll_state(IMGUIID);
@@ -63,7 +43,7 @@ static void im_push_clip(im_element_t*);
 
 static void im_pop_clip();
 
-static frame_t resolve_size(frame_t, im_element_t*);
+static frame_t resolve_size(frame_t, const im_element_t*);
 
 static bool next_layout_frame(frame_t, im_element_t *, frame_t *);
 
@@ -106,59 +86,6 @@ void im_end_layout() {
 	}
 }
 
-void im_set_input_state(
-	const vec2 position,
-	unsigned int button_mask
-) {
-	if (mouse.locked_on_element == false) {
-		mouse.target_prev_frame = mouse.target_this_frame;
-		mouse.target_this_frame = 0;
-	}
-	
-	const im_mouse_button_t previous_button_mask = mouse.button_mask;
-
-	mouse.position = position;
-	mouse.button_mask = button_mask;
-
-	mouse.click_state = (!mouse.button_mask && previous_button_mask)
-		? (tick - mouse.press_start_tick) < 12
-			? ENDED
-			: EXPIRED
-		: (button_mask & IM_MOUSE_BUTTON_LEFT && !(previous_button_mask & IM_MOUSE_BUTTON_LEFT)) || (button_mask & IM_MOUSE_BUTTON_RIGHT && !(previous_button_mask & IM_MOUSE_BUTTON_RIGHT))
-			? BEGAN
-			: NEITHER;
-			
-	if (previous_button_mask & IM_MOUSE_BUTTON_LEFT && !(mouse.button_mask & IM_MOUSE_BUTTON_LEFT)) {
-		mouse.last_button = IM_MOUSE_BUTTON_LEFT;
-	} else if (previous_button_mask & IM_MOUSE_BUTTON_RIGHT && !(mouse.button_mask & IM_MOUSE_BUTTON_RIGHT)) {
-		mouse.last_button = IM_MOUSE_BUTTON_RIGHT;
-	} else {
-		mouse.last_button = 0;
-	}
-
-	if (mouse.click_state == BEGAN) {
-		mouse.press_start_tick = tick;
-		mouse.press_target_id = mouse.target_prev_frame;
-		mouse.last_press_target_id = 0;
-	} else if (mouse.click_state == ENDED || mouse.click_state == EXPIRED) {
-		mouse.last_press_target_id = mouse.press_target_id;
-		mouse.press_target_id = 0;
-	}
-
-	if (mouse.button_mask & IM_MOUSE_BUTTON_LEFT) {
-		if (!mouse.drag.active) {
-			mouse.drag.active = true;
-			mouse.drag.start = mouse.position;
-			mouse.drag.delta = vec2_zero();
-		} else {
-			mouse.drag.delta = vec2_sub(mouse.position, mouse.drag.start);
-		}
-	} else if (mouse.drag.active) {
-		mouse.drag.active = false;
-		mouse.drag.delta = vec2_zero();
-	}
-}
-
 void im_reset_internal_state() {
 	int i;
 	for (i = 0; i < IM_STATES_MAX; ++i) {
@@ -166,10 +93,14 @@ void im_reset_internal_state() {
     _scroll_elements[i].id = 0;
   }
 	_state_list.size = 0;
-	mouse.locked_on_element = false;
-	mouse.target_prev_frame = 0;
-	mouse.target_this_frame = 0;
+	mouse.locked = false;
+	mouse._press_target_id = 0;
+	mouse._target_prev_frame = 0;
+	mouse._target_this_frame = 0;
+	mouse._press_start_tick = 0;
 	mouse.drag.active = false;
+	mouse.drag.start_position = vec2_zero();
+	mouse.drag.change = vec2_zero();
   tick = 0;
 	next_id = 0;
 }
@@ -230,15 +161,13 @@ frame_t im_get_absolute_frame() {
 }
 
 frame_t im_convert_relative_frame(const frame_t frame) {
-	// TODO: can only use top element's absolute frame to calculate this
-	register int i;
-	STACK(im_element_t) *frames = im_get_frame_stack();
-	frame_t f = resolve_size(frame, &STACK_TOP(frames));
-	for (i = frames->size - 1; i >= 0; --i) {
-    f.x += frames->elements[i].frame.x + frames->elements[i].insets.left;
-    f.y += frames->elements[i].frame.y + frames->elements[i].insets.top;
-	}
-	return f;
+	const im_element_t *top = im_get_element();
+	
+	return frame_offset(
+		resolve_size(frame, top),
+		top->absolute_frame.x + top->insets.left,
+		top->absolute_frame.y + top->insets.top
+	);
 }
 
 STACK(im_element_t)* im_get_frame_stack() {
@@ -250,6 +179,59 @@ STACK(im_element_t)* im_get_frame_stack() {
 ───┤  MOUSE INTERACTION  │
    └─────────────────────┘ */
 	 
+void im_set_input_state(
+	const vec2 position,
+	unsigned int button_mask
+) {
+	if (mouse.locked == false) {
+		mouse._target_prev_frame = mouse._target_this_frame;
+		mouse._target_this_frame = 0;
+	}
+	
+	const im_mouse_button_t previous_button_mask = mouse.button_mask;
+
+	mouse.position = position;
+	mouse.button_mask = button_mask;
+
+	mouse.click_state = (!mouse.button_mask && previous_button_mask)
+		? (tick - mouse._press_start_tick) < 12
+			? ENDED
+			: EXPIRED
+		: (button_mask & IM_MOUSE_BUTTON_LEFT && !(previous_button_mask & IM_MOUSE_BUTTON_LEFT)) || (button_mask & IM_MOUSE_BUTTON_RIGHT && !(previous_button_mask & IM_MOUSE_BUTTON_RIGHT))
+			? BEGAN
+			: NEITHER;
+			
+	if (previous_button_mask & IM_MOUSE_BUTTON_LEFT && !(mouse.button_mask & IM_MOUSE_BUTTON_LEFT)) {
+		mouse.last_button = IM_MOUSE_BUTTON_LEFT;
+	} else if (previous_button_mask & IM_MOUSE_BUTTON_RIGHT && !(mouse.button_mask & IM_MOUSE_BUTTON_RIGHT)) {
+		mouse.last_button = IM_MOUSE_BUTTON_RIGHT;
+	} else {
+		mouse.last_button = 0;
+	}
+
+	if (mouse.click_state == BEGAN) {
+		mouse._press_start_tick = tick;
+		mouse._press_target_id = mouse._target_prev_frame;
+	}
+
+	if (mouse.button_mask) {
+		if (!mouse.drag.active) {
+			mouse.drag.active = true;
+			mouse.drag.start_position = mouse.position;
+			mouse.drag.change = vec2_zero();
+		} else {
+			mouse.drag.change = vec2_sub(mouse.position, mouse.drag.start_position);
+		}
+	} else if (mouse.drag.active) {
+		mouse.drag.active = false;
+		mouse.drag.change = vec2_zero();
+	}
+}
+
+im_mouse_state_t *im_mouse_state() {
+	return &mouse;
+}
+
 void im_enable_interaction() {
 	im_element_t *element = im_get_element();
 	if (element->_interaction_enabled) {
@@ -261,9 +243,7 @@ void im_enable_interaction() {
 
 bool im_hovered() {
 	/* See `handle_element_hover` */
-	return mouse.locked_on_element == false &&
-		im_get_element()->_interaction_enabled &&
-		im_get_element()->id == mouse.target_prev_frame;
+	return mouse.locked == false && im_get_element()->_interaction_enabled && im_get_element()->id == mouse._target_prev_frame;
 }
 
 im_mouse_button_t im_pressed(
@@ -276,7 +256,7 @@ im_mouse_button_t im_pressed(
 	
 	const im_mouse_button_t button_mask = buttons & mouse.button_mask;
 	
-	if (button_mask && ((options & IM_MOUSE_PRESS_INSIDE) == false || (options & IM_MOUSE_PRESS_INSIDE && mouse.press_target_id == im_get_element()->id))) {
+	if (button_mask && ((options & IM_MOUSE_PRESS_INSIDE) == false || (options & IM_MOUSE_PRESS_INSIDE && mouse._press_target_id == im_get_element()->id))) {
 		return button_mask;
 	} else {
 		return 0;
@@ -298,7 +278,7 @@ im_mouse_button_t im_clicked(
 		}
 	} else {
 		if (mouse.click_state == ENDED || (mouse.click_state == EXPIRED && !(options & IM_CLICK_EXPIRE))) {
-			if (options & IM_CLICK_STARTS_INSIDE && mouse.last_press_target_id != im_get_element()->id) {
+			if (options & IM_CLICK_STARTS_INSIDE && mouse._press_target_id != im_get_element()->id) {
 				return 0;
 			}
 			return buttons & mouse.last_button;
@@ -357,12 +337,12 @@ unsigned int im_get_depth() {
 	return STACK_SIZE(im_get_frame_stack());
 }
 
-/* http://www.cse.yorku.ca/~oz/hash.html */
 IMGUIID im_hash(const char *str) {
+	/* http://www.cse.yorku.ca/~oz/hash.html */
 	register IMGUIID hash = 5381;
 	register int c;
 	while ((c = *str++)) {
-		hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+		hash = ((hash << 5) + hash) + c; /* === hash * 33 + c */
 	}
 	return hash;
 }
@@ -519,7 +499,7 @@ bool im_default_layout_builder(
    ║            INTERNAL FUNCTIONS              ║
    ╚════════════════════════════════════════════╝ */
 
-static frame_t resolve_size(const frame_t frame, im_element_t *parent) {
+static frame_t resolve_size(const frame_t frame, const im_element_t *parent) {
   const frame_t content_frame = frame_inset(parent->frame, parent->insets);
 
 	return frame_make(
@@ -648,7 +628,7 @@ static void handle_element_hover(im_element_t *element) {
 	between mouse detection and response but in reality it's imperceptible.
 	*/
 	if (frame_contains(element->absolute_frame, mouse.position)) {
-		mouse.target_this_frame = element->id;
+		mouse._target_this_frame = element->id;
 	}
 }
 
@@ -691,7 +671,8 @@ static void im_push_buffer(const im_buffer_ref buffer, const frame_t frame) {
 		.absolute_frame = frame,
 		.insets = insets_zero(),
 		._layout_function = NULL,
-		._layout_params = (im_layout_params_t){ 0, .options = IM_DEFAULT_LAYOUT_FLAGS }
+		._layout_params = (im_layout_params_t){ 0, .options = IM_DEFAULT_LAYOUT_FLAGS },
+		._clipped = true
 	}));
 	
 	STACK_PUSH(&buffer_framestack.clip_frames, frame);

@@ -65,7 +65,7 @@ typedef struct {
 	im_layout_options_t options;
 	void *custom_data;
 	
-	/* Private. Keep out! */
+	/* (( PRIVATE )) */		
 	int _horizontal_position, _vertical_position, _h_size, _v_size;
 	struct {
 		int h_cur, v_cur, total; /* h_ and v_cur are only counted in stacks/grids */
@@ -80,22 +80,13 @@ typedef struct {
 
 
 typedef struct {
-	/* */
 	IMGUIID id;
+	frame_t frame; /* Relative frame */
+	frame_t clipped_frame; /* Relative clipped frame */
+	frame_t absolute_frame; /* Screen-space frame */
+	insets_t insets; /* Insets affect child elements within this element */
 	
-	/* Relative frame */
-	frame_t frame;
-	
-	/* Relative clipped frame */
-	frame_t clipped_frame;
-	
-	/* Screen-space frame */
-	frame_t absolute_frame;
-  
-	/* */
-	insets_t insets;
-	
-	/* Private. Keep out! */
+	/* (( PRIVATE )) */		
 	bool (*_layout_function)(frame_t, frame_t, im_layout_params_t*, frame_t*);
 	im_layout_params_t _layout_params;
   bool _clipped, _interaction_enabled;
@@ -113,6 +104,32 @@ typedef enum {
 	IM_MOUSE_BUTTON_ANY = IM_MOUSE_BUTTON_LEFT | IM_MOUSE_BUTTON_RIGHT
 } im_mouse_button_t;
 
+
+typedef struct {
+	im_mouse_button_t button_mask;
+	im_mouse_button_t last_button;
+	vec2 position;
+	enum {
+		NEITHER,	/* Button was neither pressed or released this frame */
+		BEGAN,		/* Button was pressed down this frame (click started) */
+		ENDED,		/* Button was released this frame (click ended) */
+		EXPIRED		/* Button was held longer than deemed appropriate */
+	} click_state;
+	struct {
+		bool active;
+		vec2 start_position;
+		vec2 change;
+	} drag;
+	bool locked; /* Elements are not tracked. Set to TRUE by widgets that want exclusive
+	                use of drag state. A scrollbar thumb for example where buttons and
+                  other elements should not be highlighted even if hovered while moving */
+	
+	/* (( PRIVATE )) */								
+	unsigned int _press_start_tick;
+	unsigned int _target_prev_frame;
+	unsigned int _target_this_frame;
+	IMGUIID _press_target_id; /* Element that was focused when button press began */
+} im_mouse_state_t;
 
 typedef enum {
 	/* `IM_MOUSE_PRESS_INSIDE` option specifies whether the press has to start
@@ -148,10 +165,6 @@ void im_begin_layout(im_buffer_ref, frame_t);
 
 /* */
 void im_end_layout();
-
-
-/* Pass mouse coordinates and button press state(s) */
-void im_set_input_state(vec2, im_mouse_button_t);
 
 
 /* Resets internal values. Useful for when transitioning to a different
@@ -216,6 +229,15 @@ STACK(im_element_t)* im_get_frame_stack();
 /* ┌─────────────────────┐
 ───┤  MOUSE INTERACTION  │
    └─────────────────────┘ */
+	 
+
+/* Pass mouse coordinates and button press state(s) */
+void im_set_input_state(vec2, im_mouse_button_t);
+
+
+/* Returns the current mouse state as updated by last  `im_set_input_state` call */
+im_mouse_state_t *im_mouse_state();
+
 
 /* Enables mouse tracking for the current layout element.
    Call this after a successful `im_push_frame` call */

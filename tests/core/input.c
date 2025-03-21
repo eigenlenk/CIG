@@ -157,10 +157,51 @@ TEST(core_input, click_starts_outside) {
 	}
 }
 
+TEST(core_input, simple_drag) {
+	for (int i = 0; i < 3; ++i) {
+		begin();
+		
+		/* Simulate mouse change over time */
+		if (i == 0) {
+			im_set_input_state(vec2_make(25, 25), IM_MOUSE_BUTTON_LEFT);
+			
+			/* Taking exlusive ownership of the mouse */
+			im_mouse_state()->locked = true;
+			
+			/* Drag is activated on mouse button down */
+			TEST_ASSERT_TRUE(im_mouse_state()->drag.active);
+			TEST_ASSERT_TRUE(im_mouse_state()->button_mask & IM_MOUSE_BUTTON_LEFT);
+			TEST_ASSERT_EQUAL_VEC2(vec2_make(25, 25), im_mouse_state()->drag.start_position);
+			TEST_ASSERT_EQUAL_VEC2(vec2_zero(), im_mouse_state()->drag.change);
+		} else if (i == 1) {
+			im_set_input_state(vec2_make(50, 50), IM_MOUSE_BUTTON_LEFT);
+			
+			TEST_ASSERT_EQUAL_VEC2(vec2_make(25, 25), im_mouse_state()->drag.change);
+		} else if (i == 2) {
+			im_set_input_state(vec2_make(75, 75), 0);
+			
+			TEST_ASSERT_FALSE(im_mouse_state()->drag.active);
+		}
+		
+		im_push_frame(frame_make(40, 40, 20, 20));
+		
+		if (i == 1) {
+			/* Even though the mouse is over this element at this point, lock
+			   prevents it from being detected */
+			TEST_ASSERT_FALSE(im_hovered());
+		}
+		
+		im_pop_frame();
+
+		end();
+	}
+}
+
 TEST_GROUP_RUNNER(core_input) {
 	RUN_TEST_CASE(core_input, hover_and_press);
 	RUN_TEST_CASE(core_input, overlapping_hover_and_press);
 	RUN_TEST_CASE(core_input, click_on_release);
 	RUN_TEST_CASE(core_input, click_on_button_down);
 	RUN_TEST_CASE(core_input, click_starts_outside);
+	RUN_TEST_CASE(core_input, simple_drag);
 }
