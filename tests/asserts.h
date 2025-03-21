@@ -2,8 +2,6 @@
 #define CIM_CUSTOM_TYPE_ASSERTS_H
 
 #include "unity.h"
-#include "types/frame.h"
-#include "types/vec2.h"
 
 static void assert_frame_equal(const frame_t exp, const frame_t act, unsigned int line) {
 	char message[64];

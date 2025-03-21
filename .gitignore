@@ -51,3 +51,4 @@ Thumbs.db
 # C
 *.o
 *.pspimage
+*.old

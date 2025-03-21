@@ -1,32 +1,32 @@
-#ifndef INSETS_T_H
-#define INSETS_T_H
+#ifndef TYPE_INSETS_T_INCLUDED
+#define TYPE_INSETS_T_INCLUDED
 
-#define T short
+#include "cigmac.h"
 
-typedef struct insets_t {
-	T left, top, right, bottom;
-} insets_t;
-
-static inline  __attribute__((always_inline)) insets_t insets_make(T left, T top, T right, T bottom) {
-  return (insets_t) { left, top, right, bottom };
+#define DECLARE_INSETS_T(T, DECLNAME)                                          \
+                                                                               \
+typedef struct {                                                               \
+	T left, top, right, bottom;                                                  \
+} DECLNAME##_t;                                                                \
+                                                                               \
+CIG_INLINED  DECLNAME##_t  DECLNAME##_make(T left, T top, T right, T bottom) { \
+  return (DECLNAME##_t) { left, top, right, bottom };                          \
+}                                                                              \
+                                                                               \
+CIG_INLINED  DECLNAME##_t  DECLNAME##_zero() {                                 \
+	return (DECLNAME##_t) { 0 };                                                 \
+}                                                                              \
+                                                                               \
+CIG_INLINED  DECLNAME##_t  DECLNAME##_uniform(T inset) {                       \
+  return (DECLNAME##_t) { inset, inset, inset, inset };                        \
+}                                                                              \
+                                                                               \
+CIG_INLINED  DECLNAME##_t  DECLNAME##_horizontal(T inset) {                    \
+  return (DECLNAME##_t) { inset, 0, inset, 0 };                                \
+}                                                                              \
+                                                                               \
+CIG_INLINED  DECLNAME##_t  DECLNAME##_vertical(T inset) {                      \
+  return (DECLNAME##_t) { 0, inset, 0, inset };                                \
 }
-
-static inline  __attribute__((always_inline)) insets_t insets_zero() {
-	return (insets_t) { 0 };
-}
-
-static inline  __attribute__((always_inline)) insets_t insets_uniform(T inset) {
-  return (insets_t) { inset, inset, inset, inset };
-}
-
-static inline  __attribute__((always_inline)) insets_t insets_horizontal(T inset) {
-  return (insets_t) { inset, 0, inset, 0 };
-}
-
-static inline  __attribute__((always_inline)) insets_t insets_vertical(T inset) {
-  return (insets_t) { 0, inset, 0, inset };
-}
-
-#undef T
 
 #endif

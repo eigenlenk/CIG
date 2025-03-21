@@ -4,8 +4,9 @@
 #include "ciglimit.h"
 #include "cigmac.h"
 #include "cigcorem.h"
-#include "types/frame.h"
+#include "types/vec2.h"
 #include "types/insets.h"
+#include "types/frame.h"
 #include "types/stack.h"
 #include <stdbool.h>
 #include <stddef.h>
@@ -13,6 +14,12 @@
 /* ╔══════════════════════════╗
    ║ PUBLIC TYPE DECLARATIONS ║
    ╚══════════════════════════╝ */
+	 
+	 
+/* These macros declare a foo<int> type essentially */
+DECLARE_VEC2_T(int, vec2, -999999)
+DECLARE_INSETS_T(int, insets)
+DECLARE_FRAME_T(int, frame, vec2, insets_t)
 
 
 /* All layout element get a unique ID that tries to be unique across frames, but no promises.

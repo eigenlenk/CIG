@@ -1,5 +1,6 @@
 #include "unity.h"
 #include "fixture.h"
+#include "cigcore.h"
 #include "asserts.h"
 
 TEST_GROUP(types);
@@ -29,8 +30,8 @@ TEST(types, frame_comparator) {
 TEST(types, frame_point_check) {
 	const frame_t f = frame_make(40, 40, 50, 30);
 	
-	TEST_ASSERT_TRUE(frame_contains(f, VEC2(50, 50)));
-	TEST_ASSERT_FALSE(frame_contains(f, VEC2(30, 50)));
+	TEST_ASSERT_TRUE(frame_contains(f, vec2_make(50, 50)));
+	TEST_ASSERT_FALSE(frame_contains(f, vec2_make(30, 50)));
 }
 
 TEST(types, frame_offset) {
