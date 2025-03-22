@@ -9,11 +9,11 @@ TEST_SETUP(core_input) {}
 TEST_TEAR_DOWN(core_input) {}
 
 static void begin() {
-	im_begin_layout(NULL, cig_frame_make(0, 0, 640, 480));
+	cig_begin_layout(NULL, cig_frame_make(0, 0, 640, 480));
 }
 
 static void end() {
-	im_end_layout();
+	cig_end_layout();
 }
 
 TEST(core_input, hover_and_press) {

@@ -12,7 +12,7 @@ void demo_ui(BITMAP *buffer) {
 		grid_demo = (grid_demo + 1) % 4;
 	}*/
 	
-  im_begin_layout(buffer, cig_frame_make(0, 0, SCREEN_W, SCREEN_H));
+  cig_begin_layout(buffer, cig_frame_make(0, 0, SCREEN_W, SCREEN_H));
 	
 	/* Pass cursor position and mouse button states */
 	im_set_input_state(
@@ -230,7 +230,7 @@ void demo_ui(BITMAP *buffer) {
 
   cig_pop_frame(); /* Pop outermost inset frame */
 
-  im_end_layout();
+  cig_end_layout();
 
   ticks ++;
 }

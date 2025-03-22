@@ -143,7 +143,7 @@ typedef struct {
 	cig_id_t _press_target_id, /* Element that was focused when button press began */
            _target_prev_frame,
            _target_this_frame;
-} im_input_state_t;
+} cig_input_state_t;
 
 
 typedef enum {
@@ -179,16 +179,16 @@ DECLARE_ARRAY_STACK_T(cig_element_t);
 
 
 /* */
-void im_begin_layout(im_buffer_ref, cig_frame_t);
+void cig_begin_layout(im_buffer_ref, cig_frame_t);
 
 
 /* */
-void im_end_layout();
+void cig_end_layout();
 
 
 /* Resets internal values. Useful for when transitioning to a different
    game state or screen where you lay out a completely different UI */
-void im_reset_internal_state();
+void cig_reset_internal_state();
 
 
 /* Returns an opaque pointer to the current buffer where drawing operations would take place */
@@ -229,23 +229,23 @@ cig_element_t* cig_element();
 
 
 /* Returns current local frame relative to its parent */
-CIG_INLINED cig_frame_t im_frame() { return cig_element()->frame; }
+CIG_INLINED cig_frame_t cig_frame() { return cig_element()->frame; }
 
 
 /* Returns current local frame that's been clipped */
-CIG_INLINED cig_frame_t im_clipped_frame() { return cig_element()->clipped_frame; }
+CIG_INLINED cig_frame_t cig_clipped_frame() { return cig_element()->clipped_frame; }
 
 
 /* Returns current screen-space frame */
-CIG_INLINED cig_frame_t im_absolute_frame() { return cig_element()->absolute_frame; }
+CIG_INLINED cig_frame_t cig_absolute_frame() { return cig_element()->absolute_frame; }
 
 
 /* Converts a relative frame to a screen-space frame */
-cig_frame_t im_convert_relative_frame(cig_frame_t);
+cig_frame_t cig_convert_relative_frame(cig_frame_t);
 
 
 /* Returns a pointer to the current layout element stack. Avoid accessing if possible. */
-stack_cig_element_t_t* im_element_stack();
+stack_cig_element_t_t* cig_element_stack();
 
 
 
@@ -280,7 +280,7 @@ void im_set_input_state(cig_vec2_t, cig_input_action_type_t);
 
 
 /* Returns the current mouse state as updated by last  `im_set_input_state` call */
-im_input_state_t *im_input_state();
+cig_input_state_t *im_input_state();
 
 
 /* Enables mouse tracking for the current layout element.

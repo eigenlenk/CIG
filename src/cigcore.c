@@ -54,7 +54,7 @@ static struct {
 	size_t size;
 } _state_list = { 0 };
 static im_scroll_state_element_t _scroll_elements[CIG_SCROLLABLE_ELEMENTS_MAX];
-static im_input_state_t mouse = { 0 };
+static cig_input_state_t mouse = { 0 };
 static cig_id_t next_id = 0;
 static unsigned int tick = 0;
 
@@ -83,7 +83,7 @@ static inline  __attribute__((always_inline)) int tinyhash(int a, int b) { retur
 ───┤  CORE LAYOUT  │
    └───────────────┘ */
 
-void im_begin_layout(const im_buffer_ref buffer, const cig_frame_t frame) {
+void cig_begin_layout(const im_buffer_ref buffer, const cig_frame_t frame) {
   
   widget_states.clear(&widget_states);
   elements.clear(&elements);
@@ -107,7 +107,7 @@ void im_begin_layout(const im_buffer_ref buffer, const cig_frame_t frame) {
 	next_id = 0;
 }
 
-void im_end_layout() {
+void cig_end_layout() {
 	register im_state_t *s, *last = NULL;
 	
 	++tick;
@@ -130,7 +130,7 @@ void im_end_layout() {
 	}
 }
 
-void im_reset_internal_state() {
+void cig_reset_internal_state() {
 	int i;
 	for (i = 0; i < CIG_STATES_MAX; ++i) {
     _state_list.values[i].id = 0;
@@ -184,7 +184,7 @@ bool cig_push_layout_function(
 }
 
 cig_element_t* cig_pop_frame() {
-  cig_element_t *popped_element = stack_cig_element_t__pop(im_element_stack());
+  cig_element_t *popped_element = stack_cig_element_t__pop(cig_element_stack());
 
   if (popped_element->_clipped) {
     popped_element->_clipped = false;
@@ -195,10 +195,10 @@ cig_element_t* cig_pop_frame() {
 }
 
 cig_element_t* cig_element() {
-  return stack_cig_element_t__peek(im_element_stack(), 0);
+  return stack_cig_element_t__peek(cig_element_stack(), 0);
 }
 
-cig_frame_t im_convert_relative_frame(const cig_frame_t frame) {
+cig_frame_t cig_convert_relative_frame(const cig_frame_t frame) {
 	const im_buffer_element_t *buffer_element = buffers._peek(&buffers, 0);
 	const cig_element_t *element = cig_element();
 	
@@ -209,7 +209,7 @@ cig_frame_t im_convert_relative_frame(const cig_frame_t frame) {
 	);
 }
 
-stack_cig_element_t_t* im_element_stack() {
+stack_cig_element_t_t* cig_element_stack() {
 	return &elements;
 }
 
@@ -299,7 +299,7 @@ void im_set_input_state(
 	}
 }
 
-im_input_state_t *im_input_state() {
+cig_input_state_t *im_input_state() {
 	return &mouse;
 }
 
@@ -413,7 +413,7 @@ void im_set_next_id(cig_id_t id) {
 }
 
 unsigned int im_depth() {
-	return im_element_stack()->size;
+	return cig_element_stack()->size;
 }
 
 cig_id_t im_hash(const char *str) {
@@ -640,7 +640,7 @@ static bool push_frame(
 
 	top->_layout_params._count.total ++;
 
-	cig_frame_t absolute_frame = im_convert_relative_frame(next);
+	cig_frame_t absolute_frame = cig_convert_relative_frame(next);
 	cig_frame_t current_clip_frame = current_buffer->clip_frames.peek(&current_buffer->clip_frames, 0);
 
   elements.push(&elements, (cig_element_t) {

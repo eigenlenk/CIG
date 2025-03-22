@@ -9,11 +9,11 @@ static int main_buffer = 1;
 
 TEST_SETUP(core_layout) {
 	/* Begin laying out a screen that's 640 by 480 */
-	im_begin_layout(&main_buffer, cig_frame_make(0, 0, 640, 480));
+	cig_begin_layout(&main_buffer, cig_frame_make(0, 0, 640, 480));
 }
 
 TEST_TEAR_DOWN(core_layout) {
-	im_end_layout();
+	cig_end_layout();
 }
 
 /* (( TEST CASES )) */
@@ -142,19 +142,19 @@ TEST(core_layout, insets) {
 	the coordinates directly - it's applied when calculating the absolute (on-screen)
 	frame when rendering. Width and height, however, already take padding(s) into account */
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 0, 620, 460), cig_element()->frame);
-	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(10, 10, 620, 460), im_absolute_frame());
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(10, 10, 620, 460), cig_absolute_frame());
 	
 	/* Push another frame. This time there's padding only on the left as set by the previously pushed frame */
 	cig_push_frame(CIG_FILL);
 	
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 0, 570, 460), cig_element()->frame);
-	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(60, 10, 570, 460), im_absolute_frame());
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(60, 10, 570, 460), cig_absolute_frame());
 	
 	/* Another relative frame, this time off-set from the origin */
 	cig_push_frame(cig_frame_make(30, 40, 100, 100));
 	
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(30, 40, 100, 100), cig_element()->frame);
-	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(90, 50, 100, 100), im_absolute_frame());
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(90, 50, 100, 100), cig_absolute_frame());
 	
 	/* Here's what our layout looks like:
 
@@ -185,14 +185,14 @@ TEST(core_layout, overlay) {
 	cig_push_frame(cig_frame_make(50, 50, 540, 380));
 	
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(50, 50, 540, 380), cig_element()->frame);
-	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(50, 50, 540, 380), im_absolute_frame());
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(50, 50, 540, 380), cig_absolute_frame());
 	
 	cig_pop_frame();
 	
 	cig_push_frame(cig_frame_make(100, 100, 440, 280));
 	
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(100, 100, 440, 280), cig_element()->frame);
-	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(100, 100, 440, 280), im_absolute_frame());
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(100, 100, 440, 280), cig_absolute_frame());
 	
 	cig_pop_frame();
 	
@@ -656,11 +656,11 @@ TEST(core_layout, additional_buffers) {
 
 TEST(core_layout, main_screen_subregion) {
 	/* Let's end the original layout added by the test harness .. */
-	im_end_layout();
+	cig_end_layout();
 	
 	/* .. and start a new UI. Lets imagine we have a larger game screen but only want to render
 	   the UI in the bottom half of it. So on our 640x480 screen the Y and H would both be 240 */
-	im_begin_layout(&main_buffer, cig_frame_make(0, 240, 640, 240));
+	cig_begin_layout(&main_buffer, cig_frame_make(0, 240, 640, 240));
 	
 	/* The UI should be clipped within that larger screen */
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 240, 640, 240), cig_element()->clipped_frame);
