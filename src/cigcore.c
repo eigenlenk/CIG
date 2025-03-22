@@ -10,12 +10,12 @@
 
 typedef cig_frame_t cig_clip_frame_t;
 #define STACK_CAPACITY_cig_clip_frame_t CIG_CLIP_REGIONS_MAX
-DECLARE_ARRAY_STACK(cig_clip_frame_t);
+DECLARE_ARRAY_STACK_T(cig_clip_frame_t);
 
 typedef struct {
 	im_buffer_ref buffer;
 	cig_vec2_t origin;
-	stack_cig_clip_frame_t clip_frames;
+	stack_cig_clip_frame_t_t clip_frames;
 } im_buffer_element_t;
 
 typedef struct {
@@ -39,16 +39,16 @@ typedef struct {
 
 typedef im_state_t* im_state_ptr_t;
 #define STACK_CAPACITY_im_state_ptr_t CIG_STATES_MAX
-DECLARE_ARRAY_STACK(im_state_ptr_t);
+DECLARE_ARRAY_STACK_T(im_state_ptr_t);
 
 #define STACK_CAPACITY_im_buffer_element_t CIG_BUFFERS_MAX
-DECLARE_ARRAY_STACK(im_buffer_element_t);
+DECLARE_ARRAY_STACK_T(im_buffer_element_t);
 
 /* Define internal state */
 
-static stack_im_state_ptr_t widget_states = CONFIGURE_STACK(im_state_ptr_t);
-static stack_im_element_t elements = CONFIGURE_STACK(im_element_t);
-static stack_im_buffer_element_t buffers = CONFIGURE_STACK(im_buffer_element_t);
+static stack_im_state_ptr_t_t widget_states = INIT_STACK(im_state_ptr_t);
+static stack_im_element_t_t elements = INIT_STACK(im_element_t);
+static stack_im_buffer_element_t_t buffers = INIT_STACK(im_buffer_element_t);
 static struct {
 	im_state_t values[CIG_STATES_MAX];
 	size_t size;
@@ -217,7 +217,7 @@ cig_frame_t im_convert_relative_frame(const cig_frame_t frame) {
 	);
 }
 
-stack_im_element_t* im_element_stack() {
+stack_im_element_t_t* im_element_stack() {
 	return &elements;
 }
 
@@ -232,7 +232,7 @@ void im_push_buffer(const im_buffer_ref buffer) {
 		.origin = buffers.size == 0
 			? cig_vec2_zero()
 			: cig_vec2_make(im_element()->absolute_frame.x, im_element()->absolute_frame.y),
-     .clip_frames = CONFIGURE_STACK(cig_clip_frame_t)
+     .clip_frames = INIT_STACK(cig_clip_frame_t)
 	};
   
   buffer_element.clip_frames.push(&buffer_element.clip_frames, im_element()->absolute_frame);
@@ -746,7 +746,7 @@ static im_scroll_state_t* get_scroll_state(const IMGUIID id) {
 static void im_push_clip(im_element_t *element) {
   if (element->_clipped == false) {
 		element->_clipped = true;
-		stack_cig_clip_frame_t *clip_frames = &buffers._peek(&buffers, 0)->clip_frames;
+		stack_cig_clip_frame_t_t *clip_frames = &buffers._peek(&buffers, 0)->clip_frames;
     clip_frames->push(clip_frames, cig_frame_union(element->absolute_frame, clip_frames->peek(clip_frames, 0)));
     
 		// Check if graphics module is included
@@ -755,7 +755,7 @@ static void im_push_clip(im_element_t *element) {
 }
 
 static void im_pop_clip() {
-	stack_cig_clip_frame_t *clip_frames = &buffers._peek(&buffers, 0)->clip_frames;
+	stack_cig_clip_frame_t_t *clip_frames = &buffers._peek(&buffers, 0)->clip_frames;
   
   CIG_UNUSED(clip_frames->_pop(clip_frames));
   

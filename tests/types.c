@@ -3,6 +3,10 @@
 #include "cigcore.h"
 #include "asserts.h"
 
+/* Declare a stack type */
+#define STACK_CAPACITY_int 8
+DECLARE_ARRAY_STACK_T(int);
+
 TEST_GROUP(types);
 
 TEST_SETUP(types) {}
@@ -147,6 +151,24 @@ TEST(types, vec2_math_utils) {
 	TEST_ASSERT_EQUAL_VEC2(cig_vec2_make(5, 5), cig_vec2_abs(cig_vec2_make(-5, -5)));
 }
 
+TEST(types, stack_operations) {
+  stack_int_t si = INIT_STACK(int);
+  
+  TEST_ASSERT_EQUAL_INT(8, si.capacity);
+  TEST_ASSERT_EQUAL_INT(0, si.size);
+  
+  si.push(&si, 5);
+  
+  TEST_ASSERT_EQUAL_INT(1, si.size);
+  
+  /* stack_int_peek == si.peek */
+  TEST_ASSERT_EQUAL_INT(5, stack_int_peek(&si, 0));
+  
+  si.pop(&si);
+  
+  TEST_ASSERT_EQUAL_INT(0, si.size);
+}
+
 TEST_GROUP_RUNNER(types) {
   RUN_TEST_CASE(types, frame_constructors);
   RUN_TEST_CASE(types, frame_comparator);
@@ -163,4 +185,5 @@ TEST_GROUP_RUNNER(types) {
 	RUN_TEST_CASE(types, vec2_operations);
 	RUN_TEST_CASE(types, vec2_comparator);
 	RUN_TEST_CASE(types, vec2_math_utils);
+	RUN_TEST_CASE(types, stack_operations);
 }
