@@ -11,87 +11,87 @@ TEST_TEAR_DOWN(types) {}
 /* (( TEST CASES )) */
 
 TEST(types, frame_constructors) {
-	const frame_t f0 = frame_zero();
-	const frame_t f1 = frame_make(1, 2, 3, 4);
+	const cig_frame_t f0 = cig_frame_zero();
+	const cig_frame_t f1 = cig_frame_make(1, 2, 3, 4);
 	
 	TEST_ASSERT(f0.x == 0 && f0.y == 0 && f0.w == 0 && f0.h == 0);
 	TEST_ASSERT(f1.x == 1 && f1.y == 2 && f1.w == 3 && f1.h == 4);
 }
 
 TEST(types, frame_comparator) {
-	const frame_t a = frame_make(10, 10, 100, 100);
-	const frame_t b = frame_make(10, 10, 100, 100);
-	const frame_t c = frame_make(10, 10, 90, 100);
+	const cig_frame_t a = cig_frame_make(10, 10, 100, 100);
+	const cig_frame_t b = cig_frame_make(10, 10, 100, 100);
+	const cig_frame_t c = cig_frame_make(10, 10, 90, 100);
 	
-	TEST_ASSERT_TRUE(frame_cmp(a, b));
-	TEST_ASSERT_FALSE(frame_cmp(b, c));
+	TEST_ASSERT_TRUE(cig_frame_cmp(a, b));
+	TEST_ASSERT_FALSE(cig_frame_cmp(b, c));
 }
 
 TEST(types, frame_point_check) {
-	const frame_t f = frame_make(40, 40, 50, 30);
+	const cig_frame_t f = cig_frame_make(40, 40, 50, 30);
 	
-	TEST_ASSERT_TRUE(frame_contains(f, cig_vec2_make(50, 50)));
-	TEST_ASSERT_FALSE(frame_contains(f, cig_vec2_make(30, 50)));
+	TEST_ASSERT_TRUE(cig_frame_contains(f, cig_vec2_make(50, 50)));
+	TEST_ASSERT_FALSE(cig_frame_contains(f, cig_vec2_make(30, 50)));
 }
 
 TEST(types, frame_offset) {
-	const frame_t f = frame_offset(frame_make(40, 40, 50, 30), 10, 10);
+	const cig_frame_t f = cig_frame_offset(cig_frame_make(40, 40, 50, 30), 10, 10);
 	
 	TEST_ASSERT(f.x == 50 && f.y == 50);
 }
 
 TEST(types, frame_inset) {
-	const frame_t f = frame_inset(frame_make(40, 40, 100, 100), insets_make(10, 20, 5, 15));
+	const cig_frame_t f = cig_frame_inset(cig_frame_make(40, 40, 100, 100), insets_make(10, 20, 5, 15));
 	
-	TEST_ASSERT(frame_cmp(f, frame_make(50, 60, 85, 65)));
+	TEST_ASSERT(cig_frame_cmp(f, cig_frame_make(50, 60, 85, 65)));
 }
 
 TEST(types, frame_contains_relative_frame) {
-	const frame_t f = frame_make(40, 40, 50, 30);
+	const cig_frame_t f = cig_frame_make(40, 40, 50, 30);
 	
-	TEST_ASSERT_TRUE(frame_wholly_contains_relative_frame(
-		frame_make(40, 40, 50, 30),
-		frame_make(10, 10, 20, 20)
+	TEST_ASSERT_TRUE(cig_frame_wholly_contains_relative_frame(
+		cig_frame_make(40, 40, 50, 30),
+		cig_frame_make(10, 10, 20, 20)
 	));
-	TEST_ASSERT_FALSE(frame_wholly_contains_relative_frame(
-		frame_make(40, 40, 50, 30),
-		frame_make(10, 10, 20, 30)
+	TEST_ASSERT_FALSE(cig_frame_wholly_contains_relative_frame(
+		cig_frame_make(40, 40, 50, 30),
+		cig_frame_make(10, 10, 20, 30)
 	));
 }
 
 TEST(types, frame_intersections) {
-	TEST_ASSERT_TRUE(frame_intersects(frame_make(50, 50, 100, 100), frame_make(40, 40, 100, 100)));
-	TEST_ASSERT_FALSE(frame_intersects(frame_make(50, 50, 100, 100), frame_make(0, 0, 50, 50)));
+	TEST_ASSERT_TRUE(cig_frame_intersects(cig_frame_make(50, 50, 100, 100), cig_frame_make(40, 40, 100, 100)));
+	TEST_ASSERT_FALSE(cig_frame_intersects(cig_frame_make(50, 50, 100, 100), cig_frame_make(0, 0, 50, 50)));
 }
 
 TEST(types, frame_center) {
-	TEST_ASSERT_EQUAL_VEC2(cig_vec2_make(50, 50), frame_center(frame_make(0, 0, 100, 100)));
+	TEST_ASSERT_EQUAL_VEC2(cig_vec2_make(50, 50), cig_frame_center(cig_frame_make(0, 0, 100, 100)));
 }
 
 TEST(types, frame_containing) {
 	TEST_ASSERT_EQUAL_FRAME(
-		frame_make(0, 0, 60, 60),
-		frame_containing(
-			frame_make(0, 0, 30, 30),
-			frame_make(50, 20, 10, 40)
+		cig_frame_make(0, 0, 60, 60),
+		cig_frame_containing(
+			cig_frame_make(0, 0, 30, 30),
+			cig_frame_make(50, 20, 10, 40)
 		)
 	);
 }
 
 TEST(types, frame_union) {
 	TEST_ASSERT_EQUAL_FRAME(
-		frame_make(40, 20, 10, 10),
-		frame_union(
-			frame_make(0, 0, 50, 30),
-			frame_make(40, 20, 10, 40)
+		cig_frame_make(40, 20, 10, 10),
+		cig_frame_union(
+			cig_frame_make(0, 0, 50, 30),
+			cig_frame_make(40, 20, 10, 40)
 		)
 	);
 	
 	TEST_ASSERT_EQUAL_FRAME(
-		frame_make(0, 0, 0, 0),
-		frame_union(
-			frame_make(0, 0, 50, 30),
-			frame_make(40, 40, 10, 40)
+		cig_frame_make(0, 0, 0, 0),
+		cig_frame_union(
+			cig_frame_make(0, 0, 50, 30),
+			cig_frame_make(40, 40, 10, 40)
 		)
 	);
 }

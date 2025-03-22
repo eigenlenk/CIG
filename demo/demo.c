@@ -12,7 +12,7 @@ void demo_ui(BITMAP *buffer) {
 		grid_demo = (grid_demo + 1) % 4;
 	}*/
 	
-  im_begin_layout(buffer, frame_make(0, 0, SCREEN_W, SCREEN_H));
+  im_begin_layout(buffer, cig_frame_make(0, 0, SCREEN_W, SCREEN_H));
 	
 	/* Pass cursor position and mouse button states */
 	im_set_input_state(
@@ -91,7 +91,7 @@ void demo_ui(BITMAP *buffer) {
 
   /* Right content (a grid) */
 	
-	void demo_grid_element(const frame_t frame) {
+	void demo_grid_element(const cig_frame_t frame) {
 		if (im_push_frame(frame)) {
 			im_enable_interaction();
 			if (im_pressed(IM_MOUSE_BUTTON_ANY, 0)) {
@@ -173,10 +173,10 @@ void demo_ui(BITMAP *buffer) {
 		im_fill_color(8);
 		
 		/* We'll add some elements with increasing height */
-		demo_grid_element(frame_make(0, 0, 73, 50));
-		demo_grid_element(frame_make(0, 0, 73, 75));
-		demo_grid_element(frame_make(0, 0, 73, 100));
-		demo_grid_element(frame_make(0, 0, 73, 125));
+		demo_grid_element(cig_frame_make(0, 0, 73, 50));
+		demo_grid_element(cig_frame_make(0, 0, 73, 75));
+		demo_grid_element(cig_frame_make(0, 0, 73, 100));
+		demo_grid_element(cig_frame_make(0, 0, 73, 125));
 		
 		/* Next row will start just below the longest element (the 4th one) */
 		demo_grid_element(IM_FILL);
@@ -194,11 +194,11 @@ void demo_ui(BITMAP *buffer) {
 		im_fill_color(8);
 		
 		/* We'll add some elements with increasing height */
-		demo_grid_element(frame_make(0, 0, 50, 84));
-		demo_grid_element(frame_make(0, 0, 60, 84));
-		demo_grid_element(frame_make(0, 0, 70, 84));
-		demo_grid_element(frame_make(0, 0, 80, 84));
-		demo_grid_element(frame_make(0, 0, 90, 84));
+		demo_grid_element(cig_frame_make(0, 0, 50, 84));
+		demo_grid_element(cig_frame_make(0, 0, 60, 84));
+		demo_grid_element(cig_frame_make(0, 0, 70, 84));
+		demo_grid_element(cig_frame_make(0, 0, 80, 84));
+		demo_grid_element(cig_frame_make(0, 0, 90, 84));
 		
 		/* Next columns will start just after the widest element (the 5th one) */
 		demo_grid_element(IM_FILL);
@@ -210,7 +210,7 @@ void demo_ui(BITMAP *buffer) {
 	
 	/* Some sort of a floating footer button on top of the content */
 	{
-		im_push_frame(frame_make(200, IM_B - 100, 240, 50));
+		im_push_frame(cig_frame_make(200, IM_B - 100, 240, 50));
 		
 		im_enable_interaction();
 		

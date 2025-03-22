@@ -11,11 +11,11 @@
 
 #define IM_FILL_CONSTANT 0
 
-#define IM_FILL frame_make(0, 0, IM_FILL_CONSTANT, IM_FILL_CONSTANT)
+#define IM_FILL cig_frame_make(0, 0, IM_FILL_CONSTANT, IM_FILL_CONSTANT)
 
-#define IM_FILL_W(W) frame_make(0, 0, W, IM_FILL_CONSTANT)
+#define IM_FILL_W(W) cig_frame_make(0, 0, W, IM_FILL_CONSTANT)
 
-#define IM_FILL_H(H) frame_make(0, 0, IM_FILL_CONSTANT, H)
+#define IM_FILL_H(H) cig_frame_make(0, 0, IM_FILL_CONSTANT, H)
 
 #define IM_X im_current_element()->frame.x
 
@@ -27,7 +27,7 @@
 
 #define IM_CENTER vec2_make((IM_W * 0.5), (IM_H * 0.5))
 
-#define IM_CENTERED(W, H) frame_make((IM_W * 0.5) - (W * 0.5), (IM_H * 0.5) - (H * 0.5), W, H)
+#define IM_CENTERED(W, H) cig_frame_make((IM_W * 0.5) - (W * 0.5), (IM_H * 0.5) - (H * 0.5), W, H)
 
 #define IM_R (IM_X + IM_W)
 

@@ -9,7 +9,7 @@ static int main_buffer = 1;
 
 TEST_SETUP(core_layout) {
 	/* Begin laying out a screen that's 640 by 480 */
-	im_begin_layout(&main_buffer, frame_make(0, 0, 640, 480));
+	im_begin_layout(&main_buffer, cig_frame_make(0, 0, 640, 480));
 }
 
 TEST_TEAR_DOWN(core_layout) {
@@ -21,9 +21,9 @@ TEST_TEAR_DOWN(core_layout) {
 TEST(core_layout, basic_checks) {
 	TEST_ASSERT_NOT_NULL(im_element());
 	TEST_ASSERT_EQUAL(&main_buffer, im_buffer());
-	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 640, 480), im_element()->frame);
-	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 640, 480), im_element()->clipped_frame);
-	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 640, 480), im_element()->absolute_frame);
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 0, 640, 480), im_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 0, 640, 480), im_element()->clipped_frame);
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 0, 640, 480), im_element()->absolute_frame);
 	TEST_ASSERT(im_element()->insets.left == 0 && im_element()->insets.top == 0 &&
 		im_element()->insets.right == 0 && im_element()->insets.bottom == 0);
 }
@@ -145,20 +145,20 @@ TEST(core_layout, insets) {
 	the coordinates directly - it's applied when calculating the absolute (on-screen)
 	frame when rendering. Width and height, however, already take padding(s) into account.
 	*/
-	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 620, 460), im_element()->frame);
-	TEST_ASSERT_EQUAL_FRAME(frame_make(10, 10, 620, 460), im_absolute_frame());
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 0, 620, 460), im_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(10, 10, 620, 460), im_absolute_frame());
 	
 	/* Push another frame. This time there's padding only on the left as set by the previously pushed frame */
 	im_push_frame(IM_FILL);
 	
-	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 570, 460), im_element()->frame);
-	TEST_ASSERT_EQUAL_FRAME(frame_make(60, 10, 570, 460), im_absolute_frame());
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 0, 570, 460), im_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(60, 10, 570, 460), im_absolute_frame());
 	
 	/* Another relative frame, this time off-set from the origin */
-	im_push_frame(frame_make(30, 40, 100, 100));
+	im_push_frame(cig_frame_make(30, 40, 100, 100));
 	
-	TEST_ASSERT_EQUAL_FRAME(frame_make(30, 40, 100, 100), im_element()->frame);
-	TEST_ASSERT_EQUAL_FRAME(frame_make(90, 50, 100, 100), im_absolute_frame());
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(30, 40, 100, 100), im_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(90, 50, 100, 100), im_absolute_frame());
 	
 	/*
 	Here's what our layout looks like:
@@ -190,17 +190,17 @@ TEST(core_layout, overlay) {
 	In this case relative and absolute frames are the same
 	because they're directly in root's coordinate system.
 	*/
-	im_push_frame(frame_make(50, 50, 540, 380));
+	im_push_frame(cig_frame_make(50, 50, 540, 380));
 	
-	TEST_ASSERT_EQUAL_FRAME(frame_make(50, 50, 540, 380), im_element()->frame);
-	TEST_ASSERT_EQUAL_FRAME(frame_make(50, 50, 540, 380), im_absolute_frame());
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(50, 50, 540, 380), im_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(50, 50, 540, 380), im_absolute_frame());
 	
 	im_pop_frame();
 	
-	im_push_frame(frame_make(100, 100, 440, 280));
+	im_push_frame(cig_frame_make(100, 100, 440, 280));
 	
-	TEST_ASSERT_EQUAL_FRAME(frame_make(100, 100, 440, 280), im_element()->frame);
-	TEST_ASSERT_EQUAL_FRAME(frame_make(100, 100, 440, 280), im_absolute_frame());
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(100, 100, 440, 280), im_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(100, 100, 440, 280), im_absolute_frame());
 	
 	im_pop_frame();
 	
@@ -234,17 +234,17 @@ TEST(core_layout, culling) {
 	*/
 	
 	/* This one is wholly outside the parent's top edge */
-	if (im_push_frame(frame_make(0, -50, 100, 50))) {
+	if (im_push_frame(cig_frame_make(0, -50, 100, 50))) {
 		TEST_FAIL_MESSAGE("Frame should have been culled");
 	}
 	
 	/* This one is wholly outside the parent's right edge */
-	if (im_push_frame(frame_make(640, 0, 100, 50))) {
+	if (im_push_frame(cig_frame_make(640, 0, 100, 50))) {
 		TEST_FAIL_MESSAGE("Frame should have been culled");
 	}
 	
 	/* This one partially intersects the parent */
-	if (im_push_frame(frame_make(0, -25, 100, 50))) {
+	if (im_push_frame(cig_frame_make(0, -25, 100, 50))) {
 		im_pop_frame();
 	} else {
 		TEST_FAIL_MESSAGE("Frame should NOT have been culled");
@@ -254,7 +254,7 @@ TEST(core_layout, culling) {
 	im_disable_culling();
 	
 	/* Even though it lays outside the parent, it's still added */
-	if (im_push_frame(frame_make(0, -50, 100, 25))) {
+	if (im_push_frame(cig_frame_make(0, -50, 100, 25))) {
 		im_pop_frame();
 	} else {
 		TEST_FAIL_MESSAGE("Frame should NOT have been culled");
@@ -275,11 +275,11 @@ TEST(core_layout, vstack_layout) {
 	
 	/* Width is calculated, but height is fixed at 50pt */
 	im_push_frame(IM_FILL_H(50));
-	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 640, 50), im_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 0, 640, 50), im_element()->frame);
 	im_pop_frame();
 	
 	im_push_frame(IM_FILL_H(100));
-	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 50+10, 640, 100), im_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 50+10, 640, 100), im_element()->frame);
 	im_pop_frame();
 	
 	TEST_ASSERT_EQUAL_INT(170, im_element()->_layout_params._vertical_position);
@@ -302,11 +302,11 @@ TEST(core_layout, hstack_layout) {
 	
 	/* Width is calculated, but height is fixed at 50pt */
 	im_push_frame(IM_FILL_W(200));
-	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 200, 480-2*10), im_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 0, 200, 480-2*10), im_element()->frame);
 	im_pop_frame();
 	
 	im_push_frame(IM_FILL_W(100));
-	TEST_ASSERT_EQUAL_FRAME(frame_make(200, 0, 100, 480-2*10), im_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(200, 0, 100, 480-2*10), im_element()->frame);
 	im_pop_frame();
 	
 	TEST_ASSERT_EQUAL_INT(300, im_element()->_layout_params._horizontal_position);
@@ -344,7 +344,7 @@ TEST(core_layout, grid_with_fixed_rows_and_columns) {
 		int row = (i / 5);
 		int column = i - (row * 5);
 		im_push_frame(IM_FILL);
-		TEST_ASSERT_EQUAL_FRAME(frame_make(128*column, 96*row, 128, 96), im_element()->frame);
+		TEST_ASSERT_EQUAL_FRAME(cig_frame_make(128*column, 96*row, 128, 96), im_element()->frame);
 		im_pop_frame();
 	}
 
@@ -420,19 +420,19 @@ TEST(core_layout, grid_with_varying_cell_size) {
 	}
 
 	/* Add 3 elements with increasing width. They should fit on the first row */
-	im_push_frame(frame_make(0, 0, 100, 160)); /* (1) */
+	im_push_frame(cig_frame_make(0, 0, 100, 160)); /* (1) */
 	TEST_ASSERT_EQUAL_INT(0, im_element()->frame.x);
 	im_pop_frame();
 	
 	TEST_ASSERT_EQUAL_INT(100, im_element()->_layout_params._horizontal_position);
 	
-	im_push_frame(frame_make(0, 0, 200, 160)); /* (2) */
+	im_push_frame(cig_frame_make(0, 0, 200, 160)); /* (2) */
 	TEST_ASSERT_EQUAL_INT(100, im_element()->frame.x);
 	im_pop_frame();
 	
 	TEST_ASSERT_EQUAL_INT(300, im_element()->_layout_params._horizontal_position);
 	
-	im_push_frame(frame_make(0, 0, 300, 160)); /* (3) */
+	im_push_frame(cig_frame_make(0, 0, 300, 160)); /* (3) */
 	TEST_ASSERT_EQUAL_INT(300, im_element()->frame.x);
 	im_pop_frame();
 	
@@ -443,13 +443,13 @@ TEST(core_layout, grid_with_varying_cell_size) {
 	but the grid would exceed the number of horizontal elements,
 	so it's pushed onto the next row.
 	*/
-	im_push_frame(frame_make(0, 0, 40, 160));
+	im_push_frame(cig_frame_make(0, 0, 40, 160));
 	TEST_ASSERT_EQUAL_INT(0, 		im_element()->frame.x);
 	TEST_ASSERT_EQUAL_INT(160, 	im_element()->frame.y);
 	im_pop_frame();
 	
 	/* This one should be inserted normally onto the second row */
-	im_push_frame(frame_make(0, 0, 400, 160)); /* (5) */
+	im_push_frame(cig_frame_make(0, 0, 400, 160)); /* (5) */
 	TEST_ASSERT_EQUAL_INT(40, 	im_element()->frame.x);
 	TEST_ASSERT_EQUAL_INT(160,	im_element()->frame.y);
 	im_pop_frame();
@@ -495,19 +495,19 @@ TEST(core_layout, grid_with_down_direction) {
 	}
 	
 	/* Add 3 elements with increasing height and width. They should fit in the first column */
-	im_push_frame(frame_make(0, 0, 100, 120)); /* (1) */
+	im_push_frame(cig_frame_make(0, 0, 100, 120)); /* (1) */
 	TEST_ASSERT_EQUAL_INT(0,		im_element()->frame.y);
 	im_pop_frame();
 	
 	TEST_ASSERT_EQUAL_INT(120,	im_element()->_layout_params._vertical_position);
 	
-	im_push_frame(frame_make(0, 0, 150, 160)); /* (2) */
+	im_push_frame(cig_frame_make(0, 0, 150, 160)); /* (2) */
 	TEST_ASSERT_EQUAL_INT(120,	im_element()->frame.y);
 	im_pop_frame();
 	
 	TEST_ASSERT_EQUAL_INT(280, 	im_element()->_layout_params._vertical_position);
 	
-	im_push_frame(frame_make(0, 0, 200, 200)); /* (3) */
+	im_push_frame(cig_frame_make(0, 0, 200, 200)); /* (3) */
 	TEST_ASSERT_EQUAL_INT(280, 	im_element()->frame.y);
 	im_pop_frame();
 	
@@ -520,7 +520,7 @@ TEST(core_layout, grid_with_down_direction) {
 	the remaining space on the right.
 	*/
 	im_push_frame(IM_FILL); /* (4) */
-	TEST_ASSERT_EQUAL_FRAME(frame_make(200, 0, 440, 480), im_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(200, 0, 440, 480), im_element()->frame);
 	im_pop_frame();
 	
 	TEST_ASSERT_EQUAL_INT(640, 	im_element()->_layout_params._horizontal_position);
@@ -591,8 +591,8 @@ TEST(core_layout, clipping) {
 		 automatically by most renderers when drawing out of bounds */ 
 		 
 	/* An element that's partially outside the root bounds gets clipped */
-	im_push_frame(frame_make(100, -100, 440, 200));
-	TEST_ASSERT_EQUAL_FRAME(frame_make(100, 0, 440, 100), im_element()->clipped_frame);
+	im_push_frame(cig_frame_make(100, -100, 440, 200));
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(100, 0, 440, 100), im_element()->clipped_frame);
 	im_pop_frame();
 	
 	/* Some element filling the whole root */
@@ -601,36 +601,36 @@ TEST(core_layout, clipping) {
 	/* Clipping is now turned ON for the current layout element */
 	im_enable_clipping();
 	
-	im_push_frame(frame_make(600, 400, 100, 100));
+	im_push_frame(cig_frame_make(600, 400, 100, 100));
 	
-	TEST_ASSERT_EQUAL_FRAME(frame_make(600, 400, 40, 80), im_element()->clipped_frame);
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(600, 400, 40, 80), im_element()->clipped_frame);
 		
-		im_push_frame(frame_make(30, 70, 20, 20));
-		TEST_ASSERT_EQUAL_FRAME(frame_make(30, 70, 10, 10), im_element()->clipped_frame);
+		im_push_frame(cig_frame_make(30, 70, 20, 20));
+		TEST_ASSERT_EQUAL_FRAME(cig_frame_make(30, 70, 10, 10), im_element()->clipped_frame);
 		im_pop_frame();
 		
 	im_pop_frame();
 	
 	
-	im_push_frame(frame_make(-75, -50, 200, 200));
+	im_push_frame(cig_frame_make(-75, -50, 200, 200));
 	
-	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 125, 150), im_element()->clipped_frame);
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 0, 125, 150), im_element()->clipped_frame);
 		
-		im_push_frame(frame_make(0, 0, 100, 100));
-		TEST_ASSERT_EQUAL_FRAME(frame_make(75, 50, 25, 50), im_element()->clipped_frame);
+		im_push_frame(cig_frame_make(0, 0, 100, 100));
+		TEST_ASSERT_EQUAL_FRAME(cig_frame_make(75, 50, 25, 50), im_element()->clipped_frame);
 		im_pop_frame();
 		
-		im_push_frame(frame_make(-25, -50, 100, 100));
-		TEST_ASSERT_EQUAL_FRAME(frame_make(75, 50, 0, 0), im_element()->clipped_frame);
+		im_push_frame(cig_frame_make(-25, -50, 100, 100));
+		TEST_ASSERT_EQUAL_FRAME(cig_frame_make(75, 50, 0, 0), im_element()->clipped_frame);
 		im_pop_frame();
 		
 	im_pop_frame();
 	
-	im_push_frame(frame_make(100, 100, 440, 280));
+	im_push_frame(cig_frame_make(100, 100, 440, 280));
 	im_enable_clipping();
 	
-		im_push_frame(frame_make(-10, -50, 460, 100));
-		TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 440, 50), im_element()->clipped_frame);
+		im_push_frame(cig_frame_make(-10, -50, 460, 100));
+		TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 0, 440, 50), im_element()->clipped_frame);
 		im_pop_frame();
 	
 	im_pop_frame();
@@ -641,21 +641,21 @@ TEST(core_layout, clipping) {
 TEST(core_layout, additional_buffers) {
 	int secondary_buffer = 2;
 	
-	im_push_frame(frame_make(100, 100, 440, 280));
+	im_push_frame(cig_frame_make(100, 100, 440, 280));
 	im_push_buffer(&secondary_buffer);
 	
 	TEST_ASSERT_EQUAL(&secondary_buffer, im_buffer());
-	TEST_ASSERT_EQUAL_FRAME(frame_make(100, 100, 440, 280), im_element()->clipped_frame);
-	TEST_ASSERT_EQUAL_FRAME(frame_make(100, 100, 440, 280), im_element()->absolute_frame);
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(100, 100, 440, 280), im_element()->clipped_frame);
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(100, 100, 440, 280), im_element()->absolute_frame);
 	
 	
 	/* Another child within that new buffer */
-	im_push_frame(frame_make(100, 100, 240, 80));
+	im_push_frame(cig_frame_make(100, 100, 240, 80));
 
-	TEST_ASSERT_EQUAL_FRAME(frame_make(100, 100, 240, 80), im_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(100, 100, 240, 80), im_element()->frame);
 	
 	/* Absolute frame is now in the coordinate space of the new buffer, rather than the main buffer */
-	TEST_ASSERT_EQUAL_FRAME(frame_make(100, 100, 240, 80), im_element()->absolute_frame);
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(100, 100, 240, 80), im_element()->absolute_frame);
 
 	im_pop_frame();
 	
@@ -670,18 +670,18 @@ TEST(core_layout, main_screen_subregion) {
 	
 	/* .. and start a new UI. Lets imagine we have a larger game screen but only want to render
 	   the UI in the bottom half of it. So on our 640x480 screen the Y and H would both be 240 */
-	im_begin_layout(&main_buffer, frame_make(0, 240, 640, 240));
+	im_begin_layout(&main_buffer, cig_frame_make(0, 240, 640, 240));
 	
 	/* The UI should be clipped within that larger screen */
-	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 240, 640, 240), im_element()->clipped_frame);
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 240, 640, 240), im_element()->clipped_frame);
 	
 	
 	im_push_frame(IM_FILL);
 	
 	/* The absolute frame should be offset as well, while the relative frames stay the same */
-	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 640, 240), im_element()->frame);
-	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 0, 640, 240), im_element()->clipped_frame);
-	TEST_ASSERT_EQUAL_FRAME(frame_make(0, 240, 640, 240), im_element()->absolute_frame);
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 0, 640, 240), im_element()->frame);
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 0, 640, 240), im_element()->clipped_frame);
+	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 240, 640, 240), im_element()->absolute_frame);
 	
 	im_pop_frame();
 }

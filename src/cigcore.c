@@ -8,12 +8,12 @@
 
 /* Declare internal types */
 
-DECLARE_STACK(frame_t);
+DECLARE_STACK(cig_frame_t);
 
 typedef struct {
 	im_buffer_ref buffer;
 	cig_vec2_t origin;
-	STACK(frame_t) clip_frames;
+	STACK(cig_frame_t) clip_frames;
 } im_buffer_element_t;
 
 typedef struct {
@@ -66,11 +66,11 @@ static void im_push_clip(im_element_t*);
 
 static void im_pop_clip();
 
-static frame_t resolve_size(frame_t, const im_element_t*);
+static cig_frame_t resolve_size(cig_frame_t, const im_element_t*);
 
-static bool next_layout_frame(frame_t, im_element_t *, frame_t *);
+static bool next_layout_frame(cig_frame_t, im_element_t *, cig_frame_t *);
 
-static bool push_frame(frame_t, insets_t, im_layout_params_t, bool (*)(frame_t, frame_t, im_layout_params_t*, frame_t*));
+static bool push_frame(cig_frame_t, insets_t, im_layout_params_t, bool (*)(cig_frame_t, cig_frame_t, im_layout_params_t*, cig_frame_t*));
 
 static inline  __attribute__((always_inline)) int tinyhash(int a, int b) { return (a * 31) ^ (b * 17); }
 
@@ -79,7 +79,7 @@ static inline  __attribute__((always_inline)) int tinyhash(int a, int b) { retur
 ───┤  CORE LAYOUT  │
    └───────────────┘ */
 
-void im_begin_layout(const im_buffer_ref buffer, const frame_t frame) {
+void im_begin_layout(const im_buffer_ref buffer, const cig_frame_t frame) {
 	STACK_INIT(&widget_states);
 	STACK_INIT(&elements);
 	STACK_INIT(&buffers);
@@ -87,7 +87,7 @@ void im_begin_layout(const im_buffer_ref buffer, const frame_t frame) {
 	STACK_PUSH(&elements, ((im_element_t) {
 		0,
 		.id = next_id ? next_id : im_hash("root"),
-		.frame = frame_make(0, 0, frame.w, frame.h),
+		.frame = cig_frame_make(0, 0, frame.w, frame.h),
 		.clipped_frame = frame,
 		.absolute_frame = frame,
 		.insets = insets_zero(),
@@ -148,19 +148,19 @@ im_buffer_ref im_buffer() {
 	return STACK_TOP(&buffers).buffer;
 }
 
-bool im_push_frame(const frame_t frame) {
+bool im_push_frame(const cig_frame_t frame) {
 	return push_frame(frame, insets_zero(), (im_layout_params_t){ 0, .options = IM_DEFAULT_LAYOUT_FLAGS }, NULL);
 }
 
 bool im_push_frame_insets(
-	const frame_t frame,
+	const cig_frame_t frame,
 	const insets_t insets
 ) {
 	return push_frame(frame, insets, (im_layout_params_t){ 0, .options = IM_DEFAULT_LAYOUT_FLAGS }, NULL);
 }
 
 bool im_push_frame_insets_params(
-	const frame_t frame,
+	const cig_frame_t frame,
 	const insets_t insets,
 	const im_layout_params_t params
 ) {
@@ -168,8 +168,8 @@ bool im_push_frame_insets_params(
 }
 
 bool im_push_frame_function(
-	bool (*layout_function)(const frame_t, const frame_t, im_layout_params_t *, frame_t *),
-	const frame_t frame,
+	bool (*layout_function)(const cig_frame_t, const cig_frame_t, im_layout_params_t *, cig_frame_t *),
+	const cig_frame_t frame,
 	const insets_t insets,
 	im_layout_params_t params
 ) {
@@ -191,19 +191,19 @@ im_element_t* im_element() {
 	return &STACK_TOP(im_element_stack());
 }
 
-frame_t im_relative_frame() {
+cig_frame_t im_relative_frame() {
 	return im_element()->frame;
 }
 
-frame_t im_absolute_frame() {
+cig_frame_t im_absolute_frame() {
 	return im_element()->absolute_frame;
 }
 
-frame_t im_convert_relative_frame(const frame_t frame) {
+cig_frame_t im_convert_relative_frame(const cig_frame_t frame) {
 	const im_buffer_element_t *buffer = &STACK_TOP(&buffers);
 	const im_element_t *element = im_element();
 	
-	return frame_offset(
+	return cig_frame_offset(
 		resolve_size(frame, element),
 		element->absolute_frame.x + element->insets.left - buffer->origin.x,
 		element->absolute_frame.y + element->insets.top - buffer->origin.y
@@ -438,10 +438,10 @@ void im_spacer(const int size) {
 }
 
 bool im_default_layout_builder(
-	const frame_t container, /* Frame into which sub-frames are laid out */
-	const frame_t frame, /* Proposed sub-frame, generally from IM_FILL */
+	const cig_frame_t container, /* Frame into which sub-frames are laid out */
+	const cig_frame_t frame, /* Proposed sub-frame, generally from IM_FILL */
 	im_layout_params_t *prm,
-	frame_t *result
+	cig_frame_t *result
 ) {
 	const bool h_axis = prm->axis & HORIZONTAL;
 	const bool v_axis = prm->axis & VERTICAL;
@@ -569,7 +569,7 @@ bool im_default_layout_builder(
 		prm->_count.v_cur ++;
 	}
 
-	*result = frame_make(x, y, w, h);
+	*result = cig_frame_make(x, y, w, h);
 	
 	return true;
 }
@@ -579,10 +579,10 @@ bool im_default_layout_builder(
    ║            INTERNAL FUNCTIONS              ║
    ╚════════════════════════════════════════════╝ */
 
-static frame_t resolve_size(const frame_t frame, const im_element_t *parent) {
-  const frame_t content_frame = frame_inset(parent->frame, parent->insets);
+static cig_frame_t resolve_size(const cig_frame_t frame, const im_element_t *parent) {
+  const cig_frame_t content_frame = cig_frame_inset(parent->frame, parent->insets);
 
-	return frame_make(
+	return cig_frame_make(
 		frame.x,
 		frame.y,
 		frame.w == IM_FILL_CONSTANT ? content_frame.w : frame.w,
@@ -591,13 +591,13 @@ static frame_t resolve_size(const frame_t frame, const im_element_t *parent) {
 }
 
 static bool next_layout_frame(
-	const frame_t proposed_frame,
+	const cig_frame_t proposed_frame,
 	im_element_t *top_element,
-	frame_t *result
+	cig_frame_t *result
 ) {
 	if (top_element->_layout_function) {
 		return (*top_element->_layout_function)(
-      frame_inset(top_element->frame, top_element->insets),
+      cig_frame_inset(top_element->frame, top_element->insets),
       proposed_frame,
       &top_element->_layout_params,
 			result
@@ -609,10 +609,10 @@ static bool next_layout_frame(
 }
 
 static bool push_frame(
-	const frame_t frame,
+	const cig_frame_t frame,
 	const insets_t insets,
 	im_layout_params_t params,
-	bool (*layout_function)(frame_t, frame_t, im_layout_params_t*, frame_t*)
+	bool (*layout_function)(cig_frame_t, cig_frame_t, im_layout_params_t*, cig_frame_t*)
 ) {
 	im_buffer_element_t *current_buffer = &STACK_TOP(&buffers);
 	im_element_t *top = im_element();
@@ -621,7 +621,7 @@ static bool push_frame(
 		return false;
 	}
 	
-	frame_t next;
+	cig_frame_t next;
 	if (!next_layout_frame(frame, top, &next)) {
 		top->_id_counter ++;
 		return false;
@@ -630,25 +630,25 @@ static bool push_frame(
   if (top->_scroll_state) {
 		top->_scroll_state->content_size.x = CIG_MAX(top->_scroll_state->content_size.x, next.x + next.w);
 		top->_scroll_state->content_size.y = CIG_MAX(top->_scroll_state->content_size.y, next.y + next.h);
-	  next = frame_offset(next, -top->_scroll_state->offset.x, -top->_scroll_state->offset.y);
+	  next = cig_frame_offset(next, -top->_scroll_state->offset.x, -top->_scroll_state->offset.y);
   }
 
 	if (top->_layout_params.options & IM_CULL_SUBFRAMES
-		&& !frame_intersects(top->frame, frame_offset(next, top->frame.x+top->insets.left, top->frame.y+top->insets.top))) {
+		&& !cig_frame_intersects(top->frame, cig_frame_offset(next, top->frame.x+top->insets.left, top->frame.y+top->insets.top))) {
 		top->_id_counter ++;
 		return false;
 	}
 
 	top->_layout_params._count.total ++;
 
-	frame_t absolute_frame = im_convert_relative_frame(next);
-	frame_t current_clip_frame = STACK_TOP(&current_buffer->clip_frames);
+	cig_frame_t absolute_frame = im_convert_relative_frame(next);
+	cig_frame_t current_clip_frame = STACK_TOP(&current_buffer->clip_frames);
 
 	STACK_PUSH(&elements, ((im_element_t){
 		0,
 		.id = next_id ? next_id : (top->id + tinyhash(top->id+top->_id_counter++, im_depth())),
 		.frame = next,
-		.clipped_frame = frame_offset(frame_union(absolute_frame, current_clip_frame), -absolute_frame.x + next.x, -absolute_frame.y + next.y),
+		.clipped_frame = cig_frame_offset(cig_frame_union(absolute_frame, current_clip_frame), -absolute_frame.x + next.x, -absolute_frame.y + next.y),
 		.absolute_frame = absolute_frame,
     .insets = insets,
 		._layout_function = layout_function,
@@ -707,7 +707,7 @@ static void handle_element_hover(im_element_t *element) {
 	element (ID) with the previous result. This introduces a one-frame delay
 	between mouse detection and response but in reality it's imperceptible.
 	*/
-	if (frame_contains(element->absolute_frame, mouse.position)) {
+	if (cig_frame_contains(element->absolute_frame, mouse.position)) {
 		mouse._target_this_frame = element->id;
 	}
 }
@@ -739,8 +739,8 @@ static im_scroll_state_t* get_scroll_state(const IMGUIID id) {
 static void im_push_clip(im_element_t *element) {
   if (element->_clipped == false) {
 		element->_clipped = true;
-		STACK(frame_t) *clip_frames = &STACK_TOP(&buffers).clip_frames;
-    STACK_PUSH(clip_frames, frame_union(element->absolute_frame, STACK_TOP(clip_frames)));
+		STACK(cig_frame_t) *clip_frames = &STACK_TOP(&buffers).clip_frames;
+    STACK_PUSH(clip_frames, cig_frame_union(element->absolute_frame, STACK_TOP(clip_frames)));
 
 		// Check if graphics module is included
 		/*if (backend.set_clip) {
@@ -750,7 +750,7 @@ static void im_push_clip(im_element_t *element) {
 }
 
 static void im_pop_clip() {
-	STACK(frame_t) *clip_frames = &STACK_TOP(&buffers).clip_frames;
+	STACK(cig_frame_t) *clip_frames = &STACK_TOP(&buffers).clip_frames;
   STACK_POP_NORETURN(clip_frames);
 
   // Go back to previous clip if present

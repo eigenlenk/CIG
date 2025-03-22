@@ -1,9 +1,9 @@
-#ifndef TYPE_FRAME_T_INCLUDED
-#define TYPE_FRAME_T_INCLUDED
+#ifndef TYPE_cig_frame_t_INCLUDED
+#define TYPE_cig_frame_t_INCLUDED
 
 #include "cigmac.h"
 
-#define DECLARE_FRAME_T(T, DECLNAME, VEC2, INSETS)                                             \
+#define DECLARE_frame_t(T, DECLNAME, VEC2, INSETS)                                             \
                                                                                                \
 typedef struct {                                                                               \
   T x, y, w, h;                                                                                \
@@ -61,7 +61,7 @@ CIG_INLINED  DECLNAME##_t  DECLNAME##_containing(DECLNAME##_t a, DECLNAME##_t b)
 }                                                                                              \
                                                                                                \
 CIG_INLINED  DECLNAME##_t  DECLNAME##_union(DECLNAME##_t a, DECLNAME##_t b) {                  \
-  if (frame_intersects(a, b)) {                                                                \
+  if (cig_frame_intersects(a, b)) {                                                                \
     T x0 = CIG_MAX(a.x, b.x), y0 = CIG_MAX(a.y, b.y);                                          \
     T x1 = CIG_MIN(a.x+a.w, b.x+b.w), y1 = CIG_MIN(a.y+a.h, b.y+b.h);                          \
     return (DECLNAME##_t) { x0, y0, x1-x0, y1-y0 };                                            \

@@ -9,7 +9,7 @@ TEST_SETUP(core_input) {}
 TEST_TEAR_DOWN(core_input) {}
 
 static void begin() {
-	im_begin_layout(NULL, frame_make(0, 0, 640, 480));
+	im_begin_layout(NULL, cig_frame_make(0, 0, 640, 480));
 }
 
 static void end() {
@@ -22,7 +22,7 @@ TEST(core_input, hover_and_press) {
 		
 		im_set_input_state(cig_vec2_make(50, 50), i == 1 ? IM_MOUSE_BUTTON_LEFT : 0);
 		
-		im_push_frame(frame_make(0, 0, 100, 100));
+		im_push_frame(cig_frame_make(0, 0, 100, 100));
 		
 		im_enable_interaction(); /* This element now tracks mouse inputs */
 		
@@ -43,7 +43,7 @@ TEST(core_input, overlapping_hover_and_press) {
 		
 		im_set_input_state(cig_vec2_make(75, 75), i == 1 ? IM_MOUSE_BUTTON_LEFT : 0);
 		
-		im_push_frame(frame_make(0, 0, 100, 100));
+		im_push_frame(cig_frame_make(0, 0, 100, 100));
 		
 		im_enable_interaction(); /* This element now tracks mouse inputs */
 
@@ -54,7 +54,7 @@ TEST(core_input, overlapping_hover_and_press) {
 		
 		im_pop_frame();
 		
-		im_push_frame(frame_make(50, 50, 100, 100));
+		im_push_frame(cig_frame_make(50, 50, 100, 100));
 		
 		im_enable_interaction();
 
@@ -82,10 +82,10 @@ TEST(core_input, click_on_release) {
 		
 		im_set_input_state(cig_vec2_make(75, 75), i == 1 ? IM_MOUSE_BUTTON_LEFT : 0);
 		
-		im_push_frame(frame_make(0, 0, 100, 100));
+		im_push_frame(cig_frame_make(0, 0, 100, 100));
 		im_pop_frame();
 		
-		im_push_frame(frame_make(50, 50, 100, 100));
+		im_push_frame(cig_frame_make(50, 50, 100, 100));
 		
 		im_enable_interaction();
 		
@@ -105,10 +105,10 @@ TEST(core_input, click_on_button_down) {
 		
 		im_set_input_state(cig_vec2_make(75, 75), i == 1 ? IM_MOUSE_BUTTON_LEFT : 0);
 		
-		im_push_frame(frame_make(0, 0, 100, 100));
+		im_push_frame(cig_frame_make(0, 0, 100, 100));
 		im_pop_frame();
 		
-		im_push_frame(frame_make(50, 50, 100, 100));
+		im_push_frame(cig_frame_make(50, 50, 100, 100));
 		
 		im_enable_interaction();
 		
@@ -136,10 +136,10 @@ TEST(core_input, click_starts_outside) {
 			im_set_input_state(cig_vec2_make(75, 75), 0);
 		}
 		
-		im_push_frame(frame_make(0, 0, 100, 100));
+		im_push_frame(cig_frame_make(0, 0, 100, 100));
 		im_pop_frame();
 		
-		im_push_frame(frame_make(50, 50, 100, 100));
+		im_push_frame(cig_frame_make(50, 50, 100, 100));
 		
 		im_enable_interaction();
 		
@@ -184,7 +184,7 @@ TEST(core_input, simple_drag) {
 		}
 		
 		
-		im_push_frame(frame_make(0, 0, 100, 100));
+		im_push_frame(cig_frame_make(0, 0, 100, 100));
 		im_enable_interaction();
 		
 		if (i == 1) {

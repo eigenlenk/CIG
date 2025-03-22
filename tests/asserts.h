@@ -3,10 +3,10 @@
 
 #include "unity.h"
 
-static void assert_frame_equal(const frame_t exp, const frame_t act, unsigned int line) {
+static void assert_frame_equal(const cig_frame_t exp, const cig_frame_t act, unsigned int line) {
 	char message[64];
 	sprintf(message, "(%d, %d, %d, %d) != (%d, %d, %d, %d)", exp.x, exp.y, exp.w, exp.h, act.x, act.y, act.w, act.h);
-	UNITY_TEST_ASSERT(frame_cmp(exp, act), line, message);
+	UNITY_TEST_ASSERT(cig_frame_cmp(exp, act), line, message);
 }
 
 #define TEST_ASSERT_EQUAL_FRAME(expected, actual) assert_frame_equal(expected, actual, __LINE__)

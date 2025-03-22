@@ -19,7 +19,7 @@
 /* These macros declare a foo<int> type essentially */
 DECLARE_VEC2_T(int, cig_vec2, -999999) /* Declares `cig_vec2_t` */
 DECLARE_INSETS_T(int, insets) /* Declares `insets_t` */
-DECLARE_FRAME_T(int, frame, cig_vec2, insets) /* Declares `frame_t` */
+DECLARE_frame_t(int, cig_frame, cig_vec2, insets) /* Declares `cig_cig_frame_t` */
 
 
 /* All layout element get a unique ID that tries to be unique across frames, but no promises.
@@ -75,13 +75,13 @@ typedef struct {
 /* */
 typedef struct {
 	IMGUIID id;
-	frame_t frame; /* Relative frame */
-	frame_t clipped_frame; /* Relative clipped frame */
-	frame_t absolute_frame; /* Screen-space frame */
+	cig_frame_t frame; /* Relative frame */
+	cig_frame_t clipped_frame; /* Relative clipped frame */
+	cig_frame_t absolute_frame; /* Screen-space frame */
 	insets_t insets; /* Insets affect child elements within this element */
 	
 	/* (( PRIVATE )) */		
-	bool (*_layout_function)(frame_t, frame_t, im_layout_params_t*, frame_t*);
+	bool (*_layout_function)(cig_frame_t, cig_frame_t, im_layout_params_t*, cig_frame_t*);
 	im_layout_params_t _layout_params;
   bool _clipped, _interaction_enabled;
   im_scroll_state_t *_scroll_state;
@@ -155,7 +155,7 @@ DECLARE_STACK(im_element_t);
 
 
 /* */
-void im_begin_layout(im_buffer_ref, frame_t);
+void im_begin_layout(im_buffer_ref, cig_frame_t);
 
 
 /* */
@@ -173,24 +173,24 @@ im_buffer_ref im_buffer();
 
 /* Pushes a new frame with zero insets to layout stack.
    @return TRUE if frame is visible within current container, FALSE otherwise */
-bool im_push_frame(frame_t);
+bool im_push_frame(cig_frame_t);
 
 
 /* Push a new frame with custom insets to layout stack.
    @return TRUE if frame is visible within current container, FALSE otherwise */
-bool im_push_frame_insets(frame_t frame, insets_t insets);
+bool im_push_frame_insets(cig_frame_t frame, insets_t insets);
 
 
 /* Push a new frame with custom insets and params to layout stack.
    @return TRUE if frame is visible within current container, FALSE otherwise */
-bool im_push_frame_insets_params(frame_t frame, insets_t insets, im_layout_params_t);
+bool im_push_frame_insets_params(cig_frame_t frame, insets_t insets, im_layout_params_t);
 
 
 /* Push layout builder function to layout stack.
    @return TRUE if frame is visible within current container, FALSE otherwise */
 bool im_push_frame_function(
-	bool (*)(frame_t, frame_t, im_layout_params_t*, frame_t*),
-	frame_t frame,
+	bool (*)(cig_frame_t, cig_frame_t, im_layout_params_t*, cig_frame_t*),
+	cig_frame_t frame,
 	insets_t insets,
 	im_layout_params_t
 );
@@ -205,15 +205,15 @@ im_element_t* im_element();
 
 
 /* Returns current local frame relative to its parent */
-frame_t im_relative_frame();
+cig_frame_t im_relative_frame();
 
 
 /* Returns current screen-space frame */
-frame_t im_absolute_frame();
+cig_frame_t im_absolute_frame();
 
 
 /* Converts a relative frame to a screen-space frame */
-frame_t im_convert_relative_frame(frame_t);
+cig_frame_t im_convert_relative_frame(cig_frame_t);
 
 
 /* Returns a pointer to the current layout element stack. Avoid accessing if possible. */
@@ -355,7 +355,7 @@ void im_spacer(int size);
 
 
 /* Default layout function for stack and grid type */
-bool im_default_layout_builder(frame_t, frame_t, im_layout_params_t*, frame_t*);
+bool im_default_layout_builder(cig_frame_t, cig_frame_t, im_layout_params_t*, cig_frame_t*);
 
 
 #endif
