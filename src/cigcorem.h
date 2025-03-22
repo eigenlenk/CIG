@@ -33,9 +33,9 @@
 
 #define CIG_B (IM_Y + IM_H)
 
-#define CIG_SCROLL_LIMIT_X im_content_size().x-im_frame().w+im_element()->insets.left+im_element()->insets.right
+#define CIG_SCROLL_LIMIT_X im_content_size().x-im_frame().w+cig_element()->insets.left+cig_element()->insets.right
 
-#define CIG_SCROLL_LIMIT_Y im_content_size().y-im_frame().h+im_element()->insets.top+im_element()->insets.bottom
+#define CIG_SCROLL_LIMIT_Y im_content_size().y-im_frame().h+cig_element()->insets.top+cig_element()->insets.bottom
 
 #define IM_ARRANGE(FRAME, BODY) \
 if (cig_push_frame(FRAME)) { \
@@ -69,7 +69,7 @@ im_push_layout_frame_insets(FRAME, cig_insets_zero(), &im_layout_stack, (im_layo
   OPTIONS \
 }); \
 BODY; \
-im_pop_frame();
+cig_pop_frame();
 
 #define IM_HSTACK(FRAME, BODY, OPTIONS...) \
 im_push_layout_frame_insets(FRAME, cig_insets_zero(), &im_layout_stack, (im_layout_params_t) { \
@@ -78,7 +78,7 @@ im_push_layout_frame_insets(FRAME, cig_insets_zero(), &im_layout_stack, (im_layo
   OPTIONS \
 }); \
 BODY; \
-im_pop_frame();
+cig_pop_frame();
 
 #define IM_VSTACK(FRAME, BODY, OPTIONS...) \
 im_push_layout_frame_insets(FRAME, cig_insets_zero(), &im_layout_stack, (im_layout_params_t) { \
@@ -87,7 +87,7 @@ im_push_layout_frame_insets(FRAME, cig_insets_zero(), &im_layout_stack, (im_layo
   OPTIONS \
 }); \
 BODY; \
-im_pop_frame();
+cig_pop_frame();
 	
 #define IM_STACK_AXIS(A) .axis = A
 #define IM_STACK_SPACING(N) .spacing = N

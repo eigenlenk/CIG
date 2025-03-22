@@ -17,9 +17,9 @@
 
 
 /* These macros declare a templated type essentially */
-DECLARE_VEC2_T    (int, cig_vec2, -999999) /* Declares `cig_vec2_t` */
-DECLARE_insets_t  (int, cig_insets) /* Declares `cig_cig_insets_t` */
-DECLARE_frame_t   (int, cig_frame, cig_vec2, cig_insets) /* Declares `cig_cig_frame_t` */
+DECLARE_VEC2_T   (int, cig_vec2, -999999) /* Declares `cig_vec2_t` */
+DECLARE_INSETS_T (int, cig_insets) /* Declares `cig_cig_insets_t` */
+DECLARE_FRAME_T  (int, cig_frame, cig_vec2, cig_insets) /* Declares `cig_cig_frame_t` */
 
 
 /* All layout element get a unique ID that tries to be unique across frames, but no promises.
@@ -197,22 +197,22 @@ im_buffer_ref im_buffer();
 
 /* Pushes a new frame with zero insets to layout stack.
    @return TRUE if frame is visible within current container, FALSE otherwise */
-bool im_push_frame(cig_frame_t);
+bool cig_push_frame(cig_frame_t);
 
 
 /* Push a new frame with custom insets to layout stack.
    @return TRUE if frame is visible within current container, FALSE otherwise */
-bool im_push_frame_insets(cig_frame_t frame, cig_insets_t insets);
+bool cig_push_frame_insets(cig_frame_t frame, cig_insets_t insets);
 
 
 /* Push a new frame with custom insets and params to layout stack.
    @return TRUE if frame is visible within current container, FALSE otherwise */
-bool im_push_frame_insets_params(cig_frame_t frame, cig_insets_t insets, cig_layout_params_t);
+bool cig_push_frame_insets_params(cig_frame_t frame, cig_insets_t insets, cig_layout_params_t);
 
 
 /* Push layout builder function to layout stack.
    @return TRUE if frame is visible within current container, FALSE otherwise */
-bool im_push_frame_function(
+bool cig_push_layout_function(
 	bool (*)(cig_frame_t, cig_frame_t, cig_layout_params_t*, cig_frame_t*),
 	cig_frame_t frame,
 	cig_insets_t insets,
@@ -221,23 +221,23 @@ bool im_push_frame_function(
 
 
 /* Pop and return the last element in the layout stack */
-cig_element_t* im_pop_frame();
+cig_element_t* cig_pop_frame();
 
 
 /* Returns current layout element */
-cig_element_t* im_element();
+cig_element_t* cig_element();
 
 
 /* Returns current local frame relative to its parent */
-CIG_INLINED cig_frame_t im_frame() { return im_element()->frame; }
+CIG_INLINED cig_frame_t im_frame() { return cig_element()->frame; }
 
 
 /* Returns current local frame that's been clipped */
-CIG_INLINED cig_frame_t im_clipped_frame() { return im_element()->clipped_frame; }
+CIG_INLINED cig_frame_t im_clipped_frame() { return cig_element()->clipped_frame; }
 
 
 /* Returns current screen-space frame */
-CIG_INLINED cig_frame_t im_absolute_frame() { return im_element()->absolute_frame; }
+CIG_INLINED cig_frame_t im_absolute_frame() { return cig_element()->absolute_frame; }
 
 
 /* Converts a relative frame to a screen-space frame */

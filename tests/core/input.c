@@ -22,7 +22,7 @@ TEST(core_input, hover_and_press) {
 		
 		im_set_input_state(cig_vec2_make(50, 50), i == 1 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
 		
-		im_push_frame(cig_frame_make(0, 0, 100, 100));
+		cig_push_frame(cig_frame_make(0, 0, 100, 100));
 		
 		im_enable_interaction(); /* This element now tracks mouse inputs */
 		
@@ -31,7 +31,7 @@ TEST(core_input, hover_and_press) {
 			TEST_ASSERT_TRUE(im_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE));
 		}
 		
-		im_pop_frame();
+		cig_pop_frame();
 		
 		end();
 	}
@@ -43,7 +43,7 @@ TEST(core_input, overlapping_hover_and_press) {
 		
 		im_set_input_state(cig_vec2_make(75, 75), i == 1 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
 		
-		im_push_frame(cig_frame_make(0, 0, 100, 100));
+		cig_push_frame(cig_frame_make(0, 0, 100, 100));
 		
 		im_enable_interaction(); /* This element now tracks mouse inputs */
 
@@ -52,9 +52,9 @@ TEST(core_input, overlapping_hover_and_press) {
 			TEST_ASSERT_FALSE(im_pressed(CIG_MOUSE_BUTTON_ANY, 0));
 		}
 		
-		im_pop_frame();
+		cig_pop_frame();
 		
-		im_push_frame(cig_frame_make(50, 50, 100, 100));
+		cig_push_frame(cig_frame_make(50, 50, 100, 100));
 		
 		im_enable_interaction();
 
@@ -67,10 +67,10 @@ TEST(core_input, overlapping_hover_and_press) {
 		Even if there's an additional element on top of the current one,
 		unless we call `im_enable_interaction`, that element is not included in mouse detection.
 		*/
-		im_push_frame(CIG_FILL);
-		im_pop_frame();
+		cig_push_frame(CIG_FILL);
+		cig_pop_frame();
 		
-		im_pop_frame();
+		cig_pop_frame();
 		
 		end();
 	}
@@ -82,10 +82,10 @@ TEST(core_input, click_on_release) {
 		
 		im_set_input_state(cig_vec2_make(75, 75), i == 1 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
 		
-		im_push_frame(cig_frame_make(0, 0, 100, 100));
-		im_pop_frame();
+		cig_push_frame(cig_frame_make(0, 0, 100, 100));
+		cig_pop_frame();
 		
-		im_push_frame(cig_frame_make(50, 50, 100, 100));
+		cig_push_frame(cig_frame_make(50, 50, 100, 100));
 		
 		im_enable_interaction();
 		
@@ -93,7 +93,7 @@ TEST(core_input, click_on_release) {
 			TEST_ASSERT_TRUE(im_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_STARTS_INSIDE));
 		}
 		
-		im_pop_frame();
+		cig_pop_frame();
 		
 		end();
 	}
@@ -105,10 +105,10 @@ TEST(core_input, click_on_button_down) {
 		
 		im_set_input_state(cig_vec2_make(75, 75), i == 1 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
 		
-		im_push_frame(cig_frame_make(0, 0, 100, 100));
-		im_pop_frame();
+		cig_push_frame(cig_frame_make(0, 0, 100, 100));
+		cig_pop_frame();
 		
-		im_push_frame(cig_frame_make(50, 50, 100, 100));
+		cig_push_frame(cig_frame_make(50, 50, 100, 100));
 		
 		im_enable_interaction();
 		
@@ -117,7 +117,7 @@ TEST(core_input, click_on_button_down) {
 			TEST_ASSERT_TRUE(im_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_ON_PRESS));
 		}
 		
-		im_pop_frame();
+		cig_pop_frame();
 		
 		end();
 	}
@@ -136,10 +136,10 @@ TEST(core_input, click_starts_outside) {
 			im_set_input_state(cig_vec2_make(75, 75), 0);
 		}
 		
-		im_push_frame(cig_frame_make(0, 0, 100, 100));
-		im_pop_frame();
+		cig_push_frame(cig_frame_make(0, 0, 100, 100));
+		cig_pop_frame();
 		
-		im_push_frame(cig_frame_make(50, 50, 100, 100));
+		cig_push_frame(cig_frame_make(50, 50, 100, 100));
 		
 		im_enable_interaction();
 		
@@ -151,7 +151,7 @@ TEST(core_input, click_starts_outside) {
 			TEST_ASSERT_FALSE(im_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_STARTS_INSIDE));
 		}
 		
-		im_pop_frame();
+		cig_pop_frame();
 		
 		end();
 	}
@@ -184,7 +184,7 @@ TEST(core_input, simple_drag) {
 		}
 		
 		
-		im_push_frame(cig_frame_make(0, 0, 100, 100));
+		cig_push_frame(cig_frame_make(0, 0, 100, 100));
 		im_enable_interaction();
 		
 		if (i == 1) {
@@ -193,7 +193,7 @@ TEST(core_input, simple_drag) {
 			TEST_ASSERT_FALSE(im_hovered());
 		}
 		
-		im_pop_frame();
+		cig_pop_frame();
 
 		end();
 	}

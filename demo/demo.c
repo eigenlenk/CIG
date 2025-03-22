@@ -24,7 +24,7 @@ void demo_ui(BITMAP *buffer) {
   // Whole screen color
   CIG_FILL_color(16); // Black
 
-  im_push_frame_insets(CIG_FILL, cig_insets_uniform(10));
+  cig_push_frame_insets(CIG_FILL, cig_insets_uniform(10));
 
   im_push_frame_builder(CIG_FILL, cig_insets_uniform(10), &im_stack_layout_builder, (im_layout_params_t) {
     0,
@@ -68,31 +68,31 @@ void demo_ui(BITMAP *buffer) {
 	}
 		
   for (int i = 0; i < 24; ++i) {
-    if (im_push_frame(CIG_FILL)) {
+    if (cig_push_frame(CIG_FILL)) {
       
       if (i % 2) {
         im_enable_scroll(NULL);
         im_current_element()->_scroll_state->offset.x -= 1;
       }
       
-      if (im_push_frame(CIG_FILL)) {
+      if (cig_push_frame(CIG_FILL)) {
 				CIG_FILL_color(i);
-				im_pop_frame();
+				cig_pop_frame();
 			}
 
-      im_pop_frame();
+      cig_pop_frame();
     }
   }
 	
 	im_stroke_color(12);
 
-  im_pop_frame(); /* Pop left vertical stack layout */
+  cig_pop_frame(); /* Pop left vertical stack layout */
 	
 
   /* Right content (a grid) */
 	
 	void demo_grid_element(const cig_frame_t frame) {
-		if (im_push_frame(frame)) {
+		if (cig_push_frame(frame)) {
 			im_enable_interaction();
 			if (im_pressed(IM_MOUSE_BUTTON_ANY, 0)) {
 				CIG_FILL_color(75);
@@ -100,7 +100,7 @@ void demo_ui(BITMAP *buffer) {
 				CIG_FILL_color(7);
 			}
 			im_stroke_color(15);
-			im_pop_frame();
+			cig_pop_frame();
 		}
 	}
 
@@ -135,7 +135,7 @@ void demo_ui(BITMAP *buffer) {
 		
 		demo_grid_element(CIG_FILL);
 		
-		im_pop_frame(); /* Pop right grid layout */
+		cig_pop_frame(); /* Pop right grid layout */
 	} else if (grid_demo == 1) {
 		im_push_frame_builder(CIG_FILL, cig_insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
 			0,
@@ -161,7 +161,7 @@ void demo_ui(BITMAP *buffer) {
 		demo_grid_element(CIG_FILL);
 		demo_grid_element(CIG_FILL);
 		
-		im_pop_frame(); /* Pop right grid layout */
+		cig_pop_frame(); /* Pop right grid layout */
 	} else if (grid_demo == 2) {
 		im_push_frame_builder(CIG_FILL, cig_insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
 			0,
@@ -181,7 +181,7 @@ void demo_ui(BITMAP *buffer) {
 		/* Next row will start just below the longest element (the 4th one) */
 		demo_grid_element(CIG_FILL);
 
-		im_pop_frame(); /* Pop right grid layout */
+		cig_pop_frame(); /* Pop right grid layout */
 	} else if (grid_demo == 3) {
 		im_push_frame_builder(CIG_FILL, cig_insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
 			0,
@@ -203,14 +203,14 @@ void demo_ui(BITMAP *buffer) {
 		/* Next columns will start just after the widest element (the 5th one) */
 		demo_grid_element(CIG_FILL);
 		
-		im_pop_frame(); /* Pop right grid layout */
+		cig_pop_frame(); /* Pop right grid layout */
 	}
 
-  im_pop_frame(); /* Pop horizontal stack layout */
+  cig_pop_frame(); /* Pop horizontal stack layout */
 	
 	/* Some sort of a floating footer button on top of the content */
 	{
-		im_push_frame(cig_frame_make(200, IM_B - 100, 240, 50));
+		cig_push_frame(cig_frame_make(200, IM_B - 100, 240, 50));
 		
 		im_enable_interaction();
 		
@@ -225,10 +225,10 @@ void demo_ui(BITMAP *buffer) {
 		
 		im_stroke_color(15);
 		
-		im_pop_frame();
+		cig_pop_frame();
 	}
 
-  im_pop_frame(); /* Pop outermost inset frame */
+  cig_pop_frame(); /* Pop outermost inset frame */
 
   im_end_layout();
 

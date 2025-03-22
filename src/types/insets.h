@@ -4,7 +4,7 @@
 #include "cigmac.h"
 
 /* Macro for declaring a insets<T> type */
-#define DECLARE_insets_t(T, DECLNAME)                                        \
+#define DECLARE_INSETS_T(T, DECLNAME)                                        \
                                                                              \
 typedef struct {                                                             \
   T left, top, right, bottom;                                                \
