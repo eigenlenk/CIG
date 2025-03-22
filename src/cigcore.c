@@ -8,12 +8,14 @@
 
 /* Declare internal types */
 
-DECLARE_STACK(cig_frame_t);
+typedef cig_frame_t cig_clip_frame_t;
+#define STACK_CAPACITY_cig_clip_frame_t CIG_CLIP_REGIONS_MAX
+DECLARE_ARRAY_STACK(cig_clip_frame_t);
 
 typedef struct {
 	im_buffer_ref buffer;
 	cig_vec2_t origin;
-	STACK(cig_frame_t) clip_frames;
+	stack_cig_clip_frame_t clip_frames;
 } im_buffer_element_t;
 
 typedef struct {
@@ -36,20 +38,22 @@ typedef struct {
 } im_state_t;
 
 typedef im_state_t* im_state_ptr_t;
+#define STACK_CAPACITY_im_state_ptr_t CIG_STATES_MAX
+DECLARE_ARRAY_STACK(im_state_ptr_t);
 
-DECLARE_STACK(im_state_ptr_t);
-DECLARE_STACK(im_buffer_element_t);
+#define STACK_CAPACITY_im_buffer_element_t CIG_BUFFERS_MAX
+DECLARE_ARRAY_STACK(im_buffer_element_t);
 
 /* Define internal state */
 
-static STACK(im_state_ptr_t) widget_states;
-static STACK(im_element_t) elements;
-static STACK(im_buffer_element_t) buffers;
+static stack_im_state_ptr_t widget_states = CONFIGURE_STACK(im_state_ptr_t);
+static stack_im_element_t elements = CONFIGURE_STACK(im_element_t);
+static stack_im_buffer_element_t buffers = CONFIGURE_STACK(im_buffer_element_t);
 static struct {
-	im_state_t values[IM_STATES_MAX];
+	im_state_t values[CIG_STATES_MAX];
 	size_t size;
 } _state_list = { 0 };
-static im_scroll_state_element_t _scroll_elements[IM_STATES_MAX];
+static im_scroll_state_element_t _scroll_elements[CIG_SCROLLABLE_ELEMENTS_MAX];
 static im_mouse_state_t mouse = { 0 };
 static IMGUIID next_id = 0;
 static unsigned int tick = 0;
@@ -80,11 +84,12 @@ static inline  __attribute__((always_inline)) int tinyhash(int a, int b) { retur
    └───────────────┘ */
 
 void im_begin_layout(const im_buffer_ref buffer, const cig_frame_t frame) {
-	STACK_INIT(&widget_states);
-	STACK_INIT(&elements);
-	STACK_INIT(&buffers);
-
-	STACK_PUSH(&elements, ((im_element_t) {
+  
+  widget_states.clear(&widget_states);
+  elements.clear(&elements);
+  buffers.clear(&buffers);
+  
+  elements.push(&elements, (im_element_t) {
 		0,
 		.id = next_id ? next_id : im_hash("root"),
 		.frame = cig_frame_make(0, 0, frame.w, frame.h),
@@ -93,8 +98,8 @@ void im_begin_layout(const im_buffer_ref buffer, const cig_frame_t frame) {
 		.insets = cig_insets_zero(),
 		._layout_function = NULL,
 		._layout_params = (im_layout_params_t){ 0, .options = IM_DEFAULT_LAYOUT_FLAGS }
-	}));
-	
+	});
+
 	im_push_buffer(buffer);
 	
 	im_enable_clipping();
@@ -127,8 +132,10 @@ void im_end_layout() {
 
 void im_reset_internal_state() {
 	int i;
-	for (i = 0; i < IM_STATES_MAX; ++i) {
+	for (i = 0; i < CIG_STATES_MAX; ++i) {
     _state_list.values[i].id = 0;
+  }
+  for (i = 0; i < CIG_SCROLLABLE_ELEMENTS_MAX; ++i) {
     _scroll_elements[i].id = 0;
   }
 	_state_list.size = 0;
@@ -145,7 +152,7 @@ void im_reset_internal_state() {
 }
 
 im_buffer_ref im_buffer() {
-	return STACK_TOP(&buffers).buffer;
+  return buffers._peek(&buffers, 0)->buffer;
 }
 
 bool im_push_frame(const cig_frame_t frame) {
@@ -177,7 +184,7 @@ bool im_push_frame_function(
 }
 
 im_element_t* im_pop_frame() {
-  im_element_t *popped_element = &STACK_POP(im_element_stack());
+  im_element_t *popped_element = stack_im_element_t__pop(im_element_stack());
 
   if (popped_element->_clipped) {
     popped_element->_clipped = false;
@@ -188,7 +195,7 @@ im_element_t* im_pop_frame() {
 }
 
 im_element_t* im_element() {
-	return &STACK_TOP(im_element_stack());
+  return stack_im_element_t__peek(im_element_stack(), 0);
 }
 
 cig_frame_t im_relative_frame() {
@@ -200,7 +207,7 @@ cig_frame_t im_absolute_frame() {
 }
 
 cig_frame_t im_convert_relative_frame(const cig_frame_t frame) {
-	const im_buffer_element_t *buffer = &STACK_TOP(&buffers);
+	const im_buffer_element_t *buffer = im_buffer();
 	const im_element_t *element = im_element();
 	
 	return cig_frame_offset(
@@ -210,7 +217,7 @@ cig_frame_t im_convert_relative_frame(const cig_frame_t frame) {
 	);
 }
 
-STACK(im_element_t)* im_element_stack() {
+stack_im_element_t* im_element_stack() {
 	return &elements;
 }
 
@@ -222,18 +229,18 @@ STACK(im_element_t)* im_element_stack() {
 void im_push_buffer(const im_buffer_ref buffer) {
 	im_buffer_element_t buffer_element = {
 		.buffer = buffer,
-		.origin = STACK_IS_EMPTY(&buffers)
+		.origin = buffers.size == 0
 			? cig_vec2_zero()
-			: cig_vec2_make(im_element()->absolute_frame.x, im_element()->absolute_frame.y)
+			: cig_vec2_make(im_element()->absolute_frame.x, im_element()->absolute_frame.y),
+     .clip_frames = CONFIGURE_STACK(cig_clip_frame_t)
 	};
-	STACK_INIT(&buffer_element.clip_frames);
-	
-	STACK_PUSH(&buffer_element.clip_frames, im_element()->absolute_frame);
-	STACK_PUSH(&buffers, buffer_element);
+  
+  buffer_element.clip_frames.push(&buffer_element.clip_frames, im_element()->absolute_frame);
+  buffers.push(&buffers, buffer_element);
 }
 
 void im_pop_buffer() {
-	STACK_POP_NORETURN(&buffers);
+  CIG_UNUSED(buffers._pop(&buffers));
 }
 
 
@@ -414,7 +421,7 @@ void im_set_next_id(IMGUIID id) {
 }
 
 unsigned int im_depth() {
-	return STACK_SIZE(im_element_stack());
+	return im_element_stack()->size;
 }
 
 IMGUIID im_hash(const char *str) {
@@ -614,7 +621,7 @@ static bool push_frame(
 	im_layout_params_t params,
 	bool (*layout_function)(cig_frame_t, cig_frame_t, im_layout_params_t*, cig_frame_t*)
 ) {
-	im_buffer_element_t *current_buffer = &STACK_TOP(&buffers);
+	im_buffer_element_t *current_buffer = buffers._peek(&buffers, 0);
 	im_element_t *top = im_element();
 	
 	if (top->_layout_params.limit.total > 0 && top->_layout_params._count.total == top->_layout_params.limit.total) {
@@ -642,9 +649,9 @@ static bool push_frame(
 	top->_layout_params._count.total ++;
 
 	cig_frame_t absolute_frame = im_convert_relative_frame(next);
-	cig_frame_t current_clip_frame = STACK_TOP(&current_buffer->clip_frames);
+	cig_frame_t current_clip_frame = current_buffer->clip_frames.peek(&current_buffer->clip_frames, 0);
 
-	STACK_PUSH(&elements, ((im_element_t){
+  elements.push(&elements, (im_element_t) {
 		0,
 		.id = next_id ? next_id : (top->id + tinyhash(top->id+top->_id_counter++, im_depth())),
 		.frame = next,
@@ -655,8 +662,8 @@ static bool push_frame(
 		._layout_params = params,
     ._clipped = false,
     ._scroll_state = NULL
-	}));
-	
+	});
+
 	next_id = 0;
 
 	return true;
@@ -715,7 +722,7 @@ static void handle_element_hover(im_element_t *element) {
 static im_scroll_state_t* get_scroll_state(const IMGUIID id) {
   register int first_available = -1;
 	
-  for (register int i = 0; i < IM_STATES_MAX; ++i) {
+  for (register int i = 0; i < CIG_STATES_MAX; ++i) {
     if (_scroll_elements[i].id == id) {
 			_scroll_elements[i].last_tick = tick;
       return &_scroll_elements[i].value;
@@ -739,29 +746,19 @@ static im_scroll_state_t* get_scroll_state(const IMGUIID id) {
 static void im_push_clip(im_element_t *element) {
   if (element->_clipped == false) {
 		element->_clipped = true;
-		STACK(cig_frame_t) *clip_frames = &STACK_TOP(&buffers).clip_frames;
-    STACK_PUSH(clip_frames, cig_frame_union(element->absolute_frame, STACK_TOP(clip_frames)));
-
+		stack_cig_clip_frame_t *clip_frames = &buffers._peek(&buffers, 0)->clip_frames;
+    clip_frames->push(clip_frames, cig_frame_union(element->absolute_frame, clip_frames->peek(clip_frames, 0)));
+    
 		// Check if graphics module is included
-		/*if (backend.set_clip) {
-			(*backend.set_clip)(buffer, frame);
-    }*/
+    // TODO: Set new clip region for the renderer
   }
 }
 
 static void im_pop_clip() {
-	STACK(cig_frame_t) *clip_frames = &STACK_TOP(&buffers).clip_frames;
-  STACK_POP_NORETURN(clip_frames);
-
-  // Go back to previous clip if present
-  if (STACK_IS_EMPTY(clip_frames)) {
-		/*if (backend.reset_clip) {
-			(*backend.reset_clip)(imgui_get_buffer());
-		}*/
-  } else {
-		/*if (backend.set_clip) {
-			const im_clip_element_t *top = &STACK_TOP(&clip_frames);
-			(*backend.set_clip)(top->buffer, top->frame);
-		}*/
-  }
+	stack_cig_clip_frame_t *clip_frames = &buffers._peek(&buffers, 0)->clip_frames;
+  
+  CIG_UNUSED(clip_frames->pop(clip_frames));
+  
+  // Check if graphics module is included
+  // TODO: Set previous clip region for the renderer
 }

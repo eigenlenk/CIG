@@ -139,7 +139,8 @@ typedef enum {
 } im_click_options_t;
 
 
-DECLARE_STACK(im_element_t);
+#define STACK_CAPACITY_im_element_t CIG_ELEMENTS_MAX
+DECLARE_ARRAY_STACK(im_element_t);
 
 
 
@@ -217,7 +218,7 @@ cig_frame_t im_convert_relative_frame(cig_frame_t);
 
 
 /* Returns a pointer to the current layout element stack. Avoid accessing if possible. */
-STACK(im_element_t)* im_element_stack();
+stack_im_element_t* im_element_stack();
 
 
 

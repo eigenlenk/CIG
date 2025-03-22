@@ -1,47 +1,59 @@
 #ifndef STACK_H
 #define STACK_H
 
+#include "cigmac.h"
 #include <stddef.h>
-#include <stdbool.h>
+#include <assert.h>
 
-#define STACK_CAPACITY 32
-
-#define DECLARE_STACK(T) \
-	typedef struct { \
-		T elements[STACK_CAPACITY]; \
-		size_t size; \
-	} stack_##T;
-
-#define STACK(T) stack_##T
-#define STACK_INIT(S) (S)->size = 0;
-#define STACK_PUSH(S, V) (S)->elements[(S)->size] = V; (S)->size++;
-#define STACK_POP(S) (S)->elements[--(S)->size]
-#define STACK_TOP(S) (S)->elements[(S)->size-1]
-#define STACK_POP_NORETURN(S) (S)->size--
-#define STACK_IS_EMPTY(S) (S)->size == 0
-#define STACK_IS_FULL(S) (S)->size == STACK_CAPACITY
-#define STACK_SIZE(S) (S)->size
-#define STACK_AT(S, OFFSET) (S)->elements[(S)->size-OFFSET-1];
-#define STACK_PRINT(S, F) { \
-	printf("Stack %p:\n", S); \
-	if (!(S)->size) { \
-		printf("\t(Empty)\n"); \
-	} else { \
-		for (int i = (int)(S)->size - 1; i >= 0; --i) { \
-			printf("\t[%d] ", i); \
-			printf(F, (S)->elements[i]); \
-			printf("\n"); \
-		} \
-	} \
+#define DECLARE_ARRAY_STACK(T)                            \
+typedef struct stack_##T {                                \
+  T elements[STACK_CAPACITY_##T];                         \
+  size_t size;                                            \
+  size_t capacity;                                        \
+  void (*clear)(struct stack_##T*);                       \
+  void (*push)(struct stack_##T*, T);                     \
+  T (*pop)(struct stack_##T*);                            \
+  T (*peek)(struct stack_##T*, size_t);                   \
+  T* (*_pop)(struct stack_##T*);                          \
+  T* (*_peek)(struct stack_##T*, size_t);                 \
+} stack_##T;                                              \
+                                                          \
+CIG_INLINED void stack_##T##_clear(struct stack_##T *s) { \
+  s->size = 0;                                            \
+}                                                         \
+                                                          \
+CIG_INLINED void stack_##T##_push(struct stack_##T *s, T e) { \
+  s->elements[s->size++] = e;                             \
+}                                                         \
+                                                          \
+CIG_INLINED T stack_##T##_pop(struct stack_##T *s) {                 \
+  return s->elements[--s->size];                         \
+}                                                         \
+                                                          \
+CIG_INLINED T stack_##T##_peek(struct stack_##T *s, size_t offset) { \
+  assert(s->size > 0);                                    \
+  return s->elements[s->size-offset-1];                  \
+} \
+                                                          \
+CIG_INLINED T* stack_##T##__pop(struct stack_##T *s) {                 \
+  return &s->elements[--s->size];                         \
+}                                                         \
+                                                          \
+CIG_INLINED T* stack_##T##__peek(struct stack_##T *s, size_t offset) { \
+  assert(s->size > 0);                                    \
+  return &s->elements[s->size-offset-1];                  \
 }
 
-// Declare stacks of basic types
-
-DECLARE_STACK(int)
-DECLARE_STACK(double)
-DECLARE_STACK(bool)
-
-typedef char* char_ptr;
-DECLARE_STACK(char_ptr)
+#define CONFIGURE_STACK(T)        \
+(stack_##T) {                     \
+  0,                              \
+  .capacity = STACK_CAPACITY_##T, \
+  .clear = &stack_##T##_clear,    \
+  .push = &stack_##T##_push,      \
+  .pop = &stack_##T##_pop,        \
+  .peek = &stack_##T##_peek,      \
+  ._pop = &stack_##T##__pop,      \
+  ._peek = &stack_##T##__peek     \
+}
 
 #endif

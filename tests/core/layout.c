@@ -160,8 +160,7 @@ TEST(core_layout, insets) {
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(30, 40, 100, 100), im_element()->frame);
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(90, 50, 100, 100), im_absolute_frame());
 	
-	/*
-	Here's what our layout looks like:
+	/* Here's what our layout looks like:
 
 	┌0x0─(Root)──────────────────────640w┐   
 	│                 10                 │   
@@ -179,17 +178,14 @@ TEST(core_layout, insets) {
 	│  │                  0           0  4
 	│  └──────────────────────────────┘  8   
 	│                 10                 0   
-	└────────────────────────────────────┘
-	*/
+	└────────────────────────────────────┘ */
 }
 
 TEST(core_layout, overlay) {
 	/* Frames don't have to be nested to be overlap or appear to be contained */
 	
-	/*
-	In this case relative and absolute frames are the same
-	because they're directly in root's coordinate system.
-	*/
+	/* In this case relative and absolute frames are the same because they're
+  directly in root's coordinate system */
 	im_push_frame(cig_frame_make(50, 50, 540, 380));
 	
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(50, 50, 540, 380), im_element()->frame);
@@ -204,8 +200,7 @@ TEST(core_layout, overlay) {
 	
 	im_pop_frame();
 	
-	/*
-	On screen these 2 frames would appear nested but they're not. They could be
+	/* On screen these 2 frames would appear nested but they're not. They could be
 	modal windows for example:
 
 	╔═════════════════════════════════╗  
@@ -222,8 +217,7 @@ TEST(core_layout, overlay) {
 	║  │                           │  ║  
 	║  └───────────────────────────┘  ║  
 	║                                 ║  
-	╚═════════════════════════════════╝ 
-	*/
+	╚═════════════════════════════════╝ */
 }
 
 TEST(core_layout, culling) {
