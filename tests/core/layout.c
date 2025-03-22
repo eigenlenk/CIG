@@ -29,27 +29,27 @@ TEST(core_layout, basic_checks) {
 }
 
 TEST(core_layout, push_pop) {
-	TEST_ASSERT_EQUAL(im_depth(), 1); /* Just the root */
+	TEST_ASSERT_EQUAL(cig_depth(), 1); /* Just the root */
 	
 	cig_push_frame(CIG_FILL);
 		cig_push_frame(CIG_FILL);
 			cig_push_frame(CIG_FILL);
 			
-				TEST_ASSERT_EQUAL(im_depth(), 4);
+				TEST_ASSERT_EQUAL(cig_depth(), 4);
 				
 			cig_pop_frame();
 		cig_pop_frame();
 	
-		TEST_ASSERT_EQUAL(im_depth(), 2);
+		TEST_ASSERT_EQUAL(cig_depth(), 2);
 
 		cig_push_frame(CIG_FILL);
 		
-			TEST_ASSERT_EQUAL(im_depth(), 3);
+			TEST_ASSERT_EQUAL(cig_depth(), 3);
 			
 		cig_pop_frame();
 	cig_pop_frame();
 	
-	TEST_ASSERT_EQUAL(im_depth(), 1); /* Just the root again */
+	TEST_ASSERT_EQUAL(cig_depth(), 1); /* Just the root again */
 }
 
 TEST(core_layout, identifiers) {
@@ -71,7 +71,7 @@ TEST(core_layout, identifiers) {
 		}
 	}
 	
-	TEST_ASSERT_EQUAL_UINT32(2090695081l, cig_element()->id); // im_hash("root")
+	TEST_ASSERT_EQUAL_UINT32(2090695081l, cig_element()->id); // cig_hash("root")
 	
 	const int n0 = 8;
 	
@@ -108,7 +108,7 @@ TEST(core_layout, identifiers) {
 	}
 	
 	/* In special cases you can specify the next ID to be used */
-	im_set_next_id(333l);
+	cig_set_next_id(333l);
 	cig_push_frame(CIG_FILL);
 	
 	TEST_ASSERT_EQUAL_UINT32(333l, cig_element()->id);
@@ -241,7 +241,7 @@ TEST(core_layout, culling) {
 	}
 	
 	/* Culling is enabled by default. We can disable it (for current element) */
-	im_disable_culling();
+	cig_disable_culling();
 	
 	/* Even though it lays outside the parent, it's still added */
 	if (cig_push_frame(cig_frame_make(0, -50, 100, 25))) {
@@ -253,7 +253,7 @@ TEST(core_layout, culling) {
 
 TEST(core_layout, vstack_layout) {
 	/* Pushing a stack that lays out frames vertically with a 10pt spacing */
-	if (!cig_push_layout_function(&im_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) {
+	if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) {
     0,
     .axis = CIG_LAYOUT_AXIS_VERTICAL,
     .spacing = 10,
@@ -281,7 +281,7 @@ TEST(core_layout, vstack_layout) {
 
 TEST(core_layout, hstack_layout) {
 	/* Pushing a stack that lays out frames horizontally with no spacing, but everything is inset by 10pt */
-	if (!cig_push_layout_function(&im_default_layout_builder, CIG_FILL, cig_insets_uniform(10), (cig_layout_params_t) {
+	if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_uniform(10), (cig_layout_params_t) {
     0,
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL,
     .spacing = 0,
@@ -318,7 +318,7 @@ TEST(core_layout, grid_with_fixed_rows_and_columns) {
 	Here it's a 5x5 grid, meaning on our 640x480 screen,
 	each cell would be 128x96.
 	*/
-	if (!cig_push_layout_function(&im_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) {
+	if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) {
     0,
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL,
     .spacing = 0,
@@ -363,7 +363,7 @@ TEST(core_layout, grid_with_fixed_cell_size) {
 	│.................................│
 	└─────────────────────────────────┘
 	*/
-	if (!cig_push_layout_function(&im_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) {
+	if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) {
     0,
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL,
     .width = 200,
@@ -400,7 +400,7 @@ TEST(core_layout, grid_with_varying_cell_size) {
 	current row or pushed to the next. In addition, you can still specify the number
 	of rows and columns, and these will now be used to limit number of cells on each axis.
 	*/
-	if (!cig_push_layout_function(&im_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) {
+	if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) {
     0,
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL,
 		.limit.horizontal = 3,
@@ -445,7 +445,7 @@ TEST(core_layout, grid_with_varying_cell_size) {
 	cig_pop_frame();
 	
 	/* Spacer fills the remaining space on the second row. Internally this is just a frame push + pop */
-	im_spacer(CIG_FILL_CONSTANT /* === 0 */);
+	cig_spacer(CIG_FILL_CONSTANT /* === 0 */);
 	
 	/* Insert an element to fill all the space on the third row */
 	cig_push_frame(CIG_FILL); /* (6) */
@@ -475,7 +475,7 @@ TEST(core_layout, grid_with_down_direction) {
 	instead of filling and adding rows, columns are filled and added instead. Otherwise
 	they behave the same.
 	*/
-	if (!cig_push_layout_function(&im_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) {
+	if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) {
     0,
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL,
 		.direction = CIG_LAYOUT_DIRECTION_DOWN,
@@ -535,7 +535,7 @@ TEST(core_layout, grid_with_down_direction) {
 
 TEST(core_layout, vstack_scroll) {
 	/* Any element can be made scrollable, but it makes most sense for stacks/grids */
-	if (!cig_push_layout_function(&im_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) {
+	if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) {
     0,
     .axis = CIG_LAYOUT_AXIS_VERTICAL,
 		.height = 100,
@@ -548,12 +548,12 @@ TEST(core_layout, vstack_scroll) {
 	TEST_ASSERT_NULL(cig_element()->_scroll_state);
 	TEST_ASSERT_FALSE(cig_element()->_clipped);
 	
-	im_enable_scroll(NULL);
+	cig_enable_scroll(NULL);
 	
 	/* Scrolling also enables clipping */
 	TEST_ASSERT_TRUE(cig_element()->_clipped);
 	
-	cig_scroll_state_t *scroll = im_scroll_state();
+	cig_scroll_state_t *scroll = cig_scroll_state();
 	
 	TEST_ASSERT_EQUAL_VEC2(cig_vec2_zero(), scroll->offset);
 	TEST_ASSERT_EQUAL_VEC2(cig_vec2_zero(), scroll->content_size);
@@ -589,7 +589,7 @@ TEST(core_layout, clipping) {
 	cig_push_frame(CIG_FILL);
 			
 	/* Clipping is now turned ON for the current layout element */
-	im_enable_clipping();
+	cig_enable_clipping();
 	
 	cig_push_frame(cig_frame_make(600, 400, 100, 100));
 	
@@ -617,7 +617,7 @@ TEST(core_layout, clipping) {
 	cig_pop_frame();
 	
 	cig_push_frame(cig_frame_make(100, 100, 440, 280));
-	im_enable_clipping();
+	cig_enable_clipping();
 	
 		cig_push_frame(cig_frame_make(-10, -50, 460, 100));
 		TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 0, 440, 50), cig_element()->clipped_frame);
@@ -632,7 +632,7 @@ TEST(core_layout, additional_buffers) {
 	int secondary_buffer = 2;
 	
 	cig_push_frame(cig_frame_make(100, 100, 440, 280));
-	im_push_buffer(&secondary_buffer);
+	cig_push_buffer(&secondary_buffer);
 	
 	TEST_ASSERT_EQUAL(&secondary_buffer, im_buffer());
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(100, 100, 440, 280), cig_element()->clipped_frame);
@@ -650,7 +650,7 @@ TEST(core_layout, additional_buffers) {
 	cig_pop_frame();
 	
 	
-	im_pop_buffer();
+	cig_pop_buffer();
 	cig_pop_frame();
 }
 

@@ -33,9 +33,9 @@
 
 #define CIG_B (IM_Y + IM_H)
 
-#define CIG_SCROLL_LIMIT_X im_content_size().x-cig_frame().w+cig_element()->insets.left+cig_element()->insets.right
+#define CIG_SCROLL_LIMIT_X cig_content_size().x-cig_frame().w+cig_element()->insets.left+cig_element()->insets.right
 
-#define CIG_SCROLL_LIMIT_Y im_content_size().y-cig_frame().h+cig_element()->insets.top+cig_element()->insets.bottom
+#define CIG_SCROLL_LIMIT_Y cig_content_size().y-cig_frame().h+cig_element()->insets.top+cig_element()->insets.bottom
 
 #define IM_ARRANGE(FRAME, BODY) \
 if (cig_push_frame(FRAME)) { \

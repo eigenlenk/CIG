@@ -261,12 +261,12 @@ stack_cig_element_t_t* cig_element_stack();
 	 This is mostly when you want to cache
    some more complex widget, like a large text view or similar. You can internally
    check whether you need to redraw or just re-render the old buffer/screen/texture */	 
-void im_push_buffer(im_buffer_ref);
+void cig_push_buffer(im_buffer_ref);
 
 
 /* Pops the previously pushed buffer. Does not reset anything else about the state
    of the UI, unline `im_end_layout` */
-void im_pop_buffer();
+void cig_pop_buffer();
 
 
 
@@ -276,30 +276,30 @@ void im_pop_buffer();
 	 
 
 /* Pass mouse coordinates and button press state[s] */
-void im_set_input_state(cig_vec2_t, cig_input_action_type_t);
+void cig_set_input_state(cig_vec2_t, cig_input_action_type_t);
 
 
-/* Returns the current mouse state as updated by last  `im_set_input_state` call */
-cig_input_state_t *im_input_state();
+/* Returns the current mouse state as updated by last  `cig_set_input_state` call */
+cig_input_state_t *cig_input_state();
 
 
 /* Enables mouse tracking for the current layout element.
-   Call this after a successful `im_push_frame` call */
-void im_enable_interaction();
+   Call this after a successful `cig_push_frame` call */
+void cig_enable_interaction();
 
 
 /* Checks if the current layout element is the topmost element under the cursor */
-bool im_hovered();
+bool cig_hovered();
 
 
 /* Checks if the current element is hovered and the mouse button is pressed.
    See `im_press_flags_t` declaration for more info */
-cig_input_action_type_t im_pressed(cig_input_action_type_t, cig_press_flags_t);
+cig_input_action_type_t cig_pressed(cig_input_action_type_t, cig_press_flags_t);
 
 
 /* Checks if the current element is hovered and mouse button was clicked or released
    depending on the options. See `im_click_flags_t` declaration for more info */
-cig_input_action_type_t im_clicked(cig_input_action_type_t, cig_click_flags_t);
+cig_input_action_type_t cig_clicked(cig_input_action_type_t, cig_click_flags_t);
 
 
 
@@ -320,27 +320,27 @@ cig_input_action_type_t im_clicked(cig_input_action_type_t, cig_click_flags_t);
 	 scrolling elements already, it may fail.
 	 
 	 @return TRUE if state could be allocated, FALSE otherwise */
-bool im_enable_scroll(cig_scroll_state_t *);
-
-
-/* Set scroll offset values */
-void im_set_offset(cig_vec2_t);
-
-
-/* Change scroll offset values */
-void im_change_offset(cig_vec2_t);
-
-
-/* Get scroll offset values */
-cig_vec2_t im_offset();
-
-
-/* Get scroll content size */
-cig_vec2_t im_content_size();
+bool cig_enable_scroll(cig_scroll_state_t *);
 
 
 /* Returns the current scroll state objet, NULL if scrolling is not enabled */
-cig_scroll_state_t* im_scroll_state();
+cig_scroll_state_t* cig_scroll_state();
+
+
+/* Set scroll offset values */
+void cig_set_offset(cig_vec2_t);
+
+
+/* Change scroll offset values */
+void cig_change_offset(cig_vec2_t);
+
+
+/* Get scroll offset values */
+cig_vec2_t cig_offset();
+
+
+/* Get scroll content size */
+cig_vec2_t cig_content_size();
 
 
 
@@ -352,38 +352,38 @@ cig_scroll_state_t* im_scroll_state();
 /* By default, when adding frames that are completely outside the bounds
    of the parent, `im_push_frame` calls return false. You can disable that
    behavior with this */
-void im_disable_culling();
+void cig_disable_culling();
 
 
 /* Enables clipping for the current layout element */
-void im_enable_clipping();
+void cig_enable_clipping();
 
 
 /* Normally element ID is auto-calculated and may vary from frame to frame.
    This sets an explicit Id for the next `im_push_frame` call.
-   See `im_hash` for generating an ID from a string */
-void im_set_next_id(cig_id_t);
+   See `cig_hash` for generating an ID from a string */
+void cig_set_next_id(cig_id_t);
 
 
 /* Returns the depth of the layout stack currently */
-unsigned int im_depth();
+unsigned int cig_depth();
 
 
 /* Generates an ID from a string */
-cig_id_t im_hash(const char *str);
+cig_id_t cig_hash(const char *str);
 
 
 /* Pushes and pops an empty frame to trigger a layout function to allocate space.
    Useful when you have a stack or grid and want to trigger a new line or column */
-void im_empty();
+void cig_empty();
 
 
 /* */
-void im_spacer(int size);
+void cig_spacer(int size);
 
 
 /* Default layout function for stack and grid type */
-bool im_default_layout_builder(cig_frame_t, cig_frame_t, cig_layout_params_t*, cig_frame_t*);
+bool cig_default_layout_builder(cig_frame_t, cig_frame_t, cig_layout_params_t*, cig_frame_t*);
 
 
 #endif

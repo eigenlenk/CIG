@@ -91,7 +91,7 @@ void cig_begin_layout(const im_buffer_ref buffer, const cig_frame_t frame) {
   
   elements.push(&elements, (cig_element_t) {
 		0,
-		.id = next_id ? next_id : im_hash("root"),
+		.id = next_id ? next_id : cig_hash("root"),
 		.frame = cig_frame_make(0, 0, frame.w, frame.h),
 		.clipped_frame = frame,
 		.absolute_frame = frame,
@@ -100,9 +100,9 @@ void cig_begin_layout(const im_buffer_ref buffer, const cig_frame_t frame) {
 		._layout_params = (cig_layout_params_t){ 0, .flags = CIG_DEFAULT_LAYOUT_FLAGS }
 	});
 
-	im_push_buffer(buffer);
+	cig_push_buffer(buffer);
 	
-	im_enable_clipping();
+	cig_enable_clipping();
 	
 	next_id = 0;
 }
@@ -218,7 +218,7 @@ stack_cig_element_t_t* cig_element_stack() {
 ───┤  TEMPORARY BUFFERS (ADVANCED)  │
    └────────────────────────────────┘ */
 	 
-void im_push_buffer(const im_buffer_ref buffer) {
+void cig_push_buffer(const im_buffer_ref buffer) {
 	im_buffer_element_t buffer_element = {
 		.buffer = buffer,
 		.origin = buffers.size == 0
@@ -231,7 +231,7 @@ void im_push_buffer(const im_buffer_ref buffer) {
   buffers.push(&buffers, buffer_element);
 }
 
-void im_pop_buffer() {
+void cig_pop_buffer() {
   CIG_UNUSED(buffers._pop(&buffers));
 }
 
@@ -240,7 +240,7 @@ void im_pop_buffer() {
 ───┤  MOUSE INTERACTION  │
    └─────────────────────┘ */
 	 
-void im_set_input_state(
+void cig_set_input_state(
 	const cig_vec2_t position,
 	unsigned int action_mask
 ) {
@@ -299,11 +299,11 @@ void im_set_input_state(
 	}
 }
 
-cig_input_state_t *im_input_state() {
+cig_input_state_t *cig_input_state() {
 	return &mouse;
 }
 
-void im_enable_interaction() {
+void cig_enable_interaction() {
 	cig_element_t *element = cig_element();
 	if (element->_interaction_enabled) {
 		return;
@@ -312,16 +312,16 @@ void im_enable_interaction() {
 	handle_element_hover(element);
 }
 
-bool im_hovered() {
+bool cig_hovered() {
 	/* See `handle_element_hover` */
 	return mouse.locked == false && cig_element()->_interaction_enabled && cig_element()->id == mouse._target_prev_frame;
 }
 
-cig_input_action_type_t im_pressed(
+cig_input_action_type_t cig_pressed(
 	const cig_input_action_type_t actions,
 	const cig_press_flags_t options
 ) {
-	if (!im_hovered()) {
+	if (!cig_hovered()) {
 		return 0;
 	}
 	
@@ -334,11 +334,11 @@ cig_input_action_type_t im_pressed(
 	}
 }
 
-cig_input_action_type_t im_clicked(
+cig_input_action_type_t cig_clicked(
 	const cig_input_action_type_t actions,
 	const cig_click_flags_t options
 ) {
-	if (!im_hovered()) {
+	if (!cig_hovered()) {
 		return 0;
 	}
 	
@@ -364,35 +364,35 @@ cig_input_action_type_t im_clicked(
 ───┤  SCROLLING  │
    └─────────────┘ */
 
-bool im_enable_scroll(cig_scroll_state_t *state) {
+bool cig_enable_scroll(cig_scroll_state_t *state) {
   cig_element_t *element = cig_element();
   element->_scroll_state = state ? state : get_scroll_state(element->id);
-	im_enable_clipping();
+	cig_enable_clipping();
 	return element->_scroll_state != NULL;
 }
 
-void im_set_offset(cig_vec2_t offset) {
-	assert(im_scroll_state());
-	im_scroll_state()->offset = offset;
-}
-
-void im_change_offset(cig_vec2_t delta) {
-	assert(im_scroll_state());
-	im_scroll_state()->offset = cig_vec2_add(im_scroll_state()->offset, delta);
-}
-
-cig_vec2_t im_offset() {
-	assert(im_scroll_state());
-	return im_scroll_state()->offset;
-}
-
-cig_vec2_t im_content_size() {
-	assert(im_scroll_state());
-	return im_scroll_state()->content_size;
-}
-
-cig_scroll_state_t* im_scroll_state() {
+cig_scroll_state_t* cig_scroll_state() {
 	return cig_element()->_scroll_state;
+}
+
+void cig_set_offset(cig_vec2_t offset) {
+	assert(cig_scroll_state());
+	cig_scroll_state()->offset = offset;
+}
+
+void cig_change_offset(cig_vec2_t delta) {
+	assert(cig_scroll_state());
+	cig_scroll_state()->offset = cig_vec2_add(cig_scroll_state()->offset, delta);
+}
+
+cig_vec2_t cig_offset() {
+	assert(cig_scroll_state());
+	return cig_scroll_state()->offset;
+}
+
+cig_vec2_t cig_content_size() {
+	assert(cig_scroll_state());
+	return cig_scroll_state()->content_size;
 }
 
 
@@ -400,23 +400,23 @@ cig_scroll_state_t* im_scroll_state() {
 ───┤  LAYOUT HELPERS  │
    └──────────────────┘ */
 	 
-void im_disable_culling() {
+void cig_disable_culling() {
 	cig_element()->_layout_params.flags &= ~CIG_CULL_SUBFRAMES;
 }
 
-void im_enable_clipping() {
+void cig_enable_clipping() {
   im_push_clip(cig_element());
 }
 
-void im_set_next_id(cig_id_t id) {
+void cig_set_next_id(cig_id_t id) {
 	next_id = id;
 }
 
-unsigned int im_depth() {
+unsigned int cig_depth() {
 	return cig_element_stack()->size;
 }
 
-cig_id_t im_hash(const char *str) {
+cig_id_t cig_hash(const char *str) {
 	/* http://www.cse.yorku.ca/~oz/hash.html */
 	register cig_id_t hash = 5381;
 	register int c;
@@ -426,17 +426,17 @@ cig_id_t im_hash(const char *str) {
 	return hash;
 }
 
-void im_empty() {
+void cig_empty() {
 	cig_push_frame(CIG_FILL);
 	cig_pop_frame();
 }
 
-void im_spacer(const int size) {
+void cig_spacer(const int size) {
 	cig_push_frame(CIG_FILL_H(size));
 	cig_pop_frame();
 }
 
-bool im_default_layout_builder(
+bool cig_default_layout_builder(
 	const cig_frame_t container, /* Frame into which sub-frames are laid out */
 	const cig_frame_t frame, /* Proposed sub-frame, generally from CIG_FILL */
 	cig_layout_params_t *prm,
@@ -645,7 +645,7 @@ static bool push_frame(
 
   elements.push(&elements, (cig_element_t) {
 		0,
-		.id = next_id ? next_id : (top->id + tinyhash(top->id+top->_id_counter++, im_depth())),
+		.id = next_id ? next_id : (top->id + tinyhash(top->id+top->_id_counter++, cig_depth())),
 		.frame = next,
 		.clipped_frame = cig_frame_offset(cig_frame_union(absolute_frame, current_clip_frame), -absolute_frame.x + next.x, -absolute_frame.y + next.y),
 		.absolute_frame = absolute_frame,

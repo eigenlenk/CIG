@@ -15,7 +15,7 @@ void demo_ui(BITMAP *buffer) {
   cig_begin_layout(buffer, cig_frame_make(0, 0, SCREEN_W, SCREEN_H));
 	
 	/* Pass cursor position and mouse button states */
-	im_set_input_state(
+	cig_set_input_state(
 		vec2_make(mouse_x, mouse_y),
 		(mouse_b & 1 ? IM_MOUSE_BUTTON_LEFT : 0) +
 		(mouse_b & 2 ? IM_MOUSE_BUTTON_RIGHT : 0)
@@ -48,10 +48,10 @@ void demo_ui(BITMAP *buffer) {
 
   CIG_FILL_color(3);
 	
-  im_enable_scroll(NULL);
-	im_enable_interaction();
+  cig_enable_scroll(NULL);
+	cig_enable_interaction();
 	
-	if (!im_hovered()) {
+	if (!cig_hovered()) {
 		if (autoscroll_direction == 1) { /* Scroll until the bottom of the content */
 			if (im_current_element()->_scroll_state->offset.y < CIM_SCROLL_LIMIT_Y) {
 				im_current_element()->_scroll_state->offset.y += 1;
@@ -71,7 +71,7 @@ void demo_ui(BITMAP *buffer) {
     if (cig_push_frame(CIG_FILL)) {
       
       if (i % 2) {
-        im_enable_scroll(NULL);
+        cig_enable_scroll(NULL);
         im_current_element()->_scroll_state->offset.x -= 1;
       }
       
@@ -93,10 +93,10 @@ void demo_ui(BITMAP *buffer) {
 	
 	void demo_grid_element(const cig_frame_t frame) {
 		if (cig_push_frame(frame)) {
-			im_enable_interaction();
-			if (im_pressed(IM_MOUSE_BUTTON_ANY, 0)) {
+			cig_enable_interaction();
+			if (cig_pressed(IM_MOUSE_BUTTON_ANY, 0)) {
 				CIG_FILL_color(75);
-			} else if (im_hovered()) {
+			} else if (cig_hovered()) {
 				CIG_FILL_color(7);
 			}
 			im_stroke_color(15);
@@ -212,14 +212,14 @@ void demo_ui(BITMAP *buffer) {
 	{
 		cig_push_frame(cig_frame_make(200, IM_B - 100, 240, 50));
 		
-		im_enable_interaction();
+		cig_enable_interaction();
 		
-		if (im_clicked(IM_MOUSE_BUTTON_ANY, IM_CLICK_STARTS_INSIDE)) {
+		if (cig_clicked(IM_MOUSE_BUTTON_ANY, IM_CLICK_STARTS_INSIDE)) {
 			grid_demo = (grid_demo + 1) % 4;
 			CIG_FILL_color(3);
-		} else if (im_pressed(IM_MOUSE_BUTTON_ANY, IM_MOUSE_PRESS_INSIDE)) {
+		} else if (cig_pressed(IM_MOUSE_BUTTON_ANY, IM_MOUSE_PRESS_INSIDE)) {
 			CIG_FILL_color(9);
-		} else if (im_hovered()) {
+		} else if (cig_hovered()) {
 			CIG_FILL_color(10);
 		}
 		
