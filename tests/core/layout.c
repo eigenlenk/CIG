@@ -20,7 +20,7 @@ TEST_TEAR_DOWN(core_layout) {
 
 TEST(core_layout, basic_checks) {
 	TEST_ASSERT_NOT_NULL(cig_element());
-	TEST_ASSERT_EQUAL(&main_buffer, im_buffer());
+	TEST_ASSERT_EQUAL(&main_buffer, cig_buffer());
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 0, 640, 480), cig_element()->frame);
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 0, 640, 480), cig_element()->clipped_frame);
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 0, 640, 480), cig_element()->absolute_frame);
@@ -634,7 +634,7 @@ TEST(core_layout, additional_buffers) {
 	cig_push_frame(cig_frame_make(100, 100, 440, 280));
 	cig_push_buffer(&secondary_buffer);
 	
-	TEST_ASSERT_EQUAL(&secondary_buffer, im_buffer());
+	TEST_ASSERT_EQUAL(&secondary_buffer, cig_buffer());
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(100, 100, 440, 280), cig_element()->clipped_frame);
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(100, 100, 440, 280), cig_element()->absolute_frame);
 	

@@ -23,12 +23,12 @@ DECLARE_FRAME_T  (int, cig_frame, cig_vec2, cig_insets) /* Declares `cig_cig_fra
 
 
 /* All layout element get a unique ID that tries to be unique across frames, but no promises.
-   See `im_next_id` how to definitely keep things consistent */
+   See `cig_next_id` how to definitely keep things consistent */
 typedef unsigned long cig_id_t;
 
 
 /* Opaque pointer to a buffer/screen/texture/etc to be renderered into */
-typedef void* im_buffer_ref;
+typedef void* cig_buffer_ref;
 
 
 /* */
@@ -61,7 +61,7 @@ typedef struct {
       rows;
 
   /* Limits how many elements can be added per axis on in total.
-     Total number of elements is checked in `im_push_frame` but horizontal
+     Total number of elements is checked in `cig_push_frame` but horizontal
      and vertical limits are only used in the default stack/grid builder */
 	struct { int horizontal, vertical, total; } limit;
   
@@ -147,7 +147,7 @@ typedef struct {
 
 
 typedef enum {
-	/* `IM_PRESS_INSIDE` option specifies whether the press has to start
+	/* `CIG_PRESS_INSIDE` option specifies whether the press has to start
 	within the bounds of this element. Otherwise it can start outside and the 
 	element reflects pressed state as soon as mouse moves onto it */
   CIG_PRESS_INSIDE = CIG_BIT(0)
@@ -162,7 +162,7 @@ typedef enum {
 } cig_click_flags_t;
 
 
-#define STACK_CAPACITY_cig_element_t CIG_ELEMENTS_MAX
+#define STACK_CAPACITY_cig_element_t CIG_NESTED_ELEMENTS_MAX
 DECLARE_ARRAY_STACK_T(cig_element_t);
 
 
@@ -179,7 +179,7 @@ DECLARE_ARRAY_STACK_T(cig_element_t);
 
 
 /* */
-void cig_begin_layout(im_buffer_ref, cig_frame_t);
+void cig_begin_layout(cig_buffer_ref, cig_frame_t);
 
 
 /* */
@@ -192,7 +192,7 @@ void cig_reset_internal_state();
 
 
 /* Returns an opaque pointer to the current buffer where drawing operations would take place */
-im_buffer_ref im_buffer();
+cig_buffer_ref cig_buffer();
 
 
 /* Pushes a new frame with zero insets to layout stack.
@@ -254,18 +254,18 @@ stack_cig_element_t_t* cig_element_stack();
    └────────────────────────────────┘ */
 	 
 
-/* Similar to `im_begin_layout` where you start rendering into a new buffer,
+/* Similar to `cig_begin_layout` where you start rendering into a new buffer,
    in the current element's coordinate system. All subsequent elements `absolute_frame`-s
 	 are relative to this buffer/screen/texture.
 	 
 	 This is mostly when you want to cache
    some more complex widget, like a large text view or similar. You can internally
    check whether you need to redraw or just re-render the old buffer/screen/texture */	 
-void cig_push_buffer(im_buffer_ref);
+void cig_push_buffer(cig_buffer_ref);
 
 
 /* Pops the previously pushed buffer. Does not reset anything else about the state
-   of the UI, unline `im_end_layout` */
+   of the UI, unlike `cig_end_layout` */
 void cig_pop_buffer();
 
 
@@ -293,12 +293,12 @@ bool cig_hovered();
 
 
 /* Checks if the current element is hovered and the mouse button is pressed.
-   See `im_press_flags_t` declaration for more info */
+   See `cig_press_flags_t` declaration for more info */
 cig_input_action_type_t cig_pressed(cig_input_action_type_t, cig_press_flags_t);
 
 
 /* Checks if the current element is hovered and mouse button was clicked or released
-   depending on the options. See `im_click_flags_t` declaration for more info */
+   depending on the options. See `cig_click_flags_t` declaration for more info */
 cig_input_action_type_t cig_clicked(cig_input_action_type_t, cig_click_flags_t);
 
 
@@ -316,7 +316,7 @@ cig_input_action_type_t cig_clicked(cig_input_action_type_t, cig_click_flags_t);
 	 the struct stored somewhere in your application layer. Pass NULL for
 	 the default behavior described above.
 	 
-	 The state pool is limited to `IM_STATES_MAX` and if there are too many
+	 The state pool is limited to `CIG_STATES_MAX` and if there are too many
 	 scrolling elements already, it may fail.
 	 
 	 @return TRUE if state could be allocated, FALSE otherwise */
@@ -350,7 +350,7 @@ cig_vec2_t cig_content_size();
 
 
 /* By default, when adding frames that are completely outside the bounds
-   of the parent, `im_push_frame` calls return false. You can disable that
+   of the parent, `cig_push_frame` calls return false. You can disable that
    behavior with this */
 void cig_disable_culling();
 
@@ -360,7 +360,7 @@ void cig_enable_clipping();
 
 
 /* Normally element ID is auto-calculated and may vary from frame to frame.
-   This sets an explicit Id for the next `im_push_frame` call.
+   This sets an explicit Id for the next `cig_push_frame` call.
    See `cig_hash` for generating an ID from a string */
 void cig_set_next_id(cig_id_t);
 

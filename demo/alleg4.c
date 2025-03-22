@@ -75,7 +75,7 @@ static IM_API_GET_NEXT_INPUT_CHARACTER(alleg4_im_get_next_input_character) {
 }
 
 static IM_API_ALLOCATE_BUFFER(alleg4_im_allocate_buffer) {
-  // im_buffer_ref buffer = malloc(sizeof(buffer_t));
+  // cig_buffer_ref buffer = malloc(sizeof(buffer_t));
   // buffer_configure(buffer, w, h);
   // return buffer;
   return NULL;

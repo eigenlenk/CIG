@@ -9,20 +9,20 @@
 /* Declare internal types */
 
 typedef cig_frame_t cig_clip_frame_t;
-#define STACK_CAPACITY_cig_clip_frame_t CIG_CLIP_REGIONS_MAX
+#define STACK_CAPACITY_cig_clip_frame_t CIG_BUFFER_CLIP_REGIONS_MAX
 DECLARE_ARRAY_STACK_T(cig_clip_frame_t);
 
 typedef struct {
-	im_buffer_ref buffer;
+	cig_buffer_ref buffer;
 	cig_vec2_t origin;
 	stack_cig_clip_frame_t_t clip_frames;
-} im_buffer_element_t;
+} cig_buffer_element_t;
 
 typedef struct {
   cig_id_t id;
 	unsigned int last_tick;
   cig_scroll_state_t value;
-} im_scroll_state_element_t;
+} cig_scroll_state_element_t;
 
 typedef struct {
 	cig_id_t id;
@@ -32,58 +32,48 @@ typedef struct {
 		ACTIVE
 	} activation_state;
 	unsigned int last_tick;
-	union {
-		unsigned char bytes[IM_STATE_MEM_SIZE];
-	} data;
-} im_state_t;
+	unsigned char data[CIG_STATE_MEM_SIZE_BYTES];
+} cig_state_t;
 
-typedef im_state_t* im_state_ptr_t;
-#define STACK_CAPACITY_im_state_ptr_t CIG_STATES_MAX
-DECLARE_ARRAY_STACK_T(im_state_ptr_t);
+typedef cig_state_t* cig_state_ptr_t;
+#define STACK_CAPACITY_cig_state_ptr_t CIG_STATES_MAX
+DECLARE_ARRAY_STACK_T(cig_state_ptr_t);
 
-#define STACK_CAPACITY_im_buffer_element_t CIG_BUFFERS_MAX
-DECLARE_ARRAY_STACK_T(im_buffer_element_t);
+#define STACK_CAPACITY_cig_buffer_element_t CIG_BUFFERS_MAX
+DECLARE_ARRAY_STACK_T(cig_buffer_element_t);
 
 /* Define internal state */
 
-static stack_im_state_ptr_t_t widget_states = INIT_STACK(im_state_ptr_t);
+static stack_cig_state_ptr_t_t widget_states = INIT_STACK(cig_state_ptr_t);
 static stack_cig_element_t_t elements = INIT_STACK(cig_element_t);
-static stack_im_buffer_element_t_t buffers = INIT_STACK(im_buffer_element_t);
+static stack_cig_buffer_element_t_t buffers = INIT_STACK(cig_buffer_element_t);
 static struct {
-	im_state_t values[CIG_STATES_MAX];
+	cig_state_t values[CIG_STATES_MAX];
 	size_t size;
 } _state_list = { 0 };
-static im_scroll_state_element_t _scroll_elements[CIG_SCROLLABLE_ELEMENTS_MAX];
+static cig_scroll_state_element_t _scroll_elements[CIG_SCROLLABLE_ELEMENTS_MAX];
 static cig_input_state_t mouse = { 0 };
 static cig_id_t next_id = 0;
 static unsigned int tick = 0;
 
 /* Forward delcarations */
 
-// static im_state_t* 				im_state(const cig_id_t, const imgui_widget_t);
-
-static cig_scroll_state_t* get_scroll_state(cig_id_t);
-
+// static cig_state_t* 				im_state(const cig_id_t, const imgui_widget_t);
+static cig_scroll_state_t* find_scroll_state(cig_id_t);
 static void handle_element_hover(cig_element_t*);
-
-static void im_push_clip(cig_element_t*);
-
-static void im_pop_clip();
-
+static void push_clip(cig_element_t*);
+static void pop_clip();
 static cig_frame_t resolve_size(cig_frame_t, const cig_element_t*);
-
 static bool next_layout_frame(cig_frame_t, cig_element_t *, cig_frame_t *);
-
 static bool push_frame(cig_frame_t, cig_insets_t, cig_layout_params_t, bool (*)(cig_frame_t, cig_frame_t, cig_layout_params_t*, cig_frame_t*));
-
-static inline  __attribute__((always_inline)) int tinyhash(int a, int b) { return (a * 31) ^ (b * 17); }
+CIG_INLINED int tinyhash(int a, int b) { return (a * 31) ^ (b * 17); }
 
 
 /* ┌───────────────┐
 ───┤  CORE LAYOUT  │
    └───────────────┘ */
 
-void cig_begin_layout(const im_buffer_ref buffer, const cig_frame_t frame) {
+void cig_begin_layout(const cig_buffer_ref buffer, const cig_frame_t frame) {
   
   widget_states.clear(&widget_states);
   elements.clear(&elements);
@@ -108,7 +98,7 @@ void cig_begin_layout(const im_buffer_ref buffer, const cig_frame_t frame) {
 }
 
 void cig_end_layout() {
-	register im_state_t *s, *last = NULL;
+	register cig_state_t *s, *last = NULL;
 	
 	++tick;
 	
@@ -151,7 +141,7 @@ void cig_reset_internal_state() {
 	next_id = 0;
 }
 
-im_buffer_ref im_buffer() {
+cig_buffer_ref cig_buffer() {
   return buffers._peek(&buffers, 0)->buffer;
 }
 
@@ -188,7 +178,7 @@ cig_element_t* cig_pop_frame() {
 
   if (popped_element->_clipped) {
     popped_element->_clipped = false;
-    im_pop_clip();
+    pop_clip();
   }
   
   return popped_element;
@@ -199,7 +189,7 @@ cig_element_t* cig_element() {
 }
 
 cig_frame_t cig_convert_relative_frame(const cig_frame_t frame) {
-	const im_buffer_element_t *buffer_element = buffers._peek(&buffers, 0);
+	const cig_buffer_element_t *buffer_element = buffers._peek(&buffers, 0);
 	const cig_element_t *element = cig_element();
 	
 	return cig_frame_offset(
@@ -218,8 +208,8 @@ stack_cig_element_t_t* cig_element_stack() {
 ───┤  TEMPORARY BUFFERS (ADVANCED)  │
    └────────────────────────────────┘ */
 	 
-void cig_push_buffer(const im_buffer_ref buffer) {
-	im_buffer_element_t buffer_element = {
+void cig_push_buffer(const cig_buffer_ref buffer) {
+	cig_buffer_element_t buffer_element = {
 		.buffer = buffer,
 		.origin = buffers.size == 0
 			? cig_vec2_zero()
@@ -366,7 +356,7 @@ cig_input_action_type_t cig_clicked(
 
 bool cig_enable_scroll(cig_scroll_state_t *state) {
   cig_element_t *element = cig_element();
-  element->_scroll_state = state ? state : get_scroll_state(element->id);
+  element->_scroll_state = state ? state : find_scroll_state(element->id);
 	cig_enable_clipping();
 	return element->_scroll_state != NULL;
 }
@@ -405,7 +395,7 @@ void cig_disable_culling() {
 }
 
 void cig_enable_clipping() {
-  im_push_clip(cig_element());
+  push_clip(cig_element());
 }
 
 void cig_set_next_id(cig_id_t id) {
@@ -613,7 +603,7 @@ static bool push_frame(
 	cig_layout_params_t params,
 	bool (*layout_function)(cig_frame_t, cig_frame_t, cig_layout_params_t*, cig_frame_t*)
 ) {
-	im_buffer_element_t *current_buffer = buffers._peek(&buffers, 0);
+	cig_buffer_element_t *current_buffer = buffers._peek(&buffers, 0);
 	cig_element_t *top = cig_element();
 	
 	if (top->_layout_params.limit.total > 0 && top->_layout_params._count.total == top->_layout_params.limit.total) {
@@ -662,12 +652,12 @@ static bool push_frame(
 }
 
 
-/*static im_state_t* im_state(
+/*static cig_state_t* im_state(
 	const cig_id_t id,
 	const imgui_widget_t type
 ) {
 	register size_t i = 0;
-	im_state_t *s;
+	cig_state_t *s;
 
 	for (; i < _state_list.size; ++i) {
 		s = &_state_list.values[i];
@@ -711,7 +701,7 @@ static void handle_element_hover(cig_element_t *element) {
 	}
 }
 
-static cig_scroll_state_t* get_scroll_state(const cig_id_t id) {
+static cig_scroll_state_t* find_scroll_state(const cig_id_t id) {
   register int first_available = -1;
 	
   for (register int i = 0; i < CIG_SCROLLABLE_ELEMENTS_MAX; ++i) {
@@ -735,7 +725,7 @@ static cig_scroll_state_t* get_scroll_state(const cig_id_t id) {
   }
 }
 
-static void im_push_clip(cig_element_t *element) {
+static void push_clip(cig_element_t *element) {
   if (element->_clipped == false) {
 		element->_clipped = true;
 		stack_cig_clip_frame_t_t *clip_frames = &buffers._peek(&buffers, 0)->clip_frames;
@@ -746,7 +736,7 @@ static void im_push_clip(cig_element_t *element) {
   }
 }
 
-static void im_pop_clip() {
+static void pop_clip() {
 	stack_cig_clip_frame_t_t *clip_frames = &buffers._peek(&buffers, 0)->clip_frames;
   
   CIG_UNUSED(clip_frames->_pop(clip_frames));
