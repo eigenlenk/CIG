@@ -197,6 +197,13 @@
 #    include <windows.h>
 #    include <direct.h>
 #    include <shellapi.h>
+#elif __DJGPP__
+#    include <sys/types.h>
+#    include <sys/wait.h>
+#    include <sys/stat.h>
+#    include <unistd.h>
+#    include <fcntl.h>
+#    include <process.h>
 #else
 #    include <sys/types.h>
 #    include <sys/wait.h>
@@ -689,7 +696,12 @@ void nob__go_rebuild_urself(int argc, char **argv, const char *source_path, ...)
 
     Nob_Cmd cmd = {0};
 
+#ifdef __DJGPP__
+    // We're limited to 8 character file names on DOS
+    const char *old_binary_path = nob_temp_sprintf("%.*s.old", (int)strcspn(binary_path, "."), binary_path);
+#else
     const char *old_binary_path = nob_temp_sprintf("%s.old", binary_path);
+#endif
 
     if (!nob_rename(binary_path, old_binary_path)) exit(1);
     nob_cmd_append(&cmd, NOB_REBUILD_URSELF(binary_path, source_path));
@@ -857,6 +869,13 @@ Nob_Proc nob_cmd_run_async_redirect(Nob_Cmd cmd, Nob_Cmd_Redirect redirect)
     CloseHandle(piProcInfo.hThread);
 
     return piProcInfo.hProcess;
+#elif __DJGPP__
+    // MS-DOS does not support multiple processes so w
+    Nob_Cmd cmd_null = {0};
+    nob_da_append_many(&cmd_null, cmd.items, cmd.count);
+    nob_cmd_append(&cmd_null, NULL);
+        
+    spawnvp(P_WAIT, cmd.items[0], (char * const*) cmd_null.items);
 #else
     pid_t cpid = fork();
     if (cpid < 0) {
@@ -1050,6 +1069,8 @@ bool nob_proc_wait(Nob_Proc proc)
 
     CloseHandle(proc);
 
+    return true;
+#elif __DJGPP__
     return true;
 #else
     for (;;) {
