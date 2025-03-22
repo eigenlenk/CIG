@@ -3,7 +3,7 @@
 
 #include "cigmac.h"
 
-#define DECLARE_INSETS_T(T, DECLNAME)                                          \
+#define DECLARE_insets_t(T, DECLNAME)                                          \
                                                                                \
 typedef struct {                                                               \
   T left, top, right, bottom;                                                  \

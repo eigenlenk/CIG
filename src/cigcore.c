@@ -70,7 +70,7 @@ static cig_frame_t resolve_size(cig_frame_t, const im_element_t*);
 
 static bool next_layout_frame(cig_frame_t, im_element_t *, cig_frame_t *);
 
-static bool push_frame(cig_frame_t, insets_t, im_layout_params_t, bool (*)(cig_frame_t, cig_frame_t, im_layout_params_t*, cig_frame_t*));
+static bool push_frame(cig_frame_t, cig_insets_t, im_layout_params_t, bool (*)(cig_frame_t, cig_frame_t, im_layout_params_t*, cig_frame_t*));
 
 static inline  __attribute__((always_inline)) int tinyhash(int a, int b) { return (a * 31) ^ (b * 17); }
 
@@ -90,7 +90,7 @@ void im_begin_layout(const im_buffer_ref buffer, const cig_frame_t frame) {
 		.frame = cig_frame_make(0, 0, frame.w, frame.h),
 		.clipped_frame = frame,
 		.absolute_frame = frame,
-		.insets = insets_zero(),
+		.insets = cig_insets_zero(),
 		._layout_function = NULL,
 		._layout_params = (im_layout_params_t){ 0, .options = IM_DEFAULT_LAYOUT_FLAGS }
 	}));
@@ -149,19 +149,19 @@ im_buffer_ref im_buffer() {
 }
 
 bool im_push_frame(const cig_frame_t frame) {
-	return push_frame(frame, insets_zero(), (im_layout_params_t){ 0, .options = IM_DEFAULT_LAYOUT_FLAGS }, NULL);
+	return push_frame(frame, cig_insets_zero(), (im_layout_params_t){ 0, .options = IM_DEFAULT_LAYOUT_FLAGS }, NULL);
 }
 
 bool im_push_frame_insets(
 	const cig_frame_t frame,
-	const insets_t insets
+	const cig_insets_t insets
 ) {
 	return push_frame(frame, insets, (im_layout_params_t){ 0, .options = IM_DEFAULT_LAYOUT_FLAGS }, NULL);
 }
 
 bool im_push_frame_insets_params(
 	const cig_frame_t frame,
-	const insets_t insets,
+	const cig_insets_t insets,
 	const im_layout_params_t params
 ) {
 	return push_frame(frame, insets, params, NULL);
@@ -170,7 +170,7 @@ bool im_push_frame_insets_params(
 bool im_push_frame_function(
 	bool (*layout_function)(const cig_frame_t, const cig_frame_t, im_layout_params_t *, cig_frame_t *),
 	const cig_frame_t frame,
-	const insets_t insets,
+	const cig_insets_t insets,
 	im_layout_params_t params
 ) {
 	return push_frame(frame, insets, params, layout_function);
@@ -610,7 +610,7 @@ static bool next_layout_frame(
 
 static bool push_frame(
 	const cig_frame_t frame,
-	const insets_t insets,
+	const cig_insets_t insets,
 	im_layout_params_t params,
 	bool (*layout_function)(cig_frame_t, cig_frame_t, im_layout_params_t*, cig_frame_t*)
 ) {

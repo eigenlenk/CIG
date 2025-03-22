@@ -116,7 +116,7 @@ TEST(core_layout, identifiers) {
 
 TEST(core_layout, limits) {
 	/* We can insert a total of 2 elements into this one. Further push_frame calls will return FALSE */
-	im_push_frame_insets_params(IM_FILL, insets_zero(), (im_layout_params_t) {
+	im_push_frame_insets_params(IM_FILL, cig_insets_zero(), (im_layout_params_t) {
     0,
     .limit.total = 2,
     .options = IM_DEFAULT_LAYOUT_FLAGS
@@ -132,13 +132,13 @@ TEST(core_layout, limits) {
 
 TEST(core_layout, insets) {
 	/* We are changing root frame insets directly. Insets only apply to the children */
-	im_element()->insets = insets_uniform(10);
+	im_element()->insets = cig_insets_uniform(10);
 	
 	/*
 	The next frame should be smaller by 10 units on each side as set by its parent.
 	`IM_FILL` instructs the frame to calculate its size automatically based on where it's being inserted.
 	*/
-	im_push_frame_insets(IM_FILL, insets_make(50, 0, 0, 0));
+	im_push_frame_insets(IM_FILL, cig_insets_make(50, 0, 0, 0));
 	
 	/*
 	Top left origin (X, Y) remains at zero because padding doesn't change
@@ -263,7 +263,7 @@ TEST(core_layout, culling) {
 
 TEST(core_layout, vstack_layout) {
 	/* Pushing a stack that lays out frames vertically with a 10pt spacing */
-	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, insets_zero(), (im_layout_params_t) {
+	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, cig_insets_zero(), (im_layout_params_t) {
     0,
     .axis = VERTICAL,
     .spacing = 10,
@@ -291,7 +291,7 @@ TEST(core_layout, vstack_layout) {
 
 TEST(core_layout, hstack_layout) {
 	/* Pushing a stack that lays out frames horizontally with no spacing, but everything is inset by 10pt */
-	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, insets_uniform(10), (im_layout_params_t) {
+	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, cig_insets_uniform(10), (im_layout_params_t) {
     0,
     .axis = HORIZONTAL,
     .spacing = 0,
@@ -328,7 +328,7 @@ TEST(core_layout, grid_with_fixed_rows_and_columns) {
 	Here it's a 5x5 grid, meaning on our 640x480 screen,
 	each cell would be 128x96.
 	*/
-	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, insets_zero(), (im_layout_params_t) {
+	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, cig_insets_zero(), (im_layout_params_t) {
     0,
     .axis = HORIZONTAL | VERTICAL,
     .spacing = 0,
@@ -373,7 +373,7 @@ TEST(core_layout, grid_with_fixed_cell_size) {
 	│.................................│
 	└─────────────────────────────────┘
 	*/
-	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, insets_zero(), (im_layout_params_t) {
+	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, cig_insets_zero(), (im_layout_params_t) {
     0,
     .axis = HORIZONTAL | VERTICAL,
     .width = 200,
@@ -410,7 +410,7 @@ TEST(core_layout, grid_with_varying_cell_size) {
 	current row or pushed to the next. In addition, you can still specify the number
 	of rows and columns, and these will now be used to limit number of cells on each axis.
 	*/
-	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, insets_zero(), (im_layout_params_t) {
+	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, cig_insets_zero(), (im_layout_params_t) {
     0,
     .axis = HORIZONTAL | VERTICAL,
 		.limit.horizontal = 3,
@@ -485,7 +485,7 @@ TEST(core_layout, grid_with_down_direction) {
 	instead of filling and adding rows, columns are filled and added instead. Otherwise
 	they behave the same.
 	*/
-	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, insets_zero(), (im_layout_params_t) {
+	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, cig_insets_zero(), (im_layout_params_t) {
     0,
     .axis = HORIZONTAL | VERTICAL,
 		.direction = DIR_DOWN,
@@ -545,7 +545,7 @@ TEST(core_layout, grid_with_down_direction) {
 
 TEST(core_layout, vstack_scroll) {
 	/* Any element can be made scrollable, but it makes most sense for stacks/grids */
-	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, insets_zero(), (im_layout_params_t) {
+	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, cig_insets_zero(), (im_layout_params_t) {
     0,
     .axis = VERTICAL,
 		.height = 100,

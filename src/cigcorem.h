@@ -65,7 +65,7 @@
 	im_end_grid();
 	
 #define IM_STACK(FRAME, BODY, AXIS, OPTIONS...) \
-	im_push_layout_frame_insets(FRAME, insets_zero(), &im_layout_stack, (im_layout_params_t) { \
+	im_push_layout_frame_insets(FRAME, cig_insets_zero(), &im_layout_stack, (im_layout_params_t) { \
 		0, \
 		AXIS, \
 		OPTIONS \
@@ -74,7 +74,7 @@
 	im_pop_frame();
 	
 #define IM_HSTACK(FRAME, BODY, OPTIONS...) \
-	im_push_layout_frame_insets(FRAME, insets_zero(), &im_layout_stack, (im_layout_params_t) { \
+	im_push_layout_frame_insets(FRAME, cig_insets_zero(), &im_layout_stack, (im_layout_params_t) { \
 		0, \
 		.axis = HORIZONTAL, \
 		OPTIONS \
@@ -83,7 +83,7 @@
 	im_pop_frame();
 	
 #define IM_VSTACK(FRAME, BODY, OPTIONS...) \
-	im_push_layout_frame_insets(FRAME, insets_zero(), &im_layout_stack, (im_layout_params_t) { \
+	im_push_layout_frame_insets(FRAME, cig_insets_zero(), &im_layout_stack, (im_layout_params_t) { \
 		0, \
 		.axis = VERTICAL, \
 		OPTIONS \

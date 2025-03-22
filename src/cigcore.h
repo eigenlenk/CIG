@@ -16,10 +16,10 @@
    ╚══════════════════════════╝ */
 	 
 	 
-/* These macros declare a foo<int> type essentially */
-DECLARE_VEC2_T(int, cig_vec2, -999999) /* Declares `cig_vec2_t` */
-DECLARE_INSETS_T(int, insets) /* Declares `insets_t` */
-DECLARE_frame_t(int, cig_frame, cig_vec2, insets) /* Declares `cig_cig_frame_t` */
+/* These macros declare a templated type essentially */
+DECLARE_VEC2_T    (int, cig_vec2, -999999) /* Declares `cig_vec2_t` */
+DECLARE_insets_t  (int, cig_insets) /* Declares `cig_cig_insets_t` */
+DECLARE_frame_t   (int, cig_frame, cig_vec2, cig_insets) /* Declares `cig_cig_frame_t` */
 
 
 /* All layout element get a unique ID that tries to be unique across frames, but no promises.
@@ -78,7 +78,7 @@ typedef struct {
 	cig_frame_t frame; /* Relative frame */
 	cig_frame_t clipped_frame; /* Relative clipped frame */
 	cig_frame_t absolute_frame; /* Screen-space frame */
-	insets_t insets; /* Insets affect child elements within this element */
+	cig_insets_t insets; /* Insets affect child elements within this element */
 	
 	/* (( PRIVATE )) */		
 	bool (*_layout_function)(cig_frame_t, cig_frame_t, im_layout_params_t*, cig_frame_t*);
@@ -178,12 +178,12 @@ bool im_push_frame(cig_frame_t);
 
 /* Push a new frame with custom insets to layout stack.
    @return TRUE if frame is visible within current container, FALSE otherwise */
-bool im_push_frame_insets(cig_frame_t frame, insets_t insets);
+bool im_push_frame_insets(cig_frame_t frame, cig_insets_t insets);
 
 
 /* Push a new frame with custom insets and params to layout stack.
    @return TRUE if frame is visible within current container, FALSE otherwise */
-bool im_push_frame_insets_params(cig_frame_t frame, insets_t insets, im_layout_params_t);
+bool im_push_frame_insets_params(cig_frame_t frame, cig_insets_t insets, im_layout_params_t);
 
 
 /* Push layout builder function to layout stack.
@@ -191,7 +191,7 @@ bool im_push_frame_insets_params(cig_frame_t frame, insets_t insets, im_layout_p
 bool im_push_frame_function(
 	bool (*)(cig_frame_t, cig_frame_t, im_layout_params_t*, cig_frame_t*),
 	cig_frame_t frame,
-	insets_t insets,
+	cig_insets_t insets,
 	im_layout_params_t
 );
 

@@ -41,7 +41,7 @@ TEST(types, frame_offset) {
 }
 
 TEST(types, frame_inset) {
-	const cig_frame_t f = cig_frame_inset(cig_frame_make(40, 40, 100, 100), insets_make(10, 20, 5, 15));
+	const cig_frame_t f = cig_frame_inset(cig_frame_make(40, 40, 100, 100), cig_insets_make(10, 20, 5, 15));
 	
 	TEST_ASSERT(cig_frame_cmp(f, cig_frame_make(50, 60, 85, 65)));
 }
@@ -97,11 +97,11 @@ TEST(types, frame_union) {
 }
 
 TEST(types, insets_constructors) {
-	const insets_t i0 = insets_zero();
-	const insets_t i1 = insets_make(10, 20, 30, 40);
-	const insets_t i2 = insets_uniform(5);
-	const insets_t i3 = insets_horizontal(8);
-	const insets_t i4 = insets_vertical(1);
+	const cig_insets_t i0 = cig_insets_zero();
+	const cig_insets_t i1 = cig_insets_make(10, 20, 30, 40);
+	const cig_insets_t i2 = cig_insets_uniform(5);
+	const cig_insets_t i3 = cig_insets_horizontal(8);
+	const cig_insets_t i4 = cig_insets_vertical(1);
 	
 	TEST_ASSERT(i0.left == 0  && i0.top == 0  && i0.right == 0  && i0.bottom == 0 );
 	TEST_ASSERT(i1.left == 10 && i1.top == 20 && i1.right == 30 && i1.bottom == 40);

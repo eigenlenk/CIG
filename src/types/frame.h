@@ -1,5 +1,5 @@
-#ifndef TYPE_cig_frame_t_INCLUDED
-#define TYPE_cig_frame_t_INCLUDED
+#ifndef TYPE_FRAME_T_INCLUDED
+#define TYPE_FRAME_T_INCLUDED
 
 #include "cigmac.h"
 

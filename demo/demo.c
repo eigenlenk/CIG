@@ -24,9 +24,9 @@ void demo_ui(BITMAP *buffer) {
   // Whole screen color
   im_fill_color(16); // Black
 
-  im_push_frame_insets(IM_FILL, insets_uniform(10));
+  im_push_frame_insets(IM_FILL, cig_insets_uniform(10));
 
-  im_push_frame_builder(IM_FILL, insets_uniform(10), &im_stack_layout_builder, (im_layout_params_t) {
+  im_push_frame_builder(IM_FILL, cig_insets_uniform(10), &im_stack_layout_builder, (im_layout_params_t) {
     0,
     .axis = HORIZONTAL,
     .spacing = 10,
@@ -38,7 +38,7 @@ void demo_ui(BITMAP *buffer) {
 	
 	/* Left content */
 
-  im_push_frame_builder(IM_FILL, insets_uniform(10), &im_stack_layout_builder, (im_layout_params_t) {
+  im_push_frame_builder(IM_FILL, cig_insets_uniform(10), &im_stack_layout_builder, (im_layout_params_t) {
     0,
     .axis = VERTICAL,
     .spacing = 10,
@@ -105,7 +105,7 @@ void demo_ui(BITMAP *buffer) {
 	}
 
 	if (grid_demo == 0) {
-		im_push_frame_builder(IM_FILL, insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
+		im_push_frame_builder(IM_FILL, cig_insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
 			0,
 			.axis = HORIZONTAL | VERTICAL,
 			.direction = DIR_DOWN,
@@ -137,7 +137,7 @@ void demo_ui(BITMAP *buffer) {
 		
 		im_pop_frame(); /* Pop right grid layout */
 	} else if (grid_demo == 1) {
-		im_push_frame_builder(IM_FILL, insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
+		im_push_frame_builder(IM_FILL, cig_insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
 			0,
 			.axis = HORIZONTAL | VERTICAL,
 			.spacing = 1,
@@ -163,7 +163,7 @@ void demo_ui(BITMAP *buffer) {
 		
 		im_pop_frame(); /* Pop right grid layout */
 	} else if (grid_demo == 2) {
-		im_push_frame_builder(IM_FILL, insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
+		im_push_frame_builder(IM_FILL, cig_insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
 			0,
 			.axis = HORIZONTAL | VERTICAL,
 			.spacing = 1,
@@ -183,7 +183,7 @@ void demo_ui(BITMAP *buffer) {
 
 		im_pop_frame(); /* Pop right grid layout */
 	} else if (grid_demo == 3) {
-		im_push_frame_builder(IM_FILL, insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
+		im_push_frame_builder(IM_FILL, cig_insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
 			0,
 			.axis = HORIZONTAL | VERTICAL,
 			.direction = DIR_DOWN,
