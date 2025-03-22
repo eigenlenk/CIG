@@ -198,14 +198,6 @@ im_element_t* im_element() {
   return stack_im_element_t__peek(im_element_stack(), 0);
 }
 
-cig_frame_t im_relative_frame() {
-	return im_element()->frame;
-}
-
-cig_frame_t im_absolute_frame() {
-	return im_element()->absolute_frame;
-}
-
 cig_frame_t im_convert_relative_frame(const cig_frame_t frame) {
 	const im_buffer_element_t *buffer_element = buffers._peek(&buffers, 0);
 	const im_element_t *element = im_element();
@@ -435,18 +427,18 @@ IMGUIID im_hash(const char *str) {
 }
 
 void im_empty() {
-	im_push_frame(IM_FILL);
+	im_push_frame(CIG_FILL);
 	im_pop_frame();
 }
 
 void im_spacer(const int size) {
-	im_push_frame(IM_FILL_H(size));
+	im_push_frame(CIG_FILL_H(size));
 	im_pop_frame();
 }
 
 bool im_default_layout_builder(
 	const cig_frame_t container, /* Frame into which sub-frames are laid out */
-	const cig_frame_t frame, /* Proposed sub-frame, generally from IM_FILL */
+	const cig_frame_t frame, /* Proposed sub-frame, generally from CIG_FILL */
 	im_layout_params_t *prm,
 	cig_frame_t *result
 ) {
@@ -462,21 +454,21 @@ bool im_default_layout_builder(
 	void move_to_next_row() {
 		prm->_horizontal_position = 0;
 		prm->_vertical_position += (prm->_v_size + prm->spacing);
-		prm->_h_size = IM_FILL_CONSTANT;
-		prm->_v_size = IM_FILL_CONSTANT;
+		prm->_h_size = CIG_FILL_CONSTANT;
+		prm->_v_size = CIG_FILL_CONSTANT;
 		prm->_count.h_cur = 0;
 	}
 	
 	void move_to_next_column() {
 		prm->_vertical_position = 0;
 		prm->_horizontal_position += (prm->_h_size + prm->spacing);
-		prm->_h_size = IM_FILL_CONSTANT;
-		prm->_v_size = IM_FILL_CONSTANT;
+		prm->_h_size = CIG_FILL_CONSTANT;
+		prm->_v_size = CIG_FILL_CONSTANT;
 		prm->_count.v_cur = 0;
 	}
 	
 	if (h_axis) {
-		if (frame.w == IM_FILL_CONSTANT) {
+		if (frame.w == CIG_FILL_CONSTANT) {
 			if (prm->width > 0) {
 				w = prm->width;
 			} else if (prm->columns) {
@@ -490,17 +482,17 @@ bool im_default_layout_builder(
 			w = frame.w;
 		}
 	} else {
-		w = frame.w == IM_FILL_CONSTANT
+		w = frame.w == CIG_FILL_CONSTANT
 			? container.w - prm->_horizontal_position
 			: frame.w;
 		
 		/* Reset any remaining horizontal positioning in case we modify axis mid-layout */
 		prm->_horizontal_position = 0;
-		prm->_h_size = IM_FILL_CONSTANT;
+		prm->_h_size = CIG_FILL_CONSTANT;
 	}
 	
 	if (v_axis) {
-		if (frame.h == IM_FILL_CONSTANT) {
+		if (frame.h == CIG_FILL_CONSTANT) {
 			if (prm->height > 0) {
 				h = prm->height;
 			} else if (prm->rows) {
@@ -514,13 +506,13 @@ bool im_default_layout_builder(
 			h = frame.h;
 		}
 	} else {
-		h = frame.h == IM_FILL_CONSTANT
+		h = frame.h == CIG_FILL_CONSTANT
 			? container.h - prm->_vertical_position
 			: frame.h;
 		
 		/* Reset any remaining vertical positioning in case we modify axis mid-layout */
 		prm->_vertical_position = 0;
-		prm->_v_size = IM_FILL_CONSTANT;
+		prm->_v_size = CIG_FILL_CONSTANT;
 	}
 	
 	if (h_axis && v_axis) {
@@ -592,8 +584,8 @@ static cig_frame_t resolve_size(const cig_frame_t frame, const im_element_t *par
 	return cig_frame_make(
 		frame.x,
 		frame.y,
-		frame.w == IM_FILL_CONSTANT ? content_frame.w : frame.w,
-		frame.h == IM_FILL_CONSTANT ? content_frame.h : frame.h
+		frame.w == CIG_FILL_CONSTANT ? content_frame.w : frame.w,
+		frame.h == CIG_FILL_CONSTANT ? content_frame.h : frame.h
 	);
 }
 

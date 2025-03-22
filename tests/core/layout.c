@@ -31,9 +31,9 @@ TEST(core_layout, basic_checks) {
 TEST(core_layout, push_pop) {
 	TEST_ASSERT_EQUAL(im_depth(), 1); /* Just the root */
 	
-	im_push_frame(IM_FILL);
-		im_push_frame(IM_FILL);
-			im_push_frame(IM_FILL);
+	im_push_frame(CIG_FILL);
+		im_push_frame(CIG_FILL);
+			im_push_frame(CIG_FILL);
 			
 				TEST_ASSERT_EQUAL(im_depth(), 4);
 				
@@ -42,7 +42,7 @@ TEST(core_layout, push_pop) {
 	
 		TEST_ASSERT_EQUAL(im_depth(), 2);
 
-		im_push_frame(IM_FILL);
+		im_push_frame(CIG_FILL);
 		
 			TEST_ASSERT_EQUAL(im_depth(), 3);
 			
@@ -76,22 +76,22 @@ TEST(core_layout, identifiers) {
 	const int n0 = 8;
 	
 	for (a = 0; a < n0; ++a) {
-		if (im_push_frame(IM_FILL)) {
+		if (im_push_frame(CIG_FILL)) {
 			assert_unique(im_element()->id, __LINE__);
 			ids.recorded[ids.n++] = im_element()->id;
 			const int n1 = 8;
 			for (b = 0; b < n1; ++b) {
-				if (im_push_frame(IM_FILL)) {
+				if (im_push_frame(CIG_FILL)) {
 					assert_unique(im_element()->id, __LINE__);
 					ids.recorded[ids.n++] = im_element()->id;
 					const int n2 = 8;
 					for (c = 0; c < n2; ++c) {
-						if (im_push_frame(IM_FILL)) {
+						if (im_push_frame(CIG_FILL)) {
 							assert_unique(im_element()->id, __LINE__);
 							ids.recorded[ids.n++] = im_element()->id;
 							const int n3 = 8;
 							for (d = 0; d < n3; ++d) {
-								if (im_push_frame(IM_FILL)) {
+								if (im_push_frame(CIG_FILL)) {
 									assert_unique(im_element()->id, __LINE__);
 									ids.recorded[ids.n++] = im_element()->id;
 									im_pop_frame();
@@ -109,23 +109,23 @@ TEST(core_layout, identifiers) {
 	
 	/* In special cases you can specify the next ID to be used */
 	im_set_next_id(333l);
-	im_push_frame(IM_FILL);
+	im_push_frame(CIG_FILL);
 	
 	TEST_ASSERT_EQUAL_UINT32(333l, im_element()->id);
 }
 
 TEST(core_layout, limits) {
 	/* We can insert a total of 2 elements into this one. Further push_frame calls will return FALSE */
-	im_push_frame_insets_params(IM_FILL, cig_insets_zero(), (im_layout_params_t) {
+	im_push_frame_insets_params(CIG_FILL, cig_insets_zero(), (im_layout_params_t) {
     0,
     .limit.total = 2,
     .options = IM_DEFAULT_LAYOUT_FLAGS
   });
 	
-	if (im_push_frame(IM_FILL)) { im_pop_frame(); }
-	if (im_push_frame(IM_FILL)) { im_pop_frame(); }
+	if (im_push_frame(CIG_FILL)) { im_pop_frame(); }
+	if (im_push_frame(CIG_FILL)) { im_pop_frame(); }
 	
-	if (im_push_frame(IM_FILL)) { TEST_FAIL_MESSAGE("Limit exceeded"); }
+	if (im_push_frame(CIG_FILL)) { TEST_FAIL_MESSAGE("Limit exceeded"); }
 	
 	im_pop_frame();
 }
@@ -135,8 +135,8 @@ TEST(core_layout, insets) {
 	im_element()->insets = cig_insets_uniform(10);
 	
 	/* The next frame should be smaller by 10 units on each side as set by its parent.
-	`IM_FILL` instructs the frame to calculate its size automatically based on where it's being inserted */
-	im_push_frame_insets(IM_FILL, cig_insets_make(50, 0, 0, 0));
+	`CIG_FILL` instructs the frame to calculate its size automatically based on where it's being inserted */
+	im_push_frame_insets(CIG_FILL, cig_insets_make(50, 0, 0, 0));
 	
 	/* Top left origin (X, Y) remains at zero because padding doesn't change
 	the coordinates directly - it's applied when calculating the absolute (on-screen)
@@ -145,7 +145,7 @@ TEST(core_layout, insets) {
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(10, 10, 620, 460), im_absolute_frame());
 	
 	/* Push another frame. This time there's padding only on the left as set by the previously pushed frame */
-	im_push_frame(IM_FILL);
+	im_push_frame(CIG_FILL);
 	
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 0, 570, 460), im_element()->frame);
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(60, 10, 570, 460), im_absolute_frame());
@@ -253,7 +253,7 @@ TEST(core_layout, culling) {
 
 TEST(core_layout, vstack_layout) {
 	/* Pushing a stack that lays out frames vertically with a 10pt spacing */
-	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, cig_insets_zero(), (im_layout_params_t) {
+	if (!im_push_frame_function(&im_default_layout_builder, CIG_FILL, cig_insets_zero(), (im_layout_params_t) {
     0,
     .axis = VERTICAL,
     .spacing = 10,
@@ -264,24 +264,24 @@ TEST(core_layout, vstack_layout) {
 	}
 	
 	/* Width is calculated, but height is fixed at 50pt */
-	im_push_frame(IM_FILL_H(50));
+	im_push_frame(CIG_FILL_H(50));
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 0, 640, 50), im_element()->frame);
 	im_pop_frame();
 	
-	im_push_frame(IM_FILL_H(100));
+	im_push_frame(CIG_FILL_H(100));
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 50+10, 640, 100), im_element()->frame);
 	im_pop_frame();
 	
 	TEST_ASSERT_EQUAL_INT(170, im_element()->_layout_params._vertical_position);
 	
-	if (im_push_frame(IM_FILL)) { TEST_FAIL_MESSAGE("Vertical limit exceeded"); }
+	if (im_push_frame(CIG_FILL)) { TEST_FAIL_MESSAGE("Vertical limit exceeded"); }
 	
 	im_pop_frame(); /* Not really necessary in testing, but.. */
 }
 
 TEST(core_layout, hstack_layout) {
 	/* Pushing a stack that lays out frames horizontally with no spacing, but everything is inset by 10pt */
-	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, cig_insets_uniform(10), (im_layout_params_t) {
+	if (!im_push_frame_function(&im_default_layout_builder, CIG_FILL, cig_insets_uniform(10), (im_layout_params_t) {
     0,
     .axis = HORIZONTAL,
     .spacing = 0,
@@ -291,11 +291,11 @@ TEST(core_layout, hstack_layout) {
 	}
 	
 	/* Width is calculated, but height is fixed at 50pt */
-	im_push_frame(IM_FILL_W(200));
+	im_push_frame(CIG_FILL_W(200));
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 0, 200, 480-2*10), im_element()->frame);
 	im_pop_frame();
 	
-	im_push_frame(IM_FILL_W(100));
+	im_push_frame(CIG_FILL_W(100));
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(200, 0, 100, 480-2*10), im_element()->frame);
 	im_pop_frame();
 	
@@ -318,7 +318,7 @@ TEST(core_layout, grid_with_fixed_rows_and_columns) {
 	Here it's a 5x5 grid, meaning on our 640x480 screen,
 	each cell would be 128x96.
 	*/
-	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, cig_insets_zero(), (im_layout_params_t) {
+	if (!im_push_frame_function(&im_default_layout_builder, CIG_FILL, cig_insets_zero(), (im_layout_params_t) {
     0,
     .axis = HORIZONTAL | VERTICAL,
     .spacing = 0,
@@ -333,7 +333,7 @@ TEST(core_layout, grid_with_fixed_rows_and_columns) {
 	for (i = 0; i < 25; ++i) {
 		int row = (i / 5);
 		int column = i - (row * 5);
-		im_push_frame(IM_FILL);
+		im_push_frame(CIG_FILL);
 		TEST_ASSERT_EQUAL_FRAME(cig_frame_make(128*column, 96*row, 128, 96), im_element()->frame);
 		im_pop_frame();
 	}
@@ -363,7 +363,7 @@ TEST(core_layout, grid_with_fixed_cell_size) {
 	│.................................│
 	└─────────────────────────────────┘
 	*/
-	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, cig_insets_zero(), (im_layout_params_t) {
+	if (!im_push_frame_function(&im_default_layout_builder, CIG_FILL, cig_insets_zero(), (im_layout_params_t) {
     0,
     .axis = HORIZONTAL | VERTICAL,
     .width = 200,
@@ -377,7 +377,7 @@ TEST(core_layout, grid_with_fixed_cell_size) {
 	
 	/* First row */
 	for (i = 0; i < 3; ++i) {
-		im_push_frame(IM_FILL);
+		im_push_frame(CIG_FILL);
 		im_pop_frame();
 	}
 	
@@ -385,7 +385,7 @@ TEST(core_layout, grid_with_fixed_cell_size) {
 	
 	/* Second row */
 	for (i = 0; i < 3; ++i) {
-		im_push_frame(IM_FILL);
+		im_push_frame(CIG_FILL);
 		TEST_ASSERT_EQUAL_INT(200, im_element()->frame.y);
 		im_pop_frame();
 	}
@@ -400,7 +400,7 @@ TEST(core_layout, grid_with_varying_cell_size) {
 	current row or pushed to the next. In addition, you can still specify the number
 	of rows and columns, and these will now be used to limit number of cells on each axis.
 	*/
-	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, cig_insets_zero(), (im_layout_params_t) {
+	if (!im_push_frame_function(&im_default_layout_builder, CIG_FILL, cig_insets_zero(), (im_layout_params_t) {
     0,
     .axis = HORIZONTAL | VERTICAL,
 		.limit.horizontal = 3,
@@ -445,10 +445,10 @@ TEST(core_layout, grid_with_varying_cell_size) {
 	im_pop_frame();
 	
 	/* Spacer fills the remaining space on the second row. Internally this is just a frame push + pop */
-	im_spacer(IM_FILL_CONSTANT /* === 0 */);
+	im_spacer(CIG_FILL_CONSTANT /* === 0 */);
 	
 	/* Insert an element to fill all the space on the third row */
-	im_push_frame(IM_FILL); /* (6) */
+	im_push_frame(CIG_FILL); /* (6) */
 	TEST_ASSERT_EQUAL_INT(640, 	im_element()->frame.w);
 	TEST_ASSERT_EQUAL_INT(160, 	im_element()->frame.h);
 	im_pop_frame();
@@ -475,7 +475,7 @@ TEST(core_layout, grid_with_down_direction) {
 	instead of filling and adding rows, columns are filled and added instead. Otherwise
 	they behave the same.
 	*/
-	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, cig_insets_zero(), (im_layout_params_t) {
+	if (!im_push_frame_function(&im_default_layout_builder, CIG_FILL, cig_insets_zero(), (im_layout_params_t) {
     0,
     .axis = HORIZONTAL | VERTICAL,
 		.direction = DIR_DOWN,
@@ -509,7 +509,7 @@ TEST(core_layout, grid_with_down_direction) {
 	Without anything else configured on the grid, the next element will fill
 	the remaining space on the right.
 	*/
-	im_push_frame(IM_FILL); /* (4) */
+	im_push_frame(CIG_FILL); /* (4) */
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(200, 0, 440, 480), im_element()->frame);
 	im_pop_frame();
 	
@@ -535,7 +535,7 @@ TEST(core_layout, grid_with_down_direction) {
 
 TEST(core_layout, vstack_scroll) {
 	/* Any element can be made scrollable, but it makes most sense for stacks/grids */
-	if (!im_push_frame_function(&im_default_layout_builder, IM_FILL, cig_insets_zero(), (im_layout_params_t) {
+	if (!im_push_frame_function(&im_default_layout_builder, CIG_FILL, cig_insets_zero(), (im_layout_params_t) {
     0,
     .axis = VERTICAL,
 		.height = 100,
@@ -562,7 +562,7 @@ TEST(core_layout, vstack_scroll) {
 	
 	/* Let's add some content to the stack */
 	for (int i = 0; i < 10; ++i) {
-		if (im_push_frame(IM_FILL)) {
+		if (im_push_frame(CIG_FILL)) {
 			/* Elements should be offset by scroll amount on the Y axis */
 			TEST_ASSERT_EQUAL_INT(i*100-220, im_element()->frame.y);
 			im_pop_frame();
@@ -586,7 +586,7 @@ TEST(core_layout, clipping) {
 	im_pop_frame();
 	
 	/* Some element filling the whole root */
-	im_push_frame(IM_FILL);
+	im_push_frame(CIG_FILL);
 			
 	/* Clipping is now turned ON for the current layout element */
 	im_enable_clipping();
@@ -666,7 +666,7 @@ TEST(core_layout, main_screen_subregion) {
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 240, 640, 240), im_element()->clipped_frame);
 	
 	
-	im_push_frame(IM_FILL);
+	im_push_frame(CIG_FILL);
 	
 	/* The absolute frame should be offset as well, while the relative frames stay the same */
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 0, 640, 240), im_element()->frame);

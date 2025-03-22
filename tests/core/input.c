@@ -67,7 +67,7 @@ TEST(core_input, overlapping_hover_and_press) {
 		Even if there's an additional element on top of the current one,
 		unless we call `im_enable_interaction`, that element is not included in mouse detection.
 		*/
-		im_push_frame(IM_FILL);
+		im_push_frame(CIG_FILL);
 		im_pop_frame();
 		
 		im_pop_frame();

@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <math.h>
 
+/* Macro for declaring a vec2<T> type */
 #define DECLARE_VEC2_T(T, DECLNAME, INVALID_CONST)                                \
                                                                                   \
 typedef struct {                                                                  \

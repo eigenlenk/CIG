@@ -206,11 +206,15 @@ im_element_t* im_element();
 
 
 /* Returns current local frame relative to its parent */
-cig_frame_t im_relative_frame();
+CIG_INLINED cig_frame_t im_frame() { return im_element()->frame; }
+
+
+/* Returns current local frame that's been clipped */
+CIG_INLINED cig_frame_t im_clipped_frame() { return im_element()->clipped_frame; }
 
 
 /* Returns current screen-space frame */
-cig_frame_t im_absolute_frame();
+CIG_INLINED cig_frame_t im_absolute_frame() { return im_element()->absolute_frame; }
 
 
 /* Converts a relative frame to a screen-space frame */

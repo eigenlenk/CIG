@@ -22,11 +22,11 @@ void demo_ui(BITMAP *buffer) {
 	);
 
   // Whole screen color
-  im_fill_color(16); // Black
+  CIG_FILL_color(16); // Black
 
-  im_push_frame_insets(IM_FILL, cig_insets_uniform(10));
+  im_push_frame_insets(CIG_FILL, cig_insets_uniform(10));
 
-  im_push_frame_builder(IM_FILL, cig_insets_uniform(10), &im_stack_layout_builder, (im_layout_params_t) {
+  im_push_frame_builder(CIG_FILL, cig_insets_uniform(10), &im_stack_layout_builder, (im_layout_params_t) {
     0,
     .axis = HORIZONTAL,
     .spacing = 10,
@@ -38,7 +38,7 @@ void demo_ui(BITMAP *buffer) {
 	
 	/* Left content */
 
-  im_push_frame_builder(IM_FILL, cig_insets_uniform(10), &im_stack_layout_builder, (im_layout_params_t) {
+  im_push_frame_builder(CIG_FILL, cig_insets_uniform(10), &im_stack_layout_builder, (im_layout_params_t) {
     0,
     .axis = VERTICAL,
     .spacing = 10,
@@ -46,7 +46,7 @@ void demo_ui(BITMAP *buffer) {
     .options = IM_DEFAULT_LAYOUT_FLAGS
   });
 
-  im_fill_color(3);
+  CIG_FILL_color(3);
 	
   im_enable_scroll(NULL);
 	im_enable_interaction();
@@ -68,15 +68,15 @@ void demo_ui(BITMAP *buffer) {
 	}
 		
   for (int i = 0; i < 24; ++i) {
-    if (im_push_frame(IM_FILL)) {
+    if (im_push_frame(CIG_FILL)) {
       
       if (i % 2) {
         im_enable_scroll(NULL);
         im_current_element()->_scroll_state->offset.x -= 1;
       }
       
-      if (im_push_frame(IM_FILL)) {
-				im_fill_color(i);
+      if (im_push_frame(CIG_FILL)) {
+				CIG_FILL_color(i);
 				im_pop_frame();
 			}
 
@@ -95,9 +95,9 @@ void demo_ui(BITMAP *buffer) {
 		if (im_push_frame(frame)) {
 			im_enable_interaction();
 			if (im_pressed(IM_MOUSE_BUTTON_ANY, 0)) {
-				im_fill_color(75);
+				CIG_FILL_color(75);
 			} else if (im_hovered()) {
-				im_fill_color(7);
+				CIG_FILL_color(7);
 			}
 			im_stroke_color(15);
 			im_pop_frame();
@@ -105,7 +105,7 @@ void demo_ui(BITMAP *buffer) {
 	}
 
 	if (grid_demo == 0) {
-		im_push_frame_builder(IM_FILL, cig_insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
+		im_push_frame_builder(CIG_FILL, cig_insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
 			0,
 			.axis = HORIZONTAL | VERTICAL,
 			.direction = DIR_DOWN,
@@ -115,10 +115,10 @@ void demo_ui(BITMAP *buffer) {
 			.options = IM_DEFAULT_LAYOUT_FLAGS
 		});
 		
-		im_fill_color(8);
+		CIG_FILL_color(8);
 		
 		for (int i = 0; i < 10; ++i) {
-			demo_grid_element(IM_FILL);
+			demo_grid_element(CIG_FILL);
 		}
 		
 		/*
@@ -128,16 +128,16 @@ void demo_ui(BITMAP *buffer) {
 		*/
 		im_current_element()->_layout_params.height = 0;
 		
-		demo_grid_element(IM_FILL);
+		demo_grid_element(CIG_FILL);
 		
 		/* And this next one will fill the whole remaining space because all constraints have been removed */
 		im_current_element()->_layout_params.columns = 0;
 		
-		demo_grid_element(IM_FILL);
+		demo_grid_element(CIG_FILL);
 		
 		im_pop_frame(); /* Pop right grid layout */
 	} else if (grid_demo == 1) {
-		im_push_frame_builder(IM_FILL, cig_insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
+		im_push_frame_builder(CIG_FILL, cig_insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
 			0,
 			.axis = HORIZONTAL | VERTICAL,
 			.spacing = 1,
@@ -146,10 +146,10 @@ void demo_ui(BITMAP *buffer) {
 			.options = IM_DEFAULT_LAYOUT_FLAGS
 		});
 		
-		im_fill_color(8);
+		CIG_FILL_color(8);
 		
 		for (int i = 0; i < 10; ++i) {
-			demo_grid_element(IM_FILL);
+			demo_grid_element(CIG_FILL);
 		}
 		
 		/*
@@ -158,19 +158,19 @@ void demo_ui(BITMAP *buffer) {
 		*/
 		im_current_element()->_layout_params.columns = 0;
 		
-		demo_grid_element(IM_FILL);
-		demo_grid_element(IM_FILL);
+		demo_grid_element(CIG_FILL);
+		demo_grid_element(CIG_FILL);
 		
 		im_pop_frame(); /* Pop right grid layout */
 	} else if (grid_demo == 2) {
-		im_push_frame_builder(IM_FILL, cig_insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
+		im_push_frame_builder(CIG_FILL, cig_insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
 			0,
 			.axis = HORIZONTAL | VERTICAL,
 			.spacing = 1,
 			.options = IM_DEFAULT_LAYOUT_FLAGS
 		});
 		
-		im_fill_color(8);
+		CIG_FILL_color(8);
 		
 		/* We'll add some elements with increasing height */
 		demo_grid_element(cig_frame_make(0, 0, 73, 50));
@@ -179,11 +179,11 @@ void demo_ui(BITMAP *buffer) {
 		demo_grid_element(cig_frame_make(0, 0, 73, 125));
 		
 		/* Next row will start just below the longest element (the 4th one) */
-		demo_grid_element(IM_FILL);
+		demo_grid_element(CIG_FILL);
 
 		im_pop_frame(); /* Pop right grid layout */
 	} else if (grid_demo == 3) {
-		im_push_frame_builder(IM_FILL, cig_insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
+		im_push_frame_builder(CIG_FILL, cig_insets_zero(), &im_stack_layout_builder, (im_layout_params_t) {
 			0,
 			.axis = HORIZONTAL | VERTICAL,
 			.direction = DIR_DOWN,
@@ -191,7 +191,7 @@ void demo_ui(BITMAP *buffer) {
 			.options = IM_DEFAULT_LAYOUT_FLAGS
 		});
 		
-		im_fill_color(8);
+		CIG_FILL_color(8);
 		
 		/* We'll add some elements with increasing height */
 		demo_grid_element(cig_frame_make(0, 0, 50, 84));
@@ -201,7 +201,7 @@ void demo_ui(BITMAP *buffer) {
 		demo_grid_element(cig_frame_make(0, 0, 90, 84));
 		
 		/* Next columns will start just after the widest element (the 5th one) */
-		demo_grid_element(IM_FILL);
+		demo_grid_element(CIG_FILL);
 		
 		im_pop_frame(); /* Pop right grid layout */
 	}
@@ -216,11 +216,11 @@ void demo_ui(BITMAP *buffer) {
 		
 		if (im_clicked(IM_MOUSE_BUTTON_ANY, IM_CLICK_STARTS_INSIDE)) {
 			grid_demo = (grid_demo + 1) % 4;
-			im_fill_color(3);
+			CIG_FILL_color(3);
 		} else if (im_pressed(IM_MOUSE_BUTTON_ANY, IM_MOUSE_PRESS_INSIDE)) {
-			im_fill_color(9);
+			CIG_FILL_color(9);
 		} else if (im_hovered()) {
-			im_fill_color(10);
+			CIG_FILL_color(10);
 		}
 		
 		im_stroke_color(15);
