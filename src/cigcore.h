@@ -14,8 +14,8 @@
 /* ╔══════════════════════════╗
    ║ PUBLIC TYPE DECLARATIONS ║
    ╚══════════════════════════╝ */
-	 
-	 
+
+
 /* These macros declare a templated type essentially */
 DECLARE_VEC2_T    (int, cig_vec2, -999999) /* Declares `cig_vec2_t` */
 DECLARE_insets_t  (int, cig_insets) /* Declares `cig_cig_insets_t` */
@@ -24,7 +24,7 @@ DECLARE_frame_t   (int, cig_frame, cig_vec2, cig_insets) /* Declares `cig_cig_fr
 
 /* All layout element get a unique ID that tries to be unique across frames, but no promises.
    See `im_next_id` how to definitely keep things consistent */
-typedef unsigned long IMGUIID;
+typedef unsigned long cig_id_t;
 
 
 /* Opaque pointer to a buffer/screen/texture/etc to be renderered into */
@@ -33,114 +33,137 @@ typedef void* im_buffer_ref;
 
 /* */
 typedef enum {
-	CASEFLAG(0, IM_CULL_SUBFRAMES),
-	
-	IM_DEFAULT_LAYOUT_FLAGS = IM_CULL_SUBFRAMES
-} im_layout_options_t;
+	CIG_CULL_SUBFRAMES = CIG_BIT(0),
+	CIG_DEFAULT_LAYOUT_FLAGS = CIG_CULL_SUBFRAMES
+} cig_layout_flags_t;
 
 
 /* Structure containing parameters passed to layout function */
 typedef struct {
-	enum {
-		CASEFLAG(1, HORIZONTAL),
-		CASEFLAG(2, VERTICAL),
-	} axis;
-	enum {
-		CASE(0, DIR_LEFT),
-		CASE(1, DIR_DOWN)
-	} direction; /* Direction in which the layout flows.
-	                Only applies to grids (axis = VERTICAL | HORIZONTAL) */
-	int spacing, width, height, columns, rows;
-	struct {
-		int horizontal, vertical, total;
-	} limit;
-	im_layout_options_t options;
+  /* One or more axis which a builder uses to position children */
+  enum {
+    CIG__NOAXIS = 0,
+    CIG_LAYOUT_AXIS_HORIZONTAL = CIG_BIT(1),
+    CIG_LAYOUT_AXIS_VERTICAL = CIG_BIT(2)
+  } axis;
+
+  /* Direction in which the layout flows. Used by default grid builder */
+  enum {
+    CIG_LAYOUT_DIRECTION_LEFT = 0,
+    CIG_LAYOUT_DIRECTION_DOWN
+  } direction;
+
+  /* Some common parameters the layout builder could use */
+  int spacing,
+      width,
+      height,
+      columns,
+      rows;
+
+  /* Limits how many elements can be added per axis on in total.
+     Total number of elements is checked in `im_push_frame` but horizontal
+     and vertical limits are only used in the default stack/grid builder */
+	struct { int horizontal, vertical, total; } limit;
+  
+  /* Some basic layout flags */
+	cig_layout_flags_t flags;
+  
+  /* Opaque pointer for passing custom data to a custom layout builder */
 	void *custom_data;
 	
 	/* (( PRIVATE )) */		
-	int _horizontal_position, _vertical_position, _h_size, _v_size;
+	int _horizontal_position,
+      _vertical_position,
+      _h_size,
+      _v_size;
 	struct {
-		int h_cur, v_cur, total; /* h_ and v_cur are only counted in stacks/grids */
-	} _count;
-} im_layout_params_t;
+    int h_cur,
+        v_cur,
+        total;
+  } _count; /* h_ and v_cur are only counted in stacks/grids */
+} cig_layout_params_t;
 
 
 /* */
 typedef struct {
   cig_vec2_t offset;
 	cig_vec2_t content_size;
-} im_scroll_state_t;
+} cig_scroll_state_t;
 
 
 /* */
 typedef struct {
-	IMGUIID id;
+	cig_id_t id;
 	cig_frame_t frame; /* Relative frame */
 	cig_frame_t clipped_frame; /* Relative clipped frame */
 	cig_frame_t absolute_frame; /* Screen-space frame */
 	cig_insets_t insets; /* Insets affect child elements within this element */
 	
 	/* (( PRIVATE )) */		
-	bool (*_layout_function)(cig_frame_t, cig_frame_t, im_layout_params_t*, cig_frame_t*);
-	im_layout_params_t _layout_params;
+	bool (*_layout_function)(cig_frame_t, cig_frame_t, cig_layout_params_t*, cig_frame_t*);
+	cig_layout_params_t _layout_params;
   bool _clipped, _interaction_enabled;
-  im_scroll_state_t *_scroll_state;
+  cig_scroll_state_t *_scroll_state;
 	unsigned int _id_counter;
-} im_element_t;
+} cig_element_t;
 
 
 typedef enum {
-	CASEFLAG(0, IM_MOUSE_BUTTON_LEFT),
-	CASEFLAG(1, IM_MOUSE_BUTTON_RIGHT),
-	IM_MOUSE_BUTTON_ANY = IM_MOUSE_BUTTON_LEFT | IM_MOUSE_BUTTON_RIGHT
-} im_mouse_button_t;
+  CIG_INPUT_MOUSE_BUTTON_LEFT = CIG_BIT(0),
+  CIG_INPUT_MOUSE_BUTTON_RIGHT = CIG_BIT(1),
+	CIG_MOUSE_BUTTON_ANY = CIG_INPUT_MOUSE_BUTTON_LEFT | CIG_INPUT_MOUSE_BUTTON_RIGHT
+} cig_input_action_type_t;
 
 
 typedef struct {
-	im_mouse_button_t button_mask;
-	im_mouse_button_t last_button_down;
-	im_mouse_button_t last_button_up;
+	cig_input_action_type_t action_mask;
+	cig_input_action_type_t last_action_began;
+	cig_input_action_type_t last_action_ended;
 	cig_vec2_t position;
+  
 	enum {
 		NEITHER,	/* Button was neither pressed or released this frame */
 		BEGAN,		/* Button was pressed down this frame (click started) */
 		ENDED,		/* Button was released this frame (click ended) */
 		EXPIRED		/* Button was held longer than deemed appropriate */
 	} click_state;
+  
 	struct {
 		bool active;
 		cig_vec2_t start_position;
 		cig_vec2_t change;
 	} drag;
+  
 	bool locked; /* Elements are not tracked. Set to TRUE by widgets that want exclusive
 	                use of drag state. A scrollbar thumb for example where buttons and
                   other elements should not be highlighted even if hovered while moving */
 	
 	/* (( PRIVATE )) */								
 	unsigned int _press_start_tick;
-	unsigned int _target_prev_frame;
-	unsigned int _target_this_frame;
-	IMGUIID _press_target_id; /* Element that was focused when button press began */
-} im_mouse_state_t;
+	cig_id_t _press_target_id, /* Element that was focused when button press began */
+           _target_prev_frame,
+           _target_this_frame;
+} im_input_state_t;
+
 
 typedef enum {
-	/* `IM_MOUSE_PRESS_INSIDE` option specifies whether the press has to start
+	/* `IM_PRESS_INSIDE` option specifies whether the press has to start
 	within the bounds of this element. Otherwise it can start outside and the 
 	element reflects pressed state as soon as mouse moves onto it */
-	CASEFLAG(0, IM_MOUSE_PRESS_INSIDE)
-} im_press_options_t;
+  CIG_PRESS_INSIDE = CIG_BIT(0)
+} cig_press_flags_t;
 
 
 typedef enum {
-	CASEFLAG(0, IM_CLICK_STARTS_INSIDE),
-	CASEFLAG(1, IM_CLICK_ON_BUTTON_DOWN),
-	CASEFLAG(2, IM_CLICK_EXPIRE),
-	IM_CLICK_DEFAULT_OPTIONS = IM_CLICK_STARTS_INSIDE
-} im_click_options_t;
+  CIG_CLICK_STARTS_INSIDE = CIG_BIT(0),
+  CIG_CLICK_ON_PRESS = CIG_BIT(1),
+  CIG_CLICK_EXPIRE = CIG_BIT(2),
+	CIG_CLICK_DEFAULT_OPTIONS = CIG_CLICK_STARTS_INSIDE
+} cig_click_flags_t;
 
 
-#define STACK_CAPACITY_im_element_t CIG_ELEMENTS_MAX
-DECLARE_ARRAY_STACK_T(im_element_t);
+#define STACK_CAPACITY_cig_element_t CIG_ELEMENTS_MAX
+DECLARE_ARRAY_STACK_T(cig_element_t);
 
 
 
@@ -184,25 +207,25 @@ bool im_push_frame_insets(cig_frame_t frame, cig_insets_t insets);
 
 /* Push a new frame with custom insets and params to layout stack.
    @return TRUE if frame is visible within current container, FALSE otherwise */
-bool im_push_frame_insets_params(cig_frame_t frame, cig_insets_t insets, im_layout_params_t);
+bool im_push_frame_insets_params(cig_frame_t frame, cig_insets_t insets, cig_layout_params_t);
 
 
 /* Push layout builder function to layout stack.
    @return TRUE if frame is visible within current container, FALSE otherwise */
 bool im_push_frame_function(
-	bool (*)(cig_frame_t, cig_frame_t, im_layout_params_t*, cig_frame_t*),
+	bool (*)(cig_frame_t, cig_frame_t, cig_layout_params_t*, cig_frame_t*),
 	cig_frame_t frame,
 	cig_insets_t insets,
-	im_layout_params_t
+	cig_layout_params_t
 );
 
 
 /* Pop and return the last element in the layout stack */
-im_element_t* im_pop_frame();
+cig_element_t* im_pop_frame();
 
 
 /* Returns current layout element */
-im_element_t* im_element();
+cig_element_t* im_element();
 
 
 /* Returns current local frame relative to its parent */
@@ -222,7 +245,7 @@ cig_frame_t im_convert_relative_frame(cig_frame_t);
 
 
 /* Returns a pointer to the current layout element stack. Avoid accessing if possible. */
-stack_im_element_t_t* im_element_stack();
+stack_cig_element_t_t* im_element_stack();
 
 
 
@@ -252,12 +275,12 @@ void im_pop_buffer();
    └─────────────────────┘ */
 	 
 
-/* Pass mouse coordinates and button press state(s) */
-void im_set_input_state(cig_vec2_t, im_mouse_button_t);
+/* Pass mouse coordinates and button press state[s] */
+void im_set_input_state(cig_vec2_t, cig_input_action_type_t);
 
 
 /* Returns the current mouse state as updated by last  `im_set_input_state` call */
-im_mouse_state_t *im_mouse_state();
+im_input_state_t *im_input_state();
 
 
 /* Enables mouse tracking for the current layout element.
@@ -270,13 +293,13 @@ bool im_hovered();
 
 
 /* Checks if the current element is hovered and the mouse button is pressed.
-   See `im_press_options_t` declaration for more info */
-im_mouse_button_t im_pressed(im_mouse_button_t, im_press_options_t);
+   See `im_press_flags_t` declaration for more info */
+cig_input_action_type_t im_pressed(cig_input_action_type_t, cig_press_flags_t);
 
 
 /* Checks if the current element is hovered and mouse button was clicked or released
-   depending on the options. See `im_click_options_t` declaration for more info */
-im_mouse_button_t im_clicked(im_mouse_button_t, im_click_options_t);
+   depending on the options. See `im_click_flags_t` declaration for more info */
+cig_input_action_type_t im_clicked(cig_input_action_type_t, cig_click_flags_t);
 
 
 
@@ -297,7 +320,7 @@ im_mouse_button_t im_clicked(im_mouse_button_t, im_click_options_t);
 	 scrolling elements already, it may fail.
 	 
 	 @return TRUE if state could be allocated, FALSE otherwise */
-bool im_enable_scroll(im_scroll_state_t *);
+bool im_enable_scroll(cig_scroll_state_t *);
 
 
 /* Set scroll offset values */
@@ -317,7 +340,7 @@ cig_vec2_t im_content_size();
 
 
 /* Returns the current scroll state objet, NULL if scrolling is not enabled */
-im_scroll_state_t* im_scroll_state();
+cig_scroll_state_t* im_scroll_state();
 
 
 
@@ -339,7 +362,7 @@ void im_enable_clipping();
 /* Normally element ID is auto-calculated and may vary from frame to frame.
    This sets an explicit Id for the next `im_push_frame` call.
    See `im_hash` for generating an ID from a string */
-void im_set_next_id(IMGUIID);
+void im_set_next_id(cig_id_t);
 
 
 /* Returns the depth of the layout stack currently */
@@ -347,7 +370,7 @@ unsigned int im_depth();
 
 
 /* Generates an ID from a string */
-IMGUIID im_hash(const char *str);
+cig_id_t im_hash(const char *str);
 
 
 /* Pushes and pops an empty frame to trigger a layout function to allocate space.
@@ -360,7 +383,7 @@ void im_spacer(int size);
 
 
 /* Default layout function for stack and grid type */
-bool im_default_layout_builder(cig_frame_t, cig_frame_t, im_layout_params_t*, cig_frame_t*);
+bool im_default_layout_builder(cig_frame_t, cig_frame_t, cig_layout_params_t*, cig_frame_t*);
 
 
 #endif
