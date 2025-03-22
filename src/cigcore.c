@@ -207,13 +207,13 @@ cig_frame_t im_absolute_frame() {
 }
 
 cig_frame_t im_convert_relative_frame(const cig_frame_t frame) {
-	const im_buffer_element_t *buffer = im_buffer();
+	const im_buffer_element_t *buffer_element = buffers._peek(&buffers, 0);
 	const im_element_t *element = im_element();
 	
 	return cig_frame_offset(
 		resolve_size(frame, element),
-		element->absolute_frame.x + element->insets.left - buffer->origin.x,
-		element->absolute_frame.y + element->insets.top - buffer->origin.y
+		element->absolute_frame.x + element->insets.left - buffer_element->origin.x,
+		element->absolute_frame.y + element->insets.top - buffer_element->origin.y
 	);
 }
 
@@ -663,7 +663,7 @@ static bool push_frame(
     ._clipped = false,
     ._scroll_state = NULL
 	});
-
+  
 	next_id = 0;
 
 	return true;
@@ -722,7 +722,7 @@ static void handle_element_hover(im_element_t *element) {
 static im_scroll_state_t* get_scroll_state(const IMGUIID id) {
   register int first_available = -1;
 	
-  for (register int i = 0; i < CIG_STATES_MAX; ++i) {
+  for (register int i = 0; i < CIG_SCROLLABLE_ELEMENTS_MAX; ++i) {
     if (_scroll_elements[i].id == id) {
 			_scroll_elements[i].last_tick = tick;
       return &_scroll_elements[i].value;
@@ -757,7 +757,7 @@ static void im_push_clip(im_element_t *element) {
 static void im_pop_clip() {
 	stack_cig_clip_frame_t *clip_frames = &buffers._peek(&buffers, 0)->clip_frames;
   
-  CIG_UNUSED(clip_frames->pop(clip_frames));
+  CIG_UNUSED(clip_frames->_pop(clip_frames));
   
   // Check if graphics module is included
   // TODO: Set previous clip region for the renderer

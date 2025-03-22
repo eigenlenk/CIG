@@ -134,17 +134,13 @@ TEST(core_layout, insets) {
 	/* We are changing root frame insets directly. Insets only apply to the children */
 	im_element()->insets = cig_insets_uniform(10);
 	
-	/*
-	The next frame should be smaller by 10 units on each side as set by its parent.
-	`IM_FILL` instructs the frame to calculate its size automatically based on where it's being inserted.
-	*/
+	/* The next frame should be smaller by 10 units on each side as set by its parent.
+	`IM_FILL` instructs the frame to calculate its size automatically based on where it's being inserted */
 	im_push_frame_insets(IM_FILL, cig_insets_make(50, 0, 0, 0));
 	
-	/*
-	Top left origin (X, Y) remains at zero because padding doesn't change
+	/* Top left origin (X, Y) remains at zero because padding doesn't change
 	the coordinates directly - it's applied when calculating the absolute (on-screen)
-	frame when rendering. Width and height, however, already take padding(s) into account.
-	*/
+	frame when rendering. Width and height, however, already take padding(s) into account */
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 0, 620, 460), im_element()->frame);
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(10, 10, 620, 460), im_absolute_frame());
 	

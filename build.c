@@ -61,7 +61,7 @@ int main(int argc, char **argv)
       "-I"DEPS_FOLDER"unity/extras/fixture/src/",
 
       "-DDEBUG",
-      /* "-DUNITY_INCLUDE_PRINT_FORMATTED", */
+      "-DUNITY_INCLUDE_PRINT_FORMATTED",
       "-DUNITY_INCLUDE_DOUBLE",
 
       "-o", BIN_FOLDER"tests",

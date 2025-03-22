@@ -32,7 +32,7 @@ CIG_INLINED T stack_##T##_pop(struct stack_##T *s) {                 \
                                                           \
 CIG_INLINED T stack_##T##_peek(struct stack_##T *s, size_t offset) { \
   assert(s->size > 0);                                    \
-  return s->elements[s->size-offset-1];                  \
+  return s->elements[s->size-1-offset];                  \
 } \
                                                           \
 CIG_INLINED T* stack_##T##__pop(struct stack_##T *s) {                 \
@@ -41,7 +41,7 @@ CIG_INLINED T* stack_##T##__pop(struct stack_##T *s) {                 \
                                                           \
 CIG_INLINED T* stack_##T##__peek(struct stack_##T *s, size_t offset) { \
   assert(s->size > 0);                                    \
-  return &s->elements[s->size-offset-1];                  \
+  return &s->elements[s->size-1-offset];                  \
 }
 
 #define CONFIGURE_STACK(T)        \
