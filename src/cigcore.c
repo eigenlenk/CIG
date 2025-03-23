@@ -51,7 +51,6 @@ static struct {
 	size_t size;
 } _state_list = { 0 };
 static cig_scroll_state_element_t _scroll_elements[CIG_SCROLLABLE_ELEMENTS_MAX];
-static cig_input_state_t input_state = { 0 };
 
 /* Forward delcarations */
 // static cig_state_t* 				im_state(const cig_id_t, const imgui_widget_t);
@@ -127,14 +126,14 @@ void cig_reset_internal_state() {
     _scroll_elements[i].id = 0;
   }
 	_state_list.size = 0;
-	input_state.locked = false;
-	input_state._press_target_id = 0;
-	input_state._target_prev_frame = 0;
-	input_state._target_this_frame = 0;
-	input_state._press_start_tick = 0;
-	input_state.drag.active = false;
-	input_state.drag.start_position = cig_vec2_zero();
-	input_state.drag.change = cig_vec2_zero();
+	current->input_state.locked = false;
+	current->input_state._press_target_id = 0;
+	current->input_state._target_prev_frame = 0;
+	current->input_state._target_this_frame = 0;
+	current->input_state._press_start_tick = 0;
+	current->input_state.drag.active = false;
+	current->input_state.drag.start_position = cig_vec2_zero();
+	current->input_state.drag.change = cig_vec2_zero();
   current->tick = 0;
 	current->next_id = 0;
 }
@@ -230,63 +229,63 @@ void cig_set_input_state(
 	const cig_vec2_t position,
 	unsigned int action_mask
 ) {
-	if (input_state.locked == false) {
-		input_state._target_prev_frame = input_state._target_this_frame;
-		input_state._target_this_frame = 0;
+	if (current->input_state.locked == false) {
+		current->input_state._target_prev_frame = current->input_state._target_this_frame;
+		current->input_state._target_this_frame = 0;
 	}
 	
-	const cig_input_action_type_t previous_action_mask = input_state.action_mask;
+	const cig_input_action_type_t previous_action_mask = current->input_state.action_mask;
 
-	input_state.position = position;
-	input_state.action_mask = action_mask;
+	current->input_state.position = position;
+	current->input_state.action_mask = action_mask;
 
-	input_state.click_state = (!input_state.action_mask && previous_action_mask)
-		? (current->tick - input_state._press_start_tick) < 12
+	current->input_state.click_state = (!current->input_state.action_mask && previous_action_mask)
+		? (current->tick - current->input_state._press_start_tick) < 12
 			? ENDED
 			: EXPIRED
 		: (action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT && !(previous_action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT)) || (action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT && !(previous_action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT))
-			? input_state.click_state == BEGAN
+			? current->input_state.click_state == BEGAN
 				? NEITHER
 				: BEGAN
 			: NEITHER;
 		
-	if (input_state.action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT && !(previous_action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT)) {
-		input_state.last_action_began = CIG_INPUT_MOUSE_BUTTON_LEFT;
-	} else if (input_state.action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT && !(previous_action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT)) {
-		input_state.last_action_began = CIG_INPUT_MOUSE_BUTTON_RIGHT;
+	if (current->input_state.action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT && !(previous_action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT)) {
+		current->input_state.last_action_began = CIG_INPUT_MOUSE_BUTTON_LEFT;
+	} else if (current->input_state.action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT && !(previous_action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT)) {
+		current->input_state.last_action_began = CIG_INPUT_MOUSE_BUTTON_RIGHT;
 	} else {
-		input_state.last_action_began = 0;
+		current->input_state.last_action_began = 0;
 	}
 	
-	if (previous_action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT && !(input_state.action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT)) {
-		input_state.last_action_ended = CIG_INPUT_MOUSE_BUTTON_LEFT;
-	} else if (previous_action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT && !(input_state.action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT)) {
-		input_state.last_action_ended = CIG_INPUT_MOUSE_BUTTON_RIGHT;
+	if (previous_action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT && !(current->input_state.action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT)) {
+		current->input_state.last_action_ended = CIG_INPUT_MOUSE_BUTTON_LEFT;
+	} else if (previous_action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT && !(current->input_state.action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT)) {
+		current->input_state.last_action_ended = CIG_INPUT_MOUSE_BUTTON_RIGHT;
 	} else {
-		input_state.last_action_ended = 0;
+		current->input_state.last_action_ended = 0;
 	}
 
-	if (input_state.click_state == BEGAN) {
-		input_state._press_start_tick = current->tick;
-		input_state._press_target_id = input_state._target_prev_frame;
+	if (current->input_state.click_state == BEGAN) {
+		current->input_state._press_start_tick = current->tick;
+		current->input_state._press_target_id = current->input_state._target_prev_frame;
 	}
 
-	if (input_state.action_mask) {
-		if (!input_state.drag.active) {
-			input_state.drag.active = true;
-			input_state.drag.start_position = input_state.position;
-			input_state.drag.change = cig_vec2_zero();
+	if (current->input_state.action_mask) {
+		if (!current->input_state.drag.active) {
+			current->input_state.drag.active = true;
+			current->input_state.drag.start_position = current->input_state.position;
+			current->input_state.drag.change = cig_vec2_zero();
 		} else {
-			input_state.drag.change = cig_vec2_sub(input_state.position, input_state.drag.start_position);
+			current->input_state.drag.change = cig_vec2_sub(current->input_state.position, current->input_state.drag.start_position);
 		}
-	} else if (input_state.drag.active) {
-		input_state.drag.active = false;
-		input_state.drag.change = cig_vec2_zero();
+	} else if (current->input_state.drag.active) {
+		current->input_state.drag.active = false;
+		current->input_state.drag.change = cig_vec2_zero();
 	}
 }
 
 cig_input_state_t *cig_input_state() {
-	return &input_state;
+	return &current->input_state;
 }
 
 void cig_enable_interaction() {
@@ -300,7 +299,7 @@ void cig_enable_interaction() {
 
 bool cig_hovered() {
 	/* See `handle_element_hover` */
-	return input_state.locked == false && cig_element()->_interaction_enabled && cig_element()->id == input_state._target_prev_frame;
+	return current->input_state.locked == false && cig_element()->_interaction_enabled && cig_element()->id == current->input_state._target_prev_frame;
 }
 
 cig_input_action_type_t cig_pressed(
@@ -311,9 +310,9 @@ cig_input_action_type_t cig_pressed(
 		return 0;
 	}
 	
-	const cig_input_action_type_t action_mask = actions & input_state.action_mask;
+	const cig_input_action_type_t action_mask = actions & current->input_state.action_mask;
 	
-	if (action_mask && ((options & CIG_PRESS_INSIDE) == false || (options & CIG_PRESS_INSIDE && input_state._press_target_id == cig_element()->id))) {
+	if (action_mask && ((options & CIG_PRESS_INSIDE) == false || (options & CIG_PRESS_INSIDE && current->input_state._press_target_id == cig_element()->id))) {
 		return action_mask;
 	} else {
 		return 0;
@@ -330,15 +329,15 @@ cig_input_action_type_t cig_clicked(
 	
 	if (options & CIG_CLICK_ON_PRESS) {
 		cig_input_action_type_t result;
-		if (input_state.click_state == BEGAN && (result = actions & input_state.action_mask)) {
+		if (current->input_state.click_state == BEGAN && (result = actions & current->input_state.action_mask)) {
 			return result;
 		}
 	} else {
-		if (input_state.click_state == ENDED || (input_state.click_state == EXPIRED && !(options & CIG_CLICK_EXPIRE))) {
-			if (options & CIG_CLICK_STARTS_INSIDE && input_state._press_target_id != cig_element()->id) {
+		if (current->input_state.click_state == ENDED || (current->input_state.click_state == EXPIRED && !(options & CIG_CLICK_EXPIRE))) {
+			if (options & CIG_CLICK_STARTS_INSIDE && current->input_state._press_target_id != cig_element()->id) {
 				return 0;
 			}
-			return actions & input_state.last_action_ended;
+			return actions & current->input_state.last_action_ended;
 		}
 	}
 	
@@ -686,8 +685,8 @@ static void handle_element_hover(const cig_element_t *element) {
 	element (ID) with the previous result. This introduces a one-frame delay
 	between mouse detection and response but in reality it's imperceptible.
 	*/
-	if (cig_frame_contains(element->absolute_frame, input_state.position)) {
-		input_state._target_this_frame = element->id;
+	if (cig_frame_contains(element->absolute_frame, current->input_state.position)) {
+		current->input_state._target_this_frame = element->id;
 	}
 }
 

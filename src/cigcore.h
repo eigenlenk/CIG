@@ -27,12 +27,6 @@ typedef unsigned long cig_id_t;
 /* Opaque pointer to a buffer/screen/texture/etc to be renderered into */
 typedef void* cig_buffer_ref;
 
-/* A single instance of CIG. Use one for each game state or similar? */
-typedef struct {
-  cig_id_t next_id;
-  unsigned int tick;
-} cig_context_t;
-
 /* Structure containing parameters passed to layout function */
 typedef struct {
   /* One or more axis which a builder uses to position children */
@@ -131,6 +125,13 @@ typedef struct {
            _target_prev_frame,
            _target_this_frame;
 } cig_input_state_t;
+
+/* A single instance of CIG. Use one for each game state or similar? */
+typedef struct {
+  cig_input_state_t input_state;
+  cig_id_t next_id;
+  unsigned int tick;
+} cig_context_t;
 
 typedef enum {
 	/* `CIG_PRESS_INSIDE` option specifies whether the press has to start
