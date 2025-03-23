@@ -272,7 +272,7 @@ TEST(core_layout, vstack_layout) {
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(0, 50+10, 640, 100), cig_element()->frame);
 	cig_pop_frame();
 	
-	TEST_ASSERT_EQUAL_INT(170, cig_element()->_layout_params._vertical_position);
+	TEST_ASSERT_EQUAL_INT(170, cig_element()->_layout_params._v_pos);
 	
 	if (cig_push_frame(CIG_FILL)) { TEST_FAIL_MESSAGE("Vertical limit exceeded"); }
 	
@@ -299,7 +299,7 @@ TEST(core_layout, hstack_layout) {
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(200, 0, 100, 480-2*10), cig_element()->frame);
 	cig_pop_frame();
 	
-	TEST_ASSERT_EQUAL_INT(300, cig_element()->_layout_params._horizontal_position);
+	TEST_ASSERT_EQUAL_INT(300, cig_element()->_layout_params._h_pos);
 	
 	cig_pop_frame(); /* Not really necessary in testing, but.. */
 }
@@ -338,8 +338,8 @@ TEST(core_layout, grid_with_fixed_rows_and_columns) {
 		cig_pop_frame();
 	}
 
-	TEST_ASSERT_EQUAL_INT(0, cig_element()->_layout_params._horizontal_position);
-	TEST_ASSERT_EQUAL_INT(480, cig_element()->_layout_params._vertical_position);
+	TEST_ASSERT_EQUAL_INT(0, cig_element()->_layout_params._h_pos);
+	TEST_ASSERT_EQUAL_INT(480, cig_element()->_layout_params._v_pos);
 }
 
 TEST(core_layout, grid_with_fixed_cell_size) {
@@ -381,7 +381,7 @@ TEST(core_layout, grid_with_fixed_cell_size) {
 		cig_pop_frame();
 	}
 	
-	TEST_ASSERT_EQUAL_INT(600, cig_element()->_layout_params._horizontal_position);
+	TEST_ASSERT_EQUAL_INT(600, cig_element()->_layout_params._h_pos);
 	
 	/* Second row */
 	for (i = 0; i < 3; ++i) {
@@ -390,7 +390,7 @@ TEST(core_layout, grid_with_fixed_cell_size) {
 		cig_pop_frame();
 	}
 	
-	TEST_ASSERT_EQUAL_INT(200, cig_element()->_layout_params._vertical_position);
+	TEST_ASSERT_EQUAL_INT(200, cig_element()->_layout_params._v_pos);
 }
 
 TEST(core_layout, grid_with_varying_cell_size) {
@@ -414,19 +414,19 @@ TEST(core_layout, grid_with_varying_cell_size) {
 	TEST_ASSERT_EQUAL_INT(0, cig_element()->frame.x);
 	cig_pop_frame();
 	
-	TEST_ASSERT_EQUAL_INT(100, cig_element()->_layout_params._horizontal_position);
+	TEST_ASSERT_EQUAL_INT(100, cig_element()->_layout_params._h_pos);
 	
 	cig_push_frame(cig_frame_make(0, 0, 200, 160)); /* (2) */
 	TEST_ASSERT_EQUAL_INT(100, cig_element()->frame.x);
 	cig_pop_frame();
 	
-	TEST_ASSERT_EQUAL_INT(300, cig_element()->_layout_params._horizontal_position);
+	TEST_ASSERT_EQUAL_INT(300, cig_element()->_layout_params._h_pos);
 	
 	cig_push_frame(cig_frame_make(0, 0, 300, 160)); /* (3) */
 	TEST_ASSERT_EQUAL_INT(300, cig_element()->frame.x);
 	cig_pop_frame();
 	
-	TEST_ASSERT_EQUAL_INT(600, cig_element()->_layout_params._horizontal_position);
+	TEST_ASSERT_EQUAL_INT(600, cig_element()->_layout_params._h_pos);
 	
 	/*
 	Let's try to insert another cell that should fit width wise,
@@ -489,21 +489,21 @@ TEST(core_layout, grid_with_down_direction) {
 	TEST_ASSERT_EQUAL_INT(0,		cig_element()->frame.y);
 	cig_pop_frame();
 	
-	TEST_ASSERT_EQUAL_INT(120,	cig_element()->_layout_params._vertical_position);
+	TEST_ASSERT_EQUAL_INT(120,	cig_element()->_layout_params._v_pos);
 	
 	cig_push_frame(cig_frame_make(0, 0, 150, 160)); /* (2) */
 	TEST_ASSERT_EQUAL_INT(120,	cig_element()->frame.y);
 	cig_pop_frame();
 	
-	TEST_ASSERT_EQUAL_INT(280, 	cig_element()->_layout_params._vertical_position);
+	TEST_ASSERT_EQUAL_INT(280, 	cig_element()->_layout_params._v_pos);
 	
 	cig_push_frame(cig_frame_make(0, 0, 200, 200)); /* (3) */
 	TEST_ASSERT_EQUAL_INT(280, 	cig_element()->frame.y);
 	cig_pop_frame();
 	
 	/* No remaining space vertically - position moves back to the top and to the next column */
-	TEST_ASSERT_EQUAL_INT(200,	cig_element()->_layout_params._horizontal_position);
-	TEST_ASSERT_EQUAL_INT(0,		cig_element()->_layout_params._vertical_position);
+	TEST_ASSERT_EQUAL_INT(200,	cig_element()->_layout_params._h_pos);
+	TEST_ASSERT_EQUAL_INT(0,		cig_element()->_layout_params._v_pos);
 	
 	/*
 	Without anything else configured on the grid, the next element will fill
@@ -513,7 +513,7 @@ TEST(core_layout, grid_with_down_direction) {
 	TEST_ASSERT_EQUAL_FRAME(cig_frame_make(200, 0, 440, 480), cig_element()->frame);
 	cig_pop_frame();
 	
-	TEST_ASSERT_EQUAL_INT(640, 	cig_element()->_layout_params._horizontal_position);
+	TEST_ASSERT_EQUAL_INT(640, 	cig_element()->_layout_params._h_pos);
 	
 	/*
 	For visualisation:

@@ -7,7 +7,6 @@
 #include <math.h>
 
 /* Declare internal types */
-
 typedef cig_frame_t cig_clip_frame_t;
 #define STACK_CAPACITY_cig_clip_frame_t CIG_BUFFER_CLIP_REGIONS_MAX
 DECLARE_ARRAY_STACK_T(cig_clip_frame_t);
@@ -43,7 +42,6 @@ DECLARE_ARRAY_STACK_T(cig_state_ptr_t);
 DECLARE_ARRAY_STACK_T(cig_buffer_element_t);
 
 /* Define internal state */
-
 static stack_cig_state_ptr_t_t widget_states = INIT_STACK(cig_state_ptr_t);
 static stack_cig_element_t_t elements = INIT_STACK(cig_element_t);
 static stack_cig_buffer_element_t_t buffers = INIT_STACK(cig_buffer_element_t);
@@ -52,15 +50,14 @@ static struct {
 	size_t size;
 } _state_list = { 0 };
 static cig_scroll_state_element_t _scroll_elements[CIG_SCROLLABLE_ELEMENTS_MAX];
-static cig_input_state_t mouse = { 0 };
+static cig_input_state_t input_state = { 0 };
 static cig_id_t next_id = 0;
 static unsigned int tick = 0;
 
 /* Forward delcarations */
-
 // static cig_state_t* 				im_state(const cig_id_t, const imgui_widget_t);
 static cig_scroll_state_t* find_scroll_state(cig_id_t);
-static void handle_element_hover(cig_element_t*);
+static void handle_element_hover(const cig_element_t*);
 static void push_clip(cig_element_t*);
 static void pop_clip();
 static cig_frame_t resolve_size(cig_frame_t, const cig_element_t*);
@@ -68,13 +65,11 @@ static bool next_layout_frame(cig_frame_t, cig_element_t *, cig_frame_t *);
 static bool push_frame(cig_frame_t, cig_insets_t, cig_layout_params_t, bool (*)(cig_frame_t, cig_frame_t, cig_layout_params_t*, cig_frame_t*));
 CIG_INLINED int tinyhash(int a, int b) { return (a * 31) ^ (b * 17); }
 
-
 /* ┌───────────────┐
 ───┤  CORE LAYOUT  │
    └───────────────┘ */
 
 void cig_begin_layout(const cig_buffer_ref buffer, const cig_frame_t frame) {
-  
   widget_states.clear(&widget_states);
   elements.clear(&elements);
   buffers.clear(&buffers);
@@ -91,9 +86,7 @@ void cig_begin_layout(const cig_buffer_ref buffer, const cig_frame_t frame) {
 	});
 
 	cig_push_buffer(buffer);
-	
 	cig_enable_clipping();
-	
 	next_id = 0;
 }
 
@@ -129,14 +122,14 @@ void cig_reset_internal_state() {
     _scroll_elements[i].id = 0;
   }
 	_state_list.size = 0;
-	mouse.locked = false;
-	mouse._press_target_id = 0;
-	mouse._target_prev_frame = 0;
-	mouse._target_this_frame = 0;
-	mouse._press_start_tick = 0;
-	mouse.drag.active = false;
-	mouse.drag.start_position = cig_vec2_zero();
-	mouse.drag.change = cig_vec2_zero();
+	input_state.locked = false;
+	input_state._press_target_id = 0;
+	input_state._target_prev_frame = 0;
+	input_state._target_this_frame = 0;
+	input_state._press_start_tick = 0;
+	input_state.drag.active = false;
+	input_state.drag.start_position = cig_vec2_zero();
+	input_state.drag.change = cig_vec2_zero();
   tick = 0;
 	next_id = 0;
 }
@@ -203,7 +196,6 @@ stack_cig_element_t_t* cig_element_stack() {
 	return &elements;
 }
 
-
 /* ┌────────────────────────────────┐
 ───┤  TEMPORARY BUFFERS (ADVANCED)  │
    └────────────────────────────────┘ */
@@ -225,7 +217,6 @@ void cig_pop_buffer() {
   CIG_UNUSED(buffers._pop(&buffers));
 }
 
-
 /* ┌─────────────────────┐
 ───┤  MOUSE INTERACTION  │
    └─────────────────────┘ */
@@ -234,63 +225,63 @@ void cig_set_input_state(
 	const cig_vec2_t position,
 	unsigned int action_mask
 ) {
-	if (mouse.locked == false) {
-		mouse._target_prev_frame = mouse._target_this_frame;
-		mouse._target_this_frame = 0;
+	if (input_state.locked == false) {
+		input_state._target_prev_frame = input_state._target_this_frame;
+		input_state._target_this_frame = 0;
 	}
 	
-	const cig_input_action_type_t previous_action_mask = mouse.action_mask;
+	const cig_input_action_type_t previous_action_mask = input_state.action_mask;
 
-	mouse.position = position;
-	mouse.action_mask = action_mask;
+	input_state.position = position;
+	input_state.action_mask = action_mask;
 
-	mouse.click_state = (!mouse.action_mask && previous_action_mask)
-		? (tick - mouse._press_start_tick) < 12
+	input_state.click_state = (!input_state.action_mask && previous_action_mask)
+		? (tick - input_state._press_start_tick) < 12
 			? ENDED
 			: EXPIRED
 		: (action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT && !(previous_action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT)) || (action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT && !(previous_action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT))
-			? mouse.click_state == BEGAN
+			? input_state.click_state == BEGAN
 				? NEITHER
 				: BEGAN
 			: NEITHER;
 		
-	if (mouse.action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT && !(previous_action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT)) {
-		mouse.last_action_began = CIG_INPUT_MOUSE_BUTTON_LEFT;
-	} else if (mouse.action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT && !(previous_action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT)) {
-		mouse.last_action_began = CIG_INPUT_MOUSE_BUTTON_RIGHT;
+	if (input_state.action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT && !(previous_action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT)) {
+		input_state.last_action_began = CIG_INPUT_MOUSE_BUTTON_LEFT;
+	} else if (input_state.action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT && !(previous_action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT)) {
+		input_state.last_action_began = CIG_INPUT_MOUSE_BUTTON_RIGHT;
 	} else {
-		mouse.last_action_began = 0;
+		input_state.last_action_began = 0;
 	}
 	
-	if (previous_action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT && !(mouse.action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT)) {
-		mouse.last_action_ended = CIG_INPUT_MOUSE_BUTTON_LEFT;
-	} else if (previous_action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT && !(mouse.action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT)) {
-		mouse.last_action_ended = CIG_INPUT_MOUSE_BUTTON_RIGHT;
+	if (previous_action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT && !(input_state.action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT)) {
+		input_state.last_action_ended = CIG_INPUT_MOUSE_BUTTON_LEFT;
+	} else if (previous_action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT && !(input_state.action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT)) {
+		input_state.last_action_ended = CIG_INPUT_MOUSE_BUTTON_RIGHT;
 	} else {
-		mouse.last_action_ended = 0;
+		input_state.last_action_ended = 0;
 	}
 
-	if (mouse.click_state == BEGAN) {
-		mouse._press_start_tick = tick;
-		mouse._press_target_id = mouse._target_prev_frame;
+	if (input_state.click_state == BEGAN) {
+		input_state._press_start_tick = tick;
+		input_state._press_target_id = input_state._target_prev_frame;
 	}
 
-	if (mouse.action_mask) {
-		if (!mouse.drag.active) {
-			mouse.drag.active = true;
-			mouse.drag.start_position = mouse.position;
-			mouse.drag.change = cig_vec2_zero();
+	if (input_state.action_mask) {
+		if (!input_state.drag.active) {
+			input_state.drag.active = true;
+			input_state.drag.start_position = input_state.position;
+			input_state.drag.change = cig_vec2_zero();
 		} else {
-			mouse.drag.change = cig_vec2_sub(mouse.position, mouse.drag.start_position);
+			input_state.drag.change = cig_vec2_sub(input_state.position, input_state.drag.start_position);
 		}
-	} else if (mouse.drag.active) {
-		mouse.drag.active = false;
-		mouse.drag.change = cig_vec2_zero();
+	} else if (input_state.drag.active) {
+		input_state.drag.active = false;
+		input_state.drag.change = cig_vec2_zero();
 	}
 }
 
 cig_input_state_t *cig_input_state() {
-	return &mouse;
+	return &input_state;
 }
 
 void cig_enable_interaction() {
@@ -304,7 +295,7 @@ void cig_enable_interaction() {
 
 bool cig_hovered() {
 	/* See `handle_element_hover` */
-	return mouse.locked == false && cig_element()->_interaction_enabled && cig_element()->id == mouse._target_prev_frame;
+	return input_state.locked == false && cig_element()->_interaction_enabled && cig_element()->id == input_state._target_prev_frame;
 }
 
 cig_input_action_type_t cig_pressed(
@@ -315,9 +306,9 @@ cig_input_action_type_t cig_pressed(
 		return 0;
 	}
 	
-	const cig_input_action_type_t action_mask = actions & mouse.action_mask;
+	const cig_input_action_type_t action_mask = actions & input_state.action_mask;
 	
-	if (action_mask && ((options & CIG_PRESS_INSIDE) == false || (options & CIG_PRESS_INSIDE && mouse._press_target_id == cig_element()->id))) {
+	if (action_mask && ((options & CIG_PRESS_INSIDE) == false || (options & CIG_PRESS_INSIDE && input_state._press_target_id == cig_element()->id))) {
 		return action_mask;
 	} else {
 		return 0;
@@ -334,21 +325,20 @@ cig_input_action_type_t cig_clicked(
 	
 	if (options & CIG_CLICK_ON_PRESS) {
 		cig_input_action_type_t result;
-		if (mouse.click_state == BEGAN && (result = actions & mouse.action_mask)) {
+		if (input_state.click_state == BEGAN && (result = actions & input_state.action_mask)) {
 			return result;
 		}
 	} else {
-		if (mouse.click_state == ENDED || (mouse.click_state == EXPIRED && !(options & CIG_CLICK_EXPIRE))) {
-			if (options & CIG_CLICK_STARTS_INSIDE && mouse._press_target_id != cig_element()->id) {
+		if (input_state.click_state == ENDED || (input_state.click_state == EXPIRED && !(options & CIG_CLICK_EXPIRE))) {
+			if (options & CIG_CLICK_STARTS_INSIDE && input_state._press_target_id != cig_element()->id) {
 				return 0;
 			}
-			return actions & mouse.last_action_ended;
+			return actions & input_state.last_action_ended;
 		}
 	}
 	
 	return 0;
 }
-
 
 /* ┌─────────────┐
 ───┤  SCROLLING  │
@@ -384,7 +374,6 @@ cig_vec2_t cig_content_size() {
 	assert(cig_scroll_state());
 	return cig_scroll_state()->content_size;
 }
-
 
 /* ┌──────────────────┐
 ───┤  LAYOUT HELPERS  │
@@ -436,22 +425,22 @@ bool cig_default_layout_builder(
 	const bool v_axis = prm->axis & CIG_LAYOUT_AXIS_VERTICAL;
 	const bool is_grid = h_axis && v_axis;
 	
-	int x = prm->_horizontal_position,
-	    y = prm->_vertical_position,
+	int x = prm->_h_pos,
+	    y = prm->_v_pos,
 			w,
 			h;
 
 	void move_to_next_row() {
-		prm->_horizontal_position = 0;
-		prm->_vertical_position += (prm->_v_size + prm->spacing);
+		prm->_h_pos = 0;
+		prm->_v_pos += (prm->_v_size + prm->spacing);
 		prm->_h_size = CIG_FILL_CONSTANT;
 		prm->_v_size = CIG_FILL_CONSTANT;
 		prm->_count.h_cur = 0;
 	}
 	
 	void move_to_next_column() {
-		prm->_vertical_position = 0;
-		prm->_horizontal_position += (prm->_h_size + prm->spacing);
+		prm->_v_pos = 0;
+		prm->_h_pos += (prm->_h_size + prm->spacing);
 		prm->_h_size = CIG_FILL_CONSTANT;
 		prm->_v_size = CIG_FILL_CONSTANT;
 		prm->_count.v_cur = 0;
@@ -466,18 +455,18 @@ bool cig_default_layout_builder(
 			} else if (prm->_h_size && prm->direction == CIG_LAYOUT_DIRECTION_DOWN) {
 				w = prm->_h_size;
 			}	else {
-				w = container.w - prm->_horizontal_position;
+				w = container.w - prm->_h_pos;
 			}
 		} else {
 			w = frame.w;
 		}
 	} else {
 		w = frame.w == CIG_FILL_CONSTANT
-			? container.w - prm->_horizontal_position
+			? container.w - prm->_h_pos
 			: frame.w;
 		
 		/* Reset any remaining horizontal positioning in case we modify axis mid-layout */
-		prm->_horizontal_position = 0;
+		prm->_h_pos = 0;
 		prm->_h_size = CIG_FILL_CONSTANT;
 	}
 	
@@ -490,18 +479,18 @@ bool cig_default_layout_builder(
 			} else if (prm->_v_size && prm->direction == CIG_LAYOUT_DIRECTION_LEFT) {
 				h = prm->_v_size;
 			}	else {
-				h = container.h - prm->_vertical_position;
+				h = container.h - prm->_v_pos;
 			}
 		} else {
 			h = frame.h;
 		}
 	} else {
 		h = frame.h == CIG_FILL_CONSTANT
-			? container.h - prm->_vertical_position
+			? container.h - prm->_v_pos
 			: frame.h;
 		
 		/* Reset any remaining vertical positioning in case we modify axis mid-layout */
-		prm->_vertical_position = 0;
+		prm->_v_pos = 0;
 		prm->_v_size = CIG_FILL_CONSTANT;
 	}
 	
@@ -509,34 +498,34 @@ bool cig_default_layout_builder(
 		/* Can we fit the new frame onto current axis? */
 		switch (prm->direction) {
 			case CIG_LAYOUT_DIRECTION_LEFT: {
-				if ((prm->limit.horizontal && prm->_count.h_cur == prm->limit.horizontal) || prm->_horizontal_position + w > container.w) {
+				if ((prm->limit.horizontal && prm->_count.h_cur == prm->limit.horizontal) || prm->_h_pos + w > container.w) {
 					move_to_next_row();
 					x = 0;
-					y = prm->_vertical_position;
+					y = prm->_v_pos;
 				}
 				
-				prm->_horizontal_position += (w + prm->spacing);
+				prm->_h_pos += (w + prm->spacing);
 				prm->_h_size = CIG_MAX(prm->_h_size, w);
 				prm->_v_size = CIG_MAX(prm->_v_size, h);
 				prm->_count.h_cur ++;
 				
-				if (prm->_horizontal_position >= container.w) {
+				if (prm->_h_pos >= container.w) {
 					move_to_next_row();
 				}
 			} break;
 			case CIG_LAYOUT_DIRECTION_DOWN: {
-				if ((prm->limit.vertical && prm->_count.v_cur == prm->limit.vertical) || prm->_vertical_position + h > container.h) {
+				if ((prm->limit.vertical && prm->_count.v_cur == prm->limit.vertical) || prm->_v_pos + h > container.h) {
 					move_to_next_column();
 					y = 0;
-					x = prm->_horizontal_position;
+					x = prm->_h_pos;
 				}
 				
-				prm->_vertical_position += (h + prm->spacing);
+				prm->_v_pos += (h + prm->spacing);
 				prm->_h_size = CIG_MAX(prm->_h_size, w);
 				prm->_v_size = CIG_MAX(prm->_v_size, h);
 				prm->_count.v_cur ++;
 				
-				if (prm->_vertical_position >= container.h) {
+				if (prm->_v_pos >= container.h) {
 					move_to_next_column();
 				}
 			} break;
@@ -546,14 +535,14 @@ bool cig_default_layout_builder(
 		if (prm->limit.horizontal && prm->_count.h_cur == prm->limit.horizontal) {
 			return false;
 		}
-		prm->_horizontal_position += (w + prm->spacing);
+		prm->_h_pos += (w + prm->spacing);
 		prm->_h_size = CIG_MAX(prm->_h_size, w);
 		prm->_count.h_cur ++;
 	} else if (v_axis) {
 		if (prm->limit.vertical && prm->_count.v_cur == prm->limit.vertical) {
 			return false;
 		}
-		prm->_vertical_position += (h + prm->spacing);
+		prm->_v_pos += (h + prm->spacing);
 		prm->_v_size = CIG_MAX(prm->_v_size, h);
 		prm->_count.v_cur ++;
 	}
@@ -562,7 +551,6 @@ bool cig_default_layout_builder(
 	
 	return true;
 }
-
 
 /* ╔════════════════════════════════════════════╗
    ║            INTERNAL FUNCTIONS              ║
@@ -579,20 +567,16 @@ static cig_frame_t resolve_size(const cig_frame_t frame, const cig_element_t *pa
 	);
 }
 
-static bool next_layout_frame(
-	const cig_frame_t proposed_frame,
-	cig_element_t *top_element,
-	cig_frame_t *result
-) {
-	if (top_element->_layout_function) {
-		return (*top_element->_layout_function)(
-      cig_frame_inset(top_element->frame, top_element->insets),
-      proposed_frame,
-      &top_element->_layout_params,
+static bool next_layout_frame(const cig_frame_t proposed, cig_element_t *parent, cig_frame_t *result) {
+	if (parent->_layout_function) {
+		return (*parent->_layout_function)(
+      cig_frame_inset(parent->frame, parent->insets),
+      proposed,
+      &parent->_layout_params,
 			result
     );
 	} else {
-		*result = resolve_size(proposed_frame, top_element);
+		*result = resolve_size(proposed, parent);
 		return true;
 	}
 }
@@ -651,7 +635,6 @@ static bool push_frame(
 	return true;
 }
 
-
 /*static cig_state_t* im_state(
 	const cig_id_t id,
 	const imgui_widget_t type
@@ -685,7 +668,7 @@ static bool push_frame(
 	return s;
 }*/
 
-static void handle_element_hover(cig_element_t *element) {
+static void handle_element_hover(const cig_element_t *element) {
 	/*
 	My approach for mouse hit detection in immediate-mode GUI:
 	Due to immediate processing of elements, checking mouse position
@@ -696,8 +679,8 @@ static void handle_element_hover(cig_element_t *element) {
 	element (ID) with the previous result. This introduces a one-frame delay
 	between mouse detection and response but in reality it's imperceptible.
 	*/
-	if (cig_frame_contains(element->absolute_frame, mouse.position)) {
-		mouse._target_this_frame = element->id;
+	if (cig_frame_contains(element->absolute_frame, input_state.position)) {
+		input_state._target_this_frame = element->id;
 	}
 }
 
