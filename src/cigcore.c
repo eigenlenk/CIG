@@ -31,7 +31,7 @@ typedef struct {
 		ACTIVE
 	} activation_state;
 	unsigned int last_tick;
-	unsigned char data[CIG_STATE_MEM_SIZE_BYTES];
+	unsigned char data[CIG_STATE_MEM_ARENA_BYTES];
 } cig_state_t;
 
 typedef cig_state_t* cig_state_ptr_t;
@@ -42,6 +42,7 @@ DECLARE_ARRAY_STACK_T(cig_state_ptr_t);
 DECLARE_ARRAY_STACK_T(cig_buffer_element_t);
 
 /* Define internal state */
+static cig_context_t *current = NULL;
 static stack_cig_state_ptr_t_t widget_states = INIT_STACK(cig_state_ptr_t);
 static stack_cig_element_t_t elements = INIT_STACK(cig_element_t);
 static stack_cig_buffer_element_t_t buffers = INIT_STACK(cig_buffer_element_t);
@@ -51,8 +52,6 @@ static struct {
 } _state_list = { 0 };
 static cig_scroll_state_element_t _scroll_elements[CIG_SCROLLABLE_ELEMENTS_MAX];
 static cig_input_state_t input_state = { 0 };
-static cig_id_t next_id = 0;
-static unsigned int tick = 0;
 
 /* Forward delcarations */
 // static cig_state_t* 				im_state(const cig_id_t, const imgui_widget_t);
@@ -69,14 +68,20 @@ CIG_INLINED int tinyhash(int a, int b) { return (a * 31) ^ (b * 17); }
 ───┤  CORE LAYOUT  │
    └───────────────┘ */
 
-void cig_begin_layout(const cig_buffer_ref buffer, const cig_frame_t frame) {
+void cig_begin_layout(
+  cig_context_t *context,
+  const cig_buffer_ref buffer,
+  const cig_frame_t frame
+) {
+  current = context;
+  
   widget_states.clear(&widget_states);
   elements.clear(&elements);
   buffers.clear(&buffers);
   
   elements.push(&elements, (cig_element_t) {
 		0,
-		.id = next_id ? next_id : cig_hash("root"),
+		.id = current->next_id ? current->next_id : cig_hash("root"),
 		.frame = cig_frame_make(0, 0, frame.w, frame.h),
 		.clipped_frame = frame,
 		.absolute_frame = frame,
@@ -87,18 +92,18 @@ void cig_begin_layout(const cig_buffer_ref buffer, const cig_frame_t frame) {
 
 	cig_push_buffer(buffer);
 	cig_enable_clipping();
-	next_id = 0;
+	current->next_id = 0;
 }
 
 void cig_end_layout() {
 	register cig_state_t *s, *last = NULL;
 	
-	++tick;
+	++current->tick;
 	
 	/* Check for inactive states and filter them out by shifting active states back */
 	for (register int i = _state_list.size - 1; i >= 0; --i) {
 		s = &_state_list.values[i];
-		if (s->last_tick != tick) {
+		if (s->last_tick != current->tick) {
 			if (last) {
 				*s = *last;
 				last = NULL;
@@ -130,8 +135,8 @@ void cig_reset_internal_state() {
 	input_state.drag.active = false;
 	input_state.drag.start_position = cig_vec2_zero();
 	input_state.drag.change = cig_vec2_zero();
-  tick = 0;
-	next_id = 0;
+  current->tick = 0;
+	current->next_id = 0;
 }
 
 cig_buffer_ref cig_buffer() {
@@ -236,7 +241,7 @@ void cig_set_input_state(
 	input_state.action_mask = action_mask;
 
 	input_state.click_state = (!input_state.action_mask && previous_action_mask)
-		? (tick - input_state._press_start_tick) < 12
+		? (current->tick - input_state._press_start_tick) < 12
 			? ENDED
 			: EXPIRED
 		: (action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT && !(previous_action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT)) || (action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT && !(previous_action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT))
@@ -262,7 +267,7 @@ void cig_set_input_state(
 	}
 
 	if (input_state.click_state == BEGAN) {
-		input_state._press_start_tick = tick;
+		input_state._press_start_tick = current->tick;
 		input_state._press_target_id = input_state._target_prev_frame;
 	}
 
@@ -388,7 +393,7 @@ void cig_enable_clipping() {
 }
 
 void cig_set_next_id(cig_id_t id) {
-	next_id = id;
+	current->next_id = id;
 }
 
 unsigned int cig_depth() {
@@ -619,7 +624,9 @@ static bool push_frame(
 
   elements.push(&elements, (cig_element_t) {
 		0,
-		.id = next_id ? next_id : (top->id + tinyhash(top->id+top->_id_counter++, cig_depth())),
+		.id = current->next_id
+      ? current->next_id
+      : (top->id + tinyhash(top->id+top->_id_counter++, cig_depth())),
 		.frame = next,
 		.clipped_frame = cig_frame_offset(cig_frame_union(absolute_frame, current_clip_frame), -absolute_frame.x + next.x, -absolute_frame.y + next.y),
 		.absolute_frame = absolute_frame,
@@ -630,7 +637,7 @@ static bool push_frame(
     ._scroll_state = NULL
 	});
   
-	next_id = 0;
+	current->next_id = 0;
 
 	return true;
 }
@@ -689,9 +696,9 @@ static cig_scroll_state_t* find_scroll_state(const cig_id_t id) {
 	
   for (register int i = 0; i < CIG_SCROLLABLE_ELEMENTS_MAX; ++i) {
     if (_scroll_elements[i].id == id) {
-			_scroll_elements[i].last_tick = tick;
+			_scroll_elements[i].last_tick = current->tick;
       return &_scroll_elements[i].value;
-    } else if ((_scroll_elements[i].id == 0 || _scroll_elements[i].last_tick < tick-1) && first_available < 0) {
+    } else if ((_scroll_elements[i].id == 0 || _scroll_elements[i].last_tick < current->tick-1) && first_available < 0) {
       first_available = i;
     }
   }
@@ -702,7 +709,7 @@ static cig_scroll_state_t* find_scroll_state(const cig_id_t id) {
     _scroll_elements[first_available].id = id;
     _scroll_elements[first_available].value.offset = cig_vec2_zero();
     _scroll_elements[first_available].value.content_size = cig_vec2_zero();
-		_scroll_elements[first_available].last_tick = tick;
+		_scroll_elements[first_available].last_tick = current->tick;
 		
     return &_scroll_elements[first_available].value;
   }

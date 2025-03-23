@@ -5,11 +5,13 @@
 
 TEST_GROUP(core_input);
 
+static cig_context_t ctx = { 0 };
+
 TEST_SETUP(core_input) {}
 TEST_TEAR_DOWN(core_input) {}
 
 static void begin() {
-	cig_begin_layout(NULL, cig_frame_make(0, 0, 640, 480));
+	cig_begin_layout(&ctx, NULL, cig_frame_make(0, 0, 640, 480));
 }
 
 static void end() {

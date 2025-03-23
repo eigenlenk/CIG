@@ -12,15 +12,16 @@
 /* Size of the internal widget state pool; number of stateful elements on
    screen at once. You can also provide this state from your application layer.
    Internal storage is just for convenience */
-#define CIG_STATES_MAX 64
+#define CIG_STATES_MAX 32
 
-/* How many bytes does each state get. You can bend and mould this to your own data structures */
-#define CIG_STATE_MEM_SIZE_BYTES 512
+/* Size of the memory arena for each state */
+#define CIG_STATE_MEM_ARENA_BYTES 256
 
 /* How large is the buffer stack. Generally not too deeply nested */
 #define CIG_BUFFERS_MAX 4
 
-/* Maximum number of clip regions you can push within a buffer */
+/* Maximum number of clip regions you can push within a buffer. Every clip
+   region pushed forms a union with the last, so there shouldn't be too many? */
 #define CIG_BUFFER_CLIP_REGIONS_MAX 8
 
 #endif

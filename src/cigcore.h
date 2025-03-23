@@ -27,6 +27,12 @@ typedef unsigned long cig_id_t;
 /* Opaque pointer to a buffer/screen/texture/etc to be renderered into */
 typedef void* cig_buffer_ref;
 
+/* A single instance of CIG. Use one for each game state or similar? */
+typedef struct {
+  cig_id_t next_id;
+  unsigned int tick;
+} cig_context_t;
+
 /* Structure containing parameters passed to layout function */
 typedef struct {
   /* One or more axis which a builder uses to position children */
@@ -152,7 +158,7 @@ DECLARE_ARRAY_STACK_T(cig_element_t);
    └───────────────┘ */
 
 /* */
-void cig_begin_layout(cig_buffer_ref, cig_frame_t);
+void cig_begin_layout(cig_context_t*, cig_buffer_ref, cig_frame_t);
 
 /* */
 void cig_end_layout();
