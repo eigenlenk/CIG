@@ -43,6 +43,7 @@ DECLARE_ARRAY_STACK_T(cig_buffer_element_t);
 
 /* Define internal state */
 static cig_context_t *current = NULL;
+
 static stack_cig_state_ptr_t_t widget_states = INIT_STACK(cig_state_ptr_t);
 static stack_cig_element_t_t elements = INIT_STACK(cig_element_t);
 static stack_cig_buffer_element_t_t buffers = INIT_STACK(cig_buffer_element_t);
@@ -77,6 +78,8 @@ void cig_begin_layout(
   widget_states.clear(&widget_states);
   elements.clear(&elements);
   buffers.clear(&buffers);
+  
+  current->default_insets = cig_insets_zero();
   
   elements.push(&elements, (cig_element_t) {
 		0,
@@ -143,7 +146,7 @@ cig_buffer_ref cig_buffer() {
 }
 
 bool cig_push_frame(const cig_frame_t frame) {
-	return push_frame(frame, cig_insets_zero(), (cig_layout_params_t){ 0, .flags = CIG_DEFAULT_LAYOUT_FLAGS }, NULL);
+	return push_frame(frame, current->default_insets, (cig_layout_params_t){ 0, .flags = CIG_DEFAULT_LAYOUT_FLAGS }, NULL);
 }
 
 bool cig_push_frame_insets(
@@ -179,6 +182,10 @@ cig_element_t* cig_pop_frame() {
   }
   
   return popped_element;
+}
+
+void cig_set_default_insets(cig_insets_t insets) {
+  current->default_insets = insets;
 }
 
 cig_element_t* cig_element() {

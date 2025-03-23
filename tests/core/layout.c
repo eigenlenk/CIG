@@ -29,6 +29,15 @@ TEST(core_layout, basic_checks) {
 		cig_element()->insets.right == 0 && cig_element()->insets.bottom == 0);
 }
 
+TEST(core_layout, default_insets) {
+  cig_set_default_insets(cig_insets_uniform(3));
+  
+  cig_push_frame(CIG_FILL);
+	TEST_ASSERT(cig_element()->insets.left == 3 && cig_element()->insets.top == 3 &&
+		cig_element()->insets.right == 3 && cig_element()->insets.bottom == 3);
+  cig_pop_frame();
+}
+
 TEST(core_layout, push_pop) {
 	TEST_ASSERT_EQUAL(cig_depth(), 1); /* Just the root */
 	
@@ -679,6 +688,7 @@ TEST(core_layout, main_screen_subregion) {
 
 TEST_GROUP_RUNNER(core_layout) {
   RUN_TEST_CASE(core_layout, basic_checks);
+  RUN_TEST_CASE(core_layout, default_insets);
   RUN_TEST_CASE(core_layout, push_pop);
   RUN_TEST_CASE(core_layout, identifiers);
   RUN_TEST_CASE(core_layout, limits);

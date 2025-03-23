@@ -126,9 +126,10 @@ typedef struct {
            _target_this_frame;
 } cig_input_state_t;
 
-/* A single instance of CIG. Use one for each game state or similar? */
+/* A single instance of CIG. Use one for each game state? */
 typedef struct {
   cig_input_state_t input_state;
+  cig_insets_t default_insets;
   cig_id_t next_id;
   unsigned int tick;
 } cig_context_t;
@@ -166,7 +167,7 @@ void cig_end_layout();
 
 /* Resets internal values. Useful for when transitioning to a different
    game state or screen where you lay out a completely different UI */
-void cig_reset_internal_state();
+void cig_reset_internal_state(); /* TODO: Remove. Not needed with new context I think? */
 
 /* Returns an opaque pointer to the current buffer where drawing operations would take place */
 cig_buffer_ref cig_buffer();
@@ -194,6 +195,8 @@ bool cig_push_layout_function(
 
 /* Pop and return the last element in the layout stack */
 cig_element_t* cig_pop_frame();
+
+void cig_set_default_insets(cig_insets_t);
 
 /* Returns current layout element */
 cig_element_t* cig_element();
