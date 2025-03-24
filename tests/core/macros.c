@@ -17,25 +17,29 @@ TEST_TEAR_DOWN(core_macros) {
 
 TEST(core_macros, arrange) {
   /* This creates a 500x400 frame with 4 unit inset and centers it in the root frame */
-  CIG_ARRANGE_INSETS(CIG_CENTERED(500, 400), cig_insets_uniform(4), CIG_BODY(
-    TEST_ASSERT_EQUAL_RECT(cig_rect_make(70, 40, 500, 400), cig_rect());
-    
-    /* Regular control flow works in here */
-    for (int i = 0; i < 2; ++i) { }
-    
-    
-    CIG_ARRANGE(CIG_FILL, CIG_BODY(
-      TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 492, 392), cig_rect());
-    ))
-    
-    
-    /* No need to use CIG_BODY macro. The additional parenthesis just help with indentation.
-       CIG_FILLED(BODY...) === CIG_ARRANGE(CIG_FILL, BODY...) */
-    CIG_FILLED(
-      TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 492, 392), cig_rect());
+  CIG_ARRANGE_WITH(
+    CIG_CENTERED(500, 400),
+    cig_insets_uniform(4),
+    CIG_PARAMS(),
+    CIG_BODY(
+      TEST_ASSERT_EQUAL_RECT(cig_rect_make(70, 40, 500, 400), cig_rect());
+      
+      /* Regular control flow works in here */
       for (int i = 0; i < 2; ++i) { }
-    )
-  ))
+      
+      
+      CIG_ARRANGE(CIG_FILL, CIG_BODY(
+        TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 492, 392), cig_rect());
+      ))
+      
+      
+      /* No need to use CIG_BODY macro. The additional parenthesis just help with indentation.
+         CIG_FILLED(BODY...) === CIG_ARRANGE(CIG_FILL, BODY...) */
+      CIG_FILLED(
+        TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 492, 392), cig_rect());
+        for (int i = 0; i < 2; ++i) { }
+      )
+    ))
 }
 
 TEST(core_macros, vstack) {
@@ -48,9 +52,9 @@ TEST(core_macros, vstack) {
         ))
       }
     ),
-    CIG_STACK_HEIGHT(200),
-    CIG_STACK_SPACING(10),
-    CIG_STACK_LIMIT_VERTICAL(2)
+    CIG_HEIGHT(200),
+    CIG_SPACING(10),
+    CIG_LIMIT_VERTICAL(2)
   )
 }
 
@@ -64,9 +68,9 @@ TEST(core_macros, hstack) {
         ))
       }
     ),
-    CIG_STACK_WIDTH(200),
-    CIG_STACK_SPACING(10),
-    CIG_STACK_LIMIT_HORIZONTAL(2)
+    CIG_WIDTH(200),
+    CIG_SPACING(10),
+    CIG_LIMIT_HORIZONTAL(2)
   )
 }
 

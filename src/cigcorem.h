@@ -43,8 +43,8 @@ if (cig_push_frame(RECT)) { \
   cig_pop_frame(); \
 }
 
-#define CIG_ARRANGE_INSETS(RECT, INSETS, BODY) \
-if (cig_push_frame_insets(RECT, INSETS)) { \
+#define CIG_ARRANGE_WITH(RECT, INSETS, PARAMS, BODY) \
+if (cig_push_frame_insets_params(RECT, INSETS, PARAMS)) { \
   BODY; \
   cig_pop_frame(); \
 }
@@ -57,21 +57,9 @@ if (cig_push_frame(CIG_FILL)) { \
 
 #define CIG_BODY(CONTENT) CONTENT
 
-#define CIG_GRID(RECT, COLUMNS, ROWS, SPACING, BODY, OPTIONS...) \
-if (cig_push_layout_function(&cig_default_layout_builder, RECT, cig_insets_zero(), (cig_layout_params_t) { 0, \
-  .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL, \
-  CIG_STACK_ROWS(ROWS), \
-  CIG_STACK_COLUMNS(COLUMNS), \
-  CIG_STACK_SPACING(SPACING), \
-  OPTIONS \
-})) { \
-  BODY; \
-  cig_pop_frame(); \
-}
-
 #define CIG_HSTACK(RECT, BODY, OPTIONS...) \
 if (cig_push_layout_function(&cig_default_layout_builder, RECT, cig_insets_zero(), (cig_layout_params_t) { 0, \
-  CIG_STACK_AXIS(HORIZONTAL), \
+  CIG_AXIS(HORIZONTAL), \
   OPTIONS \
 })) { \
   BODY; \
@@ -80,25 +68,37 @@ if (cig_push_layout_function(&cig_default_layout_builder, RECT, cig_insets_zero(
 
 #define CIG_VSTACK(RECT, BODY, OPTIONS...) \
 if (cig_push_layout_function(&cig_default_layout_builder, RECT, cig_insets_zero(), (cig_layout_params_t) { 0, \
-  CIG_STACK_AXIS(VERTICAL), \
+  CIG_AXIS(VERTICAL), \
   OPTIONS \
 })) { \
   BODY; \
   cig_pop_frame(); \
 }
-	
-#define CIG_STACK_AXIS(A) .axis = CIG_LAYOUT_AXIS_##A
-#define CIG_STACK_DIRECTION(A) .axis = CIG_LAYOUT_DIRECTION_##A
-#define CIG_STACK_SPACING(N) .spacing = N
-#define CIG_STACK_WIDTH(W) .width = W
-#define CIG_STACK_HEIGHT(H) .height = H
-#define CIG_STACK_ROWS(N) .rows = N
-#define CIG_STACK_COLUMNS(N) .columns = N
-#define CIG_STACK_FLAGS(F) .flags = F
-#define CIG_STACK_LIMIT_TOTAL(L) .limit.total = L
-#define CIG_STACK_LIMIT_HORIZONTAL(L) .limit.horizontal = L
-#define CIG_STACK_LIMIT_VERTICAL(L) .limit.vertical = L
 
-#define CIG_LAYOUT_PARAMS(PARAMS...) (cig_layout_params_t) { 0, PARAMS }
+#define CIG_GRID(RECT, COLUMNS, ROWS, SPACING, BODY, OPTIONS...) \
+if (cig_push_layout_function(&cig_default_layout_builder, RECT, cig_insets_zero(), (cig_layout_params_t) { 0, \
+  .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL, \
+  CIG_ROWS(ROWS), \
+  CIG_COLUMNS(COLUMNS), \
+  CIG_SPACING(SPACING), \
+  OPTIONS \
+})) { \
+  BODY; \
+  cig_pop_frame(); \
+}
+
+#define CIG_PARAMS(PARAMS...) (cig_layout_params_t) { 0, PARAMS }
+	
+#define CIG_AXIS(A) .axis = CIG_LAYOUT_AXIS_##A
+#define CIG_DIRECTION(A) .axis = CIG_LAYOUT_DIRECTION_##A
+#define CIG_SPACING(N) .spacing = N
+#define CIG_WIDTH(W) .width = W
+#define CIG_HEIGHT(H) .height = H
+#define CIG_ROWS(N) .rows = N
+#define CIG_COLUMNS(N) .columns = N
+#define CIG_FLAGS(F) .flags = F
+#define CIG_LIMIT_TOTAL(L) .limit.total = L
+#define CIG_LIMIT_HORIZONTAL(L) .limit.horizontal = L
+#define CIG_LIMIT_VERTICAL(L) .limit.vertical = L
 
 #endif
