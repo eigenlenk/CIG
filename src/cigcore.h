@@ -54,8 +54,7 @@ typedef struct {
   
   /* Some basic layout flags */
 	enum {
-    CIG_CULL_SUBFRAMES = CIG_BIT(0),
-    CIG_DEFAULT_LAYOUT_FLAGS = CIG_CULL_SUBFRAMES
+    CIG_LAYOUT_DISABLE_CULLING = CIG_BIT(0)
   } flags;
   
   /* Opaque pointer for passing custom data to a custom layout builder */

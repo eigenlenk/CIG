@@ -126,10 +126,8 @@ TEST(core_layout, identifiers) {
 
 TEST(core_layout, limits) {
 	/* We can insert a total of 2 elements into this one. Further push_frame calls will return FALSE */
-	cig_push_frame_insets_params(CIG_FILL, cig_insets_zero(), (cig_layout_params_t) {
-    0,
-    .limit.total = 2,
-    .flags = CIG_DEFAULT_LAYOUT_FLAGS
+	cig_push_frame_insets_params(CIG_FILL, cig_insets_zero(), (cig_layout_params_t) { 0,
+    .limit.total = 2
   });
 	
 	if (cig_push_frame(CIG_FILL)) { cig_pop_frame(); }
@@ -263,12 +261,10 @@ TEST(core_layout, culling) {
 
 TEST(core_layout, vstack_layout) {
 	/* Pushing a stack that lays out frames vertically with a 10pt spacing */
-	if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) {
-    0,
+	if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) { 0,
     .axis = CIG_LAYOUT_AXIS_VERTICAL,
     .spacing = 10,
-		.limit.vertical = 2,
-    .flags = CIG_DEFAULT_LAYOUT_FLAGS
+		.limit.vertical = 2
   })) {
 		TEST_FAIL_MESSAGE("Unable to add layout builder frame");
 	}
@@ -291,11 +287,9 @@ TEST(core_layout, vstack_layout) {
 
 TEST(core_layout, hstack_layout) {
 	/* Pushing a stack that lays out frames horizontally with no spacing, but everything is inset by 10pt */
-	if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_uniform(10), (cig_layout_params_t) {
-    0,
+	if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_uniform(10), (cig_layout_params_t) { 0,
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL,
-    .spacing = 0,
-    .flags = CIG_DEFAULT_LAYOUT_FLAGS
+    .spacing = 0
   })) {
 		TEST_FAIL_MESSAGE("Unable to add layout builder frame");
 	}
@@ -328,13 +322,11 @@ TEST(core_layout, grid_with_fixed_rows_and_columns) {
 	Here it's a 5x5 grid, meaning on our 640x480 screen,
 	each cell would be 128x96.
 	*/
-	if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) {
-    0,
+	if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) { 0,
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL,
     .spacing = 0,
 		.columns = 5,
-		.rows = 5,
-    .flags = CIG_DEFAULT_LAYOUT_FLAGS
+		.rows = 5
   })) {
 		TEST_FAIL_MESSAGE("Unable to add layout builder frame");
 	}
@@ -373,12 +365,10 @@ TEST(core_layout, grid_with_fixed_cell_size) {
 	│.................................│
 	└─────────────────────────────────┘
 	*/
-	if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) {
-    0,
+	if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) { 0,
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL,
     .width = 200,
-		.height = 200,
-    .flags = CIG_DEFAULT_LAYOUT_FLAGS
+		.height = 200
   })) {
 		TEST_FAIL_MESSAGE("Unable to add layout builder frame");
 	}
@@ -410,11 +400,9 @@ TEST(core_layout, grid_with_varying_cell_size) {
 	current row or pushed to the next. In addition, you can still specify the number
 	of rows and columns, and these will now be used to limit number of cells on each axis.
 	*/
-	if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) {
-    0,
+	if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) { 0,
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL,
-		.limit.horizontal = 3,
-    .flags = CIG_DEFAULT_LAYOUT_FLAGS
+		.limit.horizontal = 3
   })) {
 		TEST_FAIL_MESSAGE("Unable to add layout builder frame");
 	}
@@ -485,11 +473,9 @@ TEST(core_layout, grid_with_down_direction) {
 	instead of filling and adding rows, columns are filled and added instead. Otherwise
 	they behave the same.
 	*/
-	if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) {
-    0,
+	if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) { 0,
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL,
-		.direction = CIG_LAYOUT_DIRECTION_DOWN,
-    .flags = CIG_DEFAULT_LAYOUT_FLAGS
+		.direction = CIG_LAYOUT_DIRECTION_DOWN
   })) {
 		TEST_FAIL_MESSAGE("Unable to add layout builder frame");
 	}
@@ -545,11 +531,9 @@ TEST(core_layout, grid_with_down_direction) {
 
 TEST(core_layout, vstack_scroll) {
 	/* Any element can be made scrollable, but it makes most sense for stacks/grids */
-	if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) {
-    0,
+	if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) { 0,
     .axis = CIG_LAYOUT_AXIS_VERTICAL,
-		.height = 100,
-    .flags = CIG_DEFAULT_LAYOUT_FLAGS
+		.height = 100
   })) {
 		TEST_FAIL_MESSAGE("Unable to add layout builder frame");
 	}

@@ -89,7 +89,7 @@ void cig_begin_layout(
 		.absolute_rect = rect,
 		.insets = cig_insets_zero(),
 		._layout_function = NULL,
-		._layout_params = (cig_layout_params_t){ 0, .flags = CIG_DEFAULT_LAYOUT_FLAGS }
+		._layout_params = (cig_layout_params_t){ 0 }
 	});
 
 	cig_push_buffer(buffer);
@@ -146,11 +146,11 @@ cig_buffer_ref cig_buffer() {
 }
 
 bool cig_push_frame(const cig_rect_t rect) {
-	return push_frame(rect, current->default_insets, (cig_layout_params_t){ 0, .flags = CIG_DEFAULT_LAYOUT_FLAGS }, NULL);
+	return push_frame(rect, current->default_insets, (cig_layout_params_t){ 0 }, NULL);
 }
 
 bool cig_push_frame_insets(const cig_rect_t rect, const cig_insets_t insets) {
-	return push_frame(rect, insets, (cig_layout_params_t){ 0, .flags = CIG_DEFAULT_LAYOUT_FLAGS }, NULL);
+	return push_frame(rect, insets, (cig_layout_params_t){ 0 }, NULL);
 }
 
 bool cig_push_frame_insets_params(const cig_rect_t rect, const cig_insets_t insets, const cig_layout_params_t params) {
@@ -384,7 +384,7 @@ cig_vec2_t cig_content_size() {
    └──────────────────┘ */
 	 
 void cig_disable_culling() {
-	cig_frame()->_layout_params.flags &= ~CIG_CULL_SUBFRAMES;
+	cig_frame()->_layout_params.flags |= CIG_LAYOUT_DISABLE_CULLING;
 }
 
 void cig_enable_clipping() {
@@ -610,7 +610,7 @@ static bool push_frame(
 	  next = cig_rect_offset(next, -top->_scroll_state->offset.x, -top->_scroll_state->offset.y);
   }
 
-	if (top->_layout_params.flags & CIG_CULL_SUBFRAMES
+	if (!(top->_layout_params.flags & CIG_LAYOUT_DISABLE_CULLING)
 		&& !cig_rect_intersects(top->rect, cig_rect_offset(next, top->rect.x+top->insets.left, top->rect.y+top->insets.top))) {
 		top->_id_counter ++;
 		return false;
