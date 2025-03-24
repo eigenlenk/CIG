@@ -1,12 +1,12 @@
-#ifndef CIG_TYPE_FRAME_T_INCLUDED
-#define CIG_TYPE_FRAME_T_INCLUDED
+#ifndef CIG_TYPE_RECT_T_INCLUDED
+#define CIG_TYPE_RECT_T_INCLUDED
 
 #include "cigmac.h"
 
-/* Macro for declaring a frame<T> type. VEC2 and INSETS define which
+/* Macro for declaring a rect<T> type. VEC2 and INSETS define which
    type to use for some of the arguments and return values. Ideally
    they'd all use the same datatype */
-#define DECLARE_FRAME_T(T, DECLNAME, VEC2, INSETS)                                           \
+#define DECLARE_RECT_T(T, DECLNAME, VEC2, INSETS)                                            \
                                                                                              \
 typedef struct {                                                                             \
   T x, y, w, h;                                                                              \
@@ -33,16 +33,12 @@ CIG_INLINED  DECLNAME##_t  DECLNAME##_inset(DECLNAME##_t f, INSETS##_t i) {     
   };                                                                                         \
 }                                                                                            \
                                                                                              \
-CIG_INLINED DECLNAME##_t DECLNAME##_offset_vec2(DECLNAME##_t frame, VEC2##_t offset) {       \
-  return (DECLNAME##_t) { frame.x + offset.x, frame.y + offset.y, frame.w, frame.h };        \
+CIG_INLINED DECLNAME##_t DECLNAME##_offset_vec2(DECLNAME##_t rect, VEC2##_t offset) {        \
+  return (DECLNAME##_t) { rect.x + offset.x, rect.y + offset.y, rect.w, rect.h };            \
 }                                                                                            \
                                                                                              \
-CIG_INLINED DECLNAME##_t DECLNAME##_offset(DECLNAME##_t frame, T x, T y) {                   \
-  return (DECLNAME##_t) { frame.x + x, frame.y + y, frame.w, frame.h };                      \
-}                                                                                            \
-                                                                                             \
-CIG_INLINED bool DECLNAME##_wholly_contains_relative_frame(DECLNAME##_t a, DECLNAME##_t b) { \
-  return !(b.y < 0 || b.y+b.h > a.h || b.x < 0 || b.x+b.w > a.w || !b.w || !b.h);            \
+CIG_INLINED DECLNAME##_t DECLNAME##_offset(DECLNAME##_t rect, T x, T y) {                    \
+  return (DECLNAME##_t) { rect.x + x, rect.y + y, rect.w, rect.h };                          \
 }                                                                                            \
                                                                                              \
 CIG_INLINED bool DECLNAME##_intersects(DECLNAME##_t a, DECLNAME##_t b) {                     \

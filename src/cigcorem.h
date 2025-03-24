@@ -11,11 +11,11 @@
 
 #define CIG_FILL_CONSTANT 0
 
-#define CIG_FILL cig_frame_make(0, 0, CIG_FILL_CONSTANT, CIG_FILL_CONSTANT)
+#define CIG_FILL cig_rect_make(0, 0, CIG_FILL_CONSTANT, CIG_FILL_CONSTANT)
 
-#define CIG_FILL_W(W) cig_frame_make(0, 0, W, CIG_FILL_CONSTANT)
+#define CIG_FILL_W(W) cig_rect_make(0, 0, W, CIG_FILL_CONSTANT)
 
-#define CIG_FILL_H(H) cig_frame_make(0, 0, CIG_FILL_CONSTANT, H)
+#define CIG_FILL_H(H) cig_rect_make(0, 0, CIG_FILL_CONSTANT, H)
 
 #define CIG_X cig_frame().x
 
@@ -27,7 +27,7 @@
 
 #define CIG_CENTER cig_vec2_make((CIG_W * 0.5), (CIG_H * 0.5))
 
-#define CIG_CENTERED(W, H) cig_frame_make((CIG_W * 0.5) - (W * 0.5), (CIG_H * 0.5) - (H * 0.5), W, H)
+#define CIG_CENTERED(W, H) cig_rect_make((CIG_W * 0.5) - (W * 0.5), (CIG_H * 0.5) - (H * 0.5), W, H)
 
 #define CIG_R (CIG_X + CIG_W)
 

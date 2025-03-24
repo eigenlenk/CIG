@@ -6,5 +6,6 @@
 #define CIG_INLINED static inline __attribute__((always_inline))
 #define CIG_BIT(B) (1<<B)
 #define CIG_UNUSED(x) (void)(x)
+#define CIG_NULLABLE(X) X
 
 #endif

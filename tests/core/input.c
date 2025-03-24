@@ -11,7 +11,7 @@ TEST_SETUP(core_input) {}
 TEST_TEAR_DOWN(core_input) {}
 
 static void begin() {
-	cig_begin_layout(&ctx, NULL, cig_frame_make(0, 0, 640, 480));
+	cig_begin_layout(&ctx, NULL, cig_rect_make(0, 0, 640, 480));
 }
 
 static void end() {
@@ -24,7 +24,7 @@ TEST(core_input, hover_and_press) {
 		
 		cig_set_input_state(cig_vec2_make(50, 50), i == 1 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
 		
-		cig_push_frame(cig_frame_make(0, 0, 100, 100));
+		cig_push_frame(cig_rect_make(0, 0, 100, 100));
 		
 		cig_enable_interaction(); /* This element now tracks mouse inputs */
 		
@@ -45,7 +45,7 @@ TEST(core_input, overlapping_hover_and_press) {
 		
 		cig_set_input_state(cig_vec2_make(75, 75), i == 1 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
 		
-		cig_push_frame(cig_frame_make(0, 0, 100, 100));
+		cig_push_frame(cig_rect_make(0, 0, 100, 100));
 		
 		cig_enable_interaction(); /* This element now tracks mouse inputs */
 
@@ -56,7 +56,7 @@ TEST(core_input, overlapping_hover_and_press) {
 		
 		cig_pop_frame();
 		
-		cig_push_frame(cig_frame_make(50, 50, 100, 100));
+		cig_push_frame(cig_rect_make(50, 50, 100, 100));
 		
 		cig_enable_interaction();
 
@@ -84,10 +84,10 @@ TEST(core_input, click_on_release) {
 		
 		cig_set_input_state(cig_vec2_make(75, 75), i == 1 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
 		
-		cig_push_frame(cig_frame_make(0, 0, 100, 100));
+		cig_push_frame(cig_rect_make(0, 0, 100, 100));
 		cig_pop_frame();
 		
-		cig_push_frame(cig_frame_make(50, 50, 100, 100));
+		cig_push_frame(cig_rect_make(50, 50, 100, 100));
 		
 		cig_enable_interaction();
 		
@@ -107,10 +107,10 @@ TEST(core_input, click_on_button_down) {
 		
 		cig_set_input_state(cig_vec2_make(75, 75), i == 1 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
 		
-		cig_push_frame(cig_frame_make(0, 0, 100, 100));
+		cig_push_frame(cig_rect_make(0, 0, 100, 100));
 		cig_pop_frame();
 		
-		cig_push_frame(cig_frame_make(50, 50, 100, 100));
+		cig_push_frame(cig_rect_make(50, 50, 100, 100));
 		
 		cig_enable_interaction();
 		
@@ -138,10 +138,10 @@ TEST(core_input, click_starts_outside) {
 			cig_set_input_state(cig_vec2_make(75, 75), 0);
 		}
 		
-		cig_push_frame(cig_frame_make(0, 0, 100, 100));
+		cig_push_frame(cig_rect_make(0, 0, 100, 100));
 		cig_pop_frame();
 		
-		cig_push_frame(cig_frame_make(50, 50, 100, 100));
+		cig_push_frame(cig_rect_make(50, 50, 100, 100));
 		
 		cig_enable_interaction();
 		
@@ -186,7 +186,7 @@ TEST(core_input, simple_drag) {
 		}
 		
 		
-		cig_push_frame(cig_frame_make(0, 0, 100, 100));
+		cig_push_frame(cig_rect_make(0, 0, 100, 100));
 		cig_enable_interaction();
 		
 		if (i == 1) {

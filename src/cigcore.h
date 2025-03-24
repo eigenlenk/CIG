@@ -6,7 +6,7 @@
 #include "cigcorem.h"
 #include "types/vec2.h"
 #include "types/insets.h"
-#include "types/frame.h"
+#include "types/rect.h"
 #include "types/stack.h"
 #include <stdbool.h>
 #include <stddef.h>
@@ -18,7 +18,7 @@
 /* These macros declare a templated type essentially */
 DECLARE_VEC2_T   (int, cig_vec2, -999999) /* Declares `cig_vec2_t` */
 DECLARE_INSETS_T (int, cig_insets) /* Declares `cig_cig_insets_t` */
-DECLARE_FRAME_T  (int, cig_frame, cig_vec2, cig_insets) /* Declares `cig_cig_frame_t` */
+DECLARE_RECT_T   (int, cig_rect, cig_vec2, cig_insets) /* Declares `cig_rect_t` */
 
 /* All layout element get a unique ID that tries to be unique across frames, but no promises.
    See `cig_next_id` how to definitely keep things consistent */
@@ -77,13 +77,13 @@ typedef struct {
 /* */
 typedef struct {
 	cig_id_t id;
-	cig_frame_t frame; /* Relative frame */
-	cig_frame_t clipped_frame; /* Relative clipped frame */
-	cig_frame_t absolute_frame; /* Screen-space frame */
+	cig_rect_t frame; /* Relative frame */
+	cig_rect_t clipped_frame; /* Relative clipped frame */
+	cig_rect_t absolute_frame; /* Screen-space frame */
 	cig_insets_t insets; /* Insets affect child elements within this element */
 	
 	/* PRIVATE: */		
-	bool (*_layout_function)(cig_frame_t, cig_frame_t, cig_layout_params_t*, cig_frame_t*);
+	bool (*_layout_function)(cig_rect_t, cig_rect_t, cig_layout_params_t*, cig_rect_t*);
 	cig_layout_params_t _layout_params;
   bool _clipped, _interaction_enabled;
   cig_scroll_state_t *_scroll_state;
@@ -160,7 +160,7 @@ DECLARE_ARRAY_STACK_T(cig_element_t);
    └───────────────┘ */
 
 /* */
-void cig_begin_layout(cig_context_t*, cig_buffer_ref, cig_frame_t);
+void cig_begin_layout(cig_context_t*, CIG_NULLABLE(cig_buffer_ref), cig_rect_t);
 
 /* */
 void cig_end_layout();
@@ -174,21 +174,21 @@ cig_buffer_ref cig_buffer();
 
 /* Pushes a new frame with zero insets to layout stack.
    @return TRUE if frame is visible within current container, FALSE otherwise */
-bool cig_push_frame(cig_frame_t);
+bool cig_push_frame(cig_rect_t);
 
 /* Push a new frame with custom insets to layout stack.
    @return TRUE if frame is visible within current container, FALSE otherwise */
-bool cig_push_frame_insets(cig_frame_t frame, cig_insets_t insets);
+bool cig_push_frame_insets(cig_rect_t frame, cig_insets_t insets);
 
 /* Push a new frame with custom insets and params to layout stack.
    @return TRUE if frame is visible within current container, FALSE otherwise */
-bool cig_push_frame_insets_params(cig_frame_t frame, cig_insets_t insets, cig_layout_params_t);
+bool cig_push_frame_insets_params(cig_rect_t frame, cig_insets_t insets, cig_layout_params_t);
 
 /* Push layout builder function to layout stack.
    @return TRUE if frame is visible within current container, FALSE otherwise */
 bool cig_push_layout_function(
-	bool (*)(cig_frame_t, cig_frame_t, cig_layout_params_t*, cig_frame_t*),
-	cig_frame_t frame,
+	bool (*)(cig_rect_t, cig_rect_t, cig_layout_params_t*, cig_rect_t*),
+	cig_rect_t frame,
 	cig_insets_t insets,
 	cig_layout_params_t
 );
@@ -202,16 +202,16 @@ void cig_set_default_insets(cig_insets_t);
 cig_element_t* cig_element();
 
 /* Returns current local frame relative to its parent */
-CIG_INLINED cig_frame_t cig_frame() { return cig_element()->frame; }
+CIG_INLINED cig_rect_t cig_frame() { return cig_element()->frame; }
 
 /* Returns current local frame that's been clipped */
-CIG_INLINED cig_frame_t cig_clipped_frame() { return cig_element()->clipped_frame; }
+CIG_INLINED cig_rect_t cig_clipped_frame() { return cig_element()->clipped_frame; }
 
 /* Returns current screen-space frame */
-CIG_INLINED cig_frame_t cig_absolute_frame() { return cig_element()->absolute_frame; }
+CIG_INLINED cig_rect_t cig_absolute_frame() { return cig_element()->absolute_frame; }
 
 /* Converts a relative frame to a screen-space frame */
-cig_frame_t cig_convert_relative_frame(cig_frame_t);
+cig_rect_t cig_convert_relative_frame(cig_rect_t);
 
 /* Returns a pointer to the current layout element stack. Avoid accessing if possible. */
 stack_cig_element_t_t* cig_element_stack();
@@ -322,6 +322,6 @@ void cig_empty();
 void cig_spacer(int size);
 
 /* Default layout function for stack and grid type */
-bool cig_default_layout_builder(cig_frame_t, cig_frame_t, cig_layout_params_t*, cig_frame_t*);
+bool cig_default_layout_builder(cig_rect_t, cig_rect_t, cig_layout_params_t*, cig_rect_t*);
 
 #endif

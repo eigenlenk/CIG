@@ -14,88 +14,75 @@ TEST_TEAR_DOWN(types) {}
 
 /* (( TEST CASES )) */
 
-TEST(types, frame_constructors) {
-	const cig_frame_t f0 = cig_frame_zero();
-	const cig_frame_t f1 = cig_frame_make(1, 2, 3, 4);
+TEST(types, rect_constructors) {
+	const cig_rect_t r0 = cig_rect_zero();
+	const cig_rect_t r1 = cig_rect_make(1, 2, 3, 4);
 	
-	TEST_ASSERT(f0.x == 0 && f0.y == 0 && f0.w == 0 && f0.h == 0);
-	TEST_ASSERT(f1.x == 1 && f1.y == 2 && f1.w == 3 && f1.h == 4);
+	TEST_ASSERT(r0.x == 0 && r0.y == 0 && r0.w == 0 && r0.h == 0);
+	TEST_ASSERT(r1.x == 1 && r1.y == 2 && r1.w == 3 && r1.h == 4);
 }
 
-TEST(types, frame_comparator) {
-	const cig_frame_t a = cig_frame_make(10, 10, 100, 100);
-	const cig_frame_t b = cig_frame_make(10, 10, 100, 100);
-	const cig_frame_t c = cig_frame_make(10, 10, 90, 100);
+TEST(types, rect_comparator) {
+	const cig_rect_t a = cig_rect_make(10, 10, 100, 100);
+	const cig_rect_t b = cig_rect_make(10, 10, 100, 100);
+	const cig_rect_t c = cig_rect_make(10, 10, 90, 100);
 	
-	TEST_ASSERT_TRUE(cig_frame_cmp(a, b));
-	TEST_ASSERT_FALSE(cig_frame_cmp(b, c));
+	TEST_ASSERT_TRUE(cig_rect_cmp(a, b));
+	TEST_ASSERT_FALSE(cig_rect_cmp(b, c));
 }
 
-TEST(types, frame_point_check) {
-	const cig_frame_t f = cig_frame_make(40, 40, 50, 30);
+TEST(types, rect_point_check) {
+	const cig_rect_t r = cig_rect_make(40, 40, 50, 30);
 	
-	TEST_ASSERT_TRUE(cig_frame_contains(f, cig_vec2_make(50, 50)));
-	TEST_ASSERT_FALSE(cig_frame_contains(f, cig_vec2_make(30, 50)));
+	TEST_ASSERT_TRUE(cig_rect_contains(r, cig_vec2_make(50, 50)));
+	TEST_ASSERT_FALSE(cig_rect_contains(r, cig_vec2_make(30, 50)));
 }
 
-TEST(types, frame_offset) {
-	const cig_frame_t f = cig_frame_offset(cig_frame_make(40, 40, 50, 30), 10, 10);
+TEST(types, rect_offset) {
+	const cig_rect_t r = cig_rect_offset(cig_rect_make(40, 40, 50, 30), 10, 10);
 	
-	TEST_ASSERT(f.x == 50 && f.y == 50);
+	TEST_ASSERT(r.x == 50 && r.y == 50);
 }
 
-TEST(types, frame_inset) {
-	const cig_frame_t f = cig_frame_inset(cig_frame_make(40, 40, 100, 100), cig_insets_make(10, 20, 5, 15));
+TEST(types, rect_inset) {
+	const cig_rect_t r = cig_rect_inset(cig_rect_make(40, 40, 100, 100), cig_insets_make(10, 20, 5, 15));
 	
-	TEST_ASSERT(cig_frame_cmp(f, cig_frame_make(50, 60, 85, 65)));
+	TEST_ASSERT(cig_rect_cmp(r, cig_rect_make(50, 60, 85, 65)));
 }
 
-TEST(types, frame_contains_relative_frame) {
-	const cig_frame_t f = cig_frame_make(40, 40, 50, 30);
-	
-	TEST_ASSERT_TRUE(cig_frame_wholly_contains_relative_frame(
-		cig_frame_make(40, 40, 50, 30),
-		cig_frame_make(10, 10, 20, 20)
-	));
-	TEST_ASSERT_FALSE(cig_frame_wholly_contains_relative_frame(
-		cig_frame_make(40, 40, 50, 30),
-		cig_frame_make(10, 10, 20, 30)
-	));
+TEST(types, rect_intersections) {
+	TEST_ASSERT_TRUE(cig_rect_intersects(cig_rect_make(50, 50, 100, 100), cig_rect_make(40, 40, 100, 100)));
+	TEST_ASSERT_FALSE(cig_rect_intersects(cig_rect_make(50, 50, 100, 100), cig_rect_make(0, 0, 50, 50)));
 }
 
-TEST(types, frame_intersections) {
-	TEST_ASSERT_TRUE(cig_frame_intersects(cig_frame_make(50, 50, 100, 100), cig_frame_make(40, 40, 100, 100)));
-	TEST_ASSERT_FALSE(cig_frame_intersects(cig_frame_make(50, 50, 100, 100), cig_frame_make(0, 0, 50, 50)));
+TEST(types, rect_center) {
+	TEST_ASSERT_EQUAL_VEC2(cig_vec2_make(50, 50), cig_rect_center(cig_rect_make(0, 0, 100, 100)));
 }
 
-TEST(types, frame_center) {
-	TEST_ASSERT_EQUAL_VEC2(cig_vec2_make(50, 50), cig_frame_center(cig_frame_make(0, 0, 100, 100)));
-}
-
-TEST(types, frame_containing) {
-	TEST_ASSERT_EQUAL_FRAME(
-		cig_frame_make(0, 0, 60, 60),
-		cig_frame_containing(
-			cig_frame_make(0, 0, 30, 30),
-			cig_frame_make(50, 20, 10, 40)
+TEST(types, rect_containing) {
+	TEST_ASSERT_EQUAL_RECT(
+		cig_rect_make(0, 0, 60, 60),
+		cig_rect_containing(
+			cig_rect_make(0, 0, 30, 30),
+			cig_rect_make(50, 20, 10, 40)
 		)
 	);
 }
 
-TEST(types, frame_union) {
-	TEST_ASSERT_EQUAL_FRAME(
-		cig_frame_make(40, 20, 10, 10),
-		cig_frame_union(
-			cig_frame_make(0, 0, 50, 30),
-			cig_frame_make(40, 20, 10, 40)
+TEST(types, rect_union) {
+	TEST_ASSERT_EQUAL_RECT(
+		cig_rect_make(40, 20, 10, 10),
+		cig_rect_union(
+			cig_rect_make(0, 0, 50, 30),
+			cig_rect_make(40, 20, 10, 40)
 		)
 	);
 	
-	TEST_ASSERT_EQUAL_FRAME(
-		cig_frame_make(0, 0, 0, 0),
-		cig_frame_union(
-			cig_frame_make(0, 0, 50, 30),
-			cig_frame_make(40, 40, 10, 40)
+	TEST_ASSERT_EQUAL_RECT(
+		cig_rect_make(0, 0, 0, 0),
+		cig_rect_union(
+			cig_rect_make(0, 0, 50, 30),
+			cig_rect_make(40, 40, 10, 40)
 		)
 	);
 }
@@ -170,16 +157,15 @@ TEST(types, stack_operations) {
 }
 
 TEST_GROUP_RUNNER(types) {
-  RUN_TEST_CASE(types, frame_constructors);
-  RUN_TEST_CASE(types, frame_comparator);
-  RUN_TEST_CASE(types, frame_point_check);
-  RUN_TEST_CASE(types, frame_offset);
-  RUN_TEST_CASE(types, frame_inset);
-  RUN_TEST_CASE(types, frame_contains_relative_frame);
-  RUN_TEST_CASE(types, frame_intersections);
-  RUN_TEST_CASE(types, frame_center);
-  RUN_TEST_CASE(types, frame_containing);
-  RUN_TEST_CASE(types, frame_union);
+  RUN_TEST_CASE(types, rect_constructors);
+  RUN_TEST_CASE(types, rect_comparator);
+  RUN_TEST_CASE(types, rect_point_check);
+  RUN_TEST_CASE(types, rect_offset);
+  RUN_TEST_CASE(types, rect_inset);
+  RUN_TEST_CASE(types, rect_intersections);
+  RUN_TEST_CASE(types, rect_center);
+  RUN_TEST_CASE(types, rect_containing);
+  RUN_TEST_CASE(types, rect_union);
 	RUN_TEST_CASE(types, insets_constructors);
 	RUN_TEST_CASE(types, vec2_constructors_and_validity);
 	RUN_TEST_CASE(types, vec2_operations);
