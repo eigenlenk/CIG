@@ -37,14 +37,14 @@
 
 #define CIG_SCROLL_LIMIT_Y cig_content_size().y-CIG_H+cig_frame()->insets.top+cig_frame()->insets.bottom
 
-#define IM_ARRANGE(FRAME, BODY) \
-if (cig_push_frame(FRAME)) { \
+#define CIG_ARRANGE(RECT, BODY) \
+if (cig_push_frame(RECT)) { \
   BODY; \
   cig_pop_frame(); \
 }
 
-#define IM_ARRANGE_INSETS(FRAME, INSETS, BODY) \
-if (cig_push_frame_insets(FRAME, INSETS)) { \
+#define CIG_ARRANGE_INSETS(RECT, INSETS, BODY) \
+if (cig_push_frame_insets(RECT, INSETS)) { \
   BODY; \
   cig_pop_frame(); \
 }
@@ -55,48 +55,50 @@ if (cig_push_frame(CIG_FILL)) { \
   cig_pop_frame(); \
 }
 
-#define IM_BODY(CONTENT) CONTENT
+#define CIG_BODY(CONTENT) CONTENT
 
-#define IM_GRID(ID, COLUMNS, ROWS, SPACING, MOUSE, BODY) \
-im_begin_grid(ID, COLUMNS, ROWS, SPACING, MOUSE); \
-BODY \
-im_end_grid();
+#define CIG_GRID(RECT, COLUMNS, ROWS, SPACING, BODY, OPTIONS...) \
+if (cig_push_layout_function(&cig_default_layout_builder, RECT, cig_insets_zero(), (cig_layout_params_t) { 0, \
+  .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL, \
+  CIG_STACK_ROWS(ROWS), \
+  CIG_STACK_COLUMNS(COLUMNS), \
+  CIG_STACK_SPACING(SPACING), \
+  OPTIONS \
+})) { \
+  BODY; \
+  cig_pop_frame(); \
+}
+
+#define CIG_HSTACK(RECT, BODY, OPTIONS...) \
+if (cig_push_layout_function(&cig_default_layout_builder, RECT, cig_insets_zero(), (cig_layout_params_t) { 0, \
+  CIG_STACK_AXIS(HORIZONTAL), \
+  OPTIONS \
+})) { \
+  BODY; \
+  cig_pop_frame(); \
+}
+
+#define CIG_VSTACK(RECT, BODY, OPTIONS...) \
+if (cig_push_layout_function(&cig_default_layout_builder, RECT, cig_insets_zero(), (cig_layout_params_t) { 0, \
+  CIG_STACK_AXIS(VERTICAL), \
+  OPTIONS \
+})) { \
+  BODY; \
+  cig_pop_frame(); \
+}
 	
-#define IM_STACK(FRAME, BODY, AXIS, OPTIONS...) \
-im_push_layout_frame_insets(FRAME, cig_insets_zero(), &im_layout_stack, (im_layout_params_t) { \
-  0, \
-  AXIS, \
-  OPTIONS \
-}); \
-BODY; \
-cig_pop_frame();
+#define CIG_STACK_AXIS(A) .axis = CIG_LAYOUT_AXIS_##A
+#define CIG_STACK_DIRECTION(A) .axis = CIG_LAYOUT_DIRECTION_##A
+#define CIG_STACK_SPACING(N) .spacing = N
+#define CIG_STACK_WIDTH(W) .width = W
+#define CIG_STACK_HEIGHT(H) .height = H
+#define CIG_STACK_ROWS(N) .rows = N
+#define CIG_STACK_COLUMNS(N) .columns = N
+#define CIG_STACK_FLAGS(F) .flags = F
+#define CIG_STACK_LIMIT_TOTAL(L) .limit.total = L
+#define CIG_STACK_LIMIT_HORIZONTAL(L) .limit.horizontal = L
+#define CIG_STACK_LIMIT_VERTICAL(L) .limit.vertical = L
 
-#define IM_HSTACK(FRAME, BODY, OPTIONS...) \
-im_push_layout_frame_insets(FRAME, cig_insets_zero(), &im_layout_stack, (im_layout_params_t) { \
-  0, \
-  .axis = HORIZONTAL, \
-  OPTIONS \
-}); \
-BODY; \
-cig_pop_frame();
-
-#define IM_VSTACK(FRAME, BODY, OPTIONS...) \
-im_push_layout_frame_insets(FRAME, cig_insets_zero(), &im_layout_stack, (im_layout_params_t) { \
-  0, \
-  .axis = VERTICAL, \
-  OPTIONS \
-}); \
-BODY; \
-cig_pop_frame();
-	
-#define IM_STACK_AXIS(A) .axis = A
-#define IM_STACK_SPACING(N) .spacing = N
-#define IM_STACK_WIDTH(W) .width = W
-#define IM_STACK_HEIGHT(H) .height = H
-#define IM_STACK_ROWS(N) .height = N
-#define IM_STACK_COLUMNS(N) .width = N
-#define IM_STACK_OPTIONS(F) .options = F
-
-#define IM_LAYOUT_PARAMS(PARAMS...) (im_layout_params_t) { 0, PARAMS }
+#define CIG_LAYOUT_PARAMS(PARAMS...) (cig_layout_params_t) { 0, PARAMS }
 
 #endif
