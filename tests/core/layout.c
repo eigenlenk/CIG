@@ -20,21 +20,21 @@ TEST_TEAR_DOWN(core_layout) {
 /* (( TEST CASES )) */
 
 TEST(core_layout, basic_checks) {
-	TEST_ASSERT_NOT_NULL(cig_element());
+	TEST_ASSERT_NOT_NULL(cig_frame());
 	TEST_ASSERT_EQUAL(&main_buffer, cig_buffer());
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 640, 480), cig_element()->frame);
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 640, 480), cig_element()->clipped_frame);
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 640, 480), cig_element()->absolute_frame);
-	TEST_ASSERT(cig_element()->insets.left == 0 && cig_element()->insets.top == 0 &&
-		cig_element()->insets.right == 0 && cig_element()->insets.bottom == 0);
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 640, 480), cig_frame()->rect);
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 640, 480), cig_frame()->clipped_rect);
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 640, 480), cig_frame()->absolute_rect);
+	TEST_ASSERT(cig_frame()->insets.left == 0 && cig_frame()->insets.top == 0 &&
+		cig_frame()->insets.right == 0 && cig_frame()->insets.bottom == 0);
 }
 
 TEST(core_layout, default_insets) {
   cig_set_default_insets(cig_insets_uniform(3));
   
   cig_push_frame(CIG_FILL);
-	TEST_ASSERT(cig_element()->insets.left == 3 && cig_element()->insets.top == 3 &&
-		cig_element()->insets.right == 3 && cig_element()->insets.bottom == 3);
+	TEST_ASSERT(cig_frame()->insets.left == 3 && cig_frame()->insets.top == 3 &&
+		cig_frame()->insets.right == 3 && cig_frame()->insets.bottom == 3);
   cig_pop_frame();
 }
 
@@ -81,29 +81,29 @@ TEST(core_layout, identifiers) {
 		}
 	}
 	
-	TEST_ASSERT_EQUAL_UINT32(2090695081l, cig_element()->id); // cig_hash("root")
+	TEST_ASSERT_EQUAL_UINT32(2090695081l, cig_frame()->id); // cig_hash("root")
 	
 	const int n0 = 8;
 	
 	for (a = 0; a < n0; ++a) {
 		if (cig_push_frame(CIG_FILL)) {
-			assert_unique(cig_element()->id, __LINE__);
-			ids.recorded[ids.n++] = cig_element()->id;
+			assert_unique(cig_frame()->id, __LINE__);
+			ids.recorded[ids.n++] = cig_frame()->id;
 			const int n1 = 8;
 			for (b = 0; b < n1; ++b) {
 				if (cig_push_frame(CIG_FILL)) {
-					assert_unique(cig_element()->id, __LINE__);
-					ids.recorded[ids.n++] = cig_element()->id;
+					assert_unique(cig_frame()->id, __LINE__);
+					ids.recorded[ids.n++] = cig_frame()->id;
 					const int n2 = 8;
 					for (c = 0; c < n2; ++c) {
 						if (cig_push_frame(CIG_FILL)) {
-							assert_unique(cig_element()->id, __LINE__);
-							ids.recorded[ids.n++] = cig_element()->id;
+							assert_unique(cig_frame()->id, __LINE__);
+							ids.recorded[ids.n++] = cig_frame()->id;
 							const int n3 = 8;
 							for (d = 0; d < n3; ++d) {
 								if (cig_push_frame(CIG_FILL)) {
-									assert_unique(cig_element()->id, __LINE__);
-									ids.recorded[ids.n++] = cig_element()->id;
+									assert_unique(cig_frame()->id, __LINE__);
+									ids.recorded[ids.n++] = cig_frame()->id;
 									cig_pop_frame();
 								}
 							}
@@ -121,7 +121,7 @@ TEST(core_layout, identifiers) {
 	cig_set_next_id(333l);
 	cig_push_frame(CIG_FILL);
 	
-	TEST_ASSERT_EQUAL_UINT32(333l, cig_element()->id);
+	TEST_ASSERT_EQUAL_UINT32(333l, cig_frame()->id);
 }
 
 TEST(core_layout, limits) {
@@ -142,7 +142,7 @@ TEST(core_layout, limits) {
 
 TEST(core_layout, insets) {
 	/* We are changing root frame insets directly. Insets only apply to the children */
-	cig_element()->insets = cig_insets_uniform(10);
+	cig_frame()->insets = cig_insets_uniform(10);
 	
 	/* The next frame should be smaller by 10 units on each side as set by its parent.
 	`CIG_FILL` instructs the frame to calculate its size automatically based on where it's being inserted */
@@ -151,20 +151,20 @@ TEST(core_layout, insets) {
 	/* Top left origin (X, Y) remains at zero because padding doesn't change
 	the coordinates directly - it's applied when calculating the absolute (on-screen)
 	frame when rendering. Width and height, however, already take padding(s) into account */
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 620, 460), cig_element()->frame);
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(10, 10, 620, 460), cig_absolute_frame());
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 620, 460), cig_frame()->rect);
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(10, 10, 620, 460), cig_absolute_rect());
 	
 	/* Push another frame. This time there's padding only on the left as set by the previously pushed frame */
 	cig_push_frame(CIG_FILL);
 	
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 570, 460), cig_element()->frame);
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(60, 10, 570, 460), cig_absolute_frame());
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 570, 460), cig_frame()->rect);
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(60, 10, 570, 460), cig_absolute_rect());
 	
 	/* Another relative frame, this time off-set from the origin */
 	cig_push_frame(cig_rect_make(30, 40, 100, 100));
 	
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(30, 40, 100, 100), cig_element()->frame);
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(90, 50, 100, 100), cig_absolute_frame());
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(30, 40, 100, 100), cig_frame()->rect);
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(90, 50, 100, 100), cig_absolute_rect());
 	
 	/* Here's what our layout looks like:
 
@@ -194,15 +194,15 @@ TEST(core_layout, overlay) {
   directly in root's coordinate system */
 	cig_push_frame(cig_rect_make(50, 50, 540, 380));
 	
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(50, 50, 540, 380), cig_element()->frame);
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(50, 50, 540, 380), cig_absolute_frame());
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(50, 50, 540, 380), cig_frame()->rect);
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(50, 50, 540, 380), cig_absolute_rect());
 	
 	cig_pop_frame();
 	
 	cig_push_frame(cig_rect_make(100, 100, 440, 280));
 	
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(100, 100, 440, 280), cig_element()->frame);
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(100, 100, 440, 280), cig_absolute_frame());
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(100, 100, 440, 280), cig_frame()->rect);
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(100, 100, 440, 280), cig_absolute_rect());
 	
 	cig_pop_frame();
 	
@@ -275,14 +275,14 @@ TEST(core_layout, vstack_layout) {
 	
 	/* Width is calculated, but height is fixed at 50pt */
 	cig_push_frame(CIG_FILL_H(50));
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 640, 50), cig_element()->frame);
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 640, 50), cig_frame()->rect);
 	cig_pop_frame();
 	
 	cig_push_frame(CIG_FILL_H(100));
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 50+10, 640, 100), cig_element()->frame);
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 50+10, 640, 100), cig_frame()->rect);
 	cig_pop_frame();
 	
-	TEST_ASSERT_EQUAL_INT(170, cig_element()->_layout_params._v_pos);
+	TEST_ASSERT_EQUAL_INT(170, cig_frame()->_layout_params._v_pos);
 	
 	if (cig_push_frame(CIG_FILL)) { TEST_FAIL_MESSAGE("Vertical limit exceeded"); }
 	
@@ -302,14 +302,14 @@ TEST(core_layout, hstack_layout) {
 	
 	/* Width is calculated, but height is fixed at 50pt */
 	cig_push_frame(CIG_FILL_W(200));
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 200, 480-2*10), cig_element()->frame);
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 200, 480-2*10), cig_frame()->rect);
 	cig_pop_frame();
 	
 	cig_push_frame(CIG_FILL_W(100));
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(200, 0, 100, 480-2*10), cig_element()->frame);
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(200, 0, 100, 480-2*10), cig_frame()->rect);
 	cig_pop_frame();
 	
-	TEST_ASSERT_EQUAL_INT(300, cig_element()->_layout_params._h_pos);
+	TEST_ASSERT_EQUAL_INT(300, cig_frame()->_layout_params._h_pos);
 	
 	cig_pop_frame(); /* Not really necessary in testing, but.. */
 }
@@ -344,12 +344,12 @@ TEST(core_layout, grid_with_fixed_rows_and_columns) {
 		int row = (i / 5);
 		int column = i - (row * 5);
 		cig_push_frame(CIG_FILL);
-		TEST_ASSERT_EQUAL_RECT(cig_rect_make(128*column, 96*row, 128, 96), cig_element()->frame);
+		TEST_ASSERT_EQUAL_RECT(cig_rect_make(128*column, 96*row, 128, 96), cig_frame()->rect);
 		cig_pop_frame();
 	}
 
-	TEST_ASSERT_EQUAL_INT(0, cig_element()->_layout_params._h_pos);
-	TEST_ASSERT_EQUAL_INT(480, cig_element()->_layout_params._v_pos);
+	TEST_ASSERT_EQUAL_INT(0, cig_frame()->_layout_params._h_pos);
+	TEST_ASSERT_EQUAL_INT(480, cig_frame()->_layout_params._v_pos);
 }
 
 TEST(core_layout, grid_with_fixed_cell_size) {
@@ -391,16 +391,16 @@ TEST(core_layout, grid_with_fixed_cell_size) {
 		cig_pop_frame();
 	}
 	
-	TEST_ASSERT_EQUAL_INT(600, cig_element()->_layout_params._h_pos);
+	TEST_ASSERT_EQUAL_INT(600, cig_frame()->_layout_params._h_pos);
 	
 	/* Second row */
 	for (i = 0; i < 3; ++i) {
 		cig_push_frame(CIG_FILL);
-		TEST_ASSERT_EQUAL_INT(200, cig_element()->frame.y);
+		TEST_ASSERT_EQUAL_INT(200, cig_frame()->rect.y);
 		cig_pop_frame();
 	}
 	
-	TEST_ASSERT_EQUAL_INT(200, cig_element()->_layout_params._v_pos);
+	TEST_ASSERT_EQUAL_INT(200, cig_frame()->_layout_params._v_pos);
 }
 
 TEST(core_layout, grid_with_varying_cell_size) {
@@ -421,22 +421,22 @@ TEST(core_layout, grid_with_varying_cell_size) {
 
 	/* Add 3 elements with increasing width. They should fit on the first row */
 	cig_push_frame(cig_rect_make(0, 0, 100, 160)); /* (1) */
-	TEST_ASSERT_EQUAL_INT(0, cig_element()->frame.x);
+	TEST_ASSERT_EQUAL_INT(0, cig_frame()->rect.x);
 	cig_pop_frame();
 	
-	TEST_ASSERT_EQUAL_INT(100, cig_element()->_layout_params._h_pos);
+	TEST_ASSERT_EQUAL_INT(100, cig_frame()->_layout_params._h_pos);
 	
 	cig_push_frame(cig_rect_make(0, 0, 200, 160)); /* (2) */
-	TEST_ASSERT_EQUAL_INT(100, cig_element()->frame.x);
+	TEST_ASSERT_EQUAL_INT(100, cig_frame()->rect.x);
 	cig_pop_frame();
 	
-	TEST_ASSERT_EQUAL_INT(300, cig_element()->_layout_params._h_pos);
+	TEST_ASSERT_EQUAL_INT(300, cig_frame()->_layout_params._h_pos);
 	
 	cig_push_frame(cig_rect_make(0, 0, 300, 160)); /* (3) */
-	TEST_ASSERT_EQUAL_INT(300, cig_element()->frame.x);
+	TEST_ASSERT_EQUAL_INT(300, cig_frame()->rect.x);
 	cig_pop_frame();
 	
-	TEST_ASSERT_EQUAL_INT(600, cig_element()->_layout_params._h_pos);
+	TEST_ASSERT_EQUAL_INT(600, cig_frame()->_layout_params._h_pos);
 	
 	/*
 	Let's try to insert another cell that should fit width wise,
@@ -444,14 +444,14 @@ TEST(core_layout, grid_with_varying_cell_size) {
 	so it's pushed onto the next row.
 	*/
 	cig_push_frame(cig_rect_make(0, 0, 40, 160));
-	TEST_ASSERT_EQUAL_INT(0, 		cig_element()->frame.x);
-	TEST_ASSERT_EQUAL_INT(160, 	cig_element()->frame.y);
+	TEST_ASSERT_EQUAL_INT(0, 		cig_frame()->rect.x);
+	TEST_ASSERT_EQUAL_INT(160, 	cig_frame()->rect.y);
 	cig_pop_frame();
 	
 	/* This one should be inserted normally onto the second row */
 	cig_push_frame(cig_rect_make(0, 0, 400, 160)); /* (5) */
-	TEST_ASSERT_EQUAL_INT(40, 	cig_element()->frame.x);
-	TEST_ASSERT_EQUAL_INT(160,	cig_element()->frame.y);
+	TEST_ASSERT_EQUAL_INT(40, 	cig_frame()->rect.x);
+	TEST_ASSERT_EQUAL_INT(160,	cig_frame()->rect.y);
 	cig_pop_frame();
 	
 	/* Spacer fills the remaining space on the second row. Internally this is just a frame push + pop */
@@ -459,8 +459,8 @@ TEST(core_layout, grid_with_varying_cell_size) {
 	
 	/* Insert an element to fill all the space on the third row */
 	cig_push_frame(CIG_FILL); /* (6) */
-	TEST_ASSERT_EQUAL_INT(640, 	cig_element()->frame.w);
-	TEST_ASSERT_EQUAL_INT(160, 	cig_element()->frame.h);
+	TEST_ASSERT_EQUAL_INT(640, 	cig_frame()->rect.w);
+	TEST_ASSERT_EQUAL_INT(160, 	cig_frame()->rect.h);
 	cig_pop_frame();
 	
 	/*
@@ -496,34 +496,34 @@ TEST(core_layout, grid_with_down_direction) {
 	
 	/* Add 3 elements with increasing height and width. They should fit in the first column */
 	cig_push_frame(cig_rect_make(0, 0, 100, 120)); /* (1) */
-	TEST_ASSERT_EQUAL_INT(0,		cig_element()->frame.y);
+	TEST_ASSERT_EQUAL_INT(0,		cig_frame()->rect.y);
 	cig_pop_frame();
 	
-	TEST_ASSERT_EQUAL_INT(120,	cig_element()->_layout_params._v_pos);
+	TEST_ASSERT_EQUAL_INT(120,	cig_frame()->_layout_params._v_pos);
 	
 	cig_push_frame(cig_rect_make(0, 0, 150, 160)); /* (2) */
-	TEST_ASSERT_EQUAL_INT(120,	cig_element()->frame.y);
+	TEST_ASSERT_EQUAL_INT(120,	cig_frame()->rect.y);
 	cig_pop_frame();
 	
-	TEST_ASSERT_EQUAL_INT(280, 	cig_element()->_layout_params._v_pos);
+	TEST_ASSERT_EQUAL_INT(280, 	cig_frame()->_layout_params._v_pos);
 	
 	cig_push_frame(cig_rect_make(0, 0, 200, 200)); /* (3) */
-	TEST_ASSERT_EQUAL_INT(280, 	cig_element()->frame.y);
+	TEST_ASSERT_EQUAL_INT(280, 	cig_frame()->rect.y);
 	cig_pop_frame();
 	
 	/* No remaining space vertically - position moves back to the top and to the next column */
-	TEST_ASSERT_EQUAL_INT(200,	cig_element()->_layout_params._h_pos);
-	TEST_ASSERT_EQUAL_INT(0,		cig_element()->_layout_params._v_pos);
+	TEST_ASSERT_EQUAL_INT(200,	cig_frame()->_layout_params._h_pos);
+	TEST_ASSERT_EQUAL_INT(0,		cig_frame()->_layout_params._v_pos);
 	
 	/*
 	Without anything else configured on the grid, the next element will fill
 	the remaining space on the right.
 	*/
 	cig_push_frame(CIG_FILL); /* (4) */
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(200, 0, 440, 480), cig_element()->frame);
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(200, 0, 440, 480), cig_frame()->rect);
 	cig_pop_frame();
 	
-	TEST_ASSERT_EQUAL_INT(640, 	cig_element()->_layout_params._h_pos);
+	TEST_ASSERT_EQUAL_INT(640, 	cig_frame()->_layout_params._h_pos);
 	
 	/*
 	For visualisation:
@@ -555,13 +555,13 @@ TEST(core_layout, vstack_scroll) {
 	}
 	
 	/* Scrolling is not enabled by default */
-	TEST_ASSERT_NULL(cig_element()->_scroll_state);
-	TEST_ASSERT_FALSE(cig_element()->_clipped);
+	TEST_ASSERT_NULL(cig_frame()->_scroll_state);
+	TEST_ASSERT_FALSE(cig_frame()->_clipped);
 	
 	cig_enable_scroll(NULL);
 	
 	/* Scrolling also enables clipping */
-	TEST_ASSERT_TRUE(cig_element()->_clipped);
+	TEST_ASSERT_TRUE(cig_frame()->_clipped);
 	
 	cig_scroll_state_t *scroll = cig_scroll_state();
 	
@@ -574,7 +574,7 @@ TEST(core_layout, vstack_scroll) {
 	for (int i = 0; i < 10; ++i) {
 		if (cig_push_frame(CIG_FILL)) {
 			/* Elements should be offset by scroll amount on the Y axis */
-			TEST_ASSERT_EQUAL_INT(i*100-220, cig_element()->frame.y);
+			TEST_ASSERT_EQUAL_INT(i*100-220, cig_frame()->rect.y);
 			cig_pop_frame();
 		}
 	}
@@ -592,7 +592,7 @@ TEST(core_layout, clipping) {
 		 
 	/* An element that's partially outside the root bounds gets clipped */
 	cig_push_frame(cig_rect_make(100, -100, 440, 200));
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(100, 0, 440, 100), cig_element()->clipped_frame);
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(100, 0, 440, 100), cig_frame()->clipped_rect);
 	cig_pop_frame();
 	
 	/* Some element filling the whole root */
@@ -603,10 +603,10 @@ TEST(core_layout, clipping) {
 	
 	cig_push_frame(cig_rect_make(600, 400, 100, 100));
 	
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(600, 400, 40, 80), cig_element()->clipped_frame);
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(600, 400, 40, 80), cig_frame()->clipped_rect);
 		
 		cig_push_frame(cig_rect_make(30, 70, 20, 20));
-		TEST_ASSERT_EQUAL_RECT(cig_rect_make(30, 70, 10, 10), cig_element()->clipped_frame);
+		TEST_ASSERT_EQUAL_RECT(cig_rect_make(30, 70, 10, 10), cig_frame()->clipped_rect);
 		cig_pop_frame();
 		
 	cig_pop_frame();
@@ -614,14 +614,14 @@ TEST(core_layout, clipping) {
 	
 	cig_push_frame(cig_rect_make(-75, -50, 200, 200));
 	
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 125, 150), cig_element()->clipped_frame);
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 125, 150), cig_frame()->clipped_rect);
 		
 		cig_push_frame(cig_rect_make(0, 0, 100, 100));
-		TEST_ASSERT_EQUAL_RECT(cig_rect_make(75, 50, 25, 50), cig_element()->clipped_frame);
+		TEST_ASSERT_EQUAL_RECT(cig_rect_make(75, 50, 25, 50), cig_frame()->clipped_rect);
 		cig_pop_frame();
 		
 		cig_push_frame(cig_rect_make(-25, -50, 100, 100));
-		TEST_ASSERT_EQUAL_RECT(cig_rect_make(75, 50, 0, 0), cig_element()->clipped_frame);
+		TEST_ASSERT_EQUAL_RECT(cig_rect_make(75, 50, 0, 0), cig_frame()->clipped_rect);
 		cig_pop_frame();
 		
 	cig_pop_frame();
@@ -630,7 +630,7 @@ TEST(core_layout, clipping) {
 	cig_enable_clipping();
 	
 		cig_push_frame(cig_rect_make(-10, -50, 460, 100));
-		TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 440, 50), cig_element()->clipped_frame);
+		TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 440, 50), cig_frame()->clipped_rect);
 		cig_pop_frame();
 	
 	cig_pop_frame();
@@ -645,17 +645,17 @@ TEST(core_layout, additional_buffers) {
 	cig_push_buffer(&secondary_buffer);
 	
 	TEST_ASSERT_EQUAL(&secondary_buffer, cig_buffer());
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(100, 100, 440, 280), cig_element()->clipped_frame);
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(100, 100, 440, 280), cig_element()->absolute_frame);
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(100, 100, 440, 280), cig_frame()->clipped_rect);
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(100, 100, 440, 280), cig_frame()->absolute_rect);
 	
 	
 	/* Another child within that new buffer */
 	cig_push_frame(cig_rect_make(100, 100, 240, 80));
 
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(100, 100, 240, 80), cig_element()->frame);
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(100, 100, 240, 80), cig_frame()->rect);
 	
 	/* Absolute frame is now in the coordinate space of the new buffer, rather than the main buffer */
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(100, 100, 240, 80), cig_element()->absolute_frame);
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(100, 100, 240, 80), cig_frame()->absolute_rect);
 
 	cig_pop_frame();
 	
@@ -673,15 +673,15 @@ TEST(core_layout, main_screen_subregion) {
 	cig_begin_layout(&ctx, &main_buffer, cig_rect_make(0, 240, 640, 240));
 	
 	/* The UI should be clipped within that larger screen */
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 240, 640, 240), cig_element()->clipped_frame);
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 240, 640, 240), cig_frame()->clipped_rect);
 	
 	
 	cig_push_frame(CIG_FILL);
 	
 	/* The absolute frame should be offset as well, while the relative frames stay the same */
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 640, 240), cig_element()->frame);
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 640, 240), cig_element()->clipped_frame);
-	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 240, 640, 240), cig_element()->absolute_frame);
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 640, 240), cig_frame()->rect);
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 640, 240), cig_frame()->clipped_rect);
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 240, 640, 240), cig_frame()->absolute_rect);
 	
 	cig_pop_frame();
 }

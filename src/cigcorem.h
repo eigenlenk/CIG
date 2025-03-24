@@ -17,13 +17,13 @@
 
 #define CIG_FILL_H(H) cig_rect_make(0, 0, CIG_FILL_CONSTANT, H)
 
-#define CIG_X cig_frame().x
+#define CIG_X cig_rect().x
 
-#define CIG_Y cig_frame().y
+#define CIG_Y cig_rect().y
 
-#define CIG_W cig_frame().w
+#define CIG_W cig_rect().w
 
-#define CIG_H cig_frame().h
+#define CIG_H cig_rect().h
 
 #define CIG_CENTER cig_vec2_make((CIG_W * 0.5), (CIG_H * 0.5))
 
@@ -33,9 +33,9 @@
 
 #define CIG_B (CIG_Y + CIG_H)
 
-#define CIG_SCROLL_LIMIT_X cig_content_size().x-CIG_W+cig_element()->insets.left+cig_element()->insets.right
+#define CIG_SCROLL_LIMIT_X cig_content_size().x-CIG_W+cig_frame()->insets.left+cig_frame()->insets.right
 
-#define CIG_SCROLL_LIMIT_Y cig_content_size().y-CIG_H+cig_element()->insets.top+cig_element()->insets.bottom
+#define CIG_SCROLL_LIMIT_Y cig_content_size().y-CIG_H+cig_frame()->insets.top+cig_frame()->insets.bottom
 
 #define IM_ARRANGE(FRAME, BODY) \
 if (cig_push_frame(FRAME)) { \

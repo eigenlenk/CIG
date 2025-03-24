@@ -77,9 +77,9 @@ typedef struct {
 /* */
 typedef struct {
 	cig_id_t id;
-	cig_rect_t frame; /* Relative frame */
-	cig_rect_t clipped_frame; /* Relative clipped frame */
-	cig_rect_t absolute_frame; /* Screen-space frame */
+	cig_rect_t rect; /* Relative rect */
+	cig_rect_t clipped_rect; /* Relative clipped rect */
+	cig_rect_t absolute_rect; /* Screen-space rect */
 	cig_insets_t insets; /* Insets affect child elements within this element */
 	
 	/* PRIVATE: */		
@@ -88,7 +88,7 @@ typedef struct {
   bool _clipped, _interaction_enabled;
   cig_scroll_state_t *_scroll_state;
 	unsigned int _id_counter;
-} cig_element_t;
+} cig_frame_t;
 
 typedef enum {
   CIG_INPUT_MOUSE_BUTTON_LEFT = CIG_BIT(0),
@@ -103,9 +103,9 @@ typedef struct {
 	cig_vec2_t position;
   
 	enum {
-		NEITHER,	/* Button was neither pressed or released this frame */
-		BEGAN,		/* Button was pressed down this frame (click started) */
-		ENDED,		/* Button was released this frame (click ended) */
+		NEITHER,	/* Button was neither pressed or released */
+		BEGAN,		/* Button was pressed down (click started) */
+		ENDED,		/* Button was released this (click ended) */
 		EXPIRED		/* Button was held longer than deemed appropriate */
 	} click_state;
   
@@ -122,8 +122,8 @@ typedef struct {
 	/* PRIVATE: */								
 	unsigned int _press_start_tick;
 	cig_id_t _press_target_id, /* Element that was focused when button press began */
-           _target_prev_frame,
-           _target_this_frame;
+           _target_prev_tick,
+           _target_this_tick;
 } cig_input_state_t;
 
 /* A single instance of CIG. Use one for each game state? */
@@ -148,8 +148,8 @@ typedef enum {
 	CIG_CLICK_DEFAULT_OPTIONS = CIG_CLICK_STARTS_INSIDE
 } cig_click_flags_t;
 
-#define STACK_CAPACITY_cig_element_t CIG_NESTED_ELEMENTS_MAX
-DECLARE_ARRAY_STACK_T(cig_element_t);
+#define STACK_CAPACITY_cig_frame_t CIG_NESTED_ELEMENTS_MAX
+DECLARE_ARRAY_STACK_T(cig_frame_t);
 
 /* ╔══════════════════════════════════════════════════╗
    ║                   PUBLIC API                     ║
@@ -173,55 +173,55 @@ void cig_reset_internal_state(); /* TODO: Remove. Not needed with new context I 
 cig_buffer_ref cig_buffer();
 
 /* Pushes a new frame with zero insets to layout stack.
-   @return TRUE if frame is visible within current container, FALSE otherwise */
+   @return TRUE if rect is visible within current container, FALSE otherwise */
 bool cig_push_frame(cig_rect_t);
 
 /* Push a new frame with custom insets to layout stack.
-   @return TRUE if frame is visible within current container, FALSE otherwise */
-bool cig_push_frame_insets(cig_rect_t frame, cig_insets_t insets);
+   @return TRUE if rect is visible within current container, FALSE otherwise */
+bool cig_push_frame_insets(cig_rect_t, cig_insets_t);
 
 /* Push a new frame with custom insets and params to layout stack.
-   @return TRUE if frame is visible within current container, FALSE otherwise */
-bool cig_push_frame_insets_params(cig_rect_t frame, cig_insets_t insets, cig_layout_params_t);
+   @return TRUE if rect is visible within current container, FALSE otherwise */
+bool cig_push_frame_insets_params(cig_rect_t, cig_insets_t, cig_layout_params_t);
 
 /* Push layout builder function to layout stack.
-   @return TRUE if frame is visible within current container, FALSE otherwise */
+   @return TRUE if rect is visible within current container, FALSE otherwise */
 bool cig_push_layout_function(
 	bool (*)(cig_rect_t, cig_rect_t, cig_layout_params_t*, cig_rect_t*),
-	cig_rect_t frame,
-	cig_insets_t insets,
+	cig_rect_t,
+	cig_insets_t,
 	cig_layout_params_t
 );
 
 /* Pop and return the last element in the layout stack */
-cig_element_t* cig_pop_frame();
+cig_frame_t* cig_pop_frame();
 
 void cig_set_default_insets(cig_insets_t);
 
 /* Returns current layout element */
-cig_element_t* cig_element();
+cig_frame_t* cig_frame();
 
-/* Returns current local frame relative to its parent */
-CIG_INLINED cig_rect_t cig_frame() { return cig_element()->frame; }
+/* Returns current local rect relative to its parent */
+CIG_INLINED cig_rect_t cig_rect() { return cig_frame()->rect; }
 
-/* Returns current local frame that's been clipped */
-CIG_INLINED cig_rect_t cig_clipped_frame() { return cig_element()->clipped_frame; }
+/* Returns current local rect that's been clipped */
+CIG_INLINED cig_rect_t cig_clipped_rect() { return cig_frame()->clipped_rect; }
 
-/* Returns current screen-space frame */
-CIG_INLINED cig_rect_t cig_absolute_frame() { return cig_element()->absolute_frame; }
+/* Returns current screen-space rect */
+CIG_INLINED cig_rect_t cig_absolute_rect() { return cig_frame()->absolute_rect; }
 
-/* Converts a relative frame to a screen-space frame */
-cig_rect_t cig_convert_relative_frame(cig_rect_t);
+/* Converts a relative rect to a screen-space rect */
+cig_rect_t cig_convert_relative_rect(cig_rect_t);
 
 /* Returns a pointer to the current layout element stack. Avoid accessing if possible. */
-stack_cig_element_t_t* cig_element_stack();
+stack_cig_frame_t_t* cig_frame_stack();
 
 /* ┌────────────────────────────────┐
 ───┤  TEMPORARY BUFFERS (ADVANCED)  │
    └────────────────────────────────┘ */
 
 /* Similar to `cig_begin_layout` where you start rendering into a new buffer,
-   in the current element's coordinate system. All subsequent elements `absolute_frame`-s
+   in the current element's coordinate system. All subsequent elements `absolute_rect`-s
 	 are relative to this buffer/screen/texture.
 	 
 	 This is mostly when you want to cache
@@ -263,7 +263,7 @@ cig_input_action_type_t cig_clicked(cig_input_action_type_t, cig_click_flags_t);
    └─────────────┘ */
    
 /* Tries to enable scrolling for the current layout element and allocate an
-   internal scroll state that remains constant between frames. The state
+   internal scroll state that remains constant between ticks. The state
 	 is released when the element is no longer on screen.
 	 
 	 To enable to a proper persistent scroll state, you can provide a pointer to
@@ -295,7 +295,7 @@ cig_vec2_t cig_content_size();
 ───┤  LAYOUT HELPERS  │
    └──────────────────┘ */
 
-/* By default, when adding frames that are completely outside the bounds
+/* By default, when adding rects that are completely outside the bounds
    of the parent, `cig_push_frame` calls return false. You can disable that
    behavior with this */
 void cig_disable_culling();
@@ -303,7 +303,7 @@ void cig_disable_culling();
 /* Enables clipping for the current layout element */
 void cig_enable_clipping();
 
-/* Normally element ID is auto-calculated and may vary from frame to frame.
+/* Normally element ID is auto-calculated and may vary from tick to tick.
    This sets an explicit Id for the next `cig_push_frame` call.
    See `cig_hash` for generating an ID from a string */
 void cig_set_next_id(cig_id_t);
