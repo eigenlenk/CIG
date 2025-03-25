@@ -2,10 +2,11 @@
 #include "deps/nob.h"
 #include <string.h>
 
-#define BIN_FOLDER 			"bin/"
-#define SRC_FOLDER   		"src/"
-#define DEPS_FOLDER			"deps/"
-#define TESTS_FOLDER		"tests/"
+#define BIN_FOLDER   "bin/"
+#define SRC_FOLDER   "src/"
+#define DEPS_FOLDER  "deps/"
+#define TESTS_FOLDER "tests/"
+#define DEMO_FOLDER  "demo/"
 
 int main(int argc, char **argv)
 {
@@ -15,7 +16,7 @@ int main(int argc, char **argv)
   
   enum targets {
     TARGET_TEST = 1,
-    TARGET_DEMO = 2
+    TARGET_RAYLIB_DEMO = 2
   };
   
   int targets_included = 0;
@@ -31,11 +32,11 @@ int main(int argc, char **argv)
   } else {
     for (int i = 1; i < argc; ++i) {
       if (!strcmp(argv[i], "all")) {
-        targets_included = TARGET_TEST | TARGET_DEMO;
+        targets_included = TARGET_TEST | TARGET_RAYLIB_DEMO;
       } else if (!strcmp(argv[i], "test")) {
         targets_included |= TARGET_TEST;
       } else if (!strcmp(argv[i], "demo")) {
-        targets_included |= TARGET_DEMO;
+        targets_included |= TARGET_RAYLIB_DEMO;
       } else {
         printf("Unknown target '%s'!\n", argv[i]);
         return 1;
@@ -68,15 +69,39 @@ int main(int argc, char **argv)
 
       DEPS_FOLDER"unity/src/unity.c",
       DEPS_FOLDER"unity/extras/fixture/src/fixture.c",
-
       SRC_FOLDER"cigcore.c",
-
       TESTS_FOLDER"main.c",
       TESTS_FOLDER"core/layout.c",
       TESTS_FOLDER"core/state.c",
       TESTS_FOLDER"core/input.c",
       TESTS_FOLDER"core/macros.c",
       TESTS_FOLDER"types.c",
+    );
+
+    if (!nob_cmd_run_sync_and_reset(&cmd)) return 1;
+  }
+  
+  if (targets_included & TARGET_RAYLIB_DEMO) {
+    nob_cmd_append(
+      &cmd,
+      "gcc",
+      "-std=gnu99",
+      "-Wfatal-errors",
+      "-I"SRC_FOLDER,
+      "-I"DEPS_FOLDER"raylib-5.5_win32_mingw-w64/include",
+
+      "-DDEBUG",
+
+      "-o", BIN_FOLDER"raylib-demo",
+
+      SRC_FOLDER"cigcore.c",
+      DEMO_FOLDER"main.c",
+      
+      DEPS_FOLDER"raylib-5.5_win32_mingw-w64/lib/libraylib.a",
+      
+      "-lopengl32",
+      "-lgdi32",
+      "-lwinmm",
     );
 
     if (!nob_cmd_run_sync_and_reset(&cmd)) return 1;

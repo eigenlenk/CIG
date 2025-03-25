@@ -445,7 +445,7 @@ bool cig_default_layout_builder(
 				w = prm->width;
 			} else if (prm->columns) {
 				w = (container.w - ((prm->columns - 1) * prm->spacing)) / prm->columns;
-			} else if (prm->_h_size && prm->direction == CIG_LAYOUT_DIRECTION_DOWN) {
+			} else if (is_grid && prm->_h_size && prm->direction == CIG_LAYOUT_DIRECTION_DOWN) {
 				w = prm->_h_size;
 			}	else {
 				w = container.w - prm->_h_pos;
@@ -469,7 +469,7 @@ bool cig_default_layout_builder(
 				h = prm->height;
 			} else if (prm->rows) {
 				h = (container.h - ((prm->rows - 1) * prm->spacing)) / prm->rows;
-			} else if (prm->_v_size && prm->direction == CIG_LAYOUT_DIRECTION_LEFT) {
+			} else if (is_grid && prm->_v_size && prm->direction == CIG_LAYOUT_DIRECTION_LEFT) {
 				h = prm->_v_size;
 			}	else {
 				h = container.h - prm->_v_pos;

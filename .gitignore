@@ -53,3 +53,4 @@ Thumbs.db
 *.pspimage
 *.old
 dev/
+deps/raylib-5.5_win32_mingw-w64/
