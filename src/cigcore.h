@@ -67,6 +67,20 @@ typedef struct {
   } _count; /* h_ and v_cur are only counted in stacks/grids */
 } cig_layout_params_t;
 
+typedef struct {
+  unsigned char bytes[CIG_STATE_MEM_ARENA_BYTES];
+  size_t mapped;
+} cig_state_memory_arena_t;
+
+typedef struct {
+	enum {
+		INACTIVE = 0,
+		ACTIVATED,
+		ACTIVE
+	} activation_state;
+	cig_state_memory_arena_t arena;
+} cig_state_t;
+
 /* */
 typedef struct {
   cig_vec2_t offset;
@@ -86,6 +100,7 @@ typedef struct {
 	cig_layout_params_t _layout_params;
   bool _clipped, _interaction_enabled;
   cig_scroll_state_t *_scroll_state;
+  cig_state_t *_state;
 	unsigned int _id_counter;
 } cig_frame_t;
 
@@ -151,15 +166,6 @@ typedef struct {
 
 #define STACK_CAPACITY_cig_frame_t CIG_NESTED_ELEMENTS_MAX
 DECLARE_ARRAY_STACK_T(cig_frame_t);
-
-typedef struct {
-	enum {
-		INACTIVE = 0,
-		ACTIVATED,
-		ACTIVE
-	} activation_state;
-	unsigned char data[CIG_STATE_MEM_ARENA_BYTES];
-} cig_state_t;
 
 #define STACK_CAPACITY_cig_buffer_element_t CIG_BUFFERS_MAX
 DECLARE_ARRAY_STACK_T(cig_buffer_element_t);
@@ -255,6 +261,8 @@ cig_frame_t_stack_t* cig_frame_stack();
    └─────────┘ */
    
 CIG_OPTIONAL(cig_state_t*) cig_state();
+
+CIG_OPTIONAL(void*) cig_state_allocate(size_t);
 
 /* ┌────────────────────────────────┐
 ───┤  TEMPORARY BUFFERS (ADVANCED)  │

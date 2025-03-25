@@ -2,6 +2,7 @@
 #include "fixture.h"
 #include "cigcore.h"
 #include "asserts.h"
+#include <string.h>
 
 TEST_GROUP(core_state);
 
@@ -91,8 +92,41 @@ TEST(core_state, stale) {
   end();
 }
 
+TEST(core_state, memory_arena) {
+  for (int i = 0; i < 2; ++i) {
+    begin();
+
+    TEST_ASSERT_EQUAL_UINT(0, cig_state()->arena.mapped);
+
+    cig_vec2_t *vec2 = (cig_vec2_t *)cig_state_allocate(sizeof(cig_vec2_t));
+    unsigned long *ul = (unsigned long *)cig_state_allocate(sizeof(unsigned long));
+    char *str = (char *)cig_state_allocate(sizeof(char[32]));
+    void *a_whole_kilobyte = cig_state_allocate(sizeof(char[1024]));
+    
+    TEST_ASSERT_NULL(a_whole_kilobyte); /* Our memory area is 512 bytes by default */
+    
+    TEST_ASSERT_EQUAL_UINT(
+      sizeof(cig_vec2_t) + sizeof(unsigned long) + sizeof(char[32]),
+      cig_state()->arena.mapped
+    );
+    
+    if (i == 0) { /* Store data */
+      *vec2 = cig_vec2_make(13, 17);
+      *ul = cig_frame()->id;
+      strcpy(str, "Hello, World!");
+    } else { /* Read data */
+      TEST_ASSERT_EQUAL_VEC2(cig_vec2_make(13, 17), *vec2);
+      TEST_ASSERT_EQUAL_UINT32(cig_frame()->id, *ul);
+      TEST_ASSERT_EQUAL_STRING("Hello, World!", str);
+    }
+    
+    end();
+  }
+}
+
 TEST_GROUP_RUNNER(core_state) {
   RUN_TEST_CASE(core_state, activation_states);
   RUN_TEST_CASE(core_state, pool_limit);
   RUN_TEST_CASE(core_state, stale);
+  RUN_TEST_CASE(core_state, memory_arena);
 }

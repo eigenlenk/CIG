@@ -165,7 +165,28 @@ cig_frame_t_stack_t* cig_frame_stack() {
    └─────────┘ */
    
 CIG_OPTIONAL(cig_state_t*) cig_state() {
-  return find_state(cig_frame()->id);
+  cig_frame_t *frame = cig_frame();
+  if (frame->_state) {
+    return frame->_state;
+  }
+  if ((frame->_state = find_state(frame->id))) {
+    frame->_state->arena.mapped = 0;
+  }
+  return frame->_state;
+}
+
+CIG_OPTIONAL(void*) cig_state_allocate(size_t bytes) {
+  cig_state_t *state = cig_state();
+  
+  if (!state) {
+    return NULL;
+  } else if (state->arena.mapped + bytes >= CIG_STATE_MEM_ARENA_BYTES) {
+    return NULL;
+  }
+  
+  void *result = &state->arena.bytes[state->arena.mapped];
+  state->arena.mapped += bytes;
+  return result;
 }
 
 /* ┌────────────────────────────────┐
@@ -641,7 +662,8 @@ static CIG_OPTIONAL(cig_state_t*) find_state(const cig_id_t id) {
     current->state_list[result].id = id;
     current->state_list[result].last_tick = current->tick;
     current->state_list[result].value.activation_state = ACTIVATED;
-    memset(&current->state_list[result].value.data, 0, CIG_STATE_MEM_ARENA_BYTES);
+    memset(&current->state_list[result].value.arena.bytes, 0, CIG_STATE_MEM_ARENA_BYTES);
+    current->state_list[result].value.arena.mapped = 0;
     return &current->state_list[result].value;
   }
   
