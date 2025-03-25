@@ -1,5 +1,5 @@
-#ifndef IM_LIMITS_H
-#define IM_LIMITS_H
+#ifndef CIG_LIMITS_INCLUDED
+#define CIG_LIMITS_INCLUDED
 
 /* Maximum number of nested layout elements during the layout pass */
 #define CIG_NESTED_ELEMENTS_MAX 32
@@ -15,9 +15,9 @@
 #define CIG_STATES_MAX 32
 
 /* Size of the memory arena for each state */
-#define CIG_STATE_MEM_ARENA_BYTES 256
+#define CIG_STATE_MEM_ARENA_BYTES 512
 
-/* How large is the buffer stack. Generally not too deeply nested */
+/* How large is the buffer stack. Generally not too deeply nested? */
 #define CIG_BUFFERS_MAX 4
 
 /* Maximum number of clip regions you can push within a buffer. Every clip

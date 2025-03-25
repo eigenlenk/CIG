@@ -9,8 +9,8 @@
 static cig_context_t *current = NULL;
 
 /* Forward delcarations */
-// static cig_state_t* 				im_state(const cig_id_t, const imgui_widget_t);
-static cig_scroll_state_t* find_scroll_state(cig_id_t);
+static CIG_OPTIONAL(cig_state_t*) find_state(cig_id_t);
+static CIG_OPTIONAL(cig_scroll_state_t*) find_scroll_state(cig_id_t);
 static void handle_frame_hover(const cig_frame_t*);
 static void push_clip(cig_frame_t*);
 static void pop_clip();
@@ -28,14 +28,16 @@ void cig_init_context(cig_context_t *context) {
   context->buffers = INIT_STACK(cig_buffer_element_t);
   context->input_state = (cig_input_state_t) { 0 };
   context->next_id = 0;
-  context->tick = 0;
+  context->tick = 1;
   
 	for (int i = 0; i < CIG_STATES_MAX; ++i) {
-    context->state_list.values[i].id = 0;
+    context->state_list[i].id = 0;
+    context->state_list[i].last_tick = context->tick;
   }
   
   for (int i = 0; i < CIG_SCROLLABLE_ELEMENTS_MAX; ++i) {
     context->scroll_elements[i].id = 0;
+    context->scroll_elements[i].last_tick = context->tick;
   }
 }
 
@@ -68,12 +70,21 @@ void cig_begin_layout(
 }
 
 void cig_end_layout() {
-	register cig_state_t *s, *last = NULL;
+  for (register int i = 0; i < CIG_STATES_MAX; ++i) {
+    if (current->state_list[i].last_tick == current->tick) {
+      if (current->state_list[i].value.activation_state == ACTIVATED) {
+        current->state_list[i].value.activation_state = ACTIVE;
+      }
+    } else {
+      current->state_list[i].value.activation_state = INACTIVE;
+    }
+  }
+  
+  ++current->tick;
 	
-	++current->tick;
-	
+  
 	/* Check for inactive states and filter them out by shifting active states back */
-	for (register int i = current->state_list.size - 1; i >= 0; --i) {
+	/*for (register int i = current->state_list.size - 1; i >= 0; --i) {
 		s = &current->state_list.values[i];
 		if (s->last_tick != current->tick) {
 			if (last) {
@@ -87,28 +98,7 @@ void cig_end_layout() {
 		} else if (!last) {
 			last = s;
 		}
-	}
-}
-
-void cig_reset_internal_state() {
-	int i;
-	for (i = 0; i < CIG_STATES_MAX; ++i) {
-    current->state_list.values[i].id = 0;
-  }
-  for (i = 0; i < CIG_SCROLLABLE_ELEMENTS_MAX; ++i) {
-    current->scroll_elements[i].id = 0;
-  }
-	current->state_list.size = 0;
-	current->input_state.locked = false;
-	current->input_state._press_target_id = 0;
-	current->input_state._target_prev_tick = 0;
-	current->input_state._target_this_tick = 0;
-	current->input_state._press_start_tick = 0;
-	current->input_state.drag.active = false;
-	current->input_state.drag.start_position = cig_vec2_zero();
-	current->input_state.drag.change = cig_vec2_zero();
-  current->tick = 0;
-	current->next_id = 0;
+	}*/
 }
 
 cig_buffer_ref cig_buffer() {
@@ -168,6 +158,14 @@ cig_rect_t cig_convert_relative_rect(const cig_rect_t rect) {
 
 cig_frame_t_stack_t* cig_frame_stack() {
 	return &current->frames;
+}
+
+/* ┌─────────┐
+───┤  STATE  │
+   └─────────┘ */
+   
+CIG_OPTIONAL(cig_state_t*) cig_state() {
+  return find_state(cig_frame()->id);
 }
 
 /* ┌────────────────────────────────┐
@@ -611,66 +609,74 @@ static bool push_frame(
 	return true;
 }
 
-/*static cig_state_t* im_state(
-	const cig_id_t id,
-	const imgui_widget_t type
-) {
-	register size_t i = 0;
-	cig_state_t *s;
-
-	for (; i < _state_list.size; ++i) {
-		s = &_state_list.values[i];
-		if (s->id == id && (type == IM_ANY || type == s->type)) {
-			if (tick != s->last_tick) {
-				s->activation_state = ACTIVE;
-				s->last_tick = tick;
-			}
-			return s;
-		}
-	}
-
-	if (_state_list.size == IM_STATES_MAX) {
-		exit(66);
-	}
-
-	s = &_state_list.values[_state_list.size++];
-	s->id = id;
-	s->type = type;
-	s->internal_record = 0;
-	s->activation_state = ACTIVATED;
-	s->last_tick = tick;
-	memset(&s->data, 0, sizeof(s->data));
-	
-	return s;
-}*/
-
 static void handle_frame_hover(const cig_frame_t *frame) {
 	if (cig_rect_contains(frame->absolute_rect, current->input_state.position)) {
 		current->input_state._target_this_tick = frame->id;
 	}
 }
 
-static cig_scroll_state_t* find_scroll_state(const cig_id_t id) {
-  register int first_available = -1;
+static CIG_OPTIONAL(cig_state_t*) find_state(const cig_id_t id) {
+  register int open = -1, stale = -1;
+  
+  /* Find a state with a matching ID, with no ID yet, or a stale state */
+  for (register int i = 0; i < CIG_STATES_MAX; ++i) {
+    if (current->state_list[i].id == id) {
+      if (current->state_list[i].value.activation_state == INACTIVE) {
+        current->state_list[i].value.activation_state = ACTIVATED;
+      }
+			current->state_list[i].last_tick = current->tick;
+      return &current->state_list[i].value;
+    }
+    else if (open < 0 && !current->state_list[i].id) {
+      open = i;
+    }
+    else if (stale < 0 && current->state_list[i].last_tick < current->tick-1) {
+      stale = i;
+    }
+  }
+
+  const int result = open >= 0 ? open : stale;
+
+  if (result >= 0) {
+    current->state_list[result].id = id;
+    current->state_list[result].last_tick = current->tick;
+    current->state_list[result].value.activation_state = ACTIVATED;
+    memset(&current->state_list[result].value.data, 0, CIG_STATE_MEM_ARENA_BYTES);
+    return &current->state_list[result].value;
+  }
+  
+  return NULL;
+}
+
+static CIG_OPTIONAL(cig_scroll_state_t*) find_scroll_state(const cig_id_t id) {
+  register int first_unused = -1, first_stale = -1;
 	
   for (register int i = 0; i < CIG_SCROLLABLE_ELEMENTS_MAX; ++i) {
     if (current->scroll_elements[i].id == id) {
 			current->scroll_elements[i].last_tick = current->tick;
       return &current->scroll_elements[i].value;
-    } else if ((current->scroll_elements[i].id == 0 || current->scroll_elements[i].last_tick < current->tick-1) && first_available < 0) {
-      first_available = i;
+    }
+    else if (current->scroll_elements[i].id == 0 && first_unused < 0) {
+      first_unused = i;
+    }
+    else if (current->scroll_elements[i].last_tick < current->tick-1 && first_stale < 0) {
+      first_stale = i;
     }
   }
 	
-  if (first_available < 0) {
+  if (first_unused < 0 && first_stale < 0) {
     return NULL;
-  } else {
-    current->scroll_elements[first_available].id = id;
-    current->scroll_elements[first_available].value.offset = cig_vec2_zero();
-    current->scroll_elements[first_available].value.content_size = cig_vec2_zero();
-		current->scroll_elements[first_available].last_tick = current->tick;
+  }
+  else {
+    /* Prefer an unused slot, use stale when nothing else is available */
+    int i = (first_unused >= 0) ? first_unused : first_stale;
+    
+    current->scroll_elements[i].id = id;
+    current->scroll_elements[i].value.offset = cig_vec2_zero();
+    current->scroll_elements[i].value.content_size = cig_vec2_zero();
+		current->scroll_elements[i].last_tick = current->tick;
 		
-    return &current->scroll_elements[first_available].value;
+    return &current->scroll_elements[i].value;
   }
 }
 

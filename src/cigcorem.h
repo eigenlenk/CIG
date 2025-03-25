@@ -90,7 +90,7 @@ if (cig_push_layout_function(&cig_default_layout_builder, RECT, cig_insets_zero(
 #define CIG_PARAMS(PARAMS...) (cig_layout_params_t) { 0, PARAMS }
 	
 #define CIG_AXIS(A) .axis = CIG_LAYOUT_AXIS_##A
-#define CIG_DIRECTION(A) .axis = CIG_LAYOUT_DIRECTION_##A
+#define CIG_DIRECTION(A) .direction = CIG_LAYOUT_DIRECTION_##A
 #define CIG_SPACING(N) .spacing = N
 #define CIG_WIDTH(W) .width = W
 #define CIG_HEIGHT(H) .height = H

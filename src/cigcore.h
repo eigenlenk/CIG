@@ -153,21 +153,21 @@ typedef struct {
 DECLARE_ARRAY_STACK_T(cig_frame_t);
 
 typedef struct {
-	cig_id_t id;
 	enum {
 		INACTIVE = 0,
 		ACTIVATED,
 		ACTIVE
 	} activation_state;
-	unsigned int last_tick;
 	unsigned char data[CIG_STATE_MEM_ARENA_BYTES];
 } cig_state_t;
 
 #define STACK_CAPACITY_cig_buffer_element_t CIG_BUFFERS_MAX
 DECLARE_ARRAY_STACK_T(cig_buffer_element_t);
 
-/* A single instance of CIG. Use one for each game state? */
+/* A single instance of CIG. Use one for each game state?
+   All fields should be considered private */
 typedef struct {
+  /* PRIVATE: */	
   cig_frame_t_stack_t frames;
   cig_buffer_element_t_stack_t buffers;
   cig_input_state_t input_state;
@@ -180,9 +180,10 @@ typedef struct {
     cig_scroll_state_t value;
   } scroll_elements[CIG_SCROLLABLE_ELEMENTS_MAX];
   struct {
-    cig_state_t values[CIG_STATES_MAX];
-    size_t size;
-  } state_list;
+    cig_id_t id;
+    cig_state_t value;
+    unsigned int last_tick;
+  } state_list[CIG_STATES_MAX];
 } cig_context_t;
 
 /* ╔══════════════════════════════════════════════════╗
@@ -197,14 +198,10 @@ typedef struct {
 void cig_init_context(cig_context_t*);
 
 /* */
-void cig_begin_layout(cig_context_t*, CIG_NULLABLE(cig_buffer_ref), cig_rect_t);
+void cig_begin_layout(cig_context_t*, CIG_OPTIONAL(cig_buffer_ref), cig_rect_t);
 
 /* */
 void cig_end_layout();
-
-/* Resets internal values. Useful for when transitioning to a different
-   game state or screen where you lay out a completely different UI */
-void cig_reset_internal_state(); /* TODO: Remove. Not needed with new context I think? */
 
 /* Returns an opaque pointer to the current buffer where drawing operations would take place */
 cig_buffer_ref cig_buffer();
@@ -253,6 +250,12 @@ cig_rect_t cig_convert_relative_rect(cig_rect_t);
 /* Returns a pointer to the current layout element stack. Avoid accessing if possible. */
 cig_frame_t_stack_t* cig_frame_stack();
 
+/* ┌─────────┐
+───┤  STATE  │
+   └─────────┘ */
+   
+CIG_OPTIONAL(cig_state_t*) cig_state();
+
 /* ┌────────────────────────────────┐
 ───┤  TEMPORARY BUFFERS (ADVANCED)  │
    └────────────────────────────────┘ */
@@ -277,8 +280,8 @@ void cig_pop_buffer();
 /* Pass mouse coordinates and button press state[s] */
 void cig_set_input_state(cig_vec2_t, cig_input_action_type_t);
 
-/* Returns the current mouse state as updated by last  `cig_set_input_state` call */
-cig_input_state_t *cig_input_state();
+/* Returns the current mouse state as updated by last `cig_set_input_state` call */
+CIG_OPTIONAL(cig_input_state_t*) cig_input_state();
 
 /* Enables mouse tracking for the current layout element.
    Call this after a successful `cig_push_frame` call */
@@ -314,7 +317,7 @@ cig_input_action_type_t cig_clicked(cig_input_action_type_t, cig_click_flags_t);
 bool cig_enable_scroll(cig_scroll_state_t *);
 
 /* Returns the current scroll state objet, NULL if scrolling is not enabled */
-cig_scroll_state_t* cig_scroll_state();
+CIG_OPTIONAL(cig_scroll_state_t*) cig_scroll_state();
 
 /* Set scroll offset values */
 void cig_set_offset(cig_vec2_t);

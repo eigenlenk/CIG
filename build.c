@@ -73,6 +73,7 @@ int main(int argc, char **argv)
 
       TESTS_FOLDER"main.c",
       TESTS_FOLDER"core/layout.c",
+      TESTS_FOLDER"core/state.c",
       TESTS_FOLDER"core/input.c",
       TESTS_FOLDER"core/macros.c",
       TESTS_FOLDER"types.c",
