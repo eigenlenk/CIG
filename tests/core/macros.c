@@ -86,9 +86,16 @@ TEST(core_macros, grid) {
   ))
 }
 
+TEST(core_macros, allocator) {
+  int *i = CIG_ALLOCATE(int);
+  *i = 5;
+  TEST_ASSERT_EQUAL_INT(5, *i);
+}
+
 TEST_GROUP_RUNNER(core_macros) {
   RUN_TEST_CASE(core_macros, arrange);
   RUN_TEST_CASE(core_macros, vstack);
   RUN_TEST_CASE(core_macros, hstack);
   RUN_TEST_CASE(core_macros, grid);
+  RUN_TEST_CASE(core_macros, allocator);
 }

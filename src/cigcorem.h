@@ -101,4 +101,6 @@ if (cig_push_layout_function(&cig_default_layout_builder, RECT, cig_insets_zero(
 #define CIG_LIMIT_HORIZONTAL(L) .limit.horizontal = L
 #define CIG_LIMIT_VERTICAL(L) .limit.vertical = L
 
+#define CIG_ALLOCATE(T) (T*)cig_state_allocate(sizeof(T));
+
 #endif
