@@ -7,7 +7,9 @@ TEST_GROUP(core_input);
 
 static cig_context_t ctx = { 0 };
 
-TEST_SETUP(core_input) {}
+TEST_SETUP(core_input) {
+  cig_init_context(&ctx);
+}
 TEST_TEAR_DOWN(core_input) {}
 
 static void begin() {

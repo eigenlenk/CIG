@@ -9,7 +9,10 @@ static cig_context_t ctx = { 0 };
 static int main_buffer = 1;
 
 TEST_SETUP(core_layout) {
-	/* Begin laying out a screen that's 640 by 480 */
+  /* This only needs to be called once, not on every tick */
+  cig_init_context(&ctx);
+    
+  /* Begin laying out a screen that's 640 by 480 */
 	cig_begin_layout(&ctx, &main_buffer, cig_rect_make(0, 0, 640, 480));
 }
 

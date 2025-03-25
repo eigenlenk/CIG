@@ -139,7 +139,7 @@ TEST(types, vec2_math_utils) {
 }
 
 TEST(types, stack_operations) {
-  stack_int_t si = INIT_STACK(int);
+  int_stack_t si = INIT_STACK(int);
   
   TEST_ASSERT_EQUAL_INT(8, si.capacity);
   TEST_ASSERT_EQUAL_INT(0, si.size);

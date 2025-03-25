@@ -8,6 +8,7 @@ TEST_GROUP(core_macros);
 static cig_context_t ctx = { 0 };
 
 TEST_SETUP(core_macros) {
+  cig_init_context(&ctx);
 	cig_begin_layout(&ctx, NULL, cig_rect_make(0, 0, 640, 480));
 }
 
@@ -26,12 +27,10 @@ TEST(core_macros, arrange) {
       
       /* Regular control flow works in here */
       for (int i = 0; i < 2; ++i) { }
-      
-      
+     
       CIG_ARRANGE(CIG_FILL, CIG_BODY(
         TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 492, 392), cig_rect());
       ))
-      
       
       /* No need to use CIG_BODY macro. The additional parenthesis just help with indentation.
          CIG_FILLED(BODY...) === CIG_ARRANGE(CIG_FILL, BODY...) */

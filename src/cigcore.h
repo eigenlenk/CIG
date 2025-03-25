@@ -125,14 +125,6 @@ typedef struct {
            _target_this_tick;
 } cig_input_state_t;
 
-/* A single instance of CIG. Use one for each game state? */
-typedef struct {
-  cig_input_state_t input_state;
-  cig_insets_t default_insets;
-  cig_id_t next_id;
-  unsigned int tick;
-} cig_context_t;
-
 typedef enum {
 	/* `CIG_PRESS_INSIDE` option specifies whether the press has to start
 	within the bounds of this element. Otherwise it can start outside and the 
@@ -147,8 +139,51 @@ typedef enum {
 	CIG_CLICK_DEFAULT_OPTIONS = CIG_CLICK_STARTS_INSIDE
 } cig_click_flags_t;
 
+typedef cig_rect_t cig_clip_rect_t;
+#define STACK_CAPACITY_cig_clip_rect_t CIG_BUFFER_CLIP_REGIONS_MAX
+DECLARE_ARRAY_STACK_T(cig_clip_rect_t);
+
+typedef struct {
+	cig_buffer_ref buffer;
+	cig_vec2_t origin;
+	cig_clip_rect_t_stack_t clip_rects;
+} cig_buffer_element_t;
+
 #define STACK_CAPACITY_cig_frame_t CIG_NESTED_ELEMENTS_MAX
 DECLARE_ARRAY_STACK_T(cig_frame_t);
+
+typedef struct {
+	cig_id_t id;
+	enum {
+		INACTIVE = 0,
+		ACTIVATED,
+		ACTIVE
+	} activation_state;
+	unsigned int last_tick;
+	unsigned char data[CIG_STATE_MEM_ARENA_BYTES];
+} cig_state_t;
+
+#define STACK_CAPACITY_cig_buffer_element_t CIG_BUFFERS_MAX
+DECLARE_ARRAY_STACK_T(cig_buffer_element_t);
+
+/* A single instance of CIG. Use one for each game state? */
+typedef struct {
+  cig_frame_t_stack_t frames;
+  cig_buffer_element_t_stack_t buffers;
+  cig_input_state_t input_state;
+  cig_insets_t default_insets;
+  cig_id_t next_id;
+  unsigned int tick;
+  struct {
+    cig_id_t id;
+    unsigned int last_tick;
+    cig_scroll_state_t value;
+  } scroll_elements[CIG_SCROLLABLE_ELEMENTS_MAX];
+  struct {
+    cig_state_t values[CIG_STATES_MAX];
+    size_t size;
+  } state_list;
+} cig_context_t;
 
 /* ╔══════════════════════════════════════════════════╗
    ║                   PUBLIC API                     ║
@@ -157,6 +192,9 @@ DECLARE_ARRAY_STACK_T(cig_frame_t);
 /* ┌───────────────┐
 ───┤  CORE LAYOUT  │
    └───────────────┘ */
+   
+/* Call this once to initalize/reset the context */
+void cig_init_context(cig_context_t*);
 
 /* */
 void cig_begin_layout(cig_context_t*, CIG_NULLABLE(cig_buffer_ref), cig_rect_t);
@@ -213,7 +251,7 @@ CIG_INLINED cig_rect_t cig_absolute_rect() { return cig_frame()->absolute_rect; 
 cig_rect_t cig_convert_relative_rect(cig_rect_t);
 
 /* Returns a pointer to the current layout element stack. Avoid accessing if possible. */
-stack_cig_frame_t_t* cig_frame_stack();
+cig_frame_t_stack_t* cig_frame_stack();
 
 /* ┌────────────────────────────────┐
 ───┤  TEMPORARY BUFFERS (ADVANCED)  │
