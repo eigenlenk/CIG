@@ -25,6 +25,10 @@
 
 #define CIG_H cig_rect().h
 
+#define CIG_GX cig_absolute_rect().x
+
+#define CIG_GY cig_absolute_rect().y
+
 #define CIG_CENTER cig_vec2_make((CIG_W * 0.5), (CIG_H * 0.5))
 
 #define CIG_CENTERED(W, H) cig_rect_make((CIG_W * 0.5) - (W * 0.5), (CIG_H * 0.5) - (H * 0.5), W, H)

@@ -22,7 +22,7 @@ static void end() {
 	cig_end_layout();
 }
 
-TEST(text_span, basic_span) {
+TEST(text_span, basic_label) {
   int spans = 0;
   
   void text_render(cig_rect_t rect, const char *str, size_t len) {
@@ -30,7 +30,7 @@ TEST(text_span, basic_span) {
   }
   
   cig_vec2_t text_measure(const char *str, size_t len) {
-    return cig_vec2_make(len, 1); /* W, H in characters for terminal display */
+    return cig_vec2_make(10*len, 10); /* 10x10 glyphs */
   }
   
   cig_set_text_render_callback(&text_render);
@@ -38,19 +38,23 @@ TEST(text_span, basic_span) {
 
   for (int i = 0; i < 2; ++i, spans = 0) {
     begin();
+    
+    spans = 0;
     cig_label("Olá mundo!");
     
-    if (cig_push_frame(CIG_CENTERED(10, 10))) {
-      cig_label("Olá mundo!");
+    TEST_ASSERT_EQUAL(2, spans);
+    
+    if (cig_push_frame(CIG_CENTERED(50, 50))) {
+      spans = 0;
+      cig_label("This is a text.");
+      TEST_ASSERT_EQUAL(4, spans);
       cig_pop_frame();
     }
-
-    // TEST_ASSERT_EQUAL(2, spans);
 
     end();
   }
 }
 
 TEST_GROUP_RUNNER(text_span) {
-  RUN_TEST_CASE(text_span, basic_span);
+  RUN_TEST_CASE(text_span, basic_label);
 }
