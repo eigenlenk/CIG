@@ -1,6 +1,6 @@
 #include "unity.h"
 #include "fixture.h"
-#include "cigcore.h"
+#include "cig.h"
 #include "asserts.h"
 
 /* Declare a stack type */

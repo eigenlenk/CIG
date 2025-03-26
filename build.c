@@ -56,8 +56,10 @@ int main(int argc, char **argv)
       "gcc",
       "-std=gnu99",
       "-Wfatal-errors",
+      
       "-I"SRC_FOLDER,
       "-I"TESTS_FOLDER,
+      "-I"DEPS_FOLDER"utf8/",
       "-I"DEPS_FOLDER"unity/src/",
       "-I"DEPS_FOLDER"unity/extras/fixture/src/",
 
@@ -69,12 +71,15 @@ int main(int argc, char **argv)
 
       DEPS_FOLDER"unity/src/unity.c",
       DEPS_FOLDER"unity/extras/fixture/src/fixture.c",
+      DEPS_FOLDER"utf8/utf8.c",
       SRC_FOLDER"cigcore.c",
+      SRC_FOLDER"cigtext.c",
       TESTS_FOLDER"main.c",
       TESTS_FOLDER"core/layout.c",
       TESTS_FOLDER"core/state.c",
       TESTS_FOLDER"core/input.c",
       TESTS_FOLDER"core/macros.c",
+      TESTS_FOLDER"text/span.c",
       TESTS_FOLDER"types.c",
     );
 
@@ -87,18 +92,21 @@ int main(int argc, char **argv)
       "gcc",
       "-std=gnu99",
       "-Wfatal-errors",
+      
       "-I"SRC_FOLDER,
+      "-I"DEPS_FOLDER"utf8/",
       "-I"DEPS_FOLDER"raylib-5.5_win32_mingw-w64/include",
-
+      
       "-DDEBUG",
 
       "-o", BIN_FOLDER"raylib-demo",
 
+      DEPS_FOLDER"utf8/utf8.c",
       SRC_FOLDER"cigcore.c",
+      SRC_FOLDER"cigtext.c",
       DEMO_FOLDER"main.c",
       
       DEPS_FOLDER"raylib-5.5_win32_mingw-w64/lib/libraylib.a",
-      
       "-lopengl32",
       "-lgdi32",
       "-lwinmm",

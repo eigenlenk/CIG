@@ -1,17 +1,24 @@
 #include "raylib.h"
-#include "cigcore.h"
+#include "cig.h"
+#include <stdio.h>
+#include <string.h>
 
 #define RECT(R) R.x, R.y, R.w, R.h
 
 static cig_context_t ctx = { 0 };
 
 static void demo_ui();
+static void render_text(cig_rect_t, const char*, size_t);
+static cig_vec2_t measure_text(const char*, size_t);
 
 int main(int argc, const char *argv[]) {
+  SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_ALWAYS_RUN);
   InitWindow(800, 600, "CIG Demo");
   SetTargetFPS(60);
 
   cig_init_context(&ctx);
+  cig_set_text_render_callback(&render_text);
+  cig_set_text_measure_callback(&measure_text);
 
   while (!WindowShouldClose()) {
     BeginDrawing();
@@ -39,14 +46,25 @@ int main(int argc, const char *argv[]) {
 
 static bool clickable_box(cig_rect_t rect) {
   bool clicked = false;
-  CIG_ARRANGE(rect, CIG_BODY(
-    cig_enable_interaction();
-    DrawRectangle(
-      RECT((cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE) ? cig_rect_offset(cig_frame()->absolute_rect, 0, 2) : cig_frame()->absolute_rect)),
-      cig_hovered() ? PURPLE : BLUE
-    );
-    clicked = cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_STARTS_INSIDE);
-  ))
+  
+  CIG_ARRANGE(
+    rect,
+    CIG_BODY(
+      cig_enable_interaction();
+      
+      clicked = cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_STARTS_INSIDE);
+      bool pressed = cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE);
+      
+      CIG_ARRANGE(
+        pressed ? cig_rect_make(0, 2, CIG_W, CIG_H) : CIG_FILL,
+        CIG_BODY(
+          DrawRectangle(RECT(cig_absolute_rect()), pressed ? PURPLE : BLUE);
+          cig_label("Hi! Olá mundo!");
+        )
+      )
+    )
+  )
+  
   return clicked;
 }
 
@@ -72,4 +90,24 @@ static void demo_ui() {
     
     cig_pop_frame();
   }
+}
+
+void render_text(cig_rect_t rect, const char *str, size_t len) {
+  static char buf[24];
+  strncpy(buf, str, len);
+  buf[len] = '\0';
+  
+  // DrawRectangle(RECT(rect), RED);
+  DrawText(buf, rect.x, rect.y, 20, LIGHTGRAY);
+}
+
+cig_vec2_t measure_text(const char *str, size_t len) {
+  static char buf[24];
+  strncpy(buf, str, len);
+  buf[len] = '\0';
+  
+  return cig_vec2_make(
+    MeasureText(buf, 20),
+    20
+  );
 }
