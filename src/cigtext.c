@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#define WORD_SPACING 9
+#define WORD_SPACING 4
 
 typedef struct {
   utf8_string slice;
@@ -50,6 +50,7 @@ void cig_label(const char *text) {
       
       /* Span terminated: basic space character or end of string */
       if (cp == 0x20 || (cur + ch.byte_len == utext.byte_len)) {
+        if (cur + ch.byte_len == utext.byte_len) { cur += ch.byte_len; }
         utf8_string slice = slice_utf8_string(utext, span_start, cur - span_start);
         
         label->spans[label->span_count++] = (span_t) { 
@@ -91,7 +92,7 @@ static void render_spans(span_t *first, size_t count) {
   }
   
   lines = 1 + y;
-  dy = absolute_rect.y + (CIG_H - (lines * 20)) * 0.5;
+  dy = absolute_rect.y + (CIG_H - (lines * 14)) * 0.5;
   
   for (line_start = span = first, x = 0; span < last;) {
     if (x + span->bounds.x > absolute_rect.w) {
@@ -123,7 +124,7 @@ static void render_spans(span_t *first, size_t count) {
       }
 
       span = line_start = line_end;
-      dy += 20;
+      dy += 14;
       continue;
     }
     

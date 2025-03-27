@@ -1,2 +1,4 @@
 @ECHO off
-bin\raylib-demo.exe
+cd bin
+raylib-demo.exe
+cd ..

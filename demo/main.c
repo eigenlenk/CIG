@@ -4,8 +4,10 @@
 #include <string.h>
 
 #define RECT(R) R.x, R.y, R.w, R.h
+#define TASKBAR_FONT_SIZE 14
 
 static cig_context_t ctx = { 0 };
+static Font font;
 
 static void demo_ui();
 static void render_text(cig_rect_t, const char*, size_t);
@@ -15,6 +17,8 @@ int main(int argc, const char *argv[]) {
   SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_ALWAYS_RUN);
   InitWindow(640, 480, "CIG Demo");
   SetTargetFPS(60);
+  
+  font = LoadFontEx("micross.ttf", TASKBAR_FONT_SIZE, 0, 0);
 
   cig_init_context(&ctx);
   cig_set_text_render_callback(&render_text);
@@ -100,17 +104,35 @@ static void demo_ui() {
   }
   
   /* Taskbar */
+  
   if (cig_push_frame_insets(cig_rect_make(0, CIG_H - TASKBAR_H, CIG_W, TASKBAR_H), cig_insets_make(2, 4, 2, 2))) {
     DrawRectangle(RECT(cig_frame()->absolute_rect), (Color){ 195, 195, 195, 255 });
     DrawLine(CIG_GX, CIG_GY + 1, CIG_GX + CIG_W, CIG_GY + 1, (Color){ 255, 255, 255, 255 });
     
-    // CIG_ARRANGE(CIG_FILL, DrawRectangle(RECT(cig_frame()->absolute_rect), (Color){ 95, 195, 195, 255 }));
-    
-    CIG_ARRANGE(CIG_FILL_W(54), CIG_BODY(
-      cig_enable_interaction();
-      draw_win32_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE));
-    ));
-    
+    CIG_HSTACK(
+      CIG_FILL,
+      CIG_BODY(
+        CIG_ARRANGE(CIG_FILL_W(54), CIG_BODY(
+          cig_enable_interaction();
+          draw_win32_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE));
+          cig_label("Start");
+        ))
+        
+        CIG_ARRANGE(CIG_FILL_W(95), CIG_BODY(
+          cig_enable_interaction();
+          draw_win32_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE));
+          cig_label("Welcome");
+        ))
+        
+        CIG_ARRANGE(CIG_FILL_W(95), CIG_BODY(
+          cig_enable_interaction();
+          draw_win32_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE));
+          cig_label("My Computer");
+        ))
+      ),
+      CIG_SPACING(4)
+    )
+
     cig_pop_frame();
   }
   
@@ -146,7 +168,7 @@ void render_text(cig_rect_t rect, const char *str, size_t len) {
   buf[len] = '\0';
   
   // DrawRectangle(RECT(rect), RED);
-  DrawText(buf, rect.x, rect.y, 20, LIGHTGRAY);
+  DrawTextEx(font, buf, (Vector2) { rect.x, rect.y }, TASKBAR_FONT_SIZE, 0, (Color) { 0, 0, 0, 255 });
 }
 
 cig_vec2_t measure_text(const char *str, size_t len) {
@@ -154,8 +176,7 @@ cig_vec2_t measure_text(const char *str, size_t len) {
   strncpy(buf, str, len);
   buf[len] = '\0';
   
-  return cig_vec2_make(
-    MeasureText(buf, 20),
-    20
-  );
+  Vector2 bounds = MeasureTextEx(font, buf, TASKBAR_FONT_SIZE, 0);
+  
+  return cig_vec2_make(bounds.x, bounds.y);
 }
