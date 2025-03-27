@@ -39,7 +39,7 @@ void cig_set_default_font(cig_font_ref font_ref) {
   default_font = font_ref;
 }
 
-void cig_label(const char *text) {
+void cig_label(const char *text, cig_text_horizontal_alignment_t h_alignment) {
   label_t *label = CIG_ALLOCATE(label_t);
 
   cig_id_t hash = cig_hash(text);

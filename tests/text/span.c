@@ -22,21 +22,21 @@ static void end() {
 	cig_end_layout();
 }
 
-TEST(text_span, basic_label) {
-  int spans = 0;
-  
-  void text_render(cig_rect_t rect, const char *str, size_t len) {
-    spans ++;
-  }
-  
-  cig_vec2_t text_measure(const char *str, size_t len) {
-    return cig_vec2_make(10*len, 10); /* 10x10 glyphs */
-  }
-  
-  cig_font_info_t font_query(cig_font_ref) {
-    return (cig_font_info_t) { 10, 0 };
-  }
-  
+static int spans = 0;
+
+CIG_INLINED void text_render(cig_rect_t rect, const char *str, size_t len) {
+  spans ++;
+}
+
+CIG_INLINED cig_vec2_t text_measure(const char *str, size_t len) {
+  return cig_vec2_make(10*len, 10); /* 10x10 glyphs */
+}
+
+CIG_INLINED cig_font_info_t font_query(cig_font_ref font_ref) {
+  return (cig_font_info_t) { 10, 0 };
+}
+
+TEST(text_span, basic_label) {  
   cig_set_text_render_callback(&text_render);
   cig_set_text_measure_callback(&text_measure);
   cig_set_font_query_callback(&font_query);
@@ -45,13 +45,13 @@ TEST(text_span, basic_label) {
     begin();
     
     spans = 0;
-    cig_label("Olá mundo!");
+    cig_label("Olá mundo!", CIG_TEXT_ALIGN_CENTER);
     
     TEST_ASSERT_EQUAL(2, spans);
     
     if (cig_push_frame(CIG_CENTERED(50, 50))) {
       spans = 0;
-      cig_label("This is a text.");
+      cig_label("This is a text.", CIG_TEXT_ALIGN_CENTER);
       TEST_ASSERT_EQUAL(4, spans);
       cig_pop_frame();
     }

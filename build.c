@@ -67,6 +67,8 @@ int main(int argc, char **argv)
       "-DUNITY_INCLUDE_PRINT_FORMATTED",
       "-DUNITY_INCLUDE_DOUBLE",
 
+      "-Wno-initializer-overrides",
+
       "-o", BIN_FOLDER"tests",
 
       DEPS_FOLDER"unity/src/unity.c",

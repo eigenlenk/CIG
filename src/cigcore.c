@@ -408,6 +408,22 @@ void cig_spacer(const int size) {
 	cig_pop_frame();
 }
 
+CIG_INLINED void move_to_next_row(cig_layout_params_t *prm) {
+  prm->_h_pos = 0;
+  prm->_v_pos += (prm->_v_size + prm->spacing);
+  prm->_h_size = CIG_FILL_CONSTANT;
+  prm->_v_size = CIG_FILL_CONSTANT;
+  prm->_count.h_cur = 0;
+}
+
+CIG_INLINED void move_to_next_column(cig_layout_params_t *prm) {
+  prm->_v_pos = 0;
+  prm->_h_pos += (prm->_h_size + prm->spacing);
+  prm->_h_size = CIG_FILL_CONSTANT;
+  prm->_v_size = CIG_FILL_CONSTANT;
+  prm->_count.v_cur = 0;
+}
+
 bool cig_default_layout_builder(
 	const cig_rect_t container, /* Rect into which sub-frames are laid out */
 	const cig_rect_t rect, /* Proposed rect, generally from CIG_FILL */
@@ -423,29 +439,13 @@ bool cig_default_layout_builder(
 			w,
 			h;
 
-	void move_to_next_row() {
-		prm->_h_pos = 0;
-		prm->_v_pos += (prm->_v_size + prm->spacing);
-		prm->_h_size = CIG_FILL_CONSTANT;
-		prm->_v_size = CIG_FILL_CONSTANT;
-		prm->_count.h_cur = 0;
-	}
-	
-	void move_to_next_column() {
-		prm->_v_pos = 0;
-		prm->_h_pos += (prm->_h_size + prm->spacing);
-		prm->_h_size = CIG_FILL_CONSTANT;
-		prm->_v_size = CIG_FILL_CONSTANT;
-		prm->_count.v_cur = 0;
-	}
-	
 	if (h_axis) {
 		if (rect.w == CIG_FILL_CONSTANT) {
 			if (prm->width > 0) {
 				w = prm->width;
 			} else if (prm->columns) {
 				w = (container.w - ((prm->columns - 1) * prm->spacing)) / prm->columns;
-			} else if (is_grid && prm->_h_size && prm->direction == CIG_LAYOUT_DIRECTION_DOWN) {
+			} else if (is_grid && prm->_h_size && prm->direction == CIG_LAYOUT_DIRECTION_VERTICAL) {
 				w = prm->_h_size;
 			}	else {
 				w = container.w - prm->_h_pos;
@@ -469,7 +469,7 @@ bool cig_default_layout_builder(
 				h = prm->height;
 			} else if (prm->rows) {
 				h = (container.h - ((prm->rows - 1) * prm->spacing)) / prm->rows;
-			} else if (is_grid && prm->_v_size && prm->direction == CIG_LAYOUT_DIRECTION_LEFT) {
+			} else if (is_grid && prm->_v_size && prm->direction == CIG_LAYOUT_DIRECTION_HORIZONTAL) {
 				h = prm->_v_size;
 			}	else {
 				h = container.h - prm->_v_pos;
@@ -490,9 +490,9 @@ bool cig_default_layout_builder(
 	if (h_axis && v_axis) {
 		/* Can we fit the new frame onto current axis? */
 		switch (prm->direction) {
-			case CIG_LAYOUT_DIRECTION_LEFT: {
+			case CIG_LAYOUT_DIRECTION_HORIZONTAL: {
 				if ((prm->limit.horizontal && prm->_count.h_cur == prm->limit.horizontal) || prm->_h_pos + w > container.w) {
-					move_to_next_row();
+					move_to_next_row(prm);
 					x = 0;
 					y = prm->_v_pos;
 				}
@@ -503,12 +503,12 @@ bool cig_default_layout_builder(
 				prm->_count.h_cur ++;
 				
 				if (prm->_h_pos >= container.w) {
-					move_to_next_row();
+					move_to_next_row(prm);
 				}
 			} break;
-			case CIG_LAYOUT_DIRECTION_DOWN: {
+			case CIG_LAYOUT_DIRECTION_VERTICAL: {
 				if ((prm->limit.vertical && prm->_count.v_cur == prm->limit.vertical) || prm->_v_pos + h > container.h) {
-					move_to_next_column();
+					move_to_next_column(prm);
 					y = 0;
 					x = prm->_h_pos;
 				}
@@ -519,7 +519,7 @@ bool cig_default_layout_builder(
 				prm->_count.v_cur ++;
 				
 				if (prm->_v_pos >= container.h) {
-					move_to_next_column();
+					move_to_next_column(prm);
 				}
 			} break;
 			default: break;
@@ -539,6 +539,14 @@ bool cig_default_layout_builder(
 		prm->_v_size = CIG_MAX(prm->_v_size, h);
 		prm->_count.v_cur ++;
 	}
+
+  if (prm->alignment.horizontal == CIG_LAYOUT_ALIGNS_RIGHT) {
+    x = (container.w - (x+w));
+  }
+
+  if (prm->alignment.vertical == CIG_LAYOUT_ALIGNS_BOTTOM) {
+    y = (container.h - (y+h));
+  }
 
 	*result = cig_rect_make(x, y, w, h);
 	

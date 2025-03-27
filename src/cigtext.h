@@ -10,6 +10,18 @@ typedef struct {
                line_spacing;
 } cig_font_info_t;
 
+typedef enum {
+  CIG_TEXT_ALIGN_LEFT = 0,
+  CIG_TEXT_ALIGN_CENTER,
+  CIG_TEXT_ALIGH_RIGHT
+} cig_text_horizontal_alignment_t;
+
+typedef enum {
+  CIG_TEXT_ALIGN_TOP = 0,
+  CIG_TEXT_ALIGN_MIDDLE,
+  CIG_TEXT_ALIGH_BOTTOM
+} cig_text_vertical_alignment_t;
+
 /* ┌─────────────────────┐
 ───┤  BACKEND CALLBACKS  │
    └─────────────────────┘ */
@@ -30,6 +42,6 @@ void cig_set_font_query_callback(cig_font_query_callback_t);
 void cig_set_default_font(cig_font_ref);
 
 /* Basic text element that's vertically centered in its frame */
-void cig_label(const char*);
+void cig_label(const char*, cig_text_horizontal_alignment_t);
 
 #endif

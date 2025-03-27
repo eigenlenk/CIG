@@ -38,9 +38,20 @@ typedef struct {
 
   /* Direction in which the layout flows. Used by default grid builder */
   enum {
-    CIG_LAYOUT_DIRECTION_LEFT = 0,
-    CIG_LAYOUT_DIRECTION_DOWN
+    CIG_LAYOUT_DIRECTION_HORIZONTAL = 0,
+    CIG_LAYOUT_DIRECTION_VERTICAL
   } direction;
+
+  struct {
+    enum {
+      CIG_LAYOUT_ALIGNS_LEFT = 0,
+      CIG_LAYOUT_ALIGNS_RIGHT
+    } horizontal;
+    enum {
+      CIG_LAYOUT_ALIGNS_TOP = 0,
+      CIG_LAYOUT_ALIGNS_BOTTOM
+    } vertical;
+  } alignment;
 
   /* Some common parameters the layout builder could use */
   int spacing, width, height, columns, rows;

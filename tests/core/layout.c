@@ -65,25 +65,27 @@ TEST(core_layout, push_pop) {
 	TEST_ASSERT_EQUAL(cig_depth(), 1); /* Just the root again */
 }
 
+static struct {
+  int n;
+  cig_id_t recorded[2048];
+} ids = { 0 };
+
+static bool assert_unique(const cig_id_t id, int line) {
+  register int i;
+  for (i = 0; i < ids.n; ++i) {
+    if (ids.recorded[i] == id) {
+      char failure_message[128];
+      sprintf(failure_message, "Line %d: ID %lu is not unique! [%d] = %lu", line, id, i, ids.recorded[i]);
+      TEST_FAIL_MESSAGE(failure_message);
+      break;
+    }
+  }
+  return true;
+}
+
 TEST(core_layout, identifiers) {
 	register int a, b, c, d;
-	struct {
-		int n;
-		cig_id_t recorded[2048];
-	} ids = { 0 };
-	
-	bool assert_unique(const cig_id_t id, int line) {
-		register int i;
-		for (i = 0; i < ids.n; ++i) {
-			if (ids.recorded[i] == id) {
-				char failure_message[128];
-				sprintf(failure_message, "Line %d: ID %lu is not unique! [%d] = %lu", line, id, i, ids.recorded[i]);
-				TEST_FAIL_MESSAGE(failure_message);
-				break;
-			}
-		}
-	}
-	
+
 	TEST_ASSERT_EQUAL_UINT32(2090695081l, cig_frame()->id); // cig_hash("root")
 	
 	const int n0 = 8;
@@ -311,6 +313,48 @@ TEST(core_layout, hstack_layout) {
 	cig_pop_frame(); /* Not really necessary in testing, but.. */
 }
 
+TEST(core_layout, vstack_align_bottom) {
+  if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) { 0,
+    .axis = CIG_LAYOUT_AXIS_VERTICAL,
+    .alignment.vertical = CIG_LAYOUT_ALIGNS_BOTTOM,
+    .height = 50,
+    .spacing = 0
+  })) {
+    TEST_FAIL_MESSAGE("Unable to add layout builder frame");
+  }
+
+  for (int i = 0; i < 2; ++i) {
+    if (cig_push_frame(CIG_FILL)) {
+      TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 480-50-(i*50), 640, 50), cig_frame()->rect);
+      cig_pop_frame();
+    }
+  }
+
+  cig_frame()->_layout_params.height = 0;
+
+  cig_push_frame(CIG_FILL);
+
+  TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 640, 380), cig_frame()->rect);
+}
+
+TEST(core_layout, hstack_align_right) {
+  if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) { 0,
+    .axis = CIG_LAYOUT_AXIS_HORIZONTAL,
+    .alignment.horizontal = CIG_LAYOUT_ALIGNS_RIGHT,
+    .width = 50,
+    .spacing = 0
+  })) {
+    TEST_FAIL_MESSAGE("Unable to add layout builder frame");
+  }
+
+  for (int i = 0; i < 8; ++i) {
+    if (cig_push_frame(CIG_FILL)) {
+      TEST_ASSERT_EQUAL_RECT(cig_rect_make(640-50-(i*50), 0, 50, 480), cig_frame()->rect);
+      cig_pop_frame();
+    }
+  }
+}
+
 /*
 	- Grid is the same stack layout builder but with both axis enabled.
 	- Grid will start adding frames horizontally/vertically, until the position exceeds
@@ -471,14 +515,12 @@ TEST(core_layout, grid_with_varying_cell_size) {
 }
 
 TEST(core_layout, grid_with_down_direction) {
-	/*
-	Grids support horizontal (default) and vertical layout direction. In vertical mode,
+	/* Grids support horizontal (default) and vertical layout direction. In vertical mode,
 	instead of filling and adding rows, columns are filled and added instead. Otherwise
-	they behave the same.
-	*/
+	they behave the same */
 	if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) { 0,
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL,
-		.direction = CIG_LAYOUT_DIRECTION_DOWN
+		.direction = CIG_LAYOUT_DIRECTION_VERTICAL
   })) {
 		TEST_FAIL_MESSAGE("Unable to add layout builder frame");
 	}
@@ -514,8 +556,7 @@ TEST(core_layout, grid_with_down_direction) {
 	
 	TEST_ASSERT_EQUAL_INT(640, 	cig_frame()->_layout_params._h_pos);
 	
-	/*
-	For visualisation:
+	/* For visualisation:
 	┌────────────────────────┐
 	│┌───┐....┌─────────────┐│
 	││ 1 │....│             ││
@@ -528,8 +569,54 @@ TEST(core_layout, grid_with_down_direction) {
 	││   3   ││             ││
 	││       ││             ││
 	│└───────┘└─────────────┘│
-	└────────────────────────┘
-	*/
+	└────────────────────────┘ */
+}
+
+TEST(core_layout, grid_with_flipped_alignment_and_direction) {
+  /* Grid that aligns to bottom-right corner starts adding elmenents into columns */
+  if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) { 0,
+    .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL,
+    .direction = CIG_LAYOUT_DIRECTION_VERTICAL,
+    .alignment.horizontal = CIG_LAYOUT_ALIGNS_RIGHT,
+    .alignment.vertical = CIG_LAYOUT_ALIGNS_BOTTOM,
+    .width = 200,
+    .height = 200
+  })) {
+    TEST_FAIL_MESSAGE("Unable to add layout builder frame");
+  }
+
+  /* First column starts growing upwards */
+  if (cig_push_frame(CIG_FILL)) {
+    TEST_ASSERT_EQUAL_RECT(cig_rect_make(640-200*1, 480-200*1, 200, 200), cig_frame()->rect);
+    cig_pop_frame(); 
+  }
+
+  if (cig_push_frame(CIG_FILL)) {
+    TEST_ASSERT_EQUAL_RECT(cig_rect_make(640-200*1, 480-200*2, 200, 200), cig_frame()->rect);
+    cig_pop_frame(); 
+  }
+
+  /* First (rightmost) column can't fit another 200H element,
+     so it moves onto the next column to the left */
+  if (cig_push_frame(CIG_FILL)) {
+    TEST_ASSERT_EQUAL_RECT(cig_rect_make(640-200*2, 480-200*1, 200, 200), cig_frame()->rect);
+    cig_pop_frame(); 
+  }
+
+  /* For visualisation:
+  ┌────────────────────────────┐
+  │            ................│
+  │            ┌      ┐┌──────┐│
+  │             (4)    │ 2    ││
+  │                    │      ││
+  │                    │      ││
+  │            └      ┘└──────┘│
+  │            ┌──────┐┌──────┐│
+  │            │ 3    ││ 1    ││
+  │            │      ││      ││
+  │            │      ││      ││
+  │            └──────┘└──────┘│
+  └────────────────────────────┘ */
 }
 
 TEST(core_layout, vstack_scroll) {
@@ -684,10 +771,13 @@ TEST_GROUP_RUNNER(core_layout) {
   RUN_TEST_CASE(core_layout, culling);
   RUN_TEST_CASE(core_layout, vstack_layout);
   RUN_TEST_CASE(core_layout, hstack_layout);
+  RUN_TEST_CASE(core_layout, hstack_align_right);
+  RUN_TEST_CASE(core_layout, vstack_align_bottom);
   RUN_TEST_CASE(core_layout, grid_with_fixed_rows_and_columns);
   RUN_TEST_CASE(core_layout, grid_with_fixed_cell_size);
   RUN_TEST_CASE(core_layout, grid_with_varying_cell_size);
   RUN_TEST_CASE(core_layout, grid_with_down_direction);
+  RUN_TEST_CASE(core_layout, grid_with_flipped_alignment_and_direction);
   RUN_TEST_CASE(core_layout, vstack_scroll);
   RUN_TEST_CASE(core_layout, clipping);
   RUN_TEST_CASE(core_layout, additional_buffers);
