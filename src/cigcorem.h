@@ -90,8 +90,6 @@ if (cig_push_layout_function(&cig_default_layout_builder, RECT, cig_insets_zero(
   BODY; \
   cig_pop_frame(); \
 }
-
-#define CIG_PARAMS(PARAMS...) (cig_layout_params_t) { 0, PARAMS }
 	
 #define CIG_AXIS(A) .axis = CIG_LAYOUT_AXIS_##A
 #define CIG_DIRECTION(A) .direction = CIG_LAYOUT_DIRECTION_##A
@@ -105,6 +103,15 @@ if (cig_push_layout_function(&cig_default_layout_builder, RECT, cig_insets_zero(
 #define CIG_LIMIT_HORIZONTAL(L) .limit.horizontal = L
 #define CIG_LIMIT_VERTICAL(L) .limit.vertical = L
 
+#define CIG_RECT(R) .rect = R
+#define CIG_INSETS(I) .insets = I
+#define CIG_PARAMS(P...) .params = (cig_layout_params_t) P
+#define CIG_BUILDER(F) .builder = F
+
 #define CIG_ALLOCATE(T) (T*)cig_state_allocate(sizeof(T));
+
+#define _ {}
+
+#define CIG(ARGS...) for (int __args=1; cig_push_frame_args((cig_frame_args_t)ARGS)&&(__args--); cig_pop_frame())
 
 #endif

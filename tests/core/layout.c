@@ -586,19 +586,19 @@ TEST(core_layout, grid_with_flipped_alignment_and_direction) {
   }
 
   /* First column starts growing upwards */
-  if (cig_push_frame(CIG_FILL)) {
+  if (cig_push_frame(CIG_FILL)) { /* 1 */
     TEST_ASSERT_EQUAL_RECT(cig_rect_make(640-200*1, 480-200*1, 200, 200), cig_frame()->rect);
     cig_pop_frame(); 
   }
 
-  if (cig_push_frame(CIG_FILL)) {
+  if (cig_push_frame(CIG_FILL)) { /* 2 */
     TEST_ASSERT_EQUAL_RECT(cig_rect_make(640-200*1, 480-200*2, 200, 200), cig_frame()->rect);
     cig_pop_frame(); 
   }
 
   /* First (rightmost) column can't fit another 200H element,
      so it moves onto the next column to the left */
-  if (cig_push_frame(CIG_FILL)) {
+  if (cig_push_frame(CIG_FILL)) { /* 3 */
     TEST_ASSERT_EQUAL_RECT(cig_rect_make(640-200*2, 480-200*1, 200, 200), cig_frame()->rect);
     cig_pop_frame(); 
   }

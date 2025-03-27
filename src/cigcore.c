@@ -105,6 +105,10 @@ cig_buffer_ref cig_buffer() {
   return current->buffers._peek(&current->buffers, 0)->buffer;
 }
 
+bool cig_push_frame_args(cig_frame_args_t args) {
+  return push_frame(args.rect, args.insets, args.params, args.builder);
+}
+
 bool cig_push_frame(const cig_rect_t rect) {
 	return push_frame(rect, current->default_insets, (cig_layout_params_t){ 0 }, NULL);
 }

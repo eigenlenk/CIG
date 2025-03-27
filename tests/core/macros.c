@@ -21,7 +21,7 @@ TEST(core_macros, arrange) {
   CIG_ARRANGE_WITH(
     CIG_CENTERED(500, 400),
     cig_insets_uniform(4),
-    CIG_PARAMS(),
+    (cig_layout_params_t) {},
     CIG_BODY(
       TEST_ASSERT_EQUAL_RECT(cig_rect_make(70, 40, 500, 400), cig_rect());
       
@@ -92,10 +92,30 @@ TEST(core_macros, allocator) {
   TEST_ASSERT_EQUAL_INT(5, *i);
 }
 
+TEST(core_macros, new_syntax) {
+  CIG({
+    CIG_RECT(CIG_FILL),
+    CIG_INSETS(cig_insets_uniform(5)),
+    CIG_PARAMS({
+      CIG_LIMIT_TOTAL(1)
+    })
+  }) {
+    CIG(_) { TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 630, 470), cig_rect()); }
+    CIG(_) { TEST_FAIL_MESSAGE("Limit exceeded"); }
+  }
+
+  CIG(_) {
+    for (int i = 0; i < 10; ++i) {
+      CIG(_) { }
+    }
+  }
+}
+
 TEST_GROUP_RUNNER(core_macros) {
   RUN_TEST_CASE(core_macros, arrange);
   RUN_TEST_CASE(core_macros, vstack);
   RUN_TEST_CASE(core_macros, hstack);
   RUN_TEST_CASE(core_macros, grid);
   RUN_TEST_CASE(core_macros, allocator);
+  RUN_TEST_CASE(core_macros, new_syntax);
 }

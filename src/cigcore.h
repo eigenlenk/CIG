@@ -98,6 +98,13 @@ typedef struct {
 	cig_vec2_t content_size;
 } cig_scroll_state_t;
 
+typedef struct {
+  cig_rect_t rect;
+  cig_insets_t insets;
+  cig_layout_params_t params;
+  bool (*builder)(cig_rect_t, cig_rect_t, cig_layout_params_t*, cig_rect_t*);
+} cig_frame_args_t;
+
 /* */
 typedef struct {
 	cig_id_t id;
@@ -222,6 +229,8 @@ void cig_end_layout();
 
 /* Returns an opaque pointer to the current buffer where drawing operations would take place */
 cig_buffer_ref cig_buffer();
+
+bool cig_push_frame_args(cig_frame_args_t);
 
 /* Pushes a new frame with zero insets to layout stack.
    @return TRUE if rect is visible within current container, FALSE otherwise */
