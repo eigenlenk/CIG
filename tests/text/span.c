@@ -33,8 +33,13 @@ TEST(text_span, basic_label) {
     return cig_vec2_make(10*len, 10); /* 10x10 glyphs */
   }
   
+  cig_font_info_t font_query(cig_font_ref) {
+    return (cig_font_info_t) { 10, 0 };
+  }
+  
   cig_set_text_render_callback(&text_render);
   cig_set_text_measure_callback(&text_measure);
+  cig_set_font_query_callback(&font_query);
 
   for (int i = 0; i < 2; ++i, spans = 0) {
     begin();

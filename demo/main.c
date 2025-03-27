@@ -4,25 +4,33 @@
 #include <string.h>
 
 #define RECT(R) R.x, R.y, R.w, R.h
-#define TASKBAR_FONT_SIZE 14
 
 static cig_context_t ctx = { 0 };
-static Font font;
+static struct {
+  Font font[4];
+} font_store;
 
 static void demo_ui();
 static void render_text(cig_rect_t, const char*, size_t);
 static cig_vec2_t measure_text(const char*, size_t);
+static cig_font_info_t font_query(cig_font_ref);
 
 int main(int argc, const char *argv[]) {
   SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_ALWAYS_RUN);
   InitWindow(640, 480, "CIG Demo");
   SetTargetFPS(60);
-  
-  font = LoadFontEx("micross.ttf", TASKBAR_FONT_SIZE, 0, 0);
 
+  font_store.font[0] = LoadFont("winr.fnt");
+  font_store.font[1] = LoadFont("winb.fnt");
+  
+  SetTextureFilter(font_store.font[0].texture, TEXTURE_FILTER_POINT);
+  SetTextureFilter(font_store.font[1].texture, TEXTURE_FILTER_POINT);
+  
   cig_init_context(&ctx);
   cig_set_text_render_callback(&render_text);
   cig_set_text_measure_callback(&measure_text);
+  cig_set_font_query_callback(&font_query);
+  cig_set_default_font(&font_store.font[0]);
 
   while (!WindowShouldClose()) {
     BeginDrawing();
@@ -74,7 +82,7 @@ static bool clickable_box(cig_rect_t rect) {
 
 #define TASKBAR_H 28
 
-static void draw_win32_panel(bool pressed) {
+static bool draw_button_panel(bool pressed) {
   DrawRectangle(RECT(cig_frame()->absolute_rect), (Color){ 195, 195, 195, 255 });
   
   if (!pressed) {
@@ -94,6 +102,29 @@ static void draw_win32_panel(bool pressed) {
     DrawLine(CIG_GX + 2, CIG_GY + 1, CIG_GX + CIG_W - 2, CIG_GY + 1, (Color){ 128, 128, 128, 255 });
     DrawLine(CIG_GX + 2, CIG_GY + 1, CIG_GX + 2, CIG_GY + CIG_H - 2, (Color){ 128, 128, 128, 255 });
   }
+  
+  return cig_push_frame_insets(
+    CIG_FILL,
+    pressed ? cig_insets_make(0, 2, 0, 0) : cig_insets_zero()
+  );
+}
+
+static void draw_window_panel() {
+  DrawRectangle(RECT(cig_frame()->absolute_rect), (Color){ 195, 195, 195, 255 });
+  
+  DrawLine(CIG_GX, CIG_GY + CIG_H - 1, CIG_GX + CIG_W, CIG_GY + CIG_H - 1, (Color){ 0, 0, 0, 255 });
+  DrawLine(CIG_GX + CIG_W, CIG_GY, CIG_GX + CIG_W, CIG_GY + CIG_H - 1, (Color){ 0, 0, 0, 255 });
+  DrawLine(CIG_GX + 1, CIG_GY + CIG_H - 2, CIG_GX + CIG_W - 1, CIG_GY + CIG_H - 2, (Color){ 130, 130, 130, 255 });
+  DrawLine(CIG_GX + CIG_W - 1, CIG_GY + 1, CIG_GX + CIG_W - 1, CIG_GY + CIG_H - 2, (Color){ 130, 130, 130, 255 });
+  DrawLine(CIG_GX + 1, CIG_GY + 1, CIG_GX + CIG_W - 2, CIG_GY + 1, (Color){ 255, 255, 255, 255 });
+  DrawLine(CIG_GX + 2, CIG_GY + 1, CIG_GX + 2, CIG_GY + CIG_H - 2, (Color){ 255, 255, 255, 255 });
+  
+  /*DrawLine(CIG_GX + 1, CIG_GY, CIG_GX + CIG_W - 1, CIG_GY, (Color){ 255, 255, 255, 255 });
+  DrawLine(CIG_GX + 1, CIG_GY + 1, CIG_GX + 1, CIG_GY + CIG_H - 1, (Color){ 255, 255, 255, 255 });
+  DrawLine(CIG_GX, CIG_GY + CIG_H - 1, CIG_GX + CIG_W, CIG_GY + CIG_H - 1, (Color){ 0, 0, 0, 255 });
+  DrawLine(CIG_GX + CIG_W, CIG_GY, CIG_GX + CIG_W, CIG_GY + CIG_H - 1, (Color){ 0, 0, 0, 255 });
+  DrawLine(CIG_GX + 1, CIG_GY + CIG_H - 2, CIG_GX + CIG_W - 1, CIG_GY + CIG_H - 2, (Color){ 130, 130, 130, 255 });
+  DrawLine(CIG_GX + CIG_W - 1, CIG_GY + 1, CIG_GX + CIG_W - 1, CIG_GY + CIG_H - 2, (Color){ 130, 130, 130, 255 });*/
 }
 
 static void demo_ui() {
@@ -114,20 +145,26 @@ static void demo_ui() {
       CIG_BODY(
         CIG_ARRANGE(CIG_FILL_W(54), CIG_BODY(
           cig_enable_interaction();
-          draw_win32_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE));
-          cig_label("Start");
+          if (draw_button_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE))) {
+            CIG_FILLED(cig_label("Start"));
+            cig_pop_frame();
+          }
         ))
         
         CIG_ARRANGE(CIG_FILL_W(95), CIG_BODY(
           cig_enable_interaction();
-          draw_win32_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE));
-          cig_label("Welcome");
+          if (draw_button_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE))) {
+            CIG_FILLED(cig_label("Welcome"));
+            cig_pop_frame();
+          }
         ))
         
         CIG_ARRANGE(CIG_FILL_W(95), CIG_BODY(
           cig_enable_interaction();
-          draw_win32_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE));
-          cig_label("My Computer");
+          if (draw_button_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE))) {
+            CIG_FILLED(cig_label("My Computer"));
+            cig_pop_frame();
+          }
         ))
       ),
       CIG_SPACING(4)
@@ -136,7 +173,19 @@ static void demo_ui() {
     cig_pop_frame();
   }
   
-  
+  CIG_ARRANGE_WITH(
+    CIG_CENTERED(488, 280),
+    cig_insets_uniform(3),
+    CIG_PARAMS(),
+    CIG_BODY(
+      draw_window_panel();
+      
+      CIG_ARRANGE(CIG_FILL_H(18), CIG_BODY(
+        DrawRectangle(RECT(cig_frame()->absolute_rect), (Color){ 0, 0, 130, 255 });
+        CIG_ARRANGE(CIG_FILL_W(70), cig_label("Welcome"));
+      ))
+    )
+  );
   
   
   
@@ -168,7 +217,7 @@ void render_text(cig_rect_t rect, const char *str, size_t len) {
   buf[len] = '\0';
   
   // DrawRectangle(RECT(rect), RED);
-  DrawTextEx(font, buf, (Vector2) { rect.x, rect.y }, TASKBAR_FONT_SIZE, 0, (Color) { 0, 0, 0, 255 });
+  DrawTextEx(font_store.font[0], buf, (Vector2) { rect.x, rect.y }, font_store.font[0].baseSize, 0, (Color) { 0, 0, 0, 255 });
 }
 
 cig_vec2_t measure_text(const char *str, size_t len) {
@@ -176,7 +225,15 @@ cig_vec2_t measure_text(const char *str, size_t len) {
   strncpy(buf, str, len);
   buf[len] = '\0';
   
-  Vector2 bounds = MeasureTextEx(font, buf, TASKBAR_FONT_SIZE, 0);
+  Vector2 bounds = MeasureTextEx(font_store.font[0], buf, font_store.font[0].baseSize, 0);
   
   return cig_vec2_make(bounds.x, bounds.y);
+}
+
+static cig_font_info_t font_query(cig_font_ref font_ref) {
+  Font *f = (Font *)font_ref;
+  return (cig_font_info_t) {
+    .height = f->baseSize,
+    .line_spacing = 0
+  };
 }

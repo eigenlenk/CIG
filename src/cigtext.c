@@ -18,6 +18,8 @@ typedef struct {
 
 static cig_text_render_callback_t render_callback = NULL;
 static cig_text_measure_callback_t measure_callback = NULL;
+static cig_font_query_callback_t font_query = NULL;
+static cig_font_ref default_font = NULL;
 
 static void render_spans(span_t*, size_t);
 
@@ -27,6 +29,14 @@ void cig_set_text_render_callback(cig_text_render_callback_t callback) {
 
 void cig_set_text_measure_callback(cig_text_measure_callback_t callback) {
   measure_callback = callback;
+}
+
+void cig_set_font_query_callback(cig_font_query_callback_t callback) {
+  font_query = callback;
+}
+
+void cig_set_default_font(cig_font_ref font_ref) {
+  default_font = font_ref;
 }
 
 void cig_label(const char *text) {
@@ -81,9 +91,11 @@ static void render_spans(span_t *first, size_t count) {
   register int lines, x, y, w, dx, dy;
   register span_t *span, *line_start, *line_end, *last = first + count;
   
+  register const cig_font_info_t font_info = font_query(default_font);
+  
   /* Figure out number of lines needed */
   for (span = first, x = 0, y = 0; span < last; span++) {
-    if (x + span->bounds.x > absolute_rect.w) {
+    if (x + span->bounds.x > absolute_rect.w && x > 0) {
       x = 0;
       y ++;
     }
@@ -92,8 +104,8 @@ static void render_spans(span_t *first, size_t count) {
   }
   
   lines = 1 + y;
-  dy = absolute_rect.y + (CIG_H - (lines * 14)) * 0.5;
-  
+  dy = absolute_rect.y + (int)(CIG_H - (lines * font_info.height)) / 2;
+
   for (line_start = span = first, x = 0; span < last;) {
     if (x + span->bounds.x > absolute_rect.w) {
       if (!x) {
@@ -113,7 +125,7 @@ static void render_spans(span_t *first, size_t count) {
     }
     
     if (line_end) {
-      dx = absolute_rect.x + (CIG_W - w) * 0.5;
+      dx = absolute_rect.x + (int)((CIG_W - w) * 0.5);
       
       for (span = line_start; span < line_end; dx += (span++)->bounds.x + WORD_SPACING) {
         render_callback(
@@ -124,7 +136,7 @@ static void render_spans(span_t *first, size_t count) {
       }
 
       span = line_start = line_end;
-      dy += 14;
+      dy += font_info.height;
       continue;
     }
     
