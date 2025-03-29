@@ -109,6 +109,8 @@ TEST(core_macros, new_syntax) {
       CIG(_) { }
     }
   }
+  
+  TEST_ASSERT_EQUAL(1, cig_depth());
 }
 
 TEST_GROUP_RUNNER(core_macros) {

@@ -25,6 +25,14 @@
 
 #define CIG_H cig_rect().h
 
+#define CIG_X_INSET (cig_rect().x + cig_frame()->insets.left)
+
+#define CIG_Y_INSET (cig_rect().y + cig_frame()->insets.top)
+
+#define CIG_W_INSET (CIG_W - cig_frame()->insets.left - cig_frame()->insets.right)
+
+#define CIG_H_INSET (CIG_H - cig_frame()->insets.top - cig_frame()->insets.bottom)
+
 #define CIG_GX cig_absolute_rect().x
 
 #define CIG_GY cig_absolute_rect().y
@@ -90,9 +98,12 @@ if (cig_push_layout_function(&cig_default_layout_builder, RECT, cig_insets_zero(
   BODY; \
   cig_pop_frame(); \
 }
-	
-#define CIG_AXIS(A) .axis = CIG_LAYOUT_AXIS_##A
+
+/* `cig_layout_params_t` fields */
+#define CIG_AXIS(A) .axis = A
 #define CIG_DIRECTION(A) .direction = CIG_LAYOUT_DIRECTION_##A
+#define CIG_ALIGNMENT_HORIZONTAL(A) .alignment.horizontal = A
+#define CIG_ALIGNMENT_VERTICAL(A) .alignment.vertical = A
 #define CIG_SPACING(N) .spacing = N
 #define CIG_WIDTH(W) .width = W
 #define CIG_HEIGHT(H) .height = H
@@ -103,15 +114,26 @@ if (cig_push_layout_function(&cig_default_layout_builder, RECT, cig_insets_zero(
 #define CIG_LIMIT_HORIZONTAL(L) .limit.horizontal = L
 #define CIG_LIMIT_VERTICAL(L) .limit.vertical = L
 
+/* `cig_frame_args_t` fields */
 #define CIG_RECT(R) .rect = R
 #define CIG_INSETS(I) .insets = I
 #define CIG_PARAMS(P...) .params = (cig_layout_params_t) P
 #define CIG_BUILDER(F) .builder = F
 
+/* These macros need to be called *after* you've set all other arguments */
+#define CIG__GRID CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL
+#define CIG__HSTACK CIG_LAYOUT_AXIS_HORIZONTAL
+#define CIG__VSTACK CIG_LAYOUT_AXIS_VERTICAL
+
+#define CIG_STACK_BUILDER &cig_default_layout_builder
+#define CIG_GRID_BUILDER &cig_default_layout_builder
+
 #define CIG_ALLOCATE(T) (T*)cig_state_allocate(sizeof(T));
 
 #define _ {}
 
-#define CIG(ARGS...) for (int __args=1; cig_push_frame_args((cig_frame_args_t)ARGS)&&(__args--); cig_pop_frame())
+/* This calls the push_frame function once, and if it returns TRUE,
+   eventually pops the frame as well */
+#define CIG(ARGS...) for (int __args=1; (__args--)&&cig_push_frame_args((cig_frame_args_t)ARGS); cig_pop_frame())
 
 #endif

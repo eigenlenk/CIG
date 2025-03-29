@@ -33,7 +33,8 @@ typedef struct {
   enum {
     CIG__NOAXIS = 0,
     CIG_LAYOUT_AXIS_HORIZONTAL = CIG_BIT(1),
-    CIG_LAYOUT_AXIS_VERTICAL = CIG_BIT(2)
+    CIG_LAYOUT_AXIS_VERTICAL = CIG_BIT(2),
+    CIG_LAYOUT_AXIS_BOTH = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL
   } axis;
 
   /* Direction in which the layout flows. Used by default grid builder */
