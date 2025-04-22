@@ -11,17 +11,21 @@ enum Fonts {
   FONT_REGULAR = 0,
   FONT_BOLD,
   FONT_TIMES_NEW_ROMAN_32_BOLD,
+  FONT_ARIAL_BLACK_32,
+  FONT_FRANKLIN_GOTHIC_BOOK_32,
   
   __FONT_COUNT
 };
 
 enum Colors {
   COLOR_BLACK = 0,
-  COLOR_WHITE
+  COLOR_WHITE,
+  COLOR_RED
 };
 
 static struct font_store {
   Font font;
+  int baseline_offset;
 } fonts[__FONT_COUNT];
 
 static Color colors[16] = { 0 };
@@ -44,21 +48,35 @@ int main(int argc, const char *argv[]) {
   res.yellow_white_pattern = LoadTexture("patyello.png");
 
   fonts[FONT_REGULAR].font = LoadFont("winr.fnt");
+  fonts[FONT_REGULAR].baseline_offset = -2;
+  
   fonts[FONT_BOLD].font = LoadFont("winb.fnt");
+  fonts[FONT_BOLD].baseline_offset = -2;
+  
   fonts[FONT_TIMES_NEW_ROMAN_32_BOLD].font = LoadFont("tnr32b.fnt");
+  fonts[FONT_TIMES_NEW_ROMAN_32_BOLD].baseline_offset = -6;
+  
+  fonts[FONT_ARIAL_BLACK_32].font = LoadFont("arbl32.fnt");
+  fonts[FONT_ARIAL_BLACK_32].baseline_offset = -7;
+  
+  fonts[FONT_FRANKLIN_GOTHIC_BOOK_32].font = LoadFont("gothbook32.fnt");
+  fonts[FONT_FRANKLIN_GOTHIC_BOOK_32].baseline_offset = -8;
   
   SetTextureFilter(fonts[FONT_REGULAR].font.texture, TEXTURE_FILTER_POINT);
   SetTextureFilter(fonts[FONT_BOLD].font.texture, TEXTURE_FILTER_POINT);
   SetTextureFilter(fonts[FONT_TIMES_NEW_ROMAN_32_BOLD].font.texture, TEXTURE_FILTER_POINT);
+  SetTextureFilter(fonts[FONT_ARIAL_BLACK_32].font.texture, TEXTURE_FILTER_POINT);
+  SetTextureFilter(fonts[FONT_FRANKLIN_GOTHIC_BOOK_32].font.texture, TEXTURE_FILTER_POINT);
   
   colors[COLOR_BLACK] = (Color) { 0, 0, 0, 255 };
   colors[COLOR_WHITE] = (Color) { 255, 255, 255, 255 };
+  colors[COLOR_RED] = (Color) { 255, 0, 0, 255 };
   
   cig_init_context(&ctx);
   cig_set_text_render_callback(&render_text);
   cig_set_text_measure_callback(&measure_text);
   cig_set_font_query_callback(&font_query);
-  cig_set_default_font(&fonts[FONT_REGULAR].font);
+  cig_set_default_font(&fonts[FONT_REGULAR]);
 
   while (!WindowShouldClose()) {
     BeginDrawing();
@@ -144,11 +162,11 @@ static void beveled_button(cig_rect_t rect, const char *title) {
   }) {
     cig_enable_interaction();
     if (draw_button_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE))) {
-      cig_label(title, (cig_text_properties_t) {
+      cig_label((cig_text_properties_t) {
         .font = &fonts[FONT_REGULAR],
         .alignment.horizontal = CIG_TEXT_ALIGN_CENTER,
         .alignment.vertical = CIG_TEXT_ALIGN_MIDDLE
-      });
+      }, title);
       cig_pop_frame();
     }
   }
@@ -180,10 +198,10 @@ static void demo_ui() {
       }) {
         cig_enable_interaction();
         if (draw_button_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE))) {
-          cig_label("Start", (cig_text_properties_t) {
+          cig_label((cig_text_properties_t) {
             .alignment.horizontal = CIG_TEXT_ALIGN_CENTER,
             .alignment.vertical = CIG_TEXT_ALIGN_MIDDLE
-          });
+          }, "Start");
           cig_pop_frame();
         }
       }
@@ -193,10 +211,10 @@ static void demo_ui() {
       }) {
         cig_enable_interaction();
         if (draw_button_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE))) {
-          cig_label("Welcome", (cig_text_properties_t) {
+          cig_label((cig_text_properties_t) {
             .alignment.horizontal = CIG_TEXT_ALIGN_CENTER,
             .alignment.vertical = CIG_TEXT_ALIGN_MIDDLE
-          });
+          }, "Welcome");
           cig_pop_frame();
         }
       }
@@ -206,10 +224,10 @@ static void demo_ui() {
       }) {
         cig_enable_interaction();
         if (draw_button_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE))) {
-          cig_label("My Computer", (cig_text_properties_t) {
+          cig_label((cig_text_properties_t) {
             .alignment.horizontal = CIG_TEXT_ALIGN_CENTER,
             .alignment.vertical = CIG_TEXT_ALIGN_MIDDLE
-          });
+          }, "My Computer");
           cig_pop_frame();
         }
       }
@@ -243,21 +261,21 @@ static void demo_ui() {
       }) {
         cig_enable_interaction();
         if (draw_button_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE))) {
-          cig_label("X", (cig_text_properties_t) {
+          cig_label((cig_text_properties_t) {
             .font = &fonts[FONT_BOLD],
             .alignment.horizontal = CIG_TEXT_ALIGN_CENTER,
             .alignment.vertical = CIG_TEXT_ALIGN_MIDDLE
-          });
+          }, "X");
           cig_pop_frame();
         }
       }
       
-      cig_label("Welcome", (cig_text_properties_t) {
+      cig_label((cig_text_properties_t) {
         .font = &fonts[FONT_BOLD],
-        .color = COLOR_WHITE,
+        .color = &colors[COLOR_WHITE],
         .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
         .alignment.vertical = CIG_TEXT_ALIGN_MIDDLE
-      });
+      }, "Welcome");
     }
     
     /* Body */
@@ -273,12 +291,12 @@ static void demo_ui() {
       CIG({
         CIG_RECT(CIG_FILL_H(20))
       }) {
-        cig_label("Welcome to <font=1>Windows<color=1>95</color></font>", (cig_text_properties_t) {
+        cig_label((cig_text_properties_t) {
           .font = &fonts[FONT_TIMES_NEW_ROMAN_32_BOLD],
-          .color = COLOR_BLACK,
+          .color = &colors[COLOR_BLACK],
           .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
           .alignment.vertical = CIG_TEXT_ALIGN_MIDDLE
-        });
+        }, "Welcome to <font=0>Windows</font><font=1><color=2>95</color></font>", &fonts[FONT_ARIAL_BLACK_32], &fonts[FONT_FRANKLIN_GOTHIC_BOOK_32], &colors[COLOR_WHITE]);
       }
       
       CIG(_) {
@@ -323,7 +341,7 @@ void render_text(cig_rect_t rect, const char *str, size_t len, cig_font_ref font
   struct font_store *fs = (struct font_store*)font;
   
   // DrawRectangle(RECT(rect), GREEN);
-  DrawTextEx(fs->font, buf, (Vector2) { rect.x, rect.y }, fs->font.baseSize, 0, colors[color]);
+  DrawTextEx(fs->font, buf, (Vector2) { rect.x, rect.y }, fs->font.baseSize, 0, color ? *(Color*)color : colors[COLOR_BLACK]);
 }
 
 cig_vec2_t measure_text(const char *str, size_t len, cig_font_ref font) {
@@ -338,9 +356,13 @@ cig_vec2_t measure_text(const char *str, size_t len, cig_font_ref font) {
 }
 
 static cig_font_info_t font_query(cig_font_ref font_ref) {
-  Font *f = (Font *)font_ref;
+  struct font_store *fs = (struct font_store*)font_ref;
+  
+  // printf("GLYPH PADDING %d\n", fs->font.glyphPadding);
+  
   return (cig_font_info_t) {
-    .height = f->baseSize,
-    .line_spacing = 0
+    .height = fs->font.baseSize,
+    .line_spacing = 0,
+    .baseline_offset = fs->baseline_offset
   };
 }

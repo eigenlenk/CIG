@@ -4,11 +4,12 @@
 #include "cigcore.h"
 
 typedef void* cig_font_ref;
-typedef unsigned int cig_text_color_ref;
+typedef void* cig_text_color_ref;
 
 typedef struct {
   unsigned int height,
-               line_spacing;
+               line_spacing,
+               baseline_offset;
 } cig_font_info_t;
 
 typedef enum {
@@ -52,6 +53,6 @@ void cig_set_font_query_callback(cig_font_query_callback_t);
 void cig_set_default_font(cig_font_ref);
 
 /* */
-void cig_label(const char*, cig_text_properties_t);
+void cig_label(cig_text_properties_t, const char*, ...);
 
 #endif
