@@ -71,7 +71,7 @@ if (cig_push_frame(CIG_FILL)) { \
 
 #define CIG_HSTACK(RECT, BODY, OPTIONS...) \
 if (cig_push_layout_function(&cig_default_layout_builder, RECT, cig_insets_zero(), (cig_layout_params_t) { 0, \
-  CIG_AXIS(HORIZONTAL), \
+  CIG_AXIS(CIG_LAYOUT_AXIS_HORIZONTAL), \
   OPTIONS \
 })) { \
   BODY; \
@@ -80,7 +80,7 @@ if (cig_push_layout_function(&cig_default_layout_builder, RECT, cig_insets_zero(
 
 #define CIG_VSTACK(RECT, BODY, OPTIONS...) \
 if (cig_push_layout_function(&cig_default_layout_builder, RECT, cig_insets_zero(), (cig_layout_params_t) { 0, \
-  CIG_AXIS(VERTICAL), \
+  CIG_AXIS(CIG_LAYOUT_AXIS_VERTICAL), \
   OPTIONS \
 })) { \
   BODY; \
@@ -101,7 +101,7 @@ if (cig_push_layout_function(&cig_default_layout_builder, RECT, cig_insets_zero(
 
 /* `cig_layout_params_t` fields */
 #define CIG_AXIS(A) .axis = A
-#define CIG_DIRECTION(A) .direction = CIG_LAYOUT_DIRECTION_##A
+#define CIG_DIRECTION(A) .direction = A
 #define CIG_ALIGNMENT_HORIZONTAL(A) .alignment.horizontal = A
 #define CIG_ALIGNMENT_VERTICAL(A) .alignment.vertical = A
 #define CIG_SPACING(N) .spacing = N
@@ -120,11 +120,6 @@ if (cig_push_layout_function(&cig_default_layout_builder, RECT, cig_insets_zero(
 #define CIG_PARAMS(P...) .params = (cig_layout_params_t) P
 #define CIG_BUILDER(F) .builder = F
 
-/* These macros need to be called *after* you've set all other arguments */
-#define CIG__GRID CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL
-#define CIG__HSTACK CIG_LAYOUT_AXIS_HORIZONTAL
-#define CIG__VSTACK CIG_LAYOUT_AXIS_VERTICAL
-
 #define CIG_STACK_BUILDER &cig_default_layout_builder
 #define CIG_GRID_BUILDER &cig_default_layout_builder
 
@@ -134,6 +129,9 @@ if (cig_push_layout_function(&cig_default_layout_builder, RECT, cig_insets_zero(
 
 /* This calls the push_frame function once, and if it returns TRUE,
    eventually pops the frame as well */
-#define CIG(ARGS...) for (int __args=1; (__args--)&&cig_push_frame_args((cig_frame_args_t)ARGS); cig_pop_frame())
+#define CIG(ARGS...) for (int __push=1; (__push--)&&cig_push_frame_args((cig_frame_args_t)ARGS); cig_pop_frame())
+  
+  
+// #define CIG__HSTACK(ARGS...) for (struct { int push; cig_frame_args_t args; } __cig = { 1, ARGS, .args.params = ARGS.params, .args.params.axis = CIG_LAYOUT_AXIS_HORIZONTAL, .args.builder = CIG_STACK_BUILDER }; (__cig.push--)&&cig_push_frame_args(__cig.args); cig_pop_frame())
 
 #endif

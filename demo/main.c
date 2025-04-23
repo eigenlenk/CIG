@@ -25,7 +25,7 @@ enum Colors {
 
 static struct font_store {
   Font font;
-  int baseline_offset;
+  int baseline_offset, word_spacing;
 } fonts[__FONT_COUNT];
 
 static Color colors[16] = { 0 };
@@ -49,18 +49,23 @@ int main(int argc, const char *argv[]) {
 
   fonts[FONT_REGULAR].font = LoadFont("winr.fnt");
   fonts[FONT_REGULAR].baseline_offset = -2;
+  fonts[FONT_REGULAR].word_spacing = 4;
   
   fonts[FONT_BOLD].font = LoadFont("winb.fnt");
   fonts[FONT_BOLD].baseline_offset = -2;
+  fonts[FONT_BOLD].word_spacing = 4;
   
   fonts[FONT_TIMES_NEW_ROMAN_32_BOLD].font = LoadFont("tnr32b.fnt");
   fonts[FONT_TIMES_NEW_ROMAN_32_BOLD].baseline_offset = -6;
+  fonts[FONT_TIMES_NEW_ROMAN_32_BOLD].word_spacing = 9;
   
   fonts[FONT_ARIAL_BLACK_32].font = LoadFont("arbl32.fnt");
   fonts[FONT_ARIAL_BLACK_32].baseline_offset = -7;
+  fonts[FONT_ARIAL_BLACK_32].word_spacing = 8;
   
   fonts[FONT_FRANKLIN_GOTHIC_BOOK_32].font = LoadFont("gothbook32.fnt");
   fonts[FONT_FRANKLIN_GOTHIC_BOOK_32].baseline_offset = -8;
+  fonts[FONT_FRANKLIN_GOTHIC_BOOK_32].word_spacing = 8;
   
   SetTextureFilter(fonts[FONT_REGULAR].font.texture, TEXTURE_FILTER_POINT);
   SetTextureFilter(fonts[FONT_BOLD].font.texture, TEXTURE_FILTER_POINT);
@@ -127,7 +132,7 @@ static bool draw_button_panel(bool pressed) {
   
   return cig_push_frame_insets(
     CIG_FILL,
-    pressed ? cig_insets_make(0, 2, 0, 0) : cig_insets_zero()
+    pressed ? cig_insets_make(0, 3, 0, 2) : cig_insets_make(0, 1, 0, 2)
   );
 }
 
@@ -163,9 +168,7 @@ static void beveled_button(cig_rect_t rect, const char *title) {
     cig_enable_interaction();
     if (draw_button_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE))) {
       cig_label((cig_text_properties_t) {
-        .font = &fonts[FONT_REGULAR],
-        .alignment.horizontal = CIG_TEXT_ALIGN_CENTER,
-        .alignment.vertical = CIG_TEXT_ALIGN_MIDDLE
+        .font = &fonts[FONT_REGULAR]
       }, title);
       cig_pop_frame();
     }
@@ -188,7 +191,7 @@ static void demo_ui() {
     CIG({
       CIG_RECT(CIG_FILL),
       CIG_PARAMS({
-        CIG_AXIS(CIG__HSTACK),
+        CIG_AXIS(CIG_LAYOUT_AXIS_HORIZONTAL),
         CIG_SPACING(4)
       }),
       CIG_BUILDER(CIG_STACK_BUILDER)
@@ -198,10 +201,7 @@ static void demo_ui() {
       }) {
         cig_enable_interaction();
         if (draw_button_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE))) {
-          cig_label((cig_text_properties_t) {
-            .alignment.horizontal = CIG_TEXT_ALIGN_CENTER,
-            .alignment.vertical = CIG_TEXT_ALIGN_MIDDLE
-          }, "Start");
+          cig_label((cig_text_properties_t) { }, "Start");
           cig_pop_frame();
         }
       }
@@ -211,10 +211,7 @@ static void demo_ui() {
       }) {
         cig_enable_interaction();
         if (draw_button_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE))) {
-          cig_label((cig_text_properties_t) {
-            .alignment.horizontal = CIG_TEXT_ALIGN_CENTER,
-            .alignment.vertical = CIG_TEXT_ALIGN_MIDDLE
-          }, "Welcome");
+          cig_label((cig_text_properties_t) { }, "Welcome");
           cig_pop_frame();
         }
       }
@@ -224,10 +221,7 @@ static void demo_ui() {
       }) {
         cig_enable_interaction();
         if (draw_button_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE))) {
-          cig_label((cig_text_properties_t) {
-            .alignment.horizontal = CIG_TEXT_ALIGN_CENTER,
-            .alignment.vertical = CIG_TEXT_ALIGN_MIDDLE
-          }, "My Computer");
+          cig_label((cig_text_properties_t) { }, "My Computer");
           cig_pop_frame();
         }
       }
@@ -248,7 +242,7 @@ static void demo_ui() {
       CIG_RECT(CIG_FILL_H(18)),
       CIG_INSETS(cig_insets_uniform(2)),
       CIG_PARAMS({
-        CIG_AXIS(CIG__HSTACK),
+        CIG_AXIS(CIG_LAYOUT_AXIS_HORIZONTAL),
         CIG_SPACING(2),
         CIG_ALIGNMENT_HORIZONTAL(CIG_LAYOUT_ALIGNS_RIGHT)
       }),
@@ -256,26 +250,22 @@ static void demo_ui() {
     }) {
       DrawRectangle(RECT(cig_frame()->absolute_rect), (Color){ 0, 0, 130, 255 });
       
-      CIG({
-        CIG_RECT(cig_rect_make(CIG_W_INSET - 16, 0, 16, CIG_FILL_CONSTANT))
-      }) {
-        cig_enable_interaction();
-        if (draw_button_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE))) {
-          cig_label((cig_text_properties_t) {
-            .font = &fonts[FONT_BOLD],
-            .alignment.horizontal = CIG_TEXT_ALIGN_CENTER,
-            .alignment.vertical = CIG_TEXT_ALIGN_MIDDLE
-          }, "X");
-          cig_pop_frame();
-        }
-      }
-      
       cig_label((cig_text_properties_t) {
         .font = &fonts[FONT_BOLD],
         .color = &colors[COLOR_WHITE],
         .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
         .alignment.vertical = CIG_TEXT_ALIGN_MIDDLE
       }, "Welcome");
+      
+      CIG({
+        CIG_RECT(cig_rect_make(CIG_W_INSET - 16, 0, 16, CIG_FILL_CONSTANT))
+      }) {
+        cig_enable_interaction();
+        if (draw_button_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE))) {
+          cig_label((cig_text_properties_t) { .font = &fonts[FONT_BOLD] }, "X");
+          cig_pop_frame();
+        }
+      }
     }
     
     /* Body */
@@ -283,7 +273,7 @@ static void demo_ui() {
       CIG_RECT(cig_rect_make(0, 18, CIG_FILL_CONSTANT, CIG_H_INSET - 18)),
       CIG_INSETS(cig_insets_make(15, 17, 11, 18)),
       CIG_PARAMS({
-        CIG_AXIS(CIG__VSTACK),
+        CIG_AXIS(CIG_LAYOUT_AXIS_VERTICAL),
         CIG_SPACING(12)
       }),
       CIG_BUILDER(CIG_STACK_BUILDER)
@@ -291,12 +281,17 @@ static void demo_ui() {
       CIG({
         CIG_RECT(CIG_FILL_H(20))
       }) {
-        cig_label((cig_text_properties_t) {
-          .font = &fonts[FONT_TIMES_NEW_ROMAN_32_BOLD],
-          .color = &colors[COLOR_BLACK],
-          .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
-          .alignment.vertical = CIG_TEXT_ALIGN_MIDDLE
-        }, "Welcome to <font=0>Windows</font><font=1><color=2>95</color></font>", &fonts[FONT_ARIAL_BLACK_32], &fonts[FONT_FRANKLIN_GOTHIC_BOOK_32], &colors[COLOR_WHITE]);
+        cig_label(
+          (cig_text_properties_t) {
+            .font = &fonts[FONT_TIMES_NEW_ROMAN_32_BOLD],
+            .color = &colors[COLOR_BLACK],
+            .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
+          },
+          "Welcome to <font=0>Windows</font><font=1><color=2>95</color></font>",
+          &fonts[FONT_ARIAL_BLACK_32],
+          &fonts[FONT_FRANKLIN_GOTHIC_BOOK_32],
+          &colors[COLOR_WHITE]
+        );
       }
       
       CIG(_) {
@@ -304,7 +299,7 @@ static void demo_ui() {
           CIG_RECT(CIG_FILL),
           CIG_INSETS(cig_insets_uniform(1)),
           CIG_PARAMS({
-            CIG_AXIS(CIG__HSTACK),
+            CIG_AXIS(CIG_LAYOUT_AXIS_HORIZONTAL),
             CIG_SPACING(12)
           }),
           CIG_BUILDER(CIG_STACK_BUILDER)
@@ -319,7 +314,7 @@ static void demo_ui() {
           CIG({
             CIG_RECT(CIG_FILL),
             CIG_PARAMS({
-              CIG_AXIS(CIG__VSTACK),
+              CIG_AXIS(CIG_LAYOUT_AXIS_VERTICAL),
               CIG_SPACING(6)
             }),
             CIG_BUILDER(CIG_STACK_BUILDER)
@@ -363,6 +358,7 @@ static cig_font_info_t font_query(cig_font_ref font_ref) {
   return (cig_font_info_t) {
     .height = fs->font.baseSize,
     .line_spacing = 0,
-    .baseline_offset = fs->baseline_offset
+    .baseline_offset = fs->baseline_offset,
+    .word_spacing = fs->word_spacing
   };
 }

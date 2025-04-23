@@ -58,19 +58,22 @@ TEST(core_macros, vstack) {
 }
 
 TEST(core_macros, hstack) {
-  CIG_HSTACK(
-    CIG_FILL,
-    CIG_BODY(
-      for (int i = 0; i < 2; ++i) {
-        CIG_ARRANGE(CIG_FILL, CIG_BODY(
-          TEST_ASSERT_EQUAL_RECT(cig_rect_make(i*(200+10), 0, 200, 480), cig_rect());
-        ))
-      }
-    ),
-    CIG_WIDTH(200),
-    CIG_SPACING(10),
-    CIG_LIMIT_HORIZONTAL(2)
-  )
+  CIG({
+    CIG_RECT(CIG_FILL),
+    CIG_BUILDER(CIG_STACK_BUILDER),
+    CIG_PARAMS({
+      CIG_WIDTH(200),
+      CIG_SPACING(10),
+      CIG_LIMIT_HORIZONTAL(2),
+      CIG_AXIS(CIG_LAYOUT_AXIS_HORIZONTAL)
+    })
+  }) {
+    for (int i = 0; i < 2; ++i) {
+      CIG_ARRANGE(CIG_FILL, CIG_BODY(
+        TEST_ASSERT_EQUAL_RECT(cig_rect_make(i*(200+10), 0, 200, 480), cig_rect());
+      ))
+    }
+  }
 }
 
 TEST(core_macros, grid) {

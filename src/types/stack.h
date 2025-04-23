@@ -50,7 +50,6 @@ CIG_INLINED T* stack_##T##__peek(T##_stack_t *s, size_t offset) {   \
 }
 
 #define INIT_STACK(T) (T##_stack_t) { \
-  0,                                  \
   .capacity = STACK_CAPACITY_##T,     \
   .clear = &stack_##T##_clear,        \
   .push = &stack_##T##_push,          \

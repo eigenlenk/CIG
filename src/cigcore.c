@@ -220,7 +220,7 @@ void cig_pop_buffer() {
 	 
 void cig_set_input_state(
 	const cig_vec2_t position,
-	unsigned int action_mask
+	cig_input_action_type_t action_mask
 ) {
 	if (current->input_state.locked == false) {
 		current->input_state._target_prev_tick = current->input_state._target_this_tick;

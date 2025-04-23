@@ -55,6 +55,7 @@ int main(int argc, char **argv)
       &cmd,
       "gcc",
       "-std=gnu99",
+      "-Wall",
       "-Wfatal-errors",
       
       "-I"SRC_FOLDER,
@@ -67,7 +68,7 @@ int main(int argc, char **argv)
       "-DUNITY_INCLUDE_PRINT_FORMATTED",
       "-DUNITY_INCLUDE_DOUBLE",
 
-      "-Wno-initializer-overrides",
+      // "-Wno-initializer-overrides",
 
       "-o", BIN_FOLDER"tests",
 

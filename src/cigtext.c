@@ -5,18 +5,15 @@
 #include <string.h>
 #include <stdarg.h>
 
-#define WORD_SPACING 8
 #define MAX_TAG_NAME_LEN 16
 #define MAX_TAG_VALUE_LEN 32
 
 typedef struct {
   utf8_string slice;
   struct { unsigned short w, h; } bounds;
+  unsigned char spacing_after;
   cig_font_ref font;
   cig_text_color_ref color;
-  enum {
-    NO_TRAILING_SPACING = CIG_BIT(0)
-  } flags;
 } span_t;
 
 typedef struct {
@@ -59,13 +56,23 @@ void cig_set_default_font(cig_font_ref font_ref) {
 }
 
 void cig_label(cig_text_properties_t props, const char *text, ...) {
-  props.font = props.font ? props.font : default_font;
-    
+  if (!props.font) {
+    props.font = default_font;
+  }
+  
+  if (props.alignment.horizontal == CIG_TEXT_ALIGN_DEFAULT) {
+    props.alignment.horizontal = CIG_TEXT_ALIGN_CENTER;
+  }
+  
+  if (props.alignment.vertical == CIG_TEXT_ALIGN_DEFAULT) {
+    props.alignment.vertical = CIG_TEXT_ALIGN_MIDDLE;
+  }
+  
   cig_id_t hash = cig_hash(text);
   tag_parser_t tag_parser = { 0 };
   
   label_t *label = CIG_ALLOCATE(label_t);
-
+  
   if (label->hash != hash) {
     label->hash = hash;
     label->span_count = 0;
@@ -77,6 +84,8 @@ void cig_label(cig_text_properties_t props, const char *text, ...) {
     utf8_char ch;
     uint32_t cp;
     size_t span_start = 0, cur = 0;
+    cig_font_ref font;
+    cig_font_info_t font_info;
     
  		va_list args;
 		va_start(args, text);
@@ -120,20 +129,22 @@ void cig_label(cig_text_properties_t props, const char *text, ...) {
         if (cur + ch.byte_len == utext.byte_len) {
           cur += ch.byte_len;
         }
+        font = font_stack.count > 0 ? font_stack.fonts[font_stack.count-1] : props.font;
+        font_info = font_query(font);
         utf8_string slice = slice_utf8_string(utext, span_start, cur - span_start);
         cig_vec2_t bounds = measure_callback
-          ? measure_callback(slice.str, slice.byte_len, font_stack.count > 0 ? font_stack.fonts[font_stack.count-1] : props.font)
+          ? measure_callback(slice.str, slice.byte_len, font)
           : cig_vec2_zero();
         
         label->spans[label->span_count++] = (span_t) { 
           .slice = slice,
           .bounds = { bounds.x, bounds.y },
+          .spacing_after = cp == 0x20 ? font_info.word_spacing : 0,
           .font = font_stack.count > 0 ? font_stack.fonts[font_stack.count-1] : NULL,
-          .color = color_stack.count > 0 ? color_stack.colors[color_stack.count-1] : NULL,
-          .flags = cp != 0x20 ? NO_TRAILING_SPACING : 0
+          .color = color_stack.count > 0 ? color_stack.colors[color_stack.count-1] : NULL
         };
         
-        // printf("appended slice %d\n", label->span_count-1);
+        // printf("appended span %d = %.*s\n", label->span_count-1, label->spans[label->span_count-1].slice.byte_len, label->spans[label->span_count-1].slice.str);
         
         span_start = cur + ch.byte_len;
       }
@@ -156,7 +167,7 @@ void cig_label(cig_text_properties_t props, const char *text, ...) {
 static void render_spans(span_t *first, size_t count, cig_text_properties_t *props) {
   register const cig_rect_t absolute_rect = cig_rect_inset(cig_absolute_rect(), cig_frame()->insets);
   register int lines, x, y, w, dx, dy;
-  register span_t *span, *line_start, *line_end, *last = first + count;
+  register span_t *span, *line_start, *line_end, *last = first + count, *prev = NULL;
   register const cig_font_info_t font_info = font_query(props->font);
   
   static double alignment_constant[3] = { 0, 0.5, 1 };
@@ -168,11 +179,11 @@ static void render_spans(span_t *first, size_t count, cig_text_properties_t *pro
       y ++;
     }
     
-    x += span->bounds.w + (span->flags & NO_TRAILING_SPACING ? 0 : WORD_SPACING);
+    x += span->bounds.w + span->spacing_after;
   }
   
   lines = 1 + y;
-  dy = absolute_rect.y + (int)(absolute_rect.h - (lines * font_info.height)) * alignment_constant[props->alignment.vertical];
+  dy = absolute_rect.y + (int)((absolute_rect.h - (lines * font_info.height)) * alignment_constant[props->alignment.vertical-1]);
   
   for (line_start = span = first, x = 0; span < last;) {
     if (x + span->bounds.w > absolute_rect.w) {
@@ -181,7 +192,7 @@ static void render_spans(span_t *first, size_t count, cig_text_properties_t *pro
         line_end = span+1;
       } else {
         line_end = span;
-        w = x - WORD_SPACING;
+        w = x - prev->spacing_after;
         x = 0;
       }
     } else if (span == last-1) {
@@ -189,14 +200,15 @@ static void render_spans(span_t *first, size_t count, cig_text_properties_t *pro
       w = x + span->bounds.w;
     } else {
       line_end = NULL;
-      x += span->bounds.w + (span->flags & NO_TRAILING_SPACING ? 0 : WORD_SPACING);
+      x += span->bounds.w + span->spacing_after;
     }
     
     if (line_end) {
-      dx = dx = absolute_rect.x + (int)((absolute_rect.w - w) * alignment_constant[props->alignment.horizontal]);
+      dx = absolute_rect.x + (int)((absolute_rect.w - w) * alignment_constant[props->alignment.horizontal-1]);
       
-      for (span = line_start; span < line_end; dx += (span->flags & NO_TRAILING_SPACING ? 0 : WORD_SPACING) + (span++)->bounds.w) {
+      for (span = line_start; span < line_end; span++) {
         cig_font_info_t span_font_info = span->font ? font_query(span->font) : font_info;
+        
         render_callback(
           cig_rect_make(
             dx,
@@ -209,13 +221,18 @@ static void render_spans(span_t *first, size_t count, cig_text_properties_t *pro
           span->font ? span->font : props->font,
           span->color ? span->color : props->color
         );
+        
+        dx += span->bounds.w + span->spacing_after;
       }
 
+      prev = span;
       span = line_start = line_end;
       dy += font_info.height;
+      
       continue;
     }
     
+    prev = span;
     span++;
   }
 }
@@ -237,7 +254,7 @@ static bool parse_tag(tag_parser_t *this, utf8_char ch, uint32_t cp) {
       printf(" terminating /\n");
     } else if (cp == 0x3E) { /* > */
       this->open = false;
-      printf("close > (%s = %d)\n", this->name, this->value);
+      printf("close > (%s = %s)\n", this->name, this->value);
       return true;
     } else if (cp == 0x3D && this->_naming) { /* = */
       this->_naming = false; /* Switch to collecting tag value */
@@ -265,17 +282,3 @@ static void* get_va_arg(va_list *list, size_t position) {
   va_end(copy);
   return arg;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
