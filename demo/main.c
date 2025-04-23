@@ -49,11 +49,11 @@ int main(int argc, const char *argv[]) {
 
   fonts[FONT_REGULAR].font = LoadFont("winr.fnt");
   fonts[FONT_REGULAR].baseline_offset = -2;
-  fonts[FONT_REGULAR].word_spacing = 4;
+  fonts[FONT_REGULAR].word_spacing = 3;
   
   fonts[FONT_BOLD].font = LoadFont("winb.fnt");
   fonts[FONT_BOLD].baseline_offset = -2;
-  fonts[FONT_BOLD].word_spacing = 4;
+  fonts[FONT_BOLD].word_spacing = 3;
   
   fonts[FONT_TIMES_NEW_ROMAN_32_BOLD].font = LoadFont("tnr32b.fnt");
   fonts[FONT_TIMES_NEW_ROMAN_32_BOLD].baseline_offset = -6;

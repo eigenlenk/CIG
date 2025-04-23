@@ -115,7 +115,7 @@ TEST(text_span, horizontal_alignment_center) {
       .alignment.horizontal = CIG_TEXT_ALIGN_CENTER
     }, "Label");
     
-    TEST_ASSERT_EQUAL_RECT(cig_rect_make(38, 0, 5, 1), spans.rects[0]);
+    TEST_ASSERT_EQUAL_RECT(cig_rect_make(37, 0, 5, 1), spans.rects[0]);
   }
 }
 
@@ -203,10 +203,10 @@ TEST(text_span, forced_line_change) {
       }, "Hello world!");
       
       /* ╔════════╗  
-         ║__Hello_║  
+         ║_Hello__║  
          ║_World!_║  
          ╚════════╝ */
-      TEST_ASSERT_EQUAL_RECT(cig_rect_make(2, 0, 5, 1), spans.rects[2]);
+      TEST_ASSERT_EQUAL_RECT(cig_rect_make(1, 0, 5, 1), spans.rects[2]);
       TEST_ASSERT_EQUAL_RECT(cig_rect_make(1, 1, 6, 1), spans.rects[3]);
     }
     

@@ -103,7 +103,7 @@ TEST(core_state, memory_arena) {
     char *str = (char *)cig_state_allocate(sizeof(char[32]));
     void *a_whole_kilobyte = cig_state_allocate(sizeof(char[1024]));
     
-    TEST_ASSERT_NULL(a_whole_kilobyte); /* Our memory area is 512 bytes by default */
+    TEST_ASSERT_NULL(a_whole_kilobyte); /* Doesn't fit. Our area is 512 bytes by default */
     
     TEST_ASSERT_EQUAL_UINT(
       sizeof(cig_vec2_t) + sizeof(unsigned long) + sizeof(char[32]),

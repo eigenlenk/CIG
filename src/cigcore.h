@@ -190,7 +190,7 @@ DECLARE_ARRAY_STACK_T(cig_frame_t);
 DECLARE_ARRAY_STACK_T(cig_buffer_element_t);
 
 /* A single instance of CIG. Use one for each game state?
-   All fields should be considered private */
+   Should be considered an opaque type! */
 typedef struct {
   /* PRIVATE: */	
   cig_frame_t_stack_t frames;
@@ -219,7 +219,7 @@ typedef struct {
 ───┤  CORE LAYOUT  │
    └───────────────┘ */
    
-/* Call this once to initalize/reset the context */
+/* Call this once to initalize (or reset) the context */
 void cig_init_context(cig_context_t*);
 
 /* */
@@ -231,9 +231,11 @@ void cig_end_layout();
 /* Returns an opaque pointer to the current buffer where drawing operations would take place */
 cig_buffer_ref cig_buffer();
 
+/* Pushes a new frame with args struct containing all relevant data.
+   @return TRUE if rect is visible within current container, FALSE otherwise */
 bool cig_push_frame_args(cig_frame_args_t);
 
-/* Pushes a new frame with zero insets to layout stack.
+/* Pushes a new frame with default insets (see `cig_set_default_insets`) to layout stack.
    @return TRUE if rect is visible within current container, FALSE otherwise */
 bool cig_push_frame(cig_rect_t);
 
@@ -257,6 +259,7 @@ bool cig_push_layout_function(
 /* Pop and return the last element in the layout stack */
 cig_frame_t* cig_pop_frame();
 
+/* Sets insets used by all consecutive `cig_push_frame` calls */
 void cig_set_default_insets(cig_insets_t);
 
 /* Returns current layout element */
@@ -331,12 +334,9 @@ cig_input_action_type_t cig_clicked(cig_input_action_type_t, cig_click_flags_t);
 ───┤  SCROLLING  │
    └─────────────┘ */
    
-/* Tries to enable scrolling for the current layout element and allocate an
-   internal scroll state that remains constant between ticks. The state
-	 is released when the element is no longer on screen.
-	 
-	 To enable to a proper persistent scroll state, you can provide a pointer to
-	 the struct stored somewhere in your application layer. Pass NULL for
+/* Attempts to enable scrolling for the current layout element and allocate an
+   internal scroll state that remains constant between ticks. You can also provide
+   a pointer to the struct stored somewhere in your application layer. Pass NULL for
 	 the default behavior described above.
 	 
 	 The state pool is limited to `CIG_STATES_MAX` and if there are too many
@@ -365,7 +365,7 @@ cig_vec2_t cig_content_size();
    └──────────────────┘ */
 
 /* By default, when adding rects that are completely outside the bounds
-   of the parent, `cig_push_frame` calls return false. You can disable that
+   of the parent, `cig_push_frame` calls return FALSE. You can disable that
    behavior with this */
 void cig_disable_culling();
 

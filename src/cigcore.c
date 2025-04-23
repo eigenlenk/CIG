@@ -17,6 +17,7 @@ static void pop_clip();
 static cig_rect_t resolve_size(cig_rect_t, const cig_frame_t*);
 static bool next_layout_rect(cig_rect_t, cig_frame_t*, cig_rect_t*);
 static bool push_frame(cig_rect_t, cig_insets_t, cig_layout_params_t, bool (*)(cig_rect_t, cig_rect_t, cig_layout_params_t*, cig_rect_t*));
+
 CIG_INLINED int tinyhash(int a, int b) { return (a * 31) ^ (b * 17); }
 
 /* ┌───────────────┐
@@ -81,24 +82,6 @@ void cig_end_layout() {
   }
   
   ++current->tick;
-	
-  
-	/* Check for inactive states and filter them out by shifting active states back */
-	/*for (register int i = current->state_list.size - 1; i >= 0; --i) {
-		s = &current->state_list.values[i];
-		if (s->last_tick != current->tick) {
-			if (last) {
-				*s = *last;
-				last = NULL;
-			} else {
-				s->id = 0;
-				s->activation_state = INACTIVE;
-			}
-			current->state_list.size --;
-		} else if (!last) {
-			last = s;
-		}
-	}*/
 }
 
 cig_buffer_ref cig_buffer() {
