@@ -5,7 +5,7 @@
 #include "asserts.h"
 #include "utf8.h"
 
-TEST_GROUP(text_span);
+TEST_GROUP(text_label);
 
 static cig_context_t ctx;
 static int text_measure_calls;
@@ -34,7 +34,7 @@ CIG_INLINED cig_font_info_t font_query(cig_font_ref font_ref) {
   };
 }
 
-TEST_SETUP(text_span) {
+TEST_SETUP(text_label) {
   cig_init_context(&ctx);
   
   cig_set_text_render_callback(&text_render);
@@ -45,7 +45,7 @@ TEST_SETUP(text_span) {
   text_measure_calls = 0;
 }
 
-TEST_TEAR_DOWN(text_span) {}
+TEST_TEAR_DOWN(text_label) {}
 
 static void begin() {
   /* In the context of these tests we work with a terminal/text-mode where
@@ -57,7 +57,7 @@ static void end() {
 	cig_end_layout();
 }
 
-TEST(text_span, basic_label) {  
+TEST(text_label, basic_label) {  
   /* Runing to iterations to test that text is measured only once
      and cached data is used on consecutive layout passes */
   for (int i = 0; i < 2; ++i) {
@@ -91,7 +91,7 @@ TEST(text_span, basic_label) {
   TEST_ASSERT_EQUAL(4, text_measure_calls); /* 2 labels with 2 spans each */
 }
 
-TEST(text_span, horizontal_alignment_left) {
+TEST(text_label, horizontal_alignment_left) {
   begin();
   
   CIG({
@@ -105,7 +105,7 @@ TEST(text_span, horizontal_alignment_left) {
   }
 }
 
-TEST(text_span, horizontal_alignment_center) {
+TEST(text_label, horizontal_alignment_center) {
   begin();
   
   CIG({
@@ -119,7 +119,7 @@ TEST(text_span, horizontal_alignment_center) {
   }
 }
 
-TEST(text_span, horizontal_alignment_right) {
+TEST(text_label, horizontal_alignment_right) {
   begin();
   
   CIG({
@@ -133,7 +133,7 @@ TEST(text_span, horizontal_alignment_right) {
   }
 }
 
-TEST(text_span, vertical_alignment_top) {
+TEST(text_label, vertical_alignment_top) {
   begin();
   
   CIG({
@@ -147,7 +147,7 @@ TEST(text_span, vertical_alignment_top) {
   }
 }
 
-TEST(text_span, vertical_alignment_middle) {
+TEST(text_label, vertical_alignment_middle) {
   begin();
   
   CIG({
@@ -161,7 +161,7 @@ TEST(text_span, vertical_alignment_middle) {
   }
 }
 
-TEST(text_span, vertical_alignment_bottom) {
+TEST(text_label, vertical_alignment_bottom) {
   begin();
   
   CIG({
@@ -175,7 +175,7 @@ TEST(text_span, vertical_alignment_bottom) {
   }
 }
 
-TEST(text_span, forced_line_change) {
+TEST(text_label, forced_line_change) {
   begin();
   
   CIG({
@@ -189,8 +189,8 @@ TEST(text_span, forced_line_change) {
       }, "Olá mundo!");
       
       /* ╔════════╗  
-         ║Hello___║  
-         ║World!__║  
+         ║Olá_____║  
+         ║mundo!__║  
          ╚════════╝ */
       TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 3, 1), spans.rects[0]);
       TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 1, 6, 1), spans.rects[1]);
@@ -204,7 +204,7 @@ TEST(text_span, forced_line_change) {
       
       /* ╔════════╗  
          ║_Hello__║  
-         ║_World!_║  
+         ║_world!_║  
          ╚════════╝ */
       TEST_ASSERT_EQUAL_RECT(cig_rect_make(1, 0, 5, 1), spans.rects[2]);
       TEST_ASSERT_EQUAL_RECT(cig_rect_make(1, 1, 6, 1), spans.rects[3]);
@@ -227,13 +227,13 @@ TEST(text_span, forced_line_change) {
   }
 }
 
-TEST_GROUP_RUNNER(text_span) {
-  RUN_TEST_CASE(text_span, basic_label);
-  RUN_TEST_CASE(text_span, horizontal_alignment_left);
-  RUN_TEST_CASE(text_span, horizontal_alignment_center);
-  RUN_TEST_CASE(text_span, horizontal_alignment_right);
-  RUN_TEST_CASE(text_span, vertical_alignment_top);
-  RUN_TEST_CASE(text_span, vertical_alignment_middle);
-  RUN_TEST_CASE(text_span, vertical_alignment_bottom);
-  RUN_TEST_CASE(text_span, forced_line_change);
+TEST_GROUP_RUNNER(text_label) {
+  RUN_TEST_CASE(text_label, basic_label);
+  RUN_TEST_CASE(text_label, horizontal_alignment_left);
+  RUN_TEST_CASE(text_label, horizontal_alignment_center);
+  RUN_TEST_CASE(text_label, horizontal_alignment_right);
+  RUN_TEST_CASE(text_label, vertical_alignment_top);
+  RUN_TEST_CASE(text_label, vertical_alignment_middle);
+  RUN_TEST_CASE(text_label, vertical_alignment_bottom);
+  RUN_TEST_CASE(text_label, forced_line_change);
 }
