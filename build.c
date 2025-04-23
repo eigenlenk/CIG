@@ -90,6 +90,8 @@ int main(int argc, char **argv)
   }
   
   if (targets_included & TARGET_RAYLIB_DEMO) {
+    nob_copy_directory_recursively(DEMO_FOLDER"res", BIN_FOLDER"res");
+    
     nob_cmd_append(
       &cmd,
       "gcc",
@@ -97,6 +99,7 @@ int main(int argc, char **argv)
       "-Wfatal-errors",
       
       "-I"SRC_FOLDER,
+      "-I"DEMO_FOLDER,
       "-I"DEPS_FOLDER"utf8/",
       "-I"DEPS_FOLDER"raylib-5.5_win32_mingw-w64/include",
       
@@ -108,6 +111,7 @@ int main(int argc, char **argv)
       SRC_FOLDER"cigcore.c",
       SRC_FOLDER"cigtext.c",
       DEMO_FOLDER"main.c",
+      DEMO_FOLDER"win95/win95.c",
       
       DEPS_FOLDER"raylib-5.5_win32_mingw-w64/lib/libraylib.a",
       "-lopengl32",

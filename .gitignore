@@ -54,3 +54,4 @@ Thumbs.db
 *.old
 dev/
 deps/raylib-5.5_win32_mingw-w64/
+bin/
