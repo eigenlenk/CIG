@@ -7,4 +7,8 @@
 #include "cigtext.h"
 #endif
 
+#ifndef CIG_EXCLUDE_GFX
+#include "ciggfx.h"
+#endif
+
 #endif

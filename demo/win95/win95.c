@@ -1,87 +1,70 @@
 #include "win95.h"
-#include "raylib.h"
 
 #define TASKBAR_H 28
-#define RAYLIB_RECT(R) R.x, R.y, R.w, R.h
 
-static bool draw_button_panel(bool pressed) {
-  DrawRectangle(RAYLIB_RECT(cig_frame()->absolute_rect), (Color){ 195, 195, 195, 255 });
+static bool standard_button(win95_t *this, cig_rect_t rect, const char *title) {
+  bool clicked = false;
   
-  if (!pressed) {
-    DrawLine(CIG_GX, CIG_GY, CIG_GX + CIG_W - 1, CIG_GY, (Color){ 255, 255, 255, 255 });
-    DrawLine(CIG_GX + 1, CIG_GY + 1, CIG_GX + 1, CIG_GY + CIG_H - 1, (Color){ 255, 255, 255, 255 });
-    DrawLine(CIG_GX, CIG_GY + CIG_H - 1, CIG_GX + CIG_W, CIG_GY + CIG_H - 1, (Color){ 0, 0, 0, 255 });
-    DrawLine(CIG_GX + CIG_W, CIG_GY, CIG_GX + CIG_W, CIG_GY + CIG_H - 1, (Color){ 0, 0, 0, 255 });
-    DrawLine(CIG_GX + 1, CIG_GY + CIG_H - 2, CIG_GX + CIG_W - 1, CIG_GY + CIG_H - 2, (Color){ 130, 130, 130, 255 });
-    DrawLine(CIG_GX + CIG_W - 1, CIG_GY + 1, CIG_GX + CIG_W - 1, CIG_GY + CIG_H - 2, (Color){ 130, 130, 130, 255 });
-  } else {
-    DrawLine(CIG_GX, CIG_GY, CIG_GX + CIG_W - 1, CIG_GY, (Color){ 0, 0, 0, 255 });
-    DrawLine(CIG_GX + 1, CIG_GY + 1, CIG_GX + 1, CIG_GY + CIG_H - 1, (Color){ 0, 0, 0, 255 });
-    DrawLine(CIG_GX, CIG_GY + CIG_H - 1, CIG_GX + CIG_W, CIG_GY + CIG_H - 1, (Color){ 255, 255, 255, 255 });
-    DrawLine(CIG_GX + CIG_W, CIG_GY, CIG_GX + CIG_W, CIG_GY + CIG_H - 1, (Color){ 255, 255, 255, 255 }); 
-    DrawLine(CIG_GX + 1, CIG_GY + CIG_H - 2, CIG_GX + CIG_W - 1, CIG_GY + CIG_H - 2, (Color){ 223, 223, 223, 255 });
-    DrawLine(CIG_GX + CIG_W - 1, CIG_GY + 1, CIG_GX + CIG_W - 1, CIG_GY + CIG_H - 2, (Color){ 223, 223, 223, 255 });
-    DrawLine(CIG_GX + 2, CIG_GY + 1, CIG_GX + CIG_W - 2, CIG_GY + 1, (Color){ 128, 128, 128, 255 });
-    DrawLine(CIG_GX + 2, CIG_GY + 1, CIG_GX + 2, CIG_GY + CIG_H - 2, (Color){ 128, 128, 128, 255 });
-  }
-  
-  return cig_push_frame_insets(
-    CIG_FILL,
-    pressed ? cig_insets_make(0, 3, 0, 2) : cig_insets_make(0, 1, 0, 2)
-  );
-}
-
-static void draw_window_panel() {
-  DrawRectangle(RAYLIB_RECT(cig_frame()->absolute_rect), (Color){ 195, 195, 195, 255 });
-  
-  DrawLine(CIG_GX, CIG_GY + CIG_H - 1, CIG_GX + CIG_W, CIG_GY + CIG_H - 1, (Color){ 0, 0, 0, 255 });
-  DrawLine(CIG_GX + CIG_W, CIG_GY, CIG_GX + CIG_W, CIG_GY + CIG_H - 1, (Color){ 0, 0, 0, 255 });
-  DrawLine(CIG_GX + 1, CIG_GY + CIG_H - 2, CIG_GX + CIG_W - 1, CIG_GY + CIG_H - 2, (Color){ 130, 130, 130, 255 });
-  DrawLine(CIG_GX + CIG_W - 1, CIG_GY + 1, CIG_GX + CIG_W - 1, CIG_GY + CIG_H - 2, (Color){ 130, 130, 130, 255 });
-  DrawLine(CIG_GX + 1, CIG_GY + 1, CIG_GX + CIG_W - 2, CIG_GY + 1, (Color){ 255, 255, 255, 255 });
-  DrawLine(CIG_GX + 2, CIG_GY + 1, CIG_GX + 2, CIG_GY + CIG_H - 2, (Color){ 255, 255, 255, 255 });
-  
-  /*DrawLine(CIG_GX + 1, CIG_GY, CIG_GX + CIG_W - 1, CIG_GY, (Color){ 255, 255, 255, 255 });
-  DrawLine(CIG_GX + 1, CIG_GY + 1, CIG_GX + 1, CIG_GY + CIG_H - 1, (Color){ 255, 255, 255, 255 });
-  DrawLine(CIG_GX, CIG_GY + CIG_H - 1, CIG_GX + CIG_W, CIG_GY + CIG_H - 1, (Color){ 0, 0, 0, 255 });
-  DrawLine(CIG_GX + CIG_W, CIG_GY, CIG_GX + CIG_W, CIG_GY + CIG_H - 1, (Color){ 0, 0, 0, 255 });
-  DrawLine(CIG_GX + 1, CIG_GY + CIG_H - 2, CIG_GX + CIG_W - 1, CIG_GY + CIG_H - 2, (Color){ 130, 130, 130, 255 });
-  DrawLine(CIG_GX + CIG_W - 1, CIG_GY + 1, CIG_GX + CIG_W - 1, CIG_GY + CIG_H - 2, (Color){ 130, 130, 130, 255 });*/
-}
-
-static void draw_inner_bevel_border() {
-  DrawLine(CIG_GX, CIG_GY, CIG_GX + CIG_W - 1, CIG_GY, (Color) { 130, 130, 130, 255 });
-  DrawLine(CIG_GX + 1, CIG_GY, CIG_GX + 1, CIG_GY + CIG_H - 1, (Color) { 130, 130, 130, 255 });
-  DrawLine(CIG_GX, CIG_GY + CIG_H - 1, CIG_GX + CIG_W, CIG_GY + CIG_H - 1, (Color) { 255, 255, 255, 255 });
-  DrawLine(CIG_GX + CIG_W, CIG_GY, CIG_GX + CIG_W, CIG_GY + CIG_H, (Color) { 255, 255, 255, 255 });
-}
-
-static void beveled_button(win95_t *this, cig_rect_t rect, const char *title) {
   CIG({
     CIG_RECT(rect)
   }) {
     cig_enable_interaction();
-    if (draw_button_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE))) {
+    
+    const bool pressed = cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE);
+    
+    cig_fill_panel(this->get_panel(PANEL_BUTTON), pressed ? CIG_PANEL_PRESSED : 0);
+    
+    if (cig_push_frame_insets(CIG_FILL,  pressed ? cig_insets_make(1, 3, 0, 2) : cig_insets_make(0, 1, 0, 2))) {
       cig_label((cig_text_properties_t) {
         .font = this->get_font(FONT_REGULAR)
       }, title);
       cig_pop_frame();
     }
+    
+    clicked = cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DEFAULT_OPTIONS);
   }
+  
+  return clicked;
 }
+
+static bool taskbar_button(win95_t *this, cig_rect_t rect, const char *title) {
+  bool clicked = false;
+  
+  CIG({
+    CIG_RECT(rect)
+  }) {
+    cig_enable_interaction();
+    
+    const bool pressed = cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE);
+    
+    cig_fill_panel(this->get_panel(PANEL_BUTTON), pressed ? CIG_PANEL_PRESSED : 0);
+    
+    if (cig_push_frame_insets(CIG_FILL,  pressed ? cig_insets_make(0, 3, 0, 2) : cig_insets_make(0, 1, 0, 2))) {
+      cig_label((cig_text_properties_t) {
+        .font = this->get_font(FONT_REGULAR)
+      }, title);
+      cig_pop_frame();
+    }
+    
+    clicked = cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DEFAULT_OPTIONS);
+  }
+  
+  return clicked;
+}
+
 
 void run_win95(win95_t *this) {
   /* Desktop */
   if (cig_push_frame(cig_rect_make(0, 0, CIG_W, CIG_H - TASKBAR_H))) {
-    DrawRectangle(RAYLIB_RECT(cig_frame()->absolute_rect), (Color){ 0, 130, 130, 255 });
+    cig_fill_color(this->get_color(COLOR_DESKTOP));
     cig_pop_frame();
   }
   
   /* Taskbar */
   
   if (cig_push_frame_insets(cig_rect_make(0, CIG_H - TASKBAR_H, CIG_W, TASKBAR_H), cig_insets_make(2, 4, 2, 2))) {
-    DrawRectangle(RAYLIB_RECT(cig_frame()->absolute_rect), (Color){ 195, 195, 195, 255 });
-    DrawLine(CIG_GX, CIG_GY + 1, CIG_GX + CIG_W, CIG_GY + 1, (Color){ 255, 255, 255, 255 });
+    cig_fill_color(this->get_color(COLOR_DIALOG_BACKGROUND));
+    cig_draw_line(this->get_color(COLOR_TEXT_WHITE), cig_vec2_make(0, 1), cig_vec2_make(CIG_W, 1), 1);
     
     CIG({
       CIG_RECT(CIG_FILL),
@@ -91,35 +74,9 @@ void run_win95(win95_t *this) {
       }),
       CIG_BUILDER(CIG_STACK_BUILDER)
     }) {
-      CIG({
-        CIG_RECT(CIG_FILL_W(54))
-      }) {
-        cig_enable_interaction();
-        if (draw_button_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE))) {
-          cig_label((cig_text_properties_t) { .font = this->get_font(FONT_BOLD) }, "Start");
-          cig_pop_frame();
-        }
-      }
-      
-      CIG({
-        CIG_RECT(CIG_FILL_W(95))
-      }) {
-        cig_enable_interaction();
-        if (draw_button_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE))) {
-          cig_label((cig_text_properties_t) { }, "Welcome");
-          cig_pop_frame();
-        }
-      }
-      
-      CIG({
-        CIG_RECT(CIG_FILL_W(95))
-      }) {
-        cig_enable_interaction();
-        if (draw_button_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE))) {
-          cig_label((cig_text_properties_t) { }, "My Computer");
-          cig_pop_frame();
-        }
-      }
+      taskbar_button(this, CIG_FILL_W(54), "Start");
+      taskbar_button(this, CIG_FILL_W(95), "Welcome");
+      taskbar_button(this, CIG_FILL_W(95), "My Computer");
     }
     
     cig_pop_frame();
@@ -130,8 +87,8 @@ void run_win95(win95_t *this) {
     CIG_RECT(CIG_CENTERED(488, 280)),
     CIG_INSETS(cig_insets_uniform(3))
   }) {
-    draw_window_panel();
-    
+    cig_fill_panel(this->get_panel(PANEL_STANDARD_DIALOG), 0);
+
     /* Titlebar */
     CIG({
       CIG_RECT(CIG_FILL_H(18)),
@@ -143,8 +100,8 @@ void run_win95(win95_t *this) {
       }),
       CIG_BUILDER(CIG_STACK_BUILDER)
     }) {
-      DrawRectangle(RAYLIB_RECT(cig_frame()->absolute_rect), (Color){ 0, 0, 130, 255 });
-      
+      cig_fill_color(this->get_color(COLOR_WINDOW_ACTIVE_TITLEBAR));
+
       cig_label((cig_text_properties_t) {
         .font = this->get_font(FONT_BOLD),
         .color = this->get_color(COLOR_TEXT_WHITE),
@@ -152,15 +109,7 @@ void run_win95(win95_t *this) {
         .alignment.vertical = CIG_TEXT_ALIGN_MIDDLE
       }, "Welcome");
       
-      CIG({
-        CIG_RECT(cig_rect_make(CIG_W_INSET - 16, 0, 16, CIG_FILL_CONSTANT))
-      }) {
-        cig_enable_interaction();
-        if (draw_button_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE))) {
-          cig_label((cig_text_properties_t) { .font = this->get_font(FONT_BOLD) }, "X");
-          cig_pop_frame();
-        }
-      }
+      standard_button(this, cig_rect_make(CIG_W_INSET - 16, 0, 16, CIG_FILL_CONSTANT), "X");
     }
     
     /* Body */
@@ -204,8 +153,8 @@ void run_win95(win95_t *this) {
           CIG({
             CIG_RECT(CIG_FILL_W(330))
           }) {
-            DrawTexturePro(*(Texture2D*)this->get_image(IMAGE_BRIGHT_YELLOW_PATTERN), (Rectangle) { 0, 0, CIG_W, CIG_H }, (Rectangle) { CIG_GX + 1, CIG_GY + 1, CIG_W - 2, CIG_H - 2 }, (Vector2){0,0}, 0, WHITE);
-            draw_inner_bevel_border();
+            cig_fill_panel(this->get_panel(PANEL_LIGHT_YELLOW), 0);
+            cig_fill_panel(this->get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
           }
           
           CIG({
@@ -216,8 +165,8 @@ void run_win95(win95_t *this) {
             }),
             CIG_BUILDER(CIG_STACK_BUILDER)
           }) {
-            beveled_button(this, CIG_FILL_H(23), "What's New");
-            beveled_button(this, CIG_FILL_H(23), "Online Registration");
+            standard_button(this, CIG_FILL_H(23), "What's New");
+            standard_button(this, CIG_FILL_H(23), "Online Registration");
           }
         }
       }

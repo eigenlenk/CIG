@@ -35,7 +35,7 @@ typedef struct {
 static cig_text_render_callback_t render_callback = NULL;
 static cig_text_measure_callback_t measure_callback = NULL;
 static cig_font_query_callback_t font_query = NULL;
-static cig_font_ref default_font = NULL;
+static cig_font_ref default_font = 0;
 static char printf_buf[CIG_LABEL_PRINTF_BUF_LENGTH];
 
 static void render_spans(span_t*, size_t, cig_text_properties_t*);
@@ -174,8 +174,8 @@ void cig_label(cig_text_properties_t props, const char *text, ...) {
         
         label->spans[label->span_count++] = (span_t) { 
           .str = slice.str,
-          .font = font_stack.count > 0 ? font_stack.fonts[font_stack.count-1] : NULL,
-          .color = color_stack.count > 0 ? color_stack.colors[color_stack.count-1] : NULL,
+          .font = font_stack.count > 0 ? font_stack.fonts[font_stack.count-1] : 0,
+          .color = color_stack.count > 0 ? color_stack.colors[color_stack.count-1] : 0,
           .bounds = { bounds.x, bounds.y },
           .byte_len = (unsigned char)slice.byte_len,
           .spacing_after = cp == 0x20 ? font_info.word_spacing : 0,

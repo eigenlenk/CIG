@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#define RAYLIB_RECT(R) R.x, R.y, R.w, R.h
+#define RAYLIB_VEC2(V) (Vector2) { V.x, V.y } 
+
 static cig_context_t ctx = { 0 };
 
 static struct font_store {
@@ -11,8 +14,10 @@ static struct font_store {
   int baseline_offset, word_spacing;
 } fonts[__FONT_COUNT];
 static Color colors[__COLOR_COUNT];
+static int panel_styles[__PANEL_COUNT];
 static Texture2D images[__IMAGE_COUNT];
 
+/* Text API */
 static void render_text(
   const char *,
   size_t,
@@ -29,16 +34,28 @@ static cig_vec2_t measure_text(
 );
 static cig_font_info_t font_query(cig_font_ref);
 
-CIG_INLINED void* get_font(font_id_t font_id) {
-  return &fonts[font_id];
+/* Gfx API */
+static void render_panel(cig_panel_ref, cig_rect_t, cig_panel_modifiers_t);
+static void draw_rectangle(cig_color_ref, cig_color_ref, cig_rect_t, unsigned int);
+static void draw_line(cig_color_ref, cig_vec2_t, cig_vec2_t, unsigned int);
+
+
+
+
+CIG_INLINED void* get_font(font_id_t id) {
+  return &fonts[id];
 }
 
-CIG_INLINED void* get_color(color_id_t color_id) {
-  return &colors[color_id];
+CIG_INLINED void* get_color(color_id_t id) {
+  return &colors[id];
 }
 
-CIG_INLINED void* get_image(image_id_t image_id) {
-  return &images[image_id];
+CIG_INLINED void* get_image(image_id_t id) {
+  return &images[id];
+}
+
+CIG_INLINED void* get_panel(panel_id_t id) {
+  return &panel_styles[id];
 }
 
 int main(int argc, const char *argv[]) {
@@ -77,18 +94,29 @@ int main(int argc, const char *argv[]) {
   
   colors[COLOR_TEXT_BLACK] = (Color) { 0, 0, 0, 255 };
   colors[COLOR_TEXT_WHITE] = (Color) { 255, 255, 255, 255 };
+  colors[COLOR_DESKTOP] = (Color) { 0, 130, 130, 255 };
+  colors[COLOR_DIALOG_BACKGROUND] = (Color) { 195, 195, 195, 255 };
+  colors[COLOR_WINDOW_ACTIVE_TITLEBAR] = (Color) { 0, 0, 130, 255 };
+  
+  for (register int i = 0; i < __PANEL_COUNT; ++i) { panel_styles[i] = i; }
 
   cig_init_context(&ctx);
+  
   cig_set_text_render_callback(&render_text);
   cig_set_text_measure_callback(&measure_text);
   cig_set_font_query_callback(&font_query);
   cig_set_default_font(&fonts[FONT_REGULAR]);
   
+  cig_set_panel_render_callback(&render_panel);
+  cig_set_draw_rectangle_callback(&draw_rectangle);
+  cig_set_draw_line_callback(&draw_line);
+  
   win95_t win_instance = {
     /* Inject dependencies */
     .get_font = &get_font,
     .get_color = &get_color,
-    .get_image = &get_image
+    .get_image = &get_image,
+    .get_panel = &get_panel
   };
 
   while (!WindowShouldClose()) {
@@ -132,7 +160,7 @@ CIG_INLINED void render_text(
   DrawTextEx(fs->font, buf, (Vector2) { rect.x, rect.y }, fs->font.baseSize, 0, color ? *(Color*)color : colors[COLOR_TEXT_BLACK]);
 }
 
-cig_vec2_t measure_text(
+CIG_INLINED cig_vec2_t measure_text(
   const char *str,
   size_t len,
   cig_font_ref font,
@@ -148,7 +176,7 @@ cig_vec2_t measure_text(
   return cig_vec2_make(bounds.x, bounds.y);
 }
 
-static cig_font_info_t font_query(cig_font_ref font_ref) {
+CIG_INLINED cig_font_info_t font_query(cig_font_ref font_ref) {
   struct font_store *fs = (struct font_store*)font_ref;
   
   // printf("GLYPH PADDING %d\n", fs->font.glyphPadding);
@@ -159,4 +187,71 @@ static cig_font_info_t font_query(cig_font_ref font_ref) {
     .baseline_offset = fs->baseline_offset,
     .word_spacing = fs->word_spacing
   };
+}
+
+CIG_INLINED void render_panel(cig_panel_ref panel, cig_rect_t rect, cig_panel_modifiers_t modifiers) {
+  const int panel_style = *(int*)panel;
+  
+  switch (panel_style) {
+    case PANEL_STANDARD_DIALOG: {
+      DrawRectangle(RAYLIB_RECT(rect), colors[COLOR_DIALOG_BACKGROUND]);
+      DrawLine(rect.x, rect.y + rect.h - 1, rect.x + rect.w, rect.y + rect.h - 1, (Color){ 0, 0, 0, 255 });
+      DrawLine(rect.x + rect.w, rect.y, rect.x + rect.w, rect.y + rect.h - 1, (Color){ 0, 0, 0, 255 });
+      DrawLine(rect.x + 1, rect.y + rect.h - 2, rect.x + rect.w - 1, rect.y + rect.h - 2, (Color){ 130, 130, 130, 255 });
+      DrawLine(rect.x + rect.w - 1, rect.y + 1, rect.x + rect.w - 1, rect.y + rect.h - 2, (Color){ 130, 130, 130, 255 });
+      DrawLine(rect.x + 1, rect.y + 1, rect.x + rect.w - 2, rect.y + 1, (Color){ 255, 255, 255, 255 });
+      DrawLine(rect.x + 2, rect.y + 1, rect.x + 2, rect.y + rect.h - 2, (Color){ 255, 255, 255, 255 });
+    } break;
+    
+    case PANEL_BUTTON: {
+      DrawRectangle(RAYLIB_RECT(rect), colors[COLOR_DIALOG_BACKGROUND]);
+      
+      if (modifiers & CIG_PANEL_PRESSED) {
+        DrawLine(rect.x, rect.y, rect.x + rect.w - 1, rect.y, (Color){ 0, 0, 0, 255 });
+        DrawLine(rect.x + 1, rect.y + 1, rect.x + 1, rect.y + rect.h - 1, (Color){ 0, 0, 0, 255 });
+        DrawLine(rect.x, rect.y + rect.h - 1, rect.x + rect.w, rect.y + rect.h - 1, (Color){ 255, 255, 255, 255 });
+        DrawLine(rect.x + rect.w, rect.y, rect.x + rect.w, rect.y + rect.h - 1, (Color){ 255, 255, 255, 255 }); 
+        DrawLine(rect.x + 1, rect.y + rect.h - 2, rect.x + rect.w - 1, rect.y + rect.h - 2, (Color){ 223, 223, 223, 255 });
+        DrawLine(rect.x + rect.w - 1, rect.y + 1, rect.x + rect.w - 1, rect.y + rect.h - 2, (Color){ 223, 223, 223, 255 });
+        DrawLine(rect.x + 2, rect.y + 1, rect.x + rect.w - 2, rect.y + 1, (Color){ 128, 128, 128, 255 });
+        DrawLine(rect.x + 2, rect.y + 1, rect.x + 2, rect.y + rect.h - 2, (Color){ 128, 128, 128, 255 });
+      } else {
+        DrawLine(rect.x, rect.y, rect.x + rect.w - 1, rect.y, (Color){ 255, 255, 255, 255 });
+        DrawLine(rect.x + 1, rect.y + 1, rect.x + 1, rect.y + rect.h - 1, (Color){ 255, 255, 255, 255 });
+        DrawLine(rect.x, rect.y + rect.h - 1, rect.x + rect.w, rect.y + rect.h - 1, (Color){ 0, 0, 0, 255 });
+        DrawLine(rect.x + rect.w, rect.y, rect.x + rect.w, rect.y + rect.h - 1, (Color){ 0, 0, 0, 255 });
+        DrawLine(rect.x + 1, rect.y + rect.h - 2, rect.x + rect.w - 1, rect.y + rect.h - 2, (Color){ 130, 130, 130, 255 });
+        DrawLine(rect.x + rect.w - 1, rect.y + 1, rect.x + rect.w - 1, rect.y + rect.h - 2, (Color){ 130, 130, 130, 255 });
+      }
+    } break;
+    
+    case PANEL_LIGHT_YELLOW: {
+      DrawTexturePro(images[IMAGE_BRIGHT_YELLOW_PATTERN], (Rectangle) { 0, 0, rect.w, rect.h }, (Rectangle) { rect.x + 1, rect.y + 1, rect.w - 2, rect.h - 2 }, (Vector2){ 0, 0 }, 0, WHITE);
+    } break;
+    
+    case PANEL_INNER_BEVEL_NO_FILL: {
+      DrawLine(rect.x, rect.y, rect.x + rect.w - 1, rect.y, (Color) { 130, 130, 130, 255 });
+      DrawLine(rect.x + 1, rect.y, rect.x + 1, rect.y + rect.h - 1, (Color) { 130, 130, 130, 255 });
+      DrawLine(rect.x, rect.y + rect.h - 1, rect.x + rect.w , rect.y + rect.h - 1, (Color) { 255, 255, 255, 255 });
+      DrawLine(rect.x + rect.w , rect.y, rect.x + rect.w , rect.y + rect.h, (Color) { 255, 255, 255, 255 });
+    } break;
+  }
+}
+
+CIG_INLINED void draw_rectangle(
+  cig_color_ref fill_color,
+  cig_color_ref border_color,
+  cig_rect_t rect,
+  unsigned int border_width
+) {
+  DrawRectangle(RAYLIB_RECT(rect), *(Color*)fill_color);
+}
+
+CIG_INLINED void draw_line(
+  cig_color_ref color,
+  cig_vec2_t p0,
+  cig_vec2_t p1,
+  unsigned int thickness
+) {
+  DrawLineEx(RAYLIB_VEC2(p0), RAYLIB_VEC2(p1), thickness, *(Color*)color);
 }

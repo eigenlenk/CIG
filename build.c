@@ -77,6 +77,7 @@ int main(int argc, char **argv)
       DEPS_FOLDER"utf8/utf8.c",
       SRC_FOLDER"cigcore.c",
       SRC_FOLDER"cigtext.c",
+      SRC_FOLDER"ciggfx.c",
       TESTS_FOLDER"main.c",
       TESTS_FOLDER"core/layout.c",
       TESTS_FOLDER"core/state.c",
@@ -111,6 +112,7 @@ int main(int argc, char **argv)
       DEPS_FOLDER"utf8/utf8.c",
       SRC_FOLDER"cigcore.c",
       SRC_FOLDER"cigtext.c",
+      SRC_FOLDER"ciggfx.c",
       DEMO_FOLDER"main.c",
       DEMO_FOLDER"win95/win95.c",
       
