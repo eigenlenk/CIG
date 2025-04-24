@@ -107,7 +107,7 @@ TEST(text_style, bold) {
     .flags = CIG_TEXT_FORMATTED
   }, "I <b>know</b>");
   
-  TEST_ASSERT_BITS_HIGH(CIG_TEXT_STYLE_BOLD, spans.info[1].style);
+  TEST_ASSERT_BITS_HIGH(CIG_TEXT_BOLD, spans.info[1].style);
 }
 
 TEST(text_style, italic) {  
@@ -117,7 +117,7 @@ TEST(text_style, italic) {
     .flags = CIG_TEXT_FORMATTED
   }, "I <i>think</i>");
   
-  TEST_ASSERT_BITS_HIGH(CIG_TEXT_STYLE_ITALIC, spans.info[1].style);
+  TEST_ASSERT_BITS_HIGH(CIG_TEXT_ITALIC, spans.info[1].style);
 }
 
 TEST(text_style, underline) {  
@@ -127,7 +127,7 @@ TEST(text_style, underline) {
     .flags = CIG_TEXT_FORMATTED
   }, "Click <u>here</u>");
   
-  TEST_ASSERT_BITS_HIGH(CIG_TEXT_STYLE_UNDERLINE, spans.info[1].style);
+  TEST_ASSERT_BITS_HIGH(CIG_TEXT_UNDERLINE, spans.info[1].style);
 }
 
 TEST(text_style, strikethrough) {  
@@ -137,7 +137,18 @@ TEST(text_style, strikethrough) {
     .flags = CIG_TEXT_FORMATTED
   }, "<s>Fixed</s>");
   
-  TEST_ASSERT_BITS_HIGH(CIG_TEXT_STYLE_STRIKETHROUGH, spans.info[0].style);
+  TEST_ASSERT_BITS_HIGH(CIG_TEXT_STRIKETHROUGH, spans.info[0].style);
+}
+
+TEST(text_style, override_base_style) {  
+  begin();
+  
+  cig_label((cig_text_properties_t) {
+    .flags = CIG_TEXT_FORMATTED,
+    .style = CIG_TEXT_BOLD
+  }, "<i>Italic</i>");
+  
+  TEST_ASSERT_BITS_HIGH(CIG_TEXT_BOLD | CIG_TEXT_ITALIC, spans.info[0].style);
 }
 
 TEST(text_style, unclosed_tag) {  
@@ -157,10 +168,9 @@ TEST(text_style, unknown_tag) {
   
   cig_label((cig_text_properties_t) {
     .flags = CIG_TEXT_FORMATTED
-  }, "<rainbow>Sun's out</rainbow>", &red_color);
+  }, "<rainbow>Rain+sun</rainbow>", &red_color);
   
-  TEST_ASSERT_EQUAL_STRING("Sun's", spans.info[0].str);
-  TEST_ASSERT_EQUAL_STRING("out", spans.info[1].str);
+  TEST_ASSERT_EQUAL_STRING("Rain+sun", spans.info[0].str);
 }
 
 TEST_GROUP_RUNNER(text_style) {
@@ -170,6 +180,7 @@ TEST_GROUP_RUNNER(text_style) {
   RUN_TEST_CASE(text_style, italic);
   RUN_TEST_CASE(text_style, underline);
   RUN_TEST_CASE(text_style, strikethrough);
+  RUN_TEST_CASE(text_style, override_base_style);
   RUN_TEST_CASE(text_style, unclosed_tag);
   RUN_TEST_CASE(text_style, unknown_tag);
 }

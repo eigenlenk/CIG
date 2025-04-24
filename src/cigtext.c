@@ -100,7 +100,7 @@ void cig_label(cig_text_properties_t props, const char *text, ...) {
     size_t span_start = 0, cur = 0;
     cig_font_ref font;
     cig_font_info_t font_info;
-    cig_text_style_t style = props.style;
+    cig_text_style_t style = 0;
     
     struct { size_t count; cig_font_ref fonts[4]; } font_stack = { 0 };
     struct { size_t count; cig_text_color_ref colors[4]; } color_stack = { 0 };
@@ -131,27 +131,27 @@ void cig_label(cig_text_properties_t props, const char *text, ...) {
             }
           } else if (!strcasecmp(tag_parser.name, "b")) {
             if (tag_parser.terminating) {
-              style &= ~CIG_TEXT_STYLE_BOLD;
+              style &= ~CIG_TEXT_BOLD;
             } else {
-              style |= CIG_TEXT_STYLE_BOLD;
+              style |= CIG_TEXT_BOLD;
             }
           } else if (!strcasecmp(tag_parser.name, "i")) {
             if (tag_parser.terminating) {
-              style &= ~CIG_TEXT_STYLE_ITALIC;
+              style &= ~CIG_TEXT_ITALIC;
             } else {
-              style |= CIG_TEXT_STYLE_ITALIC;
+              style |= CIG_TEXT_ITALIC;
             }
           } else if (!strcasecmp(tag_parser.name, "u")) {
             if (tag_parser.terminating) {
-              style &= ~CIG_TEXT_STYLE_UNDERLINE;
+              style &= ~CIG_TEXT_UNDERLINE;
             } else {
-              style |= CIG_TEXT_STYLE_UNDERLINE;
+              style |= CIG_TEXT_UNDERLINE;
             }
           } else if (!strcasecmp(tag_parser.name, "s") || !strcasecmp(tag_parser.name, "del")) {
             if (tag_parser.terminating) {
-              style &= ~CIG_TEXT_STYLE_STRIKETHROUGH;
+              style &= ~CIG_TEXT_STRIKETHROUGH;
             } else {
-              style |= CIG_TEXT_STYLE_STRIKETHROUGH;
+              style |= CIG_TEXT_STRIKETHROUGH;
             }
           }
         }
@@ -179,7 +179,7 @@ void cig_label(cig_text_properties_t props, const char *text, ...) {
           .bounds = { bounds.x, bounds.y },
           .byte_len = (unsigned char)slice.byte_len,
           .spacing_after = cp == 0x20 ? font_info.word_spacing : 0,
-          .style_flags = style
+          .style_flags = props.style | style
         };
         
         // printf("appended span %d = %.*s\n", label->span_count-1, label->spans[label->span_count-1].slice.byte_len, label->spans[label->span_count-1].slice.str);

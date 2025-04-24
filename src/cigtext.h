@@ -28,10 +28,10 @@ typedef enum {
 } cig_text_vertical_alignment_t;
 
 typedef enum {
-  CIG_TEXT_STYLE_BOLD = CIG_BIT(0),
-  CIG_TEXT_STYLE_ITALIC = CIG_BIT(1),
-  CIG_TEXT_STYLE_UNDERLINE = CIG_BIT(2),
-  CIG_TEXT_STYLE_STRIKETHROUGH = CIG_BIT(3)
+  CIG_TEXT_BOLD = CIG_BIT(0),
+  CIG_TEXT_ITALIC = CIG_BIT(1),
+  CIG_TEXT_UNDERLINE = CIG_BIT(2),
+  CIG_TEXT_STRIKETHROUGH = CIG_BIT(3)
 } cig_text_style_t;
 
 typedef struct {
