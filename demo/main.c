@@ -92,8 +92,8 @@ int main(int argc, const char *argv[]) {
   SetTextureFilter(fonts[FONT_ARIAL_BLACK_32].font.texture, TEXTURE_FILTER_POINT);
   SetTextureFilter(fonts[FONT_FRANKLIN_GOTHIC_BOOK_32].font.texture, TEXTURE_FILTER_POINT);
   
-  colors[COLOR_TEXT_BLACK] = (Color) { 0, 0, 0, 255 };
-  colors[COLOR_TEXT_WHITE] = (Color) { 255, 255, 255, 255 };
+  colors[COLOR_BLACK] = (Color) { 0, 0, 0, 255 };
+  colors[COLOR_WHITE] = (Color) { 255, 255, 255, 255 };
   colors[COLOR_DESKTOP] = (Color) { 0, 130, 130, 255 };
   colors[COLOR_DIALOG_BACKGROUND] = (Color) { 195, 195, 195, 255 };
   colors[COLOR_WINDOW_ACTIVE_TITLEBAR] = (Color) { 0, 0, 130, 255 };
@@ -157,7 +157,7 @@ CIG_INLINED void render_text(
   struct font_store *fs = (struct font_store*)font;
   
   // DrawRectangle(RAYLIB_RECT(rect), GREEN);
-  DrawTextEx(fs->font, buf, (Vector2) { rect.x, rect.y }, fs->font.baseSize, 0, color ? *(Color*)color : colors[COLOR_TEXT_BLACK]);
+  DrawTextEx(fs->font, buf, (Vector2) { rect.x, rect.y }, fs->font.baseSize, 0, color ? *(Color*)color : colors[COLOR_BLACK]);
 }
 
 CIG_INLINED cig_vec2_t measure_text(

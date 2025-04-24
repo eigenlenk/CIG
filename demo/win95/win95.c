@@ -14,7 +14,7 @@ static bool standard_button(win95_t *this, cig_rect_t rect, const char *title) {
     
     cig_fill_panel(this->get_panel(PANEL_BUTTON), pressed ? CIG_PANEL_PRESSED : 0);
     
-    if (cig_push_frame_insets(CIG_FILL,  pressed ? cig_insets_make(1, 3, 0, 2) : cig_insets_make(0, 1, 0, 2))) {
+    if (cig_push_frame_insets(CIG_FILL,  pressed ? cig_insets_make(1, 3, -1, 2) : cig_insets_make(0, 1, 0, 2))) {
       cig_label((cig_text_properties_t) {
         .font = this->get_font(FONT_REGULAR)
       }, title);
@@ -52,7 +52,6 @@ static bool taskbar_button(win95_t *this, cig_rect_t rect, const char *title) {
   return clicked;
 }
 
-
 void run_win95(win95_t *this) {
   /* Desktop */
   if (cig_push_frame(cig_rect_make(0, 0, CIG_W, CIG_H - TASKBAR_H))) {
@@ -64,7 +63,7 @@ void run_win95(win95_t *this) {
   
   if (cig_push_frame_insets(cig_rect_make(0, CIG_H - TASKBAR_H, CIG_W, TASKBAR_H), cig_insets_make(2, 4, 2, 2))) {
     cig_fill_color(this->get_color(COLOR_DIALOG_BACKGROUND));
-    cig_draw_line(this->get_color(COLOR_TEXT_WHITE), cig_vec2_make(0, 1), cig_vec2_make(CIG_W, 1), 1);
+    cig_draw_line(this->get_color(COLOR_WHITE), cig_vec2_make(0, 1), cig_vec2_make(CIG_W, 1), 1);
     
     CIG({
       CIG_RECT(CIG_FILL),
@@ -104,7 +103,7 @@ void run_win95(win95_t *this) {
 
       cig_label((cig_text_properties_t) {
         .font = this->get_font(FONT_BOLD),
-        .color = this->get_color(COLOR_TEXT_WHITE),
+        .color = this->get_color(COLOR_WHITE),
         .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
         .alignment.vertical = CIG_TEXT_ALIGN_MIDDLE
       }, "Welcome");
@@ -128,14 +127,14 @@ void run_win95(win95_t *this) {
         cig_label(
           (cig_text_properties_t) {
             .font = this->get_font(FONT_TIMES_NEW_ROMAN_32_BOLD),
-            .color = this->get_color(COLOR_TEXT_BLACK),
+            .color = this->get_color(COLOR_BLACK),
             .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
             .flags = CIG_TEXT_FORMATTED
           },
           "Welcome to <font=%x>Windows</font><font=%x><color=%x>%d</color></font>",
           this->get_font(FONT_ARIAL_BLACK_32),
           this->get_font(FONT_FRANKLIN_GOTHIC_BOOK_32),
-          this->get_color(COLOR_TEXT_WHITE),
+          this->get_color(COLOR_WHITE),
           95
         );
       }
