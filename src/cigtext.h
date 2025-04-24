@@ -27,6 +27,13 @@ typedef enum {
   CIG_TEXT_ALIGN_BOTTOM
 } cig_text_vertical_alignment_t;
 
+typedef enum {
+  CIG_TEXT_STYLE_BOLD = CIG_BIT(0),
+  CIG_TEXT_STYLE_ITALIC = CIG_BIT(1),
+  CIG_TEXT_STYLE_UNDERLINE = CIG_BIT(2),
+  CIG_TEXT_STYLE_STRIKETHROUGH = CIG_BIT(3)
+} cig_text_style_t;
+
 typedef struct {
   cig_font_ref font;
   cig_text_color_ref color;
@@ -34,16 +41,20 @@ typedef struct {
     cig_text_horizontal_alignment_t horizontal;
     cig_text_vertical_alignment_t vertical;
   } alignment;
+  enum {
+    CIG_TEXT_FORMATTED = CIG_BIT(0)
+  } flags;
+  cig_text_style_t style;
 } cig_text_properties_t;
 
 /* ┌─────────────────────┐
 ───┤  BACKEND CALLBACKS  │
    └─────────────────────┘ */
 
-typedef void (*cig_text_render_callback_t)(cig_rect_t, const char*, size_t, cig_font_ref, cig_text_color_ref);
+typedef void (*cig_text_render_callback_t)(const char*, size_t, cig_rect_t, cig_font_ref, cig_text_color_ref, cig_text_style_t);
 void cig_set_text_render_callback(cig_text_render_callback_t);
 
-typedef cig_vec2_t (*cig_text_measure_callback_t)(const char*, size_t, cig_font_ref);
+typedef cig_vec2_t (*cig_text_measure_callback_t)(const char*, size_t, cig_font_ref, cig_text_style_t);
 void cig_set_text_measure_callback(cig_text_measure_callback_t);
 
 typedef cig_font_info_t (*cig_font_query_callback_t)(cig_font_ref);

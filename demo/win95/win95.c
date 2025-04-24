@@ -96,7 +96,7 @@ void run_win95(win95_t *this) {
       }) {
         cig_enable_interaction();
         if (draw_button_panel(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE))) {
-          cig_label((cig_text_properties_t) { }, "Start");
+          cig_label((cig_text_properties_t) { .font = this->get_font(FONT_BOLD) }, "Start");
           cig_pop_frame();
         }
       }
@@ -180,12 +180,14 @@ void run_win95(win95_t *this) {
           (cig_text_properties_t) {
             .font = this->get_font(FONT_TIMES_NEW_ROMAN_32_BOLD),
             .color = this->get_color(COLOR_TEXT_BLACK),
-            .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
+            .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
+            .flags = CIG_TEXT_FORMATTED
           },
-          "Welcome to <font=0>Windows</font><font=1><color=2>95</color></font>",
+          "Welcome to <font=%x>Windows</font><font=%x><color=%x>%d</color></font>",
           this->get_font(FONT_ARIAL_BLACK_32),
           this->get_font(FONT_FRANKLIN_GOTHIC_BOOK_32),
-          this->get_color(COLOR_TEXT_WHITE)
+          this->get_color(COLOR_TEXT_WHITE),
+          95
         );
       }
       

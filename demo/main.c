@@ -13,8 +13,20 @@ static struct font_store {
 static Color colors[__COLOR_COUNT];
 static Texture2D images[__IMAGE_COUNT];
 
-static void render_text(cig_rect_t, const char*, size_t, cig_font_ref, cig_text_color_ref);
-static cig_vec2_t measure_text(const char*, size_t, cig_font_ref);
+static void render_text(
+  const char *,
+  size_t,
+  cig_rect_t,
+  cig_font_ref,
+  cig_text_color_ref,
+  cig_text_style_t
+);
+static cig_vec2_t measure_text(
+  const char *,
+  size_t,
+  cig_font_ref,
+  cig_text_style_t
+);
 static cig_font_info_t font_query(cig_font_ref);
 
 CIG_INLINED void* get_font(font_id_t font_id) {
@@ -102,7 +114,14 @@ int main(int argc, const char *argv[]) {
   return 0;
 }
 
-void render_text(cig_rect_t rect, const char *str, size_t len, cig_font_ref font, cig_text_color_ref color) {
+CIG_INLINED void render_text(
+  const char *str,
+  size_t len,
+  cig_rect_t rect,
+  cig_font_ref font,
+  cig_text_color_ref color,
+  cig_text_style_t style
+) {
   static char buf[24];
   strncpy(buf, str, len);
   buf[len] = '\0';
@@ -113,7 +132,12 @@ void render_text(cig_rect_t rect, const char *str, size_t len, cig_font_ref font
   DrawTextEx(fs->font, buf, (Vector2) { rect.x, rect.y }, fs->font.baseSize, 0, color ? *(Color*)color : colors[COLOR_TEXT_BLACK]);
 }
 
-cig_vec2_t measure_text(const char *str, size_t len, cig_font_ref font) {
+cig_vec2_t measure_text(
+  const char *str,
+  size_t len,
+  cig_font_ref font,
+  cig_text_style_t style
+) {
   static char buf[24];
   strncpy(buf, str, len);
   buf[len] = '\0';

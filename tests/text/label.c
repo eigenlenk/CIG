@@ -14,11 +14,23 @@ static struct {
   size_t count;
 } spans;
 
-CIG_INLINED void text_render(cig_rect_t rect, const char *str, size_t len, cig_font_ref font, cig_text_color_ref color) {
+CIG_INLINED void text_render(
+  const char *str,
+  size_t len,
+  cig_rect_t rect,
+  cig_font_ref font,
+  cig_text_color_ref color,
+  cig_text_style_t style
+) {
   spans.rects[spans.count++] = rect;
 }
 
-CIG_INLINED cig_vec2_t text_measure(const char *str, size_t len, cig_font_ref font) {
+CIG_INLINED cig_vec2_t text_measure(
+  const char *str,
+  size_t len,
+  cig_font_ref font,
+  cig_text_style_t style
+) {
   utf8_string slice = (utf8_string) { str, len };
   text_measure_calls ++;
   // printf("%.*s = %d\n", len, str, utf8_char_count(slice));

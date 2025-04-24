@@ -31,6 +31,8 @@
    that can have its properties overriden */
 #define CIG_LABEL_SPANS_MAX 16
 
+#define CIG_LABEL_PRINTF_BUF_LENGTH 512
+
 #endif
 
 
