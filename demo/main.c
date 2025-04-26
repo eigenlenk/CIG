@@ -4,7 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#define RAYLIB_RECT(R) R.x, R.y, R.w, R.h
+#define UNPACK_RECT(R) R.x, R.y, R.w, R.h
+#define RAYLIB_RECT(R) (Rectangle ) { R.x, R.y, R.w, R.h } 
 #define RAYLIB_VEC2(V) (Vector2) { V.x, V.y } 
 
 static cig_context_t ctx = { 0 };
@@ -178,7 +179,7 @@ CIG_INLINED void render_text(
   
   struct font_store *fs = (struct font_store*)font;
   
-  // DrawRectangle(RAYLIB_RECT(rect), GREEN);
+  // DrawRectangle(UNPACK_RECT(rect), GREEN);
   DrawTextEx(fs->font, buf, (Vector2) { rect.x, rect.y }, fs->font.baseSize, 0, color ? *(Color*)color : colors[COLOR_BLACK]);
 }
 
@@ -216,7 +217,7 @@ CIG_INLINED void render_panel(cig_panel_ref panel, cig_rect_t rect, cig_panel_mo
   
   switch (panel_style) {
     case PANEL_STANDARD_DIALOG: {
-      DrawRectangle(RAYLIB_RECT(rect), colors[COLOR_DIALOG_BACKGROUND]);
+      DrawRectangle(UNPACK_RECT(rect), colors[COLOR_DIALOG_BACKGROUND]);
 
       DrawLine(rect.x, rect.y + rect.h - 1, rect.x + rect.w, rect.y + rect.h - 1, (Color) { 0, 0, 0, 255 });
       DrawLine(rect.x + rect.w, rect.y, rect.x + rect.w, rect.y + rect.h - 1, (Color) { 0, 0, 0, 255 });
@@ -227,7 +228,7 @@ CIG_INLINED void render_panel(cig_panel_ref panel, cig_rect_t rect, cig_panel_mo
     } break;
     
     case PANEL_BUTTON: {
-      DrawRectangle(RAYLIB_RECT(rect), colors[COLOR_DIALOG_BACKGROUND]);
+      DrawRectangle(UNPACK_RECT(rect), colors[COLOR_DIALOG_BACKGROUND]);
       
       if (modifiers & CIG_PANEL_PRESSED) {
         DrawLine(rect.x, rect.y, rect.x + rect.w - 1, rect.y, (Color){ 0, 0, 0, 255 });
@@ -267,7 +268,7 @@ CIG_INLINED void draw_rectangle(
   cig_rect_t rect,
   unsigned int border_width
 ) {
-  DrawRectangle(RAYLIB_RECT(rect), *(Color*)fill_color);
+  DrawRectangle(UNPACK_RECT(rect), *(Color*)fill_color);
 }
 
 CIG_INLINED void draw_line(
@@ -287,7 +288,64 @@ CIG_INLINED void draw_image(
 ) {
   Texture2D *tex = (Texture2D *)image;
 
-  if (mode == CIG_IMAGE_MODE_CENTER) {
-    DrawTexture(*tex, rect.x + (rect.w - tex->width) * 0.5, rect.y + (rect.h - tex->height) * 0.5, WHITE); 
+  if (mode == CIG_IMAGE_MODE_ASPECT_FIT) {
+    const float srcAspect = tex->width / tex->height;
+    const float dstAspect = (float)rect.w / rect.h;
+    const float scale = (srcAspect > dstAspect)
+        ? ((float)rect.w / tex->width)
+        : ((float)rect.h / tex->height);
+    DrawTextureEx(
+      *tex,
+      (Vector2) {
+        rect.x+(rect.w-tex->width*scale)*0.5,
+        rect.y+(rect.h-tex->height*scale)*0.5
+      },
+      0,
+      scale,
+      WHITE
+    );
+  } else if (mode == CIG_IMAGE_MODE_ASPECT_FILL) {
+    const float srcAspect = tex->width / tex->height;
+    const float dstAspect = (float)rect.w / rect.h;
+    const float scale = (srcAspect < dstAspect)
+        ? ((float)rect.w / tex->width)
+        : ((float)rect.h / tex->height);
+    DrawTextureEx(
+      *tex,
+      (Vector2) {
+        rect.x+(rect.w-tex->width*scale)*0.5,
+        rect.y+(rect.h-tex->height*scale)*0.5
+      },
+      0,
+      scale,
+      WHITE
+    );
+  } else if (mode == CIG_IMAGE_MODE_FILL) {
+    DrawTexturePro(
+      *tex,
+      (Rectangle) { 0, 0, tex->width, tex->height },
+      RAYLIB_RECT(rect),
+      (Vector2) { 0, 0 },
+      0,
+      WHITE
+    );
+  } else if (mode >= CIG_IMAGE_MODE_CENTER) {
+    Vector2 positions[9] = {
+      { 0.5, 0.5 }, /* CIG_IMAGE_MODE_CENTER */
+      { 0.0, 0.5 }, /* CIG_IMAGE_MODE_LEFT */
+      { 1.0, 0.5 }, /* CIG_IMAGE_MODE_RIGHT */
+      { 0.5, 0.0 }, /* CIG_IMAGE_MODE_TOP */
+      { 0.5, 1.0 }, /* CIG_IMAGE_MODE_BOTTOM */
+      { 0.0, 0.0 }, /* CIG_IMAGE_MODE_TOP_LEFT */
+      { 1.0, 0.0 }, /* CIG_IMAGE_MODE_TOP_RIGHT */
+      { 0.0, 1.0 }, /* CIG_IMAGE_MODE_BOTTOM_LEFT */
+      { 1.0, 1.0 }, /* CIG_IMAGE_MODE_BOTTOM_RIGHT */
+    };
+    DrawTexture(
+      *tex,
+      rect.x+(rect.w-tex->width)*positions[mode-CIG_IMAGE_MODE_CENTER].x,
+      rect.y+(rect.h-tex->height)*positions[mode-CIG_IMAGE_MODE_CENTER].y,
+      WHITE
+    ); 
   }
 }

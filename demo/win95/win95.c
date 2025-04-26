@@ -38,7 +38,7 @@ static bool taskbar_button(
   
   CIG({
     CIG_RECT(rect),
-    CIG_INSETS(cig_insets_horizontal(4))
+    CIG_INSETS(cig_insets_make(4, 2, 4, 2))
   }) {
     cig_enable_interaction();
     
@@ -47,7 +47,7 @@ static bool taskbar_button(
     cig_fill_panel(this->get_panel(PANEL_BUTTON), pressed ? CIG_PANEL_PRESSED : 0);
     
     CIG_HSTACK({
-      CIG_INSETS(pressed ? cig_insets_make(0, 2, 0, 1) : cig_insets_make(0, 1, 0, 2)),
+      CIG_INSETS(pressed ? cig_insets_make(0, 1, 0, -1) : cig_insets_zero()),
       CIG_PARAMS({
         CIG_SPACING(2)
       })
@@ -186,6 +186,43 @@ void run_win95(win95_t *this) {
           }) {
             cig_fill_panel(this->get_panel(PANEL_LIGHT_YELLOW), 0);
             cig_fill_panel(this->get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
+
+            CIG_GRID({
+              CIG_INSETS(cig_insets_uniform(10)),
+              CIG_PARAMS({
+                CIG_COLUMNS(3),
+                CIG_ROWS(3),
+                CIG_SPACING(5)
+              })
+            }) {
+              CIG({ CIG_RECT(CIG_FILL) }) {
+                cig_fill_color(this->get_color(COLOR_DESKTOP));
+                cig_image(this->get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_ASPECT_FIT);
+              }
+
+              CIG({ CIG_RECT(CIG_FILL) }) {
+                cig_fill_color(this->get_color(COLOR_DESKTOP));
+                cig_image(this->get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_ASPECT_FILL);
+              }
+
+              CIG({ CIG_RECT(CIG_FILL) }) {
+                cig_fill_color(this->get_color(COLOR_DESKTOP));
+                cig_image(this->get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_FILL);
+              }
+
+              CIG({ CIG_RECT(CIG_FILL) }) {
+                cig_fill_color(this->get_color(COLOR_DESKTOP));
+                cig_image(this->get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_CENTER);
+                cig_image(this->get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_TOP);
+                cig_image(this->get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_TOP_LEFT);
+                cig_image(this->get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_TOP_RIGHT);
+                cig_image(this->get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_LEFT);
+                cig_image(this->get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_RIGHT);
+                cig_image(this->get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_BOTTOM);
+                cig_image(this->get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_BOTTOM_LEFT);
+                cig_image(this->get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_BOTTOM_RIGHT);
+              }
+            }
           }
           
           CIG_VSTACK({
