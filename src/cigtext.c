@@ -298,8 +298,8 @@ static void render_spans(
   if (!count) { return; }
 
   register const cig_rect_t absolute_rect = cig_rect_inset(cig_absolute_rect(), cig_frame()->insets);
-  register int lines = 1, x, y, w, dx, dy;
-  register span_t *span, *line_start, *line_end, *last = first + (count-1), *prev = NULL;
+  register int lines = 1, w, dx, dy;
+  register span_t *span, *line_start, *line_end, *last = first + (count-1);
   register const cig_font_info_t font_info = font_query(base_font);
   
   static double alignment_constant[3] = { 0, 0.5, 1 };
@@ -341,6 +341,7 @@ static void render_spans(
       }
 
       dy += line_end->newlines * font_info.height;
+      w = 0;
       span = line_start = line_end+1;
       
       continue;
