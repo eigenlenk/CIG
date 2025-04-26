@@ -1,6 +1,7 @@
 #include "unity.h"
 #include "fixture.h"
 #include "cigcore.h"
+#include "cigcorem.h"
 #include "asserts.h"
 
 TEST_GROUP(core_macros);
@@ -42,30 +43,27 @@ TEST(core_macros, arrange) {
 }
 
 TEST(core_macros, vstack) {
-  CIG_VSTACK(
-    CIG_FILL,
-    CIG_BODY(
-      for (int i = 0; i < 2; ++i) {
-        CIG_ARRANGE(CIG_FILL, CIG_BODY(
-          TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, i*(200+10), 640, 200), cig_rect());
-        ))
-      }
-    ),
-    CIG_HEIGHT(200),
-    CIG_SPACING(10),
-    CIG_LIMIT_VERTICAL(2)
-  )
+  CIG_VSTACK({
+    CIG_PARAMS({
+      CIG_HEIGHT(200),
+      CIG_SPACING(10),
+      CIG_LIMIT_VERTICAL(2)
+    })
+  }) {
+    for (int i = 0; i < 2; ++i) {
+      CIG_ARRANGE(CIG_FILL, CIG_BODY(
+        TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, i*(200+10), 640, 200), cig_rect());
+      ))
+    }
+  }
 }
 
 TEST(core_macros, hstack) {
-  CIG({
-    CIG_RECT(CIG_FILL),
-    CIG_BUILDER(CIG_STACK_BUILDER),
+  CIG_HSTACK({
     CIG_PARAMS({
       CIG_WIDTH(200),
       CIG_SPACING(10),
-      CIG_LIMIT_HORIZONTAL(2),
-      CIG_AXIS(CIG_LAYOUT_AXIS_HORIZONTAL)
+      CIG_LIMIT_HORIZONTAL(2)
     })
   }) {
     for (int i = 0; i < 2; ++i) {
@@ -77,16 +75,20 @@ TEST(core_macros, hstack) {
 }
 
 TEST(core_macros, grid) {
-  /* 5x5 grid with 0 spacing */
-  CIG_GRID(CIG_FILL, 5, 5, 0, CIG_BODY(
+  CIG_GRID({
+    CIG_PARAMS({
+      CIG_COLUMNS(5),
+      CIG_ROWS(5)
+    })
+  }) {
     for (int i = 0; i < 25; ++i) {
       int row = (i / 5);
       int column = i - (row * 5);
-      CIG_FILLED(
+      CIG(_) {
         TEST_ASSERT_EQUAL_RECT(cig_rect_make(128*column, 96*row, 128, 96), cig_rect());
-      )
+      }
     }
-  ))
+  }
 }
 
 TEST(core_macros, allocator) {

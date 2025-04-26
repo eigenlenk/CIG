@@ -1,4 +1,5 @@
 #include "win95.h"
+#include "cigcorem.h"
 
 #define TASKBAR_H 28
 
@@ -37,12 +38,7 @@ static bool taskbar_button(
   
   CIG({
     CIG_RECT(rect),
-    CIG_INSETS(cig_insets_horizontal(2)),
-    CIG_BUILDER(CIG_STACK_BUILDER),
-    CIG_PARAMS({
-      CIG_SPACING(3),
-      CIG_AXIS(CIG_LAYOUT_AXIS_HORIZONTAL)
-    })
+    CIG_INSETS(cig_insets_horizontal(4))
   }) {
     cig_enable_interaction();
     
@@ -50,26 +46,29 @@ static bool taskbar_button(
     
     cig_fill_panel(this->get_panel(PANEL_BUTTON), pressed ? CIG_PANEL_PRESSED : 0);
     
-    if (icon >= 0) {
-      /*CIG(CIG_FILL, _) {
-
-      }*/
-
-      CIG({ CIG_RECT(CIG_SIZED(16, 16)) }) {
-        cig_image(this->get_image(icon), CIG_IMAGE_MODE_CENTER);
+    CIG_HSTACK({
+      CIG_INSETS(pressed ? cig_insets_make(0, 2, 0, 1) : cig_insets_make(0, 1, 0, 2)),
+      CIG_PARAMS({
+        CIG_SPACING(2)
+      })
+    }) {
+      if (icon >= 0) {
+        CIG({
+          CIG_RECT(CIG_FILL_W(16))
+        }) {
+          cig_image(this->get_image(icon), CIG_IMAGE_MODE_CENTER);
+        }
+      }
+      if (title) {
+        CIG(_) {
+          cig_label((cig_text_properties_t) {
+            .font = this->get_font(FONT_BOLD),
+            .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
+          }, title);
+        }
       }
     }
 
-    if (title) {
-      if (cig_push_frame_insets(CIG_FILL,  pressed ? cig_insets_make(0, 3, 0, 2) : cig_insets_make(0, 1, 0, 2))) {
-        cig_label((cig_text_properties_t) {
-          .font = this->get_font(FONT_REGULAR),
-          .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
-        }, title);
-        cig_pop_frame();
-      }
-    }
-    
     clicked = cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DEFAULT_OPTIONS);
   }
   
@@ -94,13 +93,10 @@ void run_win95(win95_t *this) {
     cig_fill_color(this->get_color(COLOR_DIALOG_BACKGROUND));
     cig_draw_line(this->get_color(COLOR_WHITE), cig_vec2_make(0, 1), cig_vec2_make(CIG_W, 1), 1);
     
-    CIG({
-      CIG_RECT(CIG_FILL),
+    CIG_HSTACK({
       CIG_PARAMS({
-        CIG_AXIS(CIG_LAYOUT_AXIS_HORIZONTAL),
         CIG_SPACING(4)
-      }),
-      CIG_BUILDER(CIG_STACK_BUILDER)
+      })
     }) {
       taskbar_button(this, CIG_FILL_W(54), "Start", IMAGE_START_ICON);
       taskbar_button(this, CIG_FILL_W(95), "Welcome", -1);
@@ -132,15 +128,13 @@ void run_win95(win95_t *this) {
     cig_fill_panel(this->get_panel(PANEL_STANDARD_DIALOG), 0);
 
     /* Titlebar */
-    CIG({
+    CIG_HSTACK({
       CIG_RECT(CIG_FILL_H(18)),
       CIG_INSETS(cig_insets_uniform(2)),
       CIG_PARAMS({
-        CIG_AXIS(CIG_LAYOUT_AXIS_HORIZONTAL),
         CIG_SPACING(2),
         CIG_ALIGNMENT_HORIZONTAL(CIG_LAYOUT_ALIGNS_RIGHT)
-      }),
-      CIG_BUILDER(CIG_STACK_BUILDER)
+      })
     }) {
       cig_fill_color(this->get_color(COLOR_WINDOW_ACTIVE_TITLEBAR));
 
@@ -155,14 +149,12 @@ void run_win95(win95_t *this) {
     }
     
     /* Body */
-    CIG({
+    CIG_VSTACK({
       CIG_RECT(cig_rect_make(0, 18, CIG_FILL_CONSTANT, CIG_H_INSET - 18)),
       CIG_INSETS(cig_insets_make(15, 17, 11, 18)),
       CIG_PARAMS({
-        CIG_AXIS(CIG_LAYOUT_AXIS_VERTICAL),
         CIG_SPACING(12)
-      }),
-      CIG_BUILDER(CIG_STACK_BUILDER)
+      })
     }) {
       CIG({
         CIG_RECT(CIG_FILL_H(20))
@@ -183,14 +175,11 @@ void run_win95(win95_t *this) {
       }
       
       CIG(_) {
-        CIG({
-          CIG_RECT(CIG_FILL),
+        CIG_HSTACK({
           CIG_INSETS(cig_insets_uniform(1)),
           CIG_PARAMS({
-            CIG_AXIS(CIG_LAYOUT_AXIS_HORIZONTAL),
             CIG_SPACING(12)
-          }),
-          CIG_BUILDER(CIG_STACK_BUILDER)
+          })
         }) {
           CIG({
             CIG_RECT(CIG_FILL_W(330))
@@ -199,13 +188,10 @@ void run_win95(win95_t *this) {
             cig_fill_panel(this->get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
           }
           
-          CIG({
-            CIG_RECT(CIG_FILL),
+          CIG_VSTACK({
             CIG_PARAMS({
-              CIG_AXIS(CIG_LAYOUT_AXIS_VERTICAL),
               CIG_SPACING(6)
-            }),
-            CIG_BUILDER(CIG_STACK_BUILDER)
+            })
           }) {
             standard_button(this, CIG_FILL_H(23), "What's New");
             standard_button(this, CIG_FILL_H(23), "Online Registration");

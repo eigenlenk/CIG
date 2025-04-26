@@ -285,5 +285,9 @@ CIG_INLINED void draw_image(
   cig_image_ref image,
   cig_image_mode_t mode
 ) {
+  Texture2D *tex = (Texture2D *)image;
 
+  if (mode == CIG_IMAGE_MODE_CENTER) {
+    DrawTexture(*tex, rect.x + (rect.w - tex->width) * 0.5, rect.y + (rect.h - tex->height) * 0.5, WHITE); 
+  }
 }

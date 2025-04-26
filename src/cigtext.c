@@ -1,4 +1,5 @@
 #include "cigtext.h"
+#include "cigcorem.h"
 #include "utf8.h"
 
 #include <stdio.h>

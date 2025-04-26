@@ -3,7 +3,6 @@
 
 #include "ciglimit.h"
 #include "cigmac.h"
-#include "cigcorem.h"
 #include "types/vec2.h"
 #include "types/insets.h"
 #include "types/rect.h"

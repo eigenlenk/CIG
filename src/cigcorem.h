@@ -1,6 +1,8 @@
 #ifndef CIG_CORE_MACROS_INCLUDED
 #define CIG_CORE_MACROS_INCLUDED
 
+#include "cigcore.h"
+
 /* ╔══════════════════════════════════════════╗
    ║ CIG CORE MACROS                          ║
 	 ║                                          ║
@@ -71,36 +73,6 @@ if (cig_push_frame(CIG_FILL)) { \
 
 #define CIG_BODY(CONTENT) CONTENT
 
-#define CIG_HSTACK(RECT, BODY, OPTIONS...) \
-if (cig_push_layout_function(&cig_default_layout_builder, RECT, cig_insets_zero(), (cig_layout_params_t) { 0, \
-  CIG_AXIS(CIG_LAYOUT_AXIS_HORIZONTAL), \
-  OPTIONS \
-})) { \
-  BODY; \
-  cig_pop_frame(); \
-}
-
-#define CIG_VSTACK(RECT, BODY, OPTIONS...) \
-if (cig_push_layout_function(&cig_default_layout_builder, RECT, cig_insets_zero(), (cig_layout_params_t) { 0, \
-  CIG_AXIS(CIG_LAYOUT_AXIS_VERTICAL), \
-  OPTIONS \
-})) { \
-  BODY; \
-  cig_pop_frame(); \
-}
-
-#define CIG_GRID(RECT, COLUMNS, ROWS, SPACING, BODY, OPTIONS...) \
-if (cig_push_layout_function(&cig_default_layout_builder, RECT, cig_insets_zero(), (cig_layout_params_t) { 0, \
-  .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL, \
-  CIG_ROWS(ROWS), \
-  CIG_COLUMNS(COLUMNS), \
-  CIG_SPACING(SPACING), \
-  OPTIONS \
-})) { \
-  BODY; \
-  cig_pop_frame(); \
-}
-
 /* `cig_layout_params_t` fields */
 #define CIG_AXIS(A) .axis = A
 #define CIG_DIRECTION(A) .direction = A
@@ -132,8 +104,42 @@ if (cig_push_layout_function(&cig_default_layout_builder, RECT, cig_insets_zero(
 /* This calls the push_frame function once, and if it returns TRUE,
    eventually pops the frame as well */
 #define CIG(ARGS...) for (int __push=1; (__push--)&&cig_push_frame_args((cig_frame_args_t)ARGS); cig_pop_frame())
-  
-  
-// #define CIG__HSTACK(ARGS...) for (struct { int push; cig_frame_args_t args; } __cig = { 1, ARGS, .args.params = ARGS.params, .args.params.axis = CIG_LAYOUT_AXIS_HORIZONTAL, .args.builder = CIG_STACK_BUILDER }; (__cig.push--)&&cig_push_frame_args(__cig.args); cig_pop_frame())
+
+CIG_INLINED cig_frame_args_t cig__into_hstack(cig_frame_args_t args) {
+  args = (cig_frame_args_t) {
+    .rect = args.rect,
+    .insets = args.insets,
+    .params = args.params,
+    .builder = &cig_default_layout_builder
+  };
+  args.params.axis = CIG_LAYOUT_AXIS_HORIZONTAL;
+  return args;
+}
+
+CIG_INLINED cig_frame_args_t cig__into_vstack(cig_frame_args_t args) {
+  args = (cig_frame_args_t) {
+    .rect = args.rect,
+    .insets = args.insets,
+    .params = args.params,
+    .builder = &cig_default_layout_builder
+  };
+  args.params.axis = CIG_LAYOUT_AXIS_VERTICAL;
+  return args;
+}
+
+CIG_INLINED cig_frame_args_t cig__into_grid(cig_frame_args_t args) {
+  args = (cig_frame_args_t) {
+    .rect = args.rect,
+    .insets = args.insets,
+    .params = args.params,
+    .builder = &cig_default_layout_builder
+  };
+  args.params.axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL;
+  return args;
+}
+
+#define CIG_HSTACK(ARGS...) for (int __push=1; (__push--)&&cig_push_frame_args(cig__into_hstack((cig_frame_args_t)ARGS)); cig_pop_frame())
+#define CIG_VSTACK(ARGS...) for (int __push=1; (__push--)&&cig_push_frame_args(cig__into_vstack((cig_frame_args_t)ARGS)); cig_pop_frame())
+#define CIG_GRID(ARGS...) for (int __push=1; (__push--)&&cig_push_frame_args(cig__into_grid((cig_frame_args_t)ARGS)); cig_pop_frame())
 
 #endif
