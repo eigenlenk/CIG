@@ -23,6 +23,7 @@ typedef enum {
 
 typedef enum {
   IMAGE_BRIGHT_YELLOW_PATTERN = 0,
+  IMAGE_START_ICON,
   __IMAGE_COUNT
 } image_id_t;
 

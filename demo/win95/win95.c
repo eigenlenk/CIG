@@ -27,11 +27,22 @@ static bool standard_button(win95_t *this, cig_rect_t rect, const char *title) {
   return clicked;
 }
 
-static bool taskbar_button(win95_t *this, cig_rect_t rect, const char *title) {
+static bool taskbar_button(
+  win95_t *this,
+  cig_rect_t rect,
+  const char *title,
+  image_id_t icon
+) {
   bool clicked = false;
   
   CIG({
-    CIG_RECT(rect)
+    CIG_RECT(rect),
+    CIG_INSETS(cig_insets_horizontal(2)),
+    CIG_BUILDER(CIG_STACK_BUILDER),
+    CIG_PARAMS({
+      CIG_SPACING(3),
+      CIG_AXIS(CIG_LAYOUT_AXIS_HORIZONTAL)
+    })
   }) {
     cig_enable_interaction();
     
@@ -39,11 +50,24 @@ static bool taskbar_button(win95_t *this, cig_rect_t rect, const char *title) {
     
     cig_fill_panel(this->get_panel(PANEL_BUTTON), pressed ? CIG_PANEL_PRESSED : 0);
     
-    if (cig_push_frame_insets(CIG_FILL,  pressed ? cig_insets_make(0, 3, 0, 2) : cig_insets_make(0, 1, 0, 2))) {
-      cig_label((cig_text_properties_t) {
-        .font = this->get_font(FONT_REGULAR)
-      }, title);
-      cig_pop_frame();
+    if (icon >= 0) {
+      /*CIG(CIG_FILL, _) {
+
+      }*/
+
+      CIG({ CIG_RECT(CIG_SIZED(16, 16)) }) {
+        cig_image(this->get_image(icon), CIG_IMAGE_MODE_CENTER);
+      }
+    }
+
+    if (title) {
+      if (cig_push_frame_insets(CIG_FILL,  pressed ? cig_insets_make(0, 3, 0, 2) : cig_insets_make(0, 1, 0, 2))) {
+        cig_label((cig_text_properties_t) {
+          .font = this->get_font(FONT_REGULAR),
+          .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
+        }, title);
+        cig_pop_frame();
+      }
     }
     
     clicked = cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DEFAULT_OPTIONS);
@@ -53,9 +77,13 @@ static bool taskbar_button(win95_t *this, cig_rect_t rect, const char *title) {
 }
 
 void run_win95(win95_t *this) {
+  static label_t some_label, other_label;
+
   /* Desktop */
   if (cig_push_frame(cig_rect_make(0, 0, CIG_W, CIG_H - TASKBAR_H))) {
     cig_fill_color(this->get_color(COLOR_DESKTOP));
+    cig_draw_line(this->get_color(COLOR_WHITE), cig_vec2_make(0, 0), cig_vec2_make(CIG_W, 0), 1);
+
     cig_pop_frame();
   }
   
@@ -73,9 +101,23 @@ void run_win95(win95_t *this) {
       }),
       CIG_BUILDER(CIG_STACK_BUILDER)
     }) {
-      taskbar_button(this, CIG_FILL_W(54), "Start");
-      taskbar_button(this, CIG_FILL_W(95), "Welcome");
-      taskbar_button(this, CIG_FILL_W(95), "My Computer");
+      taskbar_button(this, CIG_FILL_W(54), "Start", IMAGE_START_ICON);
+      taskbar_button(this, CIG_FILL_W(95), "Welcome", -1);
+      taskbar_button(this, CIG_FILL_W(95), "My Computer", -1);
+
+      cig_prepare_label(&some_label, (cig_text_properties_t)_, 0, "Hello!");
+
+      CIG({
+        CIG_RECT(CIG_FILL_W(some_label.bounds.w))
+      }) {
+        cig_prepared_label(&some_label);
+      }
+
+      /*cig_prepared_label(cig_prepare_label(&other_label, (cig_text_properties_t) {
+        .color = this->get_color(COLOR_WINDOW_ACTIVE_TITLEBAR)
+      }, 0, "Eigen Lenk"));*/
+
+      taskbar_button(this, CIG_FILL_W(95), "Control Panel", -1);
     }
     
     cig_pop_frame();

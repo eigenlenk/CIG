@@ -35,12 +35,10 @@ static cig_vec2_t measure_text(
 static cig_font_info_t font_query(cig_font_ref);
 
 /* Gfx API */
+static void draw_image(cig_buffer_ref, cig_rect_t, cig_image_ref, cig_image_mode_t);
 static void render_panel(cig_panel_ref, cig_rect_t, cig_panel_modifiers_t);
 static void draw_rectangle(cig_color_ref, cig_color_ref, cig_rect_t, unsigned int);
-static void draw_line(cig_color_ref, cig_vec2_t, cig_vec2_t, unsigned int);
-
-
-
+static void draw_line(cig_color_ref, cig_vec2_t, cig_vec2_t, float);
 
 CIG_INLINED void* get_font(font_id_t id) {
   return &fonts[id];
@@ -58,13 +56,20 @@ CIG_INLINED void* get_panel(panel_id_t id) {
   return &panel_styles[id];
 }
 
+CIG_INLINED void load_texture(Texture2D *dst, const char *path) {
+  *dst = LoadTexture(path);
+  SetTextureFilter(*dst, TEXTURE_FILTER_POINT);
+}
+
 int main(int argc, const char *argv[]) {
-  SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_ALWAYS_RUN);
-  InitWindow(640, 480, "Windooze 95");
+// SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
+  SetConfigFlags(FLAG_WINDOW_ALWAYS_RUN);
+  InitWindow(1280, 960, "Windooze 95");
   SetTargetFPS(60);
   // ToggleFullscreen();
 
-  images[IMAGE_BRIGHT_YELLOW_PATTERN] = LoadTexture("res/images/light_yellow_pattern.png");
+  load_texture(&images[IMAGE_BRIGHT_YELLOW_PATTERN], "res/images/light_yellow_pattern.png");
+  load_texture(&images[IMAGE_START_ICON], "res/images/start.png");
 
   fonts[FONT_REGULAR].font = LoadFont("res/fonts/winr.fnt");
   fonts[FONT_REGULAR].baseline_offset = -2;
@@ -107,6 +112,7 @@ int main(int argc, const char *argv[]) {
   cig_set_font_query_callback(&font_query);
   cig_set_default_font(&fonts[FONT_REGULAR]);
   
+  cig_set_draw_image_callback(&draw_image);
   cig_set_panel_render_callback(&render_panel);
   cig_set_draw_rectangle_callback(&draw_rectangle);
   cig_set_draw_line_callback(&draw_line);
@@ -119,13 +125,17 @@ int main(int argc, const char *argv[]) {
     .get_panel = &get_panel
   };
 
+  RenderTexture2D render_texture = LoadRenderTexture(640, 480);
+  SetTextureFilter(render_texture.texture, TEXTURE_FILTER_POINT);
+
   while (!WindowShouldClose()) {
     BeginDrawing();
 
-    cig_begin_layout(&ctx, NULL, cig_rect_make(0, 0, GetScreenWidth(), GetScreenHeight()));
+    BeginTextureMode(render_texture);
+    cig_begin_layout(&ctx, NULL, cig_rect_make(0, 0, 640, 480));
     
     cig_set_input_state(
-      cig_vec2_make(GetMouseX(), GetMouseY()),
+      cig_vec2_make(GetMouseX()/2, GetMouseY()/2),
       IsMouseButtonDown(MOUSE_BUTTON_LEFT) ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0 +
       IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? CIG_INPUT_MOUSE_BUTTON_RIGHT : 0
     );
@@ -134,9 +144,21 @@ int main(int argc, const char *argv[]) {
     
     cig_end_layout();
 
+    EndTextureMode();
+
+    DrawTexturePro(
+      render_texture.texture,
+      (Rectangle) { 0, 0, (float)render_texture.texture.width, (float)-render_texture.texture.height },
+      (Rectangle) { 0, 0, GetScreenWidth(), GetScreenHeight() },
+      (Vector2) { 0, 0 },
+      0,
+      WHITE
+    );
+
     EndDrawing();
   }
 
+  UnloadRenderTexture(render_texture); 
   CloseWindow();
 
   return 0;
@@ -156,7 +178,7 @@ CIG_INLINED void render_text(
   
   struct font_store *fs = (struct font_store*)font;
   
-  // DrawRectangle(RAYLIB_RECT(rect), GREEN);
+  DrawRectangle(RAYLIB_RECT(rect), GREEN);
   DrawTextEx(fs->font, buf, (Vector2) { rect.x, rect.y }, fs->font.baseSize, 0, color ? *(Color*)color : colors[COLOR_BLACK]);
 }
 
@@ -195,12 +217,13 @@ CIG_INLINED void render_panel(cig_panel_ref panel, cig_rect_t rect, cig_panel_mo
   switch (panel_style) {
     case PANEL_STANDARD_DIALOG: {
       DrawRectangle(RAYLIB_RECT(rect), colors[COLOR_DIALOG_BACKGROUND]);
-      DrawLine(rect.x, rect.y + rect.h - 1, rect.x + rect.w, rect.y + rect.h - 1, (Color){ 0, 0, 0, 255 });
-      DrawLine(rect.x + rect.w, rect.y, rect.x + rect.w, rect.y + rect.h - 1, (Color){ 0, 0, 0, 255 });
-      DrawLine(rect.x + 1, rect.y + rect.h - 2, rect.x + rect.w - 1, rect.y + rect.h - 2, (Color){ 130, 130, 130, 255 });
-      DrawLine(rect.x + rect.w - 1, rect.y + 1, rect.x + rect.w - 1, rect.y + rect.h - 2, (Color){ 130, 130, 130, 255 });
-      DrawLine(rect.x + 1, rect.y + 1, rect.x + rect.w - 2, rect.y + 1, (Color){ 255, 255, 255, 255 });
-      DrawLine(rect.x + 2, rect.y + 1, rect.x + 2, rect.y + rect.h - 2, (Color){ 255, 255, 255, 255 });
+
+      DrawLine(rect.x, rect.y + rect.h - 1, rect.x + rect.w, rect.y + rect.h - 1, (Color) { 0, 0, 0, 255 });
+      DrawLine(rect.x + rect.w, rect.y, rect.x + rect.w, rect.y + rect.h - 1, (Color) { 0, 0, 0, 255 });
+      DrawLine(rect.x + 1, rect.y + rect.h - 2, rect.x + rect.w - 1, rect.y + rect.h - 2, (Color) { 130, 130, 130, 255 });
+      DrawLine(rect.x + rect.w - 1, rect.y + 1, rect.x + rect.w - 1, rect.y + rect.h - 2, (Color) { 130, 130, 130, 255 });
+      DrawLine(rect.x + 1, rect.y + 1, rect.x + rect.w - 2, rect.y + 1, (Color) { 255, 255, 255, 255 });
+      DrawLine(rect.x + 2, rect.y + 1, rect.x + 2, rect.y + rect.h - 2, (Color) { 255, 255, 255, 255 });
     } break;
     
     case PANEL_BUTTON: {
@@ -251,7 +274,16 @@ CIG_INLINED void draw_line(
   cig_color_ref color,
   cig_vec2_t p0,
   cig_vec2_t p1,
-  unsigned int thickness
+  float thickness
 ) {
   DrawLineEx(RAYLIB_VEC2(p0), RAYLIB_VEC2(p1), thickness, *(Color*)color);
+}
+
+CIG_INLINED void draw_image(
+  cig_buffer_ref buffer,
+  cig_rect_t rect,
+  cig_image_ref image,
+  cig_image_mode_t mode
+) {
+
 }

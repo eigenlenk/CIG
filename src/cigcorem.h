@@ -41,6 +41,8 @@
 
 #define CIG_CENTERED(W, H) cig_rect_make((CIG_W * 0.5) - (W * 0.5), (CIG_H * 0.5) - (H * 0.5), W, H)
 
+#define CIG_SIZED(W, H) cig_rect_make(0, 0, W, H)
+
 #define CIG_R (CIG_X + CIG_W)
 
 #define CIG_B (CIG_Y + CIG_H)

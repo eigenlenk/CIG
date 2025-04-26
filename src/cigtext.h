@@ -3,6 +3,11 @@
 
 #include "cigcore.h"
 
+/* Label is a single line of text and a span is basically a word
+   that can have its properties overriden */
+#define CIG_LABEL_SPANS_MAX 16
+#define CIG_LABEL_PRINTF_BUF_LENGTH 512
+
 typedef void* cig_font_ref;
 typedef void* cig_text_color_ref;
 
@@ -11,6 +16,7 @@ typedef struct {
       line_spacing,
       baseline_offset,
       word_spacing;
+
 } cig_font_info_t;
 
 #define CIG_TEXT_ALIGN_DEFAULT 0
@@ -19,12 +25,14 @@ typedef enum {
   CIG_TEXT_ALIGN_LEFT = 1,
   CIG_TEXT_ALIGN_CENTER,
   CIG_TEXT_ALIGN_RIGHT
+
 } cig_text_horizontal_alignment_t;
 
 typedef enum {
   CIG_TEXT_ALIGN_TOP = 1,
   CIG_TEXT_ALIGN_MIDDLE,
   CIG_TEXT_ALIGN_BOTTOM
+
 } cig_text_vertical_alignment_t;
 
 typedef enum {
@@ -32,6 +40,7 @@ typedef enum {
   CIG_TEXT_ITALIC = CIG_BIT(1),
   CIG_TEXT_UNDERLINE = CIG_BIT(2),
   CIG_TEXT_STRIKETHROUGH = CIG_BIT(3)
+
 } cig_text_style_t;
 
 typedef struct {
@@ -45,7 +54,34 @@ typedef struct {
     CIG_TEXT_FORMATTED = CIG_BIT(0)
   } flags;
   cig_text_style_t style;
+
 } cig_text_properties_t;
+
+typedef struct {
+  const char *str;                        /* 4 */
+  cig_font_ref font;                      /* 4 */
+  cig_text_color_ref color;               /* 4 */
+  struct { unsigned short w, h; } bounds; /* 4 */
+  unsigned char byte_len;                 /* 1 */
+  unsigned char spacing_after;            /* 1 */
+  unsigned char style_flags;              /* 1 */
+  unsigned char newlines;                 /* 1 */
+
+} span_t;                                 /* 20 bytes total */
+
+typedef struct {
+  span_t spans[CIG_LABEL_SPANS_MAX];      /* 320 */
+  cig_id_t hash;                          /* 4 */
+  cig_font_ref font;                      /* 4 */
+  cig_text_color_ref color;               /* 4 */
+  struct {
+    cig_text_horizontal_alignment_t horizontal;
+    cig_text_vertical_alignment_t vertical;
+  } alignment;
+  struct { unsigned short w, h; } bounds; /* 4 */
+  unsigned char span_count;               /* 1 */
+
+} label_t;                                /* 330 bytes total */
 
 /* ┌─────────────────────┐
 ───┤  BACKEND CALLBACKS  │
@@ -68,5 +104,14 @@ void cig_set_default_font(cig_font_ref);
 
 /* */
 void cig_label(cig_text_properties_t, const char*, ...);
+
+/* For more advanced text display you can prepare a piece of text.
+   This enables accessing the text bounds before rendering it to
+   pass as a size for the next layout frame for example. It also exposes
+   the underlying spans (smallest text components) */
+label_t* cig_prepare_label(label_t *, cig_text_properties_t, unsigned int, const char *, ...);
+
+/* Renders a prepared label */
+void cig_prepared_label(label_t *);
 
 #endif
