@@ -78,6 +78,7 @@ static bool taskbar_button(
 
 void run_win95(win95_t *this) {
   static label_t some_label, other_label;
+  static int cnt = 0;
 
   /* Desktop */
   if (cig_push_frame(cig_rect_make(0, 0, CIG_W, CIG_H - TASKBAR_H))) {
@@ -105,7 +106,7 @@ void run_win95(win95_t *this) {
       taskbar_button(this, CIG_FILL_W(95), "Welcome", -1);
       taskbar_button(this, CIG_FILL_W(95), "My Computer", -1);
 
-      cig_prepare_label(&some_label, (cig_text_properties_t)_, 0, "Hello!");
+      cig_prepare_label(&some_label, (cig_text_properties_t) { .flags = CIG_TEXT_FORMATTED }, 0, "Counter: %d", cnt=cnt+(1+cnt*0.001));
 
       CIG({
         CIG_RECT(CIG_FILL_W(some_label.bounds.w))

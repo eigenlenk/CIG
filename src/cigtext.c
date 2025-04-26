@@ -246,17 +246,17 @@ static void prepare_label(
 
         if (max_width) {
           if (line_w + bounds.x + (prev_span ? prev_span->spacing_after : 0) > max_width) { /* Push span to new line */
+            if (prev_span) {
+              prev_span->newlines = 1;
+              prev_span->spacing_after = 0;
+              line_count ++;
+            }
             if (!line_w) { /* This is the first span on this line, no line change needed */
               label->bounds.w = CIG_MAX(label->bounds.w, bounds.x);
               new_span->newlines = 0;
               new_span->spacing_after = 0;
             } else {
               line_w = bounds.x; /* New line started */
-              if (prev_span) {
-                prev_span->newlines = 1;
-                prev_span->spacing_after = 0;
-                line_count ++;
-              }
             }
           } else {
             if (prev_span) {

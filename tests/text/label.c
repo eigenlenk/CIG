@@ -239,6 +239,44 @@ TEST(text_label, forced_line_change) {
   }
 }
 
+TEST(text_label, prepare_single_long_word) {
+  begin();
+
+  label_t label;
+  cig_prepare_label(&label, (cig_text_properties_t) {}, 7, "Foobarbaz");
+
+  TEST_ASSERT_EQUAL_INT(9, label.bounds.w);
+  TEST_ASSERT_EQUAL_INT(1, label.bounds.h);
+
+  CIG({
+    CIG_RECT(cig_rect_make(0, 0, 7, 1))
+  }) {
+    cig_prepared_label(&label);
+
+    TEST_ASSERT_EQUAL_RECT(cig_rect_make(-1, 0, 9, 1), spans.rects[0]);
+  }
+}
+
+TEST(text_label, prepare_multiple_long_words) {
+  begin();
+
+  label_t label;
+  cig_prepare_label(&label, (cig_text_properties_t) {}, 7, "Foobarbaz barbazfoo bazfoobar");
+  
+  TEST_ASSERT_EQUAL_INT(9, label.bounds.w);
+  TEST_ASSERT_EQUAL_INT(3, label.bounds.h);
+
+  CIG({
+    CIG_RECT(cig_rect_make(0, 0, 7, 3))
+  }) {
+    cig_prepared_label(&label);
+
+    TEST_ASSERT_EQUAL_RECT(cig_rect_make(-1, 0, 9, 1), spans.rects[0]);
+    TEST_ASSERT_EQUAL_RECT(cig_rect_make(-1, 1, 9, 1), spans.rects[1]);
+    TEST_ASSERT_EQUAL_RECT(cig_rect_make(-1, 2, 9, 1), spans.rects[2]);
+  }
+}
+
 TEST_GROUP_RUNNER(text_label) {
   RUN_TEST_CASE(text_label, basic_label);
   RUN_TEST_CASE(text_label, horizontal_alignment_left);
@@ -248,4 +286,6 @@ TEST_GROUP_RUNNER(text_label) {
   RUN_TEST_CASE(text_label, vertical_alignment_middle);
   RUN_TEST_CASE(text_label, vertical_alignment_bottom);
   RUN_TEST_CASE(text_label, forced_line_change);
+  RUN_TEST_CASE(text_label, prepare_single_long_word);
+  RUN_TEST_CASE(text_label, prepare_multiple_long_words);
 }
