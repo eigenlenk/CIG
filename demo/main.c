@@ -197,7 +197,7 @@ CIG_INLINED void render_text(
   
   struct font_store *fs = (struct font_store*)font;
   
-  // DrawRectangle(UNPACK_RECT(rect), GREEN);
+  DrawRectangle(UNPACK_RECT(rect), GREEN);
   DrawTextEx(fs->font, buf, (Vector2) { rect.x, rect.y }, fs->font.baseSize, 0, color ? *(Color*)color : colors[COLOR_BLACK]);
 }
 

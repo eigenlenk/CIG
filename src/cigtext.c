@@ -152,7 +152,7 @@ static void prepare_label(
     bool tag_stage_changed;
     utf8_char ch;
     uint32_t cp;
-    size_t span_start = 0, cur = 0, line_w = 0, line_count = 1;
+    size_t span_start = 0, cur = 0, line_w = 0, line_count = 1, word_len;
     cig_font_ref font;
     cig_font_info_t base_font_info = font_query(props->font);
     cig_font_info_t font_info;
@@ -227,10 +227,9 @@ static void prepare_label(
         }
         font = font_stack.count > 0 ? font_stack.fonts[font_stack.count-1] : props->font;
         font_info = font_query(font);
-        utf8_string slice = slice_utf8_string(utext, span_start, cur - span_start);
-        cig_vec2_t bounds = measure_callback
-          ? measure_callback(slice.str, slice.byte_len, font, style)
-          : cig_vec2_zero();
+        word_len = cur - span_start;
+        utf8_string slice = slice_utf8_string(utext, span_start, word_len);
+        cig_vec2_t bounds = measure_callback(slice.str, slice.byte_len, font, style);
 
         prev_span = new_span;
         new_span = &label->spans[label->span_count++];
@@ -246,18 +245,65 @@ static void prepare_label(
         };
 
         if (max_width) {
-          if (line_w + bounds.x + (prev_span ? prev_span->spacing_after : 0) > max_width) { /* Push span to new line */
-            if (prev_span) {
-              prev_span->newlines = 1;
-              prev_span->spacing_after = 0;
-              line_count ++;
-            }
-            if (!line_w) { /* This is the first span on this line, no line change needed */
-              label->bounds.w = CIG_MAX(label->bounds.w, bounds.x);
-              new_span->newlines = 0;
-              new_span->spacing_after = 0;
-            } else {
-              line_w = bounds.x; /* New line started */
+          const int added_width = bounds.x + (prev_span ? prev_span->spacing_after : 0);
+
+          if (line_w + added_width > max_width) {
+            switch (props->overflow) {
+              case CIG_TEXT_WORD_WRAP: {
+                /* Push span to new line */
+                if (prev_span) {
+                  prev_span->newlines = 1;
+                  prev_span->spacing_after = 0;
+                  line_count ++;
+                }
+                if (!line_w) { /* This is the first span on this line, no line change needed */
+                  label->bounds.w = CIG_MAX(label->bounds.w, bounds.x);
+                  new_span->newlines = 0;
+                  new_span->spacing_after = 0;
+                } else {
+                  line_w = bounds.x; /* New line started */
+                }
+              } break;
+
+              case CIG_TEXT_SHOW_ELLIPSIS: {
+                /* How much of the text overflows? */
+                const cig_vec2_t ellipsis_size = measure_callback("...", 3, font, style);
+                const float overflow = (line_w+added_width+ellipsis_size.x)-max_width;
+                const float overflow_amount = 1.0f-(overflow/added_width);
+                slice = slice_utf8_string(utext, span_start, word_len*overflow_amount);
+                bounds = measure_callback(slice.str, slice.byte_len, font, style);
+                new_span->byte_len = slice.byte_len;
+                new_span->bounds.w = bounds.x;
+                new_span->bounds.h = bounds.y;
+                new_span->spacing_after = 0;
+                label->spans[label->span_count++] = (span_t) { 
+                  .str = "...",
+                  .font = new_span->font,
+                  .color = new_span->color,
+                  .bounds = { ellipsis_size.x, ellipsis_size.y },
+                  .byte_len = 3,
+                  .spacing_after = 0,
+                  .style_flags = props->style | style,
+                  .newlines = 0
+                };
+                line_w += bounds.x+ellipsis_size.x;
+                label->bounds.w = CIG_MAX(label->bounds.w, line_w);
+                goto end_of_loop;
+              } break;
+
+              case CIG_TEXT_TRUNCATE: {
+                /* How much of the text overflows? */
+                const float overflow = (line_w+added_width)-max_width;
+                const float overflow_amount = 1.0f-(overflow/added_width);
+                slice = slice_utf8_string(utext, span_start, word_len*overflow_amount);
+                bounds = measure_callback(slice.str, slice.byte_len, font, style);
+                new_span->byte_len = slice.byte_len;
+                new_span->bounds.w = bounds.x;
+                new_span->bounds.h = bounds.y;
+                line_w += bounds.x;
+                label->bounds.w = CIG_MAX(label->bounds.w, line_w);
+                goto end_of_loop;
+              } break;
             }
           } else {
             if (prev_span) {
@@ -281,6 +327,8 @@ static void prepare_label(
       
       cur += ch.byte_len;
     }
+
+    end_of_loop:
 
     line_count = CIG_MAX(1, line_count);
     label->bounds.h = (line_count * base_font_info.height) + (line_count - 1) * base_font_info.line_spacing;
