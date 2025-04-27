@@ -392,4 +392,11 @@ void cig_spacer(int size);
 /* Default layout function for stack and grid type */
 bool cig_default_layout_builder(cig_rect_t, cig_rect_t, cig_layout_params_t*, cig_rect_t*);
 
+/* ┌─────────────────────┐
+───┤  BACKEND CALLBACKS  │
+   └─────────────────────┘ */
+
+typedef void (*cig_set_clip_rect_callback_t)(cig_buffer_ref, cig_rect_t, bool);
+void cig_set_clip_rect_callback(cig_set_clip_rect_callback_t);
+
 #endif

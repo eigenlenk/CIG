@@ -23,7 +23,9 @@ typedef enum {
 
 typedef enum {
   IMAGE_BRIGHT_YELLOW_PATTERN = 0,
+  IMAGE_GRAY_DITHER,
   IMAGE_START_ICON,
+  IMAGE_MY_COMPUTER_16,
   __IMAGE_COUNT
 } image_id_t;
 
@@ -31,6 +33,7 @@ typedef enum {
   PANEL_STANDARD_DIALOG = 0,
   PANEL_BUTTON,
   PANEL_LIGHT_YELLOW,
+  PANEL_GRAY_DITHER,
   PANEL_INNER_BEVEL_NO_FILL,
   __PANEL_COUNT
 } panel_id_t;

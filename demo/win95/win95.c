@@ -32,8 +32,52 @@ static bool taskbar_button(
   win95_t *this,
   cig_rect_t rect,
   const char *title,
-  image_id_t icon
+  int icon,
+  bool selected
 ) {
+  bool clicked = false;
+  
+  CIG({
+    CIG_RECT(rect),
+    CIG_INSETS(cig_insets_make(4, 2, 4, 2))
+  }) {
+    cig_enable_interaction();
+    
+    const bool pressed = cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE);
+    
+    cig_fill_panel(this->get_panel(PANEL_BUTTON), selected ? CIG_PANEL_SELECTED : (pressed ? CIG_PANEL_PRESSED : 0));
+    
+    CIG_HSTACK({
+      CIG_INSETS(selected ? cig_insets_make(0, 1, 0, -1) : cig_insets_zero()),
+      CIG_PARAMS({
+        CIG_SPACING(2)
+      })
+    }) {
+      if (icon >= 0) {
+        CIG({
+          CIG_RECT(CIG_FILL_W(16))
+        }) {
+          cig_image(this->get_image(icon), CIG_IMAGE_MODE_CENTER);
+        }
+      }
+      if (title) {
+        CIG(_) {
+          cig_label((cig_text_properties_t) {
+            .font = this->get_font(selected ? FONT_BOLD : FONT_REGULAR),
+            .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
+            .overflow = CIG_TEXT_SHOW_ELLIPSIS
+          }, title);
+        }
+      }
+    }
+
+    clicked = cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DEFAULT_OPTIONS);
+  }
+  
+  return clicked;
+}
+
+static bool start_button(win95_t *this, cig_rect_t rect) {
   bool clicked = false;
   
   CIG({
@@ -52,20 +96,15 @@ static bool taskbar_button(
         CIG_SPACING(2)
       })
     }) {
-      if (icon >= 0) {
-        CIG({
-          CIG_RECT(CIG_FILL_W(16))
-        }) {
-          cig_image(this->get_image(icon), CIG_IMAGE_MODE_CENTER);
-        }
+      CIG({ CIG_RECT(CIG_FILL_W(16)) }) {
+        cig_image(this->get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_CENTER);
       }
-      if (title) {
-        CIG(_) {
-          cig_label((cig_text_properties_t) {
-            .font = this->get_font(FONT_BOLD),
-            .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
-          }, title);
-        }
+
+      CIG(_) {
+        cig_label((cig_text_properties_t) {
+          .font = this->get_font(FONT_BOLD),
+          .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
+        }, "Start");
       }
     }
 
@@ -98,9 +137,9 @@ void run_win95(win95_t *this) {
         CIG_SPACING(4)
       })
     }) {
-      taskbar_button(this, CIG_FILL_W(54), "Start", IMAGE_START_ICON);
-      taskbar_button(this, CIG_FILL_W(95), "Welcome", -1);
-      taskbar_button(this, CIG_FILL_W(95), "My Computer", -1);
+      start_button(this, CIG_FILL_W(54));
+      taskbar_button(this, CIG_FILL_W(95), "Welcome", -1, false);
+      taskbar_button(this, CIG_FILL_W(95), "My Computer", IMAGE_MY_COMPUTER_16, true);
 
       cig_prepare_label(&some_label, (cig_text_properties_t) { .flags = CIG_TEXT_FORMATTED }, 0, "Counter: %lu", cnt=cnt+(1+cnt*0.001));
 
@@ -114,7 +153,7 @@ void run_win95(win95_t *this) {
         .color = this->get_color(COLOR_WINDOW_ACTIVE_TITLEBAR)
       }, 0, "Eigen Lenk"));*/
 
-      taskbar_button(this, CIG_FILL_W(95), "Control Panel", -1);
+      taskbar_button(this, CIG_FILL_W(95), "Control Panel", -1, false);
     }
     
     cig_pop_frame();
@@ -201,13 +240,21 @@ void run_win95(win95_t *this) {
               }
 
               CIG({ CIG_RECT(CIG_FILL) }) {
+                cig_enable_interaction();
+                bool *clipping_on = CIG_ALLOCATE(bool);
+                if (cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DEFAULT_OPTIONS)) {
+                  *clipping_on = !*clipping_on;
+                }
                 cig_fill_color(this->get_color(COLOR_DESKTOP));
+                if (*clipping_on) {
+                  cig_enable_clipping();
+                }
                 cig_image(this->get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_ASPECT_FILL);
               }
 
               CIG({ CIG_RECT(CIG_FILL) }) {
                 cig_fill_color(this->get_color(COLOR_DESKTOP));
-                cig_image(this->get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_FILL);
+                cig_image(this->get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_SCALE_TO_FILL);
               }
 
               CIG({ CIG_RECT(CIG_FILL) }) {

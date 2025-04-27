@@ -18,6 +18,9 @@ static Color colors[__COLOR_COUNT];
 static int panel_styles[__PANEL_COUNT];
 static Texture2D images[__IMAGE_COUNT];
 
+/* Core API */
+static void set_clip_rect(cig_buffer_ref, cig_rect_t, bool);
+
 /* Text API */
 static void render_text(
   const char *,
@@ -70,7 +73,9 @@ int main(int argc, const char *argv[]) {
   // ToggleFullscreen();
 
   load_texture(&images[IMAGE_BRIGHT_YELLOW_PATTERN], "res/images/light_yellow_pattern.png");
+  load_texture(&images[IMAGE_GRAY_DITHER], "res/images/gray_dither.png");
   load_texture(&images[IMAGE_START_ICON], "res/images/start.png");
+  load_texture(&images[IMAGE_MY_COMPUTER_16], "res/images/my_computer.png");
 
   fonts[FONT_REGULAR].font = LoadFont("res/fonts/winr.fnt");
   fonts[FONT_REGULAR].baseline_offset = -2;
@@ -107,6 +112,8 @@ int main(int argc, const char *argv[]) {
   for (register int i = 0; i < __PANEL_COUNT; ++i) { panel_styles[i] = i; }
 
   cig_init_context(&ctx);
+
+  cig_set_clip_rect_callback(&set_clip_rect);
   
   cig_set_text_render_callback(&render_text);
   cig_set_text_measure_callback(&measure_text);
@@ -163,6 +170,17 @@ int main(int argc, const char *argv[]) {
   CloseWindow();
 
   return 0;
+}
+
+
+
+CIG_INLINED void set_clip_rect(cig_buffer_ref buffer, cig_rect_t rect, bool is_root) {
+  if (is_root) {
+    EndScissorMode();
+  } else {
+    BeginScissorMode(UNPACK_RECT(rect));
+  }
+  // printf("set_clip_rect: %d, %d, %d, %d (%d)\n", rect.x, rect.y, rect.w, rect.h, is_root);
 }
 
 CIG_INLINED void render_text(
@@ -228,9 +246,19 @@ CIG_INLINED void render_panel(cig_panel_ref panel, cig_rect_t rect, cig_panel_mo
     } break;
     
     case PANEL_BUTTON: {
-      DrawRectangle(UNPACK_RECT(rect), colors[COLOR_DIALOG_BACKGROUND]);
-      
-      if (modifiers & CIG_PANEL_PRESSED) {
+      if (modifiers & CIG_PANEL_SELECTED) {
+        DrawTexturePro(images[IMAGE_GRAY_DITHER], (Rectangle) { 0, 0, rect.w-4, rect.h-5 }, (Rectangle) { rect.x+2, rect.y+3, rect.w-4, rect.h-5 }, (Vector2){ 0, 0 }, 0, WHITE);
+        DrawLine(rect.x, rect.y, rect.x + rect.w - 1, rect.y, (Color){ 0, 0, 0, 255 });
+        DrawLine(rect.x + 1, rect.y + 1, rect.x + 1, rect.y + rect.h - 1, (Color){ 0, 0, 0, 255 });
+        DrawLine(rect.x, rect.y + rect.h - 1, rect.x + rect.w, rect.y + rect.h - 1, (Color){ 255, 255, 255, 255 });
+        DrawLine(rect.x + rect.w, rect.y, rect.x + rect.w, rect.y + rect.h - 1, (Color){ 255, 255, 255, 255 }); 
+        DrawLine(rect.x + 1, rect.y + rect.h - 2, rect.x + rect.w - 1, rect.y + rect.h - 2, (Color){ 223, 223, 223, 255 });
+        DrawLine(rect.x + rect.w - 1, rect.y + 1, rect.x + rect.w - 1, rect.y + rect.h - 2, (Color){ 223, 223, 223, 255 });
+        DrawLine(rect.x + 2, rect.y + 1, rect.x + rect.w - 2, rect.y + 1, (Color){ 128, 128, 128, 255 });
+        DrawLine(rect.x + 2, rect.y + 1, rect.x + 2, rect.y + rect.h - 2, (Color){ 128, 128, 128, 255 });
+        DrawLine(rect.x + 2, rect.y + 2, rect.x + rect.w - 2, rect.y + 2, (Color){ 255, 255, 255, 255 });
+      } else if (modifiers & CIG_PANEL_PRESSED) {
+        DrawRectangle(UNPACK_RECT(rect), colors[COLOR_DIALOG_BACKGROUND]);
         DrawLine(rect.x, rect.y, rect.x + rect.w - 1, rect.y, (Color){ 0, 0, 0, 255 });
         DrawLine(rect.x + 1, rect.y + 1, rect.x + 1, rect.y + rect.h - 1, (Color){ 0, 0, 0, 255 });
         DrawLine(rect.x, rect.y + rect.h - 1, rect.x + rect.w, rect.y + rect.h - 1, (Color){ 255, 255, 255, 255 });
@@ -240,6 +268,7 @@ CIG_INLINED void render_panel(cig_panel_ref panel, cig_rect_t rect, cig_panel_mo
         DrawLine(rect.x + 2, rect.y + 1, rect.x + rect.w - 2, rect.y + 1, (Color){ 128, 128, 128, 255 });
         DrawLine(rect.x + 2, rect.y + 1, rect.x + 2, rect.y + rect.h - 2, (Color){ 128, 128, 128, 255 });
       } else {
+        DrawRectangle(UNPACK_RECT(rect), colors[COLOR_DIALOG_BACKGROUND]);
         DrawLine(rect.x, rect.y, rect.x + rect.w - 1, rect.y, (Color){ 255, 255, 255, 255 });
         DrawLine(rect.x + 1, rect.y + 1, rect.x + 1, rect.y + rect.h - 1, (Color){ 255, 255, 255, 255 });
         DrawLine(rect.x, rect.y + rect.h - 1, rect.x + rect.w, rect.y + rect.h - 1, (Color){ 0, 0, 0, 255 });
@@ -250,7 +279,11 @@ CIG_INLINED void render_panel(cig_panel_ref panel, cig_rect_t rect, cig_panel_mo
     } break;
     
     case PANEL_LIGHT_YELLOW: {
-      DrawTexturePro(images[IMAGE_BRIGHT_YELLOW_PATTERN], (Rectangle) { 0, 0, rect.w, rect.h }, (Rectangle) { rect.x + 1, rect.y + 1, rect.w - 2, rect.h - 2 }, (Vector2){ 0, 0 }, 0, WHITE);
+      DrawTexturePro(images[IMAGE_BRIGHT_YELLOW_PATTERN], (Rectangle) { 0, 0, rect.w, rect.h }, (Rectangle) { rect.x, rect.y, rect.w, rect.h }, (Vector2){ 0, 0 }, 0, WHITE);
+    } break;
+
+    case PANEL_GRAY_DITHER: {
+      DrawTexturePro(images[IMAGE_GRAY_DITHER], (Rectangle) { 0, 0, rect.w, rect.h }, (Rectangle) { rect.x, rect.y, rect.w, rect.h }, (Vector2){ 0, 0 }, 0, WHITE);
     } break;
     
     case PANEL_INNER_BEVEL_NO_FILL: {
@@ -320,7 +353,7 @@ CIG_INLINED void draw_image(
       scale,
       WHITE
     );
-  } else if (mode == CIG_IMAGE_MODE_FILL) {
+  } else if (mode == CIG_IMAGE_MODE_SCALE_TO_FILL) {
     DrawTexturePro(
       *tex,
       (Rectangle) { 0, 0, tex->width, tex->height },

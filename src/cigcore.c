@@ -8,6 +8,7 @@
 #include <math.h>
 
 static cig_context_t *current = NULL;
+static cig_set_clip_rect_callback_t set_clip = NULL;
 
 /* Forward delcarations */
 static CIG_OPTIONAL(cig_state_t*) find_state(cig_id_t);
@@ -67,7 +68,7 @@ void cig_begin_layout(
 	});
 
 	cig_push_buffer(buffer);
-	cig_enable_clipping();
+	// cig_enable_clipping();
 	current->next_id = 0;
 }
 
@@ -541,6 +542,14 @@ bool cig_default_layout_builder(
 	return true;
 }
 
+/* ┌─────────────────────┐
+───┤  BACKEND CALLBACKS  │
+   └─────────────────────┘ */
+
+void cig_set_clip_rect_callback(cig_set_clip_rect_callback_t fp) {
+	set_clip = fp;
+}
+
 /* ╔════════════════════════════════════════════╗
    ║            INTERNAL FUNCTIONS              ║
    ╚════════════════════════════════════════════╝ */
@@ -702,18 +711,21 @@ static void push_clip(cig_frame_t *frame) {
   if (frame->_clipped == false) {
 		frame->_clipped = true;
 		cig_clip_rect_t_stack_t *clip_rects = &current->buffers._peek(&current->buffers, 0)->clip_rects;
-    clip_rects->push(clip_rects, cig_rect_union(frame->absolute_rect, clip_rects->peek(clip_rects, 0)));
+		cig_rect_t clip_rect = cig_rect_union(frame->absolute_rect, clip_rects->peek(clip_rects, 0));
+    clip_rects->push(clip_rects, clip_rect);
     
-		// Check if graphics module is included
-    // TODO: Set new clip region for the renderer
+    if (set_clip) {
+    	set_clip(cig_buffer(), clip_rect, clip_rects->size == 1);
+    }
   }
 }
 
 static void pop_clip() {
   cig_clip_rect_t_stack_t *clip_rects = &current->buffers._peek(&current->buffers, 0)->clip_rects;
-  
   CIG_UNUSED(clip_rects->_pop(clip_rects));
-  
-  // Check if graphics module is included
-  // TODO: Set previous clip region for the renderer
+  cig_rect_t restored_clip_rect = clip_rects->peek(clip_rects, 0);
+
+  if (set_clip) {
+  	set_clip(cig_buffer(), restored_clip_rect, clip_rects->size == 1);
+  }
 }

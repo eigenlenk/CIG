@@ -51,6 +51,11 @@ typedef struct {
     cig_text_vertical_alignment_t vertical;
   } alignment;
   enum {
+    CIG_TEXT_WORD_WRAP = 0,
+    CIG_TEXT_SHOW_ELLIPSIS,
+    CIG_TEXT_TRUNCATE
+  } overflow;
+  enum {
     CIG_TEXT_FORMATTED = CIG_BIT(0)
   } flags;
   cig_text_style_t style;

@@ -101,10 +101,6 @@ if (cig_push_frame(CIG_FILL)) { \
 
 #define _ {}
 
-/* This calls the push_frame function once, and if it returns TRUE,
-   eventually pops the frame as well */
-#define CIG(ARGS...) for (int __push=1; (__push--)&&cig_push_frame_args((cig_frame_args_t)ARGS); cig_pop_frame())
-
 CIG_INLINED cig_frame_args_t cig__into_hstack(cig_frame_args_t args) {
   args = (cig_frame_args_t) {
     .rect = args.rect,
@@ -141,5 +137,9 @@ CIG_INLINED cig_frame_args_t cig__into_grid(cig_frame_args_t args) {
 #define CIG_HSTACK(ARGS...) for (int __push=1; (__push--)&&cig_push_frame_args(cig__into_hstack((cig_frame_args_t)ARGS)); cig_pop_frame())
 #define CIG_VSTACK(ARGS...) for (int __push=1; (__push--)&&cig_push_frame_args(cig__into_vstack((cig_frame_args_t)ARGS)); cig_pop_frame())
 #define CIG_GRID(ARGS...) for (int __push=1; (__push--)&&cig_push_frame_args(cig__into_grid((cig_frame_args_t)ARGS)); cig_pop_frame())
+
+/* This calls the push_frame function once, and if it returns TRUE,
+   eventually pops the frame as well */
+#define CIG(ARGS...) for (int __push=1; (__push--)&&cig_push_frame_args((cig_frame_args_t)ARGS); cig_pop_frame())
 
 #endif
