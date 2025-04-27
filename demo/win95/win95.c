@@ -77,12 +77,12 @@ static bool taskbar_button(
 
 void run_win95(win95_t *this) {
   static label_t some_label, other_label;
-  static int cnt = 0;
+  static unsigned long cnt = 0;
 
   /* Desktop */
   if (cig_push_frame(cig_rect_make(0, 0, CIG_W, CIG_H - TASKBAR_H))) {
     cig_fill_color(this->get_color(COLOR_DESKTOP));
-    cig_draw_line(this->get_color(COLOR_WHITE), cig_vec2_make(0, 0), cig_vec2_make(CIG_W, 0), 1);
+    // cig_draw_line(this->get_color(COLOR_WHITE), cig_vec2_make(0, 0), cig_vec2_make(CIG_W, 0), 1);
 
     cig_pop_frame();
   }
@@ -102,7 +102,7 @@ void run_win95(win95_t *this) {
       taskbar_button(this, CIG_FILL_W(95), "Welcome", -1);
       taskbar_button(this, CIG_FILL_W(95), "My Computer", -1);
 
-      cig_prepare_label(&some_label, (cig_text_properties_t) { .flags = CIG_TEXT_FORMATTED }, 0, "Counter: %d", cnt=cnt+(1+cnt*0.001));
+      cig_prepare_label(&some_label, (cig_text_properties_t) { .flags = CIG_TEXT_FORMATTED }, 0, "Counter: %lu", cnt=cnt+(1+cnt*0.001));
 
       CIG({
         CIG_RECT(CIG_FILL_W(some_label.bounds.w))

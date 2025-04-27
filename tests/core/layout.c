@@ -314,6 +314,37 @@ TEST(core_layout, hstack_layout) {
 	cig_pop_frame(); /* Not really necessary in testing, but.. */
 }
 
+TEST(core_layout, hstack_mix) {
+	if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) {
+		.axis = CIG_LAYOUT_AXIS_HORIZONTAL,
+		.columns = 4
+	})) {
+		TEST_FAIL_MESSAGE("Unable to add layout builder frame");
+	}
+
+	if (cig_push_frame(CIG_FILL)) {
+		TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 160, 480), cig_frame()->rect);
+		cig_pop_frame();
+	}
+
+	if (cig_push_frame(CIG_FILL_W(100))) {
+		TEST_ASSERT_EQUAL_RECT(cig_rect_make(160, 0, 100, 480), cig_frame()->rect);
+		cig_pop_frame();
+	}
+
+	if (cig_push_frame(CIG_FILL)) {
+		TEST_ASSERT_EQUAL_RECT(cig_rect_make(260, 0, 160, 480), cig_frame()->rect);
+		cig_pop_frame();
+	}
+
+	if (cig_push_frame(CIG_FILL)) {
+		TEST_ASSERT_EQUAL_RECT(cig_rect_make(420, 0, 160, 480), cig_frame()->rect);
+		cig_pop_frame();
+	}
+
+	cig_pop_frame();
+}
+
 TEST(core_layout, vstack_align_bottom) {
   if (!cig_push_layout_function(&cig_default_layout_builder, CIG_FILL, cig_insets_zero(), (cig_layout_params_t) { 0,
     .axis = CIG_LAYOUT_AXIS_VERTICAL,
@@ -772,6 +803,7 @@ TEST_GROUP_RUNNER(core_layout) {
   RUN_TEST_CASE(core_layout, culling);
   RUN_TEST_CASE(core_layout, vstack_layout);
   RUN_TEST_CASE(core_layout, hstack_layout);
+  RUN_TEST_CASE(core_layout, hstack_mix);
   RUN_TEST_CASE(core_layout, hstack_align_right);
   RUN_TEST_CASE(core_layout, vstack_align_bottom);
   RUN_TEST_CASE(core_layout, grid_with_fixed_rows_and_columns);
