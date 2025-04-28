@@ -62,6 +62,10 @@ typedef struct {
 	struct {
     int horizontal, vertical, total;
   } limit;
+
+  struct {
+   int width, height;
+  } size_max, size_min;
   
   /* Some basic layout flags */
 	enum {

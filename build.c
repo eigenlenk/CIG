@@ -115,6 +115,7 @@ int main(int argc, char **argv)
       SRC_FOLDER"ciggfx.c",
       DEMO_FOLDER"main.c",
       DEMO_FOLDER"win95/win95.c",
+      DEMO_FOLDER"win95/apps/welcome/welcome.c",
       
       DEPS_FOLDER"raylib-5.5_win32_mingw-w64/lib/libraylib.a",
       "-lopengl32",

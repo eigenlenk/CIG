@@ -3,6 +3,8 @@
 
 #include "cig.h"
 
+#define WIN95_APPS_MAX 16
+
 typedef enum {
   FONT_REGULAR = 0,
   FONT_BOLD,
@@ -10,6 +12,7 @@ typedef enum {
   FONT_ARIAL_BLACK_32,
   FONT_FRANKLIN_GOTHIC_BOOK_32,
   __FONT_COUNT
+
 } font_id_t;
 
 typedef enum {
@@ -19,6 +22,7 @@ typedef enum {
   COLOR_DIALOG_BACKGROUND,
   COLOR_WINDOW_ACTIVE_TITLEBAR,
   __COLOR_COUNT
+
 } color_id_t;
 
 typedef enum {
@@ -27,6 +31,7 @@ typedef enum {
   IMAGE_START_ICON,
   IMAGE_MY_COMPUTER_16,
   __IMAGE_COUNT
+
 } image_id_t;
 
 typedef enum {
@@ -36,15 +41,63 @@ typedef enum {
   PANEL_GRAY_DITHER,
   PANEL_INNER_BEVEL_NO_FILL,
   __PANEL_COUNT
+
 } panel_id_t;
+
+struct application_t;
+struct window_t;
+
+typedef enum {
+  WINDOW_CLOSE = 1
+
+} window_proc_result_t;
+
+typedef window_proc_result_t (*win_proc_t)(struct window_t *);
+
+typedef enum {
+  APPLICATION_KILL = 1
+
+} application_proc_result_t;
+
+typedef application_proc_result_t (*application_proc_t)(struct application_t *);
+
+typedef struct window_t {
+  win_proc_t proc;
+  void *data;
+  char *title;
+  int icon;
+
+} window_t;
+
+typedef struct application_t {
+  application_proc_t proc;
+  void *data;
+  window_t windows[1];
+
+} application_t;
+
+void application_open_window(application_t *, window_t);
 
 typedef struct {
   void* (*get_font)(font_id_t);
   void* (*get_color)(color_id_t);
   void* (*get_image)(image_id_t);
   void* (*get_panel)(panel_id_t);
+
+} assets_dependency_t;
+
+typedef struct {
+  /* Dependencies */
+  assets_dependency_t assets;
+
+  /* Private */
+  application_t applications[WIN95_APPS_MAX];
+  size_t running_apps;
+  window_t *selected_window;
 } win95_t;
 
+void start_win95(win95_t *);
 void run_win95(win95_t *);
+void win95_open_app(win95_t *, application_t);
 
 #endif

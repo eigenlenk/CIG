@@ -442,6 +442,8 @@ bool cig_default_layout_builder(
 		} else {
 			w = rect.w;
 		}
+		if (prm->size_max.width > 0) { w = CIG_MIN(prm->size_max.width, w); }
+		if (prm->size_min.width > 0) { w = CIG_MAX(prm->size_min.width, w); }
 	} else {
 		w = rect.w == CIG_FILL_CONSTANT
 			? container.w - prm->_h_pos
@@ -466,6 +468,8 @@ bool cig_default_layout_builder(
 		} else {
 			h = rect.h;
 		}
+		if (prm->size_max.height > 0) { h = CIG_MIN(prm->size_max.height, h); }
+		if (prm->size_min.height > 0) { h = CIG_MAX(prm->size_min.height, h); }
 	} else {
 		h = rect.h == CIG_FILL_CONSTANT
 			? container.h - prm->_v_pos

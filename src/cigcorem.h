@@ -87,6 +87,10 @@ if (cig_push_frame(CIG_FILL)) { \
 #define CIG_LIMIT_TOTAL(L) .limit.total = L
 #define CIG_LIMIT_HORIZONTAL(L) .limit.horizontal = L
 #define CIG_LIMIT_VERTICAL(L) .limit.vertical = L
+#define CIG_MAX_WIDTH(N) .size_max.width = N
+#define CIG_MAX_HEIGHT(N) .size_max.height = N
+#define CIG_MIN_WIDTH(N) .size_min.width = N
+#define CIG_MIN_HEIGHT(N) .size_min.height = N
 
 /* `cig_frame_args_t` fields */
 #define CIG_RECT(R) .rect = R

@@ -127,11 +127,15 @@ int main(int argc, const char *argv[]) {
   
   win95_t win_instance = {
     /* Inject dependencies */
-    .get_font = &get_font,
-    .get_color = &get_color,
-    .get_image = &get_image,
-    .get_panel = &get_panel
+    .assets = {
+      .get_font = &get_font,
+      .get_color = &get_color,
+      .get_image = &get_image,
+      .get_panel = &get_panel
+    }
   };
+
+  start_win95(&win_instance);
 
   RenderTexture2D render_texture = LoadRenderTexture(640, 480);
   SetTextureFilter(render_texture.texture, TEXTURE_FILTER_POINT);
