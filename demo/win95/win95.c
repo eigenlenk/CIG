@@ -1,4 +1,5 @@
 #include "win95.h"
+#include "time.h"
 #include "cigcorem.h"
 
 #define TASKBAR_H 28
@@ -114,30 +115,52 @@ static bool start_button(win95_t *this, cig_rect_t rect) {
   return clicked;
 }
 
-void run_win95(win95_t *this) {
-  static label_t some_label, other_label;
-  static unsigned long cnt = 0;
-
-  /* Desktop */
+static void do_desktop(win95_t *this) {
   if (cig_push_frame(cig_rect_make(0, 0, CIG_W, CIG_H - TASKBAR_H))) {
     cig_fill_color(this->get_color(COLOR_DESKTOP));
-    // cig_draw_line(this->get_color(COLOR_WHITE), cig_vec2_make(0, 0), cig_vec2_make(CIG_W, 0), 1);
-
     cig_pop_frame();
   }
-  
-  /* Taskbar */
-  
-  if (cig_push_frame_insets(cig_rect_make(0, CIG_H - TASKBAR_H, CIG_W, TASKBAR_H), cig_insets_make(2, 4, 2, 2))) {
+}
+
+static void do_taskbar(win95_t *this) {
+  static label_t some_label, clock_label;
+  static unsigned long cnt = 0;
+
+  const int start_button_width = 54;
+  const int spacing = 4;
+
+  CIG({
+    CIG_RECT(cig_rect_make(0, CIG_H - TASKBAR_H, CIG_W, TASKBAR_H)),
+    CIG_INSETS(cig_insets_make(2, 4, 2, 2))
+  }) {
     cig_fill_color(this->get_color(COLOR_DIALOG_BACKGROUND));
     cig_draw_line(this->get_color(COLOR_WHITE), cig_vec2_make(0, 1), cig_vec2_make(CIG_W, 1), 1);
+
+    /* Left: Start button */
+    start_button(this, CIG_FILL_W(start_button_width));
     
-    CIG_HSTACK({
-      CIG_PARAMS({
-        CIG_SPACING(4)
-      })
+    /* Right: Calculate clock bounds */
+    time_t t = time(NULL);
+    struct tm *ct = localtime(&t);
+
+    cig_prepare_label(&clock_label, (cig_text_properties_t) { .flags = CIG_TEXT_FORMATTED }, 0, "%02d:%02d", ct->tm_hour, ct->tm_min);
+
+    const int clock_w = (clock_label.bounds.w+11*2);
+
+    CIG({
+      CIG_RECT(cig_rect_make(CIG_W_INSET-clock_w, 0, clock_w, CIG_FILL_CONSTANT)),
+      CIG_INSETS(cig_insets_uniform(1))
     }) {
-      start_button(this, CIG_FILL_W(54));
+      cig_fill_panel(this->get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
+      cig_prepared_label(&clock_label);
+    }
+
+    /* Center: Fill remaining middle space with task buttons */
+
+    CIG_HSTACK({
+      CIG_RECT(cig_rect_make(start_button_width+spacing, 0, CIG_W_INSET-start_button_width-clock_w-spacing*2, CIG_FILL_CONSTANT)),
+      CIG_PARAMS({ CIG_SPACING(spacing) })
+    }) {
       taskbar_button(this, CIG_FILL_W(95), "Welcome", -1, false);
       taskbar_button(this, CIG_FILL_W(95), "My Computer", IMAGE_MY_COMPUTER_16, true);
 
@@ -149,15 +172,14 @@ void run_win95(win95_t *this) {
         cig_prepared_label(&some_label);
       }
 
-      /*cig_prepared_label(cig_prepare_label(&other_label, (cig_text_properties_t) {
-        .color = this->get_color(COLOR_WINDOW_ACTIVE_TITLEBAR)
-      }, 0, "Eigen Lenk"));*/
-
       taskbar_button(this, CIG_FILL_W(95), "Control Panel", -1, false);
     }
-    
-    cig_pop_frame();
   }
+}
+
+void run_win95(win95_t *this) {
+  do_desktop(this);
+  do_taskbar(this);
   
   // "Welcome" window
   CIG({
