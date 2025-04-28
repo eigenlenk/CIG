@@ -44,19 +44,19 @@ static void render_panel(cig_panel_ref, cig_rect_t, cig_panel_modifiers_t);
 static void draw_rectangle(cig_color_ref, cig_color_ref, cig_rect_t, unsigned int);
 static void draw_line(cig_color_ref, cig_vec2_t, cig_vec2_t, float);
 
-CIG_INLINED void* get_font(font_id_t id) {
+void* get_font(font_id_t id) {
   return &fonts[id];
 }
 
-CIG_INLINED void* get_color(color_id_t id) {
+void* get_color(color_id_t id) {
   return &colors[id];
 }
 
-CIG_INLINED void* get_image(image_id_t id) {
+void* get_image(image_id_t id) {
   return &images[id];
 }
 
-CIG_INLINED void* get_panel(panel_id_t id) {
+void* get_panel(panel_id_t id) {
   return &panel_styles[id];
 }
 
@@ -125,16 +125,9 @@ int main(int argc, const char *argv[]) {
   cig_set_draw_rectangle_callback(&draw_rectangle);
   cig_set_draw_line_callback(&draw_line);
   
-  win95_t win_instance = {
-    /* Inject dependencies */
-    .assets = {
-      .get_font = &get_font,
-      .get_color = &get_color,
-      .get_image = &get_image,
-      .get_panel = &get_panel
-    }
-  };
+  cig_begin_layout(&ctx, NULL, cig_rect_make(0, 0, 640, 480));
 
+  win95_t win_instance = { 0 };
   start_win95(&win_instance);
 
   RenderTexture2D render_texture = LoadRenderTexture(640, 480);

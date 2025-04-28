@@ -50,9 +50,9 @@ struct window_t;
 typedef enum {
   WINDOW_CLOSE = 1
 
-} window_proc_result_t;
+} window_message_t;
 
-typedef window_proc_result_t (*win_proc_t)(struct window_t *);
+typedef window_message_t (*win_proc_t)(struct window_t *);
 
 typedef enum {
   APPLICATION_KILL = 1
@@ -64,6 +64,7 @@ typedef application_proc_result_t (*application_proc_t)(struct application_t *);
 typedef struct window_t {
   win_proc_t proc;
   void *data;
+  cig_rect_t rect;
   char *title;
   int icon;
 
@@ -78,18 +79,12 @@ typedef struct application_t {
 
 void application_open_window(application_t *, window_t);
 
-typedef struct {
-  void* (*get_font)(font_id_t);
-  void* (*get_color)(color_id_t);
-  void* (*get_image)(image_id_t);
-  void* (*get_panel)(panel_id_t);
-
-} assets_dependency_t;
+void* get_font(font_id_t);
+void* get_color(color_id_t);
+void* get_image(image_id_t);
+void* get_panel(panel_id_t);
 
 typedef struct {
-  /* Dependencies */
-  assets_dependency_t assets;
-
   /* Private */
   application_t applications[WIN95_APPS_MAX];
   size_t running_apps;
@@ -98,6 +93,12 @@ typedef struct {
 
 void start_win95(win95_t *);
 void run_win95(win95_t *);
-void win95_open_app(win95_t *, application_t);
+void win95_open_app(application_t);
+
+/* Components */
+
+bool standard_button(cig_rect_t, const char *);
+window_message_t begin_window(window_t *);
+void end_window();
 
 #endif
