@@ -144,6 +144,30 @@ TEST(core_layout, limits) {
 	cig_pop_frame();
 }
 
+TEST(core_layout, min_max_size) {
+	/* Any child of this frame cannot exceed these bounds */
+	cig_push_frame_insets_params(CIG_FILL, cig_insets_zero(), (cig_layout_params_t) {
+		.size_max.width = 200,
+		.size_max.height = 150,
+		.size_min.width = 50,
+		.size_min.height = 30,
+	});
+
+	cig_push_frame(cig_rect_make(0, 0, 220, 180));
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 200, 150), cig_frame()->rect);
+	cig_pop_frame();
+
+	cig_push_frame(cig_rect_make(0, 0, 40, 20));
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 50, 30), cig_frame()->rect);
+	cig_pop_frame();
+
+	cig_push_frame(cig_rect_make(0, 0, 100, 100));
+	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 100, 100), cig_frame()->rect);
+	cig_pop_frame();
+
+	cig_pop_frame();
+}
+
 TEST(core_layout, insets) {
 	/* We are changing root frame insets directly. Insets only apply to the children */
 	cig_frame()->insets = cig_insets_uniform(10);
@@ -798,6 +822,7 @@ TEST_GROUP_RUNNER(core_layout) {
   RUN_TEST_CASE(core_layout, push_pop);
   RUN_TEST_CASE(core_layout, identifiers);
   RUN_TEST_CASE(core_layout, limits);
+  RUN_TEST_CASE(core_layout, min_max_size);
   RUN_TEST_CASE(core_layout, insets);
   RUN_TEST_CASE(core_layout, overlay);
   RUN_TEST_CASE(core_layout, culling);

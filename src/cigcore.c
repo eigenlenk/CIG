@@ -20,7 +20,15 @@ static cig_rect_t resolve_size(cig_rect_t, const cig_frame_t*);
 static bool next_layout_rect(cig_rect_t, cig_frame_t*, cig_rect_t*);
 static bool push_frame(cig_rect_t, cig_insets_t, cig_layout_params_t, bool (*)(cig_rect_t, cig_rect_t, cig_layout_params_t*, cig_rect_t*));
 
-CIG_INLINED int tinyhash(int a, int b) { return (a * 31) ^ (b * 17); }
+CIG_INLINED int tinyhash(int a, int b) {
+	return (a * 31) ^ (b * 17);
+}
+
+CIG_INLINED int limit(int v, const int minv_or_zero, const int maxv_or_zero) {
+	if (maxv_or_zero > 0) { v = CIG_MIN(maxv_or_zero, v); }
+	if (minv_or_zero > 0) { v = CIG_MAX(minv_or_zero, v); }
+	return v;
+}
 
 /* ┌───────────────┐
 ───┤  CORE LAYOUT  │
@@ -442,13 +450,11 @@ bool cig_default_layout_builder(
 		} else {
 			w = rect.w;
 		}
-		if (prm->size_max.width > 0) { w = CIG_MIN(prm->size_max.width, w); }
-		if (prm->size_min.width > 0) { w = CIG_MAX(prm->size_min.width, w); }
 	} else {
 		w = rect.w == CIG_FILL_CONSTANT
 			? container.w - prm->_h_pos
 			: rect.w;
-		
+
 		/* Reset any remaining horizontal positioning in case we modify axis mid-layout */
 		prm->_h_pos = 0;
 		prm->_h_size = CIG_FILL_CONSTANT;
@@ -468,8 +474,6 @@ bool cig_default_layout_builder(
 		} else {
 			h = rect.h;
 		}
-		if (prm->size_max.height > 0) { h = CIG_MIN(prm->size_max.height, h); }
-		if (prm->size_min.height > 0) { h = CIG_MAX(prm->size_min.height, h); }
 	} else {
 		h = rect.h == CIG_FILL_CONSTANT
 			? container.h - prm->_v_pos
@@ -479,7 +483,10 @@ bool cig_default_layout_builder(
 		prm->_v_pos = 0;
 		prm->_v_size = CIG_FILL_CONSTANT;
 	}
-	
+
+	w = limit(w, prm->size_min.width, prm->size_max.width);
+	h = limit(h, prm->size_min.height, prm->size_max.height);
+
 	if (h_axis && v_axis) {
 		/* Can we fit the new frame onto current axis? */
 		switch (prm->direction) {
@@ -564,8 +571,16 @@ static cig_rect_t resolve_size(const cig_rect_t rect, const cig_frame_t *parent)
 	return cig_rect_make(
 		rect.x,
 		rect.y,
-		rect.w == CIG_FILL_CONSTANT ? content_rect.w : rect.w,
-		rect.h == CIG_FILL_CONSTANT ? content_rect.h : rect.h
+		limit(
+			rect.w == CIG_FILL_CONSTANT ? content_rect.w : rect.w,
+			parent->_layout_params.size_min.width,
+			parent->_layout_params.size_max.width
+		),
+		limit(
+			rect.h == CIG_FILL_CONSTANT ? content_rect.h : rect.h,
+			parent->_layout_params.size_min.height,
+			parent->_layout_params.size_max.height
+		)
 	);
 }
 
