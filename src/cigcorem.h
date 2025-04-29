@@ -14,10 +14,13 @@
 #define CIG_FILL_CONSTANT 0
 
 #define CIG_FILL cig_rect_make(0, 0, CIG_FILL_CONSTANT, CIG_FILL_CONSTANT)
+#define RECT_AUTO cig_rect_make(0, 0, CIG_FILL_CONSTANT, CIG_FILL_CONSTANT)
 
 #define CIG_FILL_W(W) cig_rect_make(0, 0, W, CIG_FILL_CONSTANT)
+#define RECT_AUTO_W(W) cig_rect_make(0, 0, W, CIG_FILL_CONSTANT)
 
 #define CIG_FILL_H(H) cig_rect_make(0, 0, CIG_FILL_CONSTANT, H)
+#define RECT_AUTO_H(H) cig_rect_make(0, 0, CIG_FILL_CONSTANT, H)
 
 #define CIG_X cig_rect().x
 
