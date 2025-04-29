@@ -86,7 +86,7 @@ TEST(text_label, basic_label) {
     TEST_ASSERT_EQUAL_RECT(cig_rect_make(35, 12, 3, 1), spans.rects[0]);
     TEST_ASSERT_EQUAL_RECT(cig_rect_make(39, 12, 6, 1), spans.rects[1]);
     
-    if (cig_push_frame(CIG_CENTERED(40, 15))) {
+    if (cig_push_frame(RECT_CENTERED(40, 15))) {
       spans.count = 0;
       cig_label((cig_text_properties_t) {
         .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
@@ -106,9 +106,7 @@ TEST(text_label, basic_label) {
 TEST(text_label, horizontal_alignment_left) {
   begin();
   
-  CIG({
-    CIG_RECT(CIG_FILL_H(1))
-  }) {
+  CIG(RECT_AUTO_H(1)) {
     cig_label((cig_text_properties_t) {
       .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
     }, "Label");
@@ -120,9 +118,7 @@ TEST(text_label, horizontal_alignment_left) {
 TEST(text_label, horizontal_alignment_center) {
   begin();
   
-  CIG({
-    CIG_RECT(CIG_FILL_H(1))
-  }) {
+  CIG(RECT_AUTO_H(1)) {
     cig_label((cig_text_properties_t) {
       .alignment.horizontal = CIG_TEXT_ALIGN_CENTER
     }, "Label");
@@ -134,9 +130,7 @@ TEST(text_label, horizontal_alignment_center) {
 TEST(text_label, horizontal_alignment_right) {
   begin();
   
-  CIG({
-    CIG_RECT(CIG_FILL_H(1))
-  }) {
+  CIG(RECT_AUTO_H(1)) {
     cig_label((cig_text_properties_t) {
       .alignment.horizontal = CIG_TEXT_ALIGN_RIGHT
     }, "Label");
@@ -148,9 +142,7 @@ TEST(text_label, horizontal_alignment_right) {
 TEST(text_label, vertical_alignment_top) {
   begin();
   
-  CIG({
-    CIG_RECT(CIG_FILL_W(5))
-  }) {
+  CIG(RECT_AUTO_W(5)) {
     cig_label((cig_text_properties_t) {
       .alignment.vertical = CIG_TEXT_ALIGN_TOP
     }, "Label");
@@ -162,9 +154,7 @@ TEST(text_label, vertical_alignment_top) {
 TEST(text_label, vertical_alignment_middle) {
   begin();
   
-  CIG({
-    CIG_RECT(CIG_FILL_W(5))
-  }) {
+  CIG(RECT_AUTO_W(5)) {
     cig_label((cig_text_properties_t) {
       .alignment.vertical = CIG_TEXT_ALIGN_MIDDLE
     }, "Label");
@@ -176,9 +166,7 @@ TEST(text_label, vertical_alignment_middle) {
 TEST(text_label, vertical_alignment_bottom) {
   begin();
   
-  CIG({
-    CIG_RECT(CIG_FILL_W(5))
-  }) {
+  CIG(RECT_AUTO_W(5)) {
     cig_label((cig_text_properties_t) {
       .alignment.vertical = CIG_TEXT_ALIGN_BOTTOM
     }, "Label");
@@ -190,9 +178,7 @@ TEST(text_label, vertical_alignment_bottom) {
 TEST(text_label, forced_line_change) {
   begin();
   
-  CIG({
-    CIG_RECT(cig_rect_make(0, 0, 8, 2))
-  }) {
+  CIG(cig_rect_make(0, 0, 8, 2)) {
     /* Left aligned text */
     CIG(_) {
       cig_label((cig_text_properties_t) {
@@ -248,9 +234,7 @@ TEST(text_label, prepare_single_long_word) {
   TEST_ASSERT_EQUAL_INT(9, label.bounds.w);
   TEST_ASSERT_EQUAL_INT(1, label.bounds.h);
 
-  CIG({
-    CIG_RECT(cig_rect_make(0, 0, 7, 1))
-  }) {
+  CIG(cig_rect_make(0, 0, 7, 1)) {
     cig_prepared_label(&label);
 
     TEST_ASSERT_EQUAL_RECT(cig_rect_make(-1, 0, 9, 1), spans.rects[0]);
@@ -266,9 +250,7 @@ TEST(text_label, prepare_multiple_long_words) {
   TEST_ASSERT_EQUAL_INT(9, label.bounds.w);
   TEST_ASSERT_EQUAL_INT(3, label.bounds.h);
 
-  CIG({
-    CIG_RECT(cig_rect_make(0, 0, 7, 3))
-  }) {
+  CIG(cig_rect_make(0, 0, 7, 3)) {
     cig_prepared_label(&label);
 
     TEST_ASSERT_EQUAL_RECT(cig_rect_make(-1, 0, 9, 1), spans.rects[0]);

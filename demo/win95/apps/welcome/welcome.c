@@ -98,7 +98,7 @@ application_t welcome_app() {
 			(window_t) {
 				.proc = &process_main_window,
 				.data = malloc(sizeof(window_data_t)),
-				.rect = CIG_CENTERED(488, 280),
+				.rect = RECT_CENTERED(488, 280),
 				.title = "Welcome",
 				.icon = -1
 			}

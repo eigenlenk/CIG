@@ -1,7 +1,6 @@
 #include "unity.h"
 #include "fixture.h"
 #include "cigcore.h"
-#include "cigcorem.h"
 #include "asserts.h"
 
 TEST_GROUP(core_input);
@@ -72,7 +71,7 @@ TEST(core_input, overlapping_hover_and_press) {
 		Even if there's an additional element on top of the current one,
 		unless we call `im_enable_interaction`, that element is not included in mouse detection.
 		*/
-		cig_push_frame(CIG_FILL);
+		cig_push_frame(RECT_AUTO);
 		cig_pop_frame();
 		
 		cig_pop_frame();

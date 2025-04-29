@@ -17,70 +17,62 @@ TEST_TEAR_DOWN(core_macros) {
 	cig_end_layout();
 }
 
-TEST(core_macros, arrange) {
+TEST(core_macros, cig) {
   /* This creates a 500x400 frame with 4 unit inset and centers it in the root frame */
-  CIG_ARRANGE_WITH(
-    CIG_CENTERED(500, 400),
-    cig_insets_uniform(4),
-    (cig_layout_params_t) {},
-    CIG_BODY(
-      TEST_ASSERT_EQUAL_RECT(cig_rect_make(70, 40, 500, 400), cig_rect());
-      
-      /* Regular control flow works in here */
-      for (int i = 0; i < 2; ++i) { }
-     
-      CIG_ARRANGE(CIG_FILL, CIG_BODY(
-        TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 492, 392), cig_rect());
-      ))
-      
-      /* No need to use CIG_BODY macro. The additional parenthesis just help with indentation.
-         CIG_FILLED(BODY...) === CIG_ARRANGE(CIG_FILL, BODY...) */
-      CIG_FILLED(
-        TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 492, 392), cig_rect());
-        for (int i = 0; i < 2; ++i) { }
-      )
-    ))
+  CIG(RECT_CENTERED(500, 400), CIG_INSETS(cig_insets_uniform(4))) {
+    TEST_ASSERT_EQUAL_RECT(cig_rect_make(70, 40, 500, 400), cig_rect());
+    
+    /* Regular control flow works in here */
+    for (int i = 0; i < 2; ++i) { }
+   
+    CIG(_) { /* _ stands for RECT_AUTO */
+      TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 492, 392), cig_rect());
+    }
+  }
 }
 
 TEST(core_macros, vstack) {
-  CIG_VSTACK({
+  CIG_VSTACK(
+    RECT_AUTO,
     CIG_PARAMS({
       CIG_HEIGHT(200),
       CIG_SPACING(10),
       CIG_LIMIT_VERTICAL(2)
     })
-  }) {
+  ) {
     for (int i = 0; i < 2; ++i) {
-      CIG_ARRANGE(CIG_FILL, CIG_BODY(
+      CIG(_) {
         TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, i*(200+10), 640, 200), cig_rect());
-      ))
+      }
     }
   }
 }
 
 TEST(core_macros, hstack) {
-  CIG_HSTACK({
+  CIG_HSTACK(
+    RECT_AUTO,
     CIG_PARAMS({
       CIG_WIDTH(200),
       CIG_SPACING(10),
       CIG_LIMIT_HORIZONTAL(2)
     })
-  }) {
+  ) {
     for (int i = 0; i < 2; ++i) {
-      CIG_ARRANGE(CIG_FILL, CIG_BODY(
+      CIG(_) {
         TEST_ASSERT_EQUAL_RECT(cig_rect_make(i*(200+10), 0, 200, 480), cig_rect());
-      ))
+      }
     }
   }
 }
 
 TEST(core_macros, grid) {
-  CIG_GRID({
+  CIG_GRID(
+    RECT_AUTO,
     CIG_PARAMS({
       CIG_COLUMNS(5),
       CIG_ROWS(5)
     })
-  }) {
+  ) {
     for (int i = 0; i < 25; ++i) {
       int row = (i / 5);
       int column = i - (row * 5);
@@ -97,32 +89,11 @@ TEST(core_macros, allocator) {
   TEST_ASSERT_EQUAL_INT(5, *i);
 }
 
-TEST(core_macros, new_syntax) {
-  CIG({
-    CIG_RECT(CIG_FILL),
-    CIG_INSETS(cig_insets_uniform(5)),
-    CIG_PARAMS({
-      CIG_LIMIT_TOTAL(1)
-    })
-  }) {
-    CIG(_) { TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 630, 470), cig_rect()); }
-    CIG(_) { TEST_FAIL_MESSAGE("Limit exceeded"); }
-  }
-
-  CIG(_) {
-    for (int i = 0; i < 10; ++i) {
-      CIG(_) { }
-    }
-  }
-  
-  TEST_ASSERT_EQUAL(1, cig_depth());
-}
-
 TEST_GROUP_RUNNER(core_macros) {
-  RUN_TEST_CASE(core_macros, arrange);
+  RUN_TEST_CASE(core_macros, cig);
   RUN_TEST_CASE(core_macros, vstack);
   RUN_TEST_CASE(core_macros, hstack);
   RUN_TEST_CASE(core_macros, grid);
   RUN_TEST_CASE(core_macros, allocator);
-  RUN_TEST_CASE(core_macros, new_syntax);
+  // TODO: check positional and rect macros
 }

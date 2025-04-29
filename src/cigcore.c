@@ -30,6 +30,10 @@ CIG_INLINED int limit(int v, const int minv_or_zero, const int maxv_or_zero) {
 	return v;
 }
 
+CIG_INLINED int clearbits(int n) {
+	return (n&~CIG_AUTO_BIT);
+}
+
 /* ┌───────────────┐
 ───┤  CORE LAYOUT  │
    └───────────────┘ */
@@ -72,7 +76,7 @@ void cig_begin_layout(
 		.absolute_rect = rect,
 		.insets = cig_insets_zero(),
 		._layout_function = NULL,
-		._layout_params = (cig_layout_params_t){ 0 }
+		._layout_params = (cig_layout_params_t) { 0 }
 	});
 
 	cig_push_buffer(buffer);
@@ -396,28 +400,28 @@ cig_id_t cig_hash(const char *str) {
 }
 
 void cig_empty() {
-	cig_push_frame(CIG_FILL);
+	cig_push_frame(RECT_AUTO);
 	cig_pop_frame();
 }
 
 void cig_spacer(const int size) {
-	cig_push_frame(CIG_FILL_H(size));
+	cig_push_frame(RECT_AUTO_H(size));
 	cig_pop_frame();
 }
 
 CIG_INLINED void move_to_next_row(cig_layout_params_t *prm) {
   prm->_h_pos = 0;
   prm->_v_pos += (prm->_v_size + prm->spacing);
-  prm->_h_size = CIG_FILL_CONSTANT;
-  prm->_v_size = CIG_FILL_CONSTANT;
+  prm->_h_size = 0;
+  prm->_v_size = 0;
   prm->_count.h_cur = 0;
 }
 
 CIG_INLINED void move_to_next_column(cig_layout_params_t *prm) {
   prm->_v_pos = 0;
   prm->_h_pos += (prm->_h_size + prm->spacing);
-  prm->_h_size = CIG_FILL_CONSTANT;
-  prm->_v_size = CIG_FILL_CONSTANT;
+  prm->_h_size = 0;
+  prm->_v_size = 0;
   prm->_count.v_cur = 0;
 }
 
@@ -437,7 +441,7 @@ bool cig_default_layout_builder(
 			h;
 
 	if (h_axis) {
-		if (rect.w == CIG_FILL_CONSTANT) {
+		if (rect.w & CIG_AUTO_BIT) {
 			if (prm->width > 0) {
 				w = prm->width;
 			} else if (prm->columns) {
@@ -448,20 +452,20 @@ bool cig_default_layout_builder(
 				w = container.w - prm->_h_pos;
 			}
 		} else {
-			w = rect.w;
+			w = clearbits(rect.w);
 		}
 	} else {
-		w = rect.w == CIG_FILL_CONSTANT
+		w = rect.w & CIG_AUTO_BIT
 			? container.w - prm->_h_pos
-			: rect.w;
+			: clearbits(rect.w);
 
 		/* Reset any remaining horizontal positioning in case we modify axis mid-layout */
 		prm->_h_pos = 0;
-		prm->_h_size = CIG_FILL_CONSTANT;
+		prm->_h_size = 0;
 	}
 	
 	if (v_axis) {
-		if (rect.h == CIG_FILL_CONSTANT) {
+		if (rect.h & CIG_AUTO_BIT) {
 			if (prm->height > 0) {
 				h = prm->height;
 			} else if (prm->rows) {
@@ -472,16 +476,16 @@ bool cig_default_layout_builder(
 				h = container.h - prm->_v_pos;
 			}
 		} else {
-			h = rect.h;
+			h = clearbits(rect.h);
 		}
 	} else {
-		h = rect.h == CIG_FILL_CONSTANT
+		h = rect.h & CIG_AUTO_BIT
 			? container.h - prm->_v_pos
-			: rect.h;
+			: clearbits(rect.h);
 		
 		/* Reset any remaining vertical positioning in case we modify axis mid-layout */
 		prm->_v_pos = 0;
-		prm->_v_size = CIG_FILL_CONSTANT;
+		prm->_v_size = 0;
 	}
 
 	w = limit(w, prm->size_min.width, prm->size_max.width);
@@ -587,12 +591,12 @@ static cig_rect_t resolve_size(const cig_rect_t rect, const cig_frame_t *parent)
 		rect.x,
 		rect.y,
 		limit(
-			rect.w == CIG_FILL_CONSTANT ? content_rect.w : rect.w,
+			clearbits(rect.w & CIG_AUTO_BIT ? content_rect.w : rect.w),
 			parent->_layout_params.size_min.width,
 			parent->_layout_params.size_max.width
 		),
 		limit(
-			rect.h == CIG_FILL_CONSTANT ? content_rect.h : rect.h,
+			clearbits(rect.h & CIG_AUTO_BIT ? content_rect.h : rect.h),
 			parent->_layout_params.size_min.height,
 			parent->_layout_params.size_max.height
 		)
@@ -632,6 +636,8 @@ static bool push_frame(
 		return false;
 	}
 	
+	// printf("(%d, %d, %d, %d) -> (%d, %d, %d, %d)\n", rect.x, rect.y, rect.w, rect.h, next.x, next.y, next.w, next.h);
+
   if (top->_scroll_state) {
 		top->_scroll_state->content_size.x = CIG_MAX(top->_scroll_state->content_size.x, next.x + next.w);
 		top->_scroll_state->content_size.y = CIG_MAX(top->_scroll_state->content_size.y, next.y + next.h);

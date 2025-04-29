@@ -1,7 +1,6 @@
 #include "unity.h"
 #include "fixture.h"
 #include "cigcore.h"
-#include "cigcorem.h"
 #include "asserts.h"
 #include <string.h>
 
@@ -29,7 +28,7 @@ TEST(core_state, activation_states) {
   for (int i = 0; i < 2; ++i) {
 		begin();
     
-    cig_push_frame(CIG_FILL);
+    cig_push_frame(RECT_AUTO);
     
     if (!persistent_id) { persistent_id = cig_frame()->id; }
     else { TEST_ASSERT_EQUAL_UINT32(persistent_id, cig_frame()->id); }
@@ -51,7 +50,7 @@ TEST(core_state, pool_limit) {
   begin();
   
   for (int i = 0; i < CIG_STATES_MAX + 1; ++i) {
-    cig_push_frame(CIG_FILL);
+    cig_push_frame(RECT_AUTO);
     
     if (i < CIG_STATES_MAX) {
       TEST_ASSERT_NOT_NULL(cig_state());
@@ -69,7 +68,7 @@ TEST(core_state, stale) {
   begin();
   /* Tick 1: Mark all states as used */
   for (int i = 0; i < CIG_STATES_MAX + 1; ++i) {
-    cig_push_frame(CIG_FILL);
+    cig_push_frame(RECT_AUTO);
     CIG_UNUSED(cig_state());
     cig_pop_frame();
   }
@@ -79,7 +78,7 @@ TEST(core_state, stale) {
      so at this point we don't expect there to be any available states */
   begin();
   cig_set_next_id(12345);
-  cig_push_frame(CIG_FILL);
+  cig_push_frame(RECT_AUTO);
   TEST_ASSERT_NULL(cig_state());
   cig_pop_frame();
   end();
@@ -87,7 +86,7 @@ TEST(core_state, stale) {
   /* Tick 3: Now there should be */
   begin();
   cig_set_next_id(12345);
-  cig_push_frame(CIG_FILL);
+  cig_push_frame(RECT_AUTO);
   TEST_ASSERT_NOT_NULL(cig_state());
   cig_pop_frame();
   end();
@@ -102,9 +101,9 @@ TEST(core_state, memory_arena) {
     cig_vec2_t *vec2 = (cig_vec2_t *)cig_state_allocate(sizeof(cig_vec2_t));
     unsigned long *ul = (unsigned long *)cig_state_allocate(sizeof(unsigned long));
     char *str = (char *)cig_state_allocate(sizeof(char[32]));
-    void *a_whole_kilobyte = cig_state_allocate(sizeof(char[1024]));
+    void *hundred_whole_kilobytes = cig_state_allocate(sizeof(char[1024*100]));
     
-    TEST_ASSERT_NULL(a_whole_kilobyte); /* Doesn't fit. Our area is 512 bytes by default */
+    TEST_ASSERT_NULL(hundred_whole_kilobytes); /* Doesn't fit */
     
     TEST_ASSERT_EQUAL_UINT(
       sizeof(cig_vec2_t) + sizeof(unsigned long) + sizeof(char[32]),
