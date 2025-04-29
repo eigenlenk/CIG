@@ -2,10 +2,16 @@
 #include "cigcorem.h"
 
 typedef struct {
-
+  int tip_index;
 } window_data_t;
 
 static window_message_t process_main_window(window_t *this) {
+  static const char *tips[] = {
+    "This is not actually Windows 95 but a little demo application to develop and test a C immediate-mode GUI library called CIG.",
+    "You can find the library on GitHub by visiting the World Wide Web link below:\n\nhttps://github.com/eigenlenk/cig\n\nMore text!",
+    "A fatal exception 0E has occurred at 0F:DEADBEEF. The current application will be shot and terminated."
+  };
+
 	window_data_t *window_data = (window_data_t*)this->data;
 	window_message_t msg = 0;
 
@@ -53,7 +59,7 @@ static window_message_t process_main_window(window_t *this) {
           		cig_label((cig_text_properties_t) {
           			.alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
           			.alignment.vertical = CIG_TEXT_ALIGN_TOP,
-          		}, "This is not actually Windows 95 but a little demo application to develop and test a C immediate-mode GUI library called CIG.");
+          		}, tips[window_data->tip_index]);
           		cig_pop_frame();
           	}
           	cig_pop_frame();
@@ -63,10 +69,12 @@ static window_message_t process_main_window(window_t *this) {
         cig_pop_frame();
       }
 
-      if (cig_push_vstack(RECT_AUTO, cig_insets_zero(), (cig_layout_params_t) { .spacing = 6 })) {
-        standard_button(RECT_AUTO_H(23), "What's New");
-        standard_button(RECT_AUTO_H(23), "Online Registration");
-        standard_button(RECT_AUTO_H(23), "Next Tip");
+      if (cig_push_vstack(_, cig_insets_zero(), (cig_layout_params_t) { .spacing = 6, .height = 23 })) {
+        standard_button(_, "What's New");
+        standard_button(_, "Online Registration");
+        if (standard_button(_, "Next Tip")) {
+          window_data->tip_index = (window_data->tip_index+1)%3;
+        }
         cig_spacer(58);
         if (cig_push_frame(RECT_AUTO_H(2))) { /* Separator */
         	cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
@@ -93,11 +101,14 @@ static window_message_t process_main_window(window_t *this) {
 }
 
 application_t welcome_app() {
+  window_data_t *data = malloc(sizeof(window_data_t));
+  data->tip_index = 0;
+
 	return (application_t) {
 		.windows = {
 			(window_t) {
 				.proc = &process_main_window,
-				.data = malloc(sizeof(window_data_t)),
+				.data = data,
 				.rect = RECT_CENTERED(488, 280),
 				.title = "Welcome",
 				.icon = -1

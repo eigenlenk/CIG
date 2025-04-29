@@ -19,11 +19,13 @@ DECLARE_VEC2_T   (int, cig_vec2, -999999) /* Declares `cig_vec2_t` */
 DECLARE_INSETS_T (int, cig_insets) /* Declares `cig_cig_insets_t` */
 DECLARE_RECT_T   (int, cig_rect, cig_vec2, cig_insets) /* Declares `cig_rect_t` */
 
-#define CIG_AUTO_BIT CIG_BIT(31)
+#define CIG_AUTO_BIT CIG_BIT(30)
 
 #define RECT_AUTO cig_rect_make(0, 0, CIG_AUTO_BIT, CIG_AUTO_BIT)
 #define RECT_AUTO_W(W) cig_rect_make(0, 0, W, CIG_AUTO_BIT)
 #define RECT_AUTO_H(H) cig_rect_make(0, 0, CIG_AUTO_BIT, H)
+#define RECT_AUTO_W_OFFSET(W) cig_rect_make(0, 0, CIG_AUTO_BIT+W, CIG_AUTO_BIT)
+#define RECT_AUTO_H_OFFSET(H) cig_rect_make(0, 0, CIG_AUTO_BIT, CIG_AUTO_BIT+H)
 
 /* All layout element get a unique ID that tries to be unique across frames, but no promises.
    See `cig_next_id` how to definitely keep things consistent */

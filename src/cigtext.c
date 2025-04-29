@@ -152,7 +152,7 @@ static void prepare_label(
     bool tag_stage_changed;
     utf8_char ch;
     uint32_t cp;
-    size_t span_start = 0, cur = 0, line_w = 0, line_count = 1, word_len;
+    size_t span_start = 0, cur = 0, next, line_w = 0, line_count = 1, word_len;
     cig_font_ref font;
     cig_font_info_t base_font_info = font_query(props->font);
     cig_font_info_t font_info;
@@ -163,11 +163,9 @@ static void prepare_label(
     struct { size_t count; cig_text_color_ref colors[4]; } color_stack = { 0 };
     
     while ((ch = next_utf8_char(&iter)).byte_len > 0 && (cp = unicode_code_point(ch))) {
-      /*printf("character: %.*s\t", (int)ch.byte_len, ch.str);
-      printf("unicode code point: U+%04X\t", cp);
-      printf("open = %d\t", tag_parser.open);
-      printf("span_start = %d\n", (int)span_start);*/
-      
+      // printf("character: %.*s\t", (int)ch.byte_len, ch.str);
+      // printf("unicode code point: U+%04X\t\n", cp);
+
       /* Tag was either opened or closed */
       if (props->flags & CIG_TEXT_FORMATTED && (tag_stage_changed = parse_tag(&tag_parser, ch, cp))) {
         /* Tag closed */
@@ -217,14 +215,20 @@ static void prepare_label(
         continue;
       }
       
+      bool is_newline = cp == 0x0A;
+
       /* Span terminated:
-         a) basic space character
-         b) tag encountered
-         c) end of string */
-      if ((cur > span_start && (cp == 0x20 || tag_stage_changed)) || (cur + ch.byte_len == utext.byte_len)) {
+         a) basic space character (0x20)
+         b) newline (0x0A)
+         c) tag encountered
+         d) end of string */
+      if ((cur > span_start && (cp == 0x20 || is_newline || tag_stage_changed)) || (cur + ch.byte_len == utext.byte_len)) {
         if (cur + ch.byte_len == utext.byte_len) {
           cur += ch.byte_len;
         }
+
+        next = cur + ch.byte_len;
+
         font = font_stack.count > 0 ? font_stack.fonts[font_stack.count-1] : props->font;
         font_info = font_query(font);
         word_len = cur - span_start;
@@ -241,8 +245,25 @@ static void prepare_label(
           .byte_len = (unsigned char)slice.byte_len,
           .spacing_after = cp == 0x20 ? font_info.word_spacing : 0,
           .style_flags = props->style | style,
-          .newlines = 0
+          .newlines = is_newline ? 1 : 0
         };
+
+        if (is_newline) { /* Peek forward and count number of newlines */
+          char *last_valid_pos = (char *)iter.str;
+          // next = cur;
+          while ((ch = next_utf8_char(&iter)).byte_len > 0) {
+            if (unicode_code_point(ch) == 0x0A) {
+              new_span->newlines ++;
+              next += ch.byte_len;
+              last_valid_pos = (char *)iter.str;
+              printf("extra newline to |%.*s|\n", slice.byte_len, slice.str);
+            } else {
+              iter.str = last_valid_pos;
+              //iter = (utf8_char_iter) { last_valid_pos, iter.terminator };
+              break;
+            }
+          }
+        }
 
         if (max_width) {
           const int added_width = bounds.x + (prev_span ? prev_span->spacing_after : 0);
@@ -320,9 +341,15 @@ static void prepare_label(
           label->bounds.w = CIG_MAX(label->bounds.w, line_w);
         }
 
+        if (is_newline) {
+          line_w = 0;
+        }
+
         // printf("appended span %d = %.*s\n", label->span_count-1, label->spans[label->span_count-1].slice.byte_len, label->spans[label->span_count-1].slice.str);
         
-        span_start = cur + ch.byte_len;
+        cur = next;
+        span_start = next;
+        continue;
       }
       
       cur += ch.byte_len;

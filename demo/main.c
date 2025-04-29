@@ -189,13 +189,15 @@ CIG_INLINED void render_text(
   cig_text_color_ref color,
   cig_text_style_t style
 ) {
-  static char buf[24];
+  static char buf[256];
   strncpy(buf, str, len);
   buf[len] = '\0';
   
   struct font_store *fs = (struct font_store*)font;
+
+  // printf("render: |%s|\n", buf);
   
-  // DrawRectangle(UNPACK_RECT(rect), GREEN);
+  DrawRectangle(UNPACK_RECT(rect), GREEN);
   DrawTextEx(fs->font, buf, (Vector2) { rect.x, rect.y }, fs->font.baseSize, 0, color ? *(Color*)color : colors[COLOR_BLACK]);
 }
 
@@ -205,7 +207,7 @@ CIG_INLINED cig_vec2_t measure_text(
   cig_font_ref font,
   cig_text_style_t style
 ) {
-  static char buf[24];
+  static char buf[256];
   strncpy(buf, str, len);
   buf[len] = '\0';
   
