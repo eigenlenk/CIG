@@ -8,7 +8,7 @@ typedef struct {
 static window_message_t process_main_window(window_t *this) {
   static const char *tips[] = {
     "This is not actually Windows 95 but a little demo application to develop and test a C immediate-mode GUI library called CIG.",
-    "You can find the library on GitHub by visiting the World Wide Web link below:\n\nhttps://github.com/eigenlenk/cig\n\nMore text!",
+    "You can find the library on GitHub by visiting the World Wide Web link below:\n\nhttps://github.com/eigenlenk/cig",
     "A fatal exception 0E has occurred at 0F:DEADBEEF. The current application will be shot and terminated."
   };
 

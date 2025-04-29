@@ -301,7 +301,12 @@ CIG_INLINED void draw_rectangle(
   cig_rect_t rect,
   unsigned int border_width
 ) {
-  DrawRectangle(UNPACK_RECT(rect), *(Color*)fill_color);
+  if (fill_color) {
+    DrawRectangle(UNPACK_RECT(rect), *(Color*)fill_color);
+  }
+  if (border_color) {
+    DrawRectangleLinesEx(RAYLIB_RECT(rect), border_width, *(Color*)border_color);
+  }
 }
 
 CIG_INLINED void draw_line(

@@ -45,7 +45,7 @@ void cig_fill_color(cig_color_ref color) {
 }
 
 void cig_draw_line(cig_color_ref color, cig_vec2_t p0, cig_vec2_t p1, float thickness) {
-  if (!draw_line) { /* Log an error? */  return; }
+  if (!draw_line) { /* Log an error? */ return; }
   register const cig_vec2_t origin = cig_vec2_make(cig_absolute_rect().x, cig_absolute_rect().y);
   draw_line(color, cig_vec2_add(origin, p0), cig_vec2_add(origin, p1), thickness);
 }
