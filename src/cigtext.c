@@ -356,7 +356,7 @@ static int wrap_text_if_needed(
           prev_span->newlines = 1;
           prev_span->spacing_after = 0;
         }
-        if (!line_w) { /* This is the first span on this line, no line change needed */
+        if (*line_w == 0) { /* This is the first span on this line, no line change needed */
           label->bounds.w = CIG_MAX(label->bounds.w, bounds.x);
           new_span->newlines = 0;
           new_span->spacing_after = 0;
@@ -386,7 +386,7 @@ static int wrap_text_if_needed(
           .style_flags = props->style | style,
           .newlines = 0
         };
-        *line_w = *line_w + bounds.x+ellipsis_size.x;
+        *line_w += bounds.x+ellipsis_size.x;
         label->bounds.w = CIG_MAX(label->bounds.w, *line_w);
         return -1;
       };
@@ -400,16 +400,16 @@ static int wrap_text_if_needed(
         new_span->byte_len = slice.byte_len;
         new_span->bounds.w = bounds.x;
         new_span->bounds.h = bounds.y;
-        *line_w = *line_w + bounds.x;
+        *line_w += bounds.x;
         label->bounds.w = CIG_MAX(label->bounds.w, *line_w);
         return -1;
       };
     }
   } else {
     if (prev_span) {
-      *line_w = *line_w + prev_span->spacing_after;
+      *line_w += prev_span->spacing_after;
     }
-    *line_w = *line_w + bounds.x;
+    *line_w += bounds.x;
     label->bounds.w = CIG_MAX(label->bounds.w, *line_w);
   }
 
