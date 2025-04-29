@@ -76,6 +76,7 @@ int main(int argc, const char *argv[]) {
   load_texture(&images[IMAGE_GRAY_DITHER], "res/images/gray_dither.png");
   load_texture(&images[IMAGE_START_ICON], "res/images/start.png");
   load_texture(&images[IMAGE_MY_COMPUTER_16], "res/images/my_computer.png");
+  load_texture(&images[IMAGE_TIP_OF_THE_DAY], "res/images/tip_of_the_day.png");
 
   fonts[FONT_REGULAR].font = LoadFont("res/fonts/winr.fnt");
   fonts[FONT_REGULAR].baseline_offset = -2;

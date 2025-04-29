@@ -30,6 +30,7 @@ typedef enum {
   IMAGE_GRAY_DITHER,
   IMAGE_START_ICON,
   IMAGE_MY_COMPUTER_16,
+  IMAGE_TIP_OF_THE_DAY,
   __IMAGE_COUNT
 
 } image_id_t;
@@ -98,6 +99,7 @@ void win95_open_app(application_t);
 /* Components */
 
 bool standard_button(cig_rect_t, const char *);
+bool checkbox(cig_rect_t, bool *, const char *);
 window_message_t begin_window(window_t *);
 void end_window();
 

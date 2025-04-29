@@ -396,6 +396,12 @@ void cig_spacer(int size);
 /* Default layout function for stack and grid type */
 bool cig_default_layout_builder(cig_rect_t, cig_rect_t, cig_layout_params_t*, cig_rect_t*);
 
+bool cig_push_hstack(cig_rect_t, cig_insets_t, cig_layout_params_t);
+
+bool cig_push_vstack(cig_rect_t, cig_insets_t, cig_layout_params_t);
+
+bool cig_push_grid(cig_rect_t, cig_insets_t, cig_layout_params_t);
+
 /* ┌─────────────────────┐
 ───┤  BACKEND CALLBACKS  │
    └─────────────────────┘ */

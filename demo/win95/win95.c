@@ -281,6 +281,33 @@ bool standard_button(cig_rect_t rect, const char *title) {
   return clicked;
 }
 
+bool checkbox(cig_rect_t rect, bool *value, const char *text) {
+  CIG_HSTACK({
+    CIG_RECT(rect),
+    CIG_PARAMS({
+      CIG_SPACING(5)
+    })
+  }) {
+    CIG({ CIG_RECT(CIG_FILL_W(13)) }) {
+      CIG({
+        CIG_RECT(RECT_CENTERED_VERTICALLY(CIG_SIZED(13, 13)))
+      }) {
+        cig_fill_color(get_color(COLOR_WHITE));
+        cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
+        cig_draw_line(get_color(COLOR_BLACK), cig_vec2_make(2, 1), cig_vec2_make(11, 1), 1);
+        cig_draw_line(get_color(COLOR_BLACK), cig_vec2_make(2, 1), cig_vec2_make(2, 11), 1);
+        cig_draw_line(get_color(COLOR_DIALOG_BACKGROUND), cig_vec2_make(1, 11), cig_vec2_make(12, 11), 1);
+        cig_draw_line(get_color(COLOR_DIALOG_BACKGROUND), cig_vec2_make(12, 11), cig_vec2_make(12, 1), 1);
+      }
+    }
+    CIG(_) {
+      cig_label((cig_text_properties_t) {
+        .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
+      }, text);
+    }
+  }
+}
+
 window_message_t begin_window(window_t *wnd) {
   window_message_t msg = 0;
 

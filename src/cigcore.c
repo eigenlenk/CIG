@@ -553,6 +553,21 @@ bool cig_default_layout_builder(
 	return true;
 }
 
+bool cig_push_hstack(cig_rect_t rect, cig_insets_t insets, cig_layout_params_t params) {
+	params.axis = CIG_LAYOUT_AXIS_HORIZONTAL;
+	return cig_push_layout_function(&cig_default_layout_builder, rect, insets, params);
+}
+
+bool cig_push_vstack(cig_rect_t rect, cig_insets_t insets , cig_layout_params_t params) {
+	params.axis = CIG_LAYOUT_AXIS_VERTICAL;
+	return cig_push_layout_function(&cig_default_layout_builder, rect, insets, params);
+}
+
+bool cig_push_grid(cig_rect_t rect, cig_insets_t insets, cig_layout_params_t params) {
+	params.axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL;
+	return cig_push_layout_function(&cig_default_layout_builder, rect, insets, params);
+}
+
 /* ┌─────────────────────┐
 ───┤  BACKEND CALLBACKS  │
    └─────────────────────┘ */
