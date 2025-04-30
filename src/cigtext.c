@@ -24,12 +24,13 @@ static cig_text_render_callback_t render_callback = NULL;
 static cig_text_measure_callback_t measure_callback = NULL;
 static cig_font_query_callback_t font_query = NULL;
 static cig_font_ref default_font = 0;
+static cig_text_color_ref default_text_color = 0;
 static char printf_buf[CIG_LABEL_PRINTF_BUF_LENGTH];
 static struct { size_t count; cig_font_ref fonts[4]; } font_stack;
 static struct { size_t count; cig_text_color_ref colors[4]; } color_stack;
 static cig_text_style_t style;
 
-static void prepare_label(label_t *, cig_text_properties_t *, unsigned int, const char *);
+static void prepare_label(label_t *, const cig_text_properties_t *, const unsigned int, const char *);
 static span_t* create_span(label_t *, utf8_string, cig_font_ref, cig_text_color_ref, cig_text_style_t, cig_vec2_t);
 static void render_spans(span_t *, size_t, cig_font_ref, cig_text_color_ref, cig_text_horizontal_alignment_t, cig_text_vertical_alignment_t, bounds_t);
 static void wrap_text(utf8_string *, size_t, cig_vec2_t *, cig_text_overflow_t, cig_font_ref, cig_font_ref, cig_text_color_ref, cig_text_style_t, size_t, span_t *);
@@ -52,8 +53,12 @@ void cig_set_font_query_callback(cig_font_query_callback_t callback) {
 ───┤  TEXT DISPLAY  │
    └────────────────┘ */
 
-void cig_set_default_font(cig_font_ref font_ref) {
-  default_font = font_ref;
+void cig_set_default_font(cig_font_ref font) {
+  default_font = font;
+}
+
+void cig_set_default_text_color(cig_text_color_ref color) {
+  default_text_color = color;
 }
 
 void cig_label(cig_text_properties_t props, const char *text, ...) {
@@ -124,33 +129,25 @@ void cig_prepared_label(label_t *label) {
 
 static void prepare_label(
   label_t *label,
-  cig_text_properties_t *props,
-  unsigned int max_width,
+  const cig_text_properties_t *props,
+  const unsigned int max_width,
   const char *str
 ) {
   cig_id_t hash = cig_hash(str);
 
   if (label->hash != hash) {
-    if (!props->font) {
-      props->font = default_font;
-    }
-
-    if (props->alignment.horizontal == CIG_TEXT_ALIGN_DEFAULT) {
-      props->alignment.horizontal = CIG_TEXT_ALIGN_CENTER;
-    }
-
-    if (props->alignment.vertical == CIG_TEXT_ALIGN_DEFAULT) {
-      props->alignment.vertical = CIG_TEXT_ALIGN_MIDDLE;
-    }
-
     label->hash = hash;
     label->span_count = 0;
     label->bounds.w = 0;
     label->bounds.h = 0;
-    label->font = props->font;
-    label->color = props->color;
-    label->alignment.horizontal = props->alignment.horizontal;
-    label->alignment.vertical = props->alignment.vertical;
+    label->font = props->font ? props->font : default_font;
+    label->color = props->color ? props->color : default_text_color;
+    label->alignment.horizontal = props->alignment.horizontal == CIG_TEXT_ALIGN_DEFAULT
+      ? CIG_TEXT_ALIGN_CENTER
+      : props->alignment.horizontal;
+    label->alignment.vertical = props->alignment.vertical == CIG_TEXT_ALIGN_DEFAULT
+      ? CIG_TEXT_ALIGN_MIDDLE
+      : props->alignment.vertical;
 
     utf8_string utext = make_utf8_string(str);
     utf8_char_iter iter = make_utf8_char_iter(utext);
@@ -158,7 +155,7 @@ static void prepare_label(
     uint32_t cp;
     size_t i = 0, line_width = 0, line_count = 1;
 
-    cig_font_info_t base_font_info = font_query(props->font);
+    cig_font_info_t base_font_info = font_query(label->font);
 
     tag_parser_t tag_parser = { 0 };
     bool tag_stage_changed = false;
@@ -209,7 +206,7 @@ static void prepare_label(
         utf8_string slice = slice_utf8_string(utext, span.start, length);
         cig_text_color_ref color_override = color_stack.count > 0 ? color_stack.colors[color_stack.count-1] : 0;
         cig_font_ref font_override = font_stack.count > 0 ? font_stack.fonts[font_stack.count-1] : 0;
-        cig_font_ref display_font = font_override ? font_override : props->font;
+        cig_font_ref display_font = font_override ? font_override : label->font;
         cig_vec2_t bounds = measure_callback(slice.str, slice.byte_len, display_font, style);
         size_t newlines = is_newline ? 1 : 0;
 
@@ -308,7 +305,7 @@ static void wrap_text(
   utf8_string *slice,
   size_t text_length,
   cig_vec2_t *bounds,
-  cig_text_overflow_t overflow,
+  cig_text_overflow_t overflow_mode,
   cig_font_ref display_font,
   cig_font_ref font_override,
   cig_text_color_ref color_override,
@@ -316,12 +313,13 @@ static void wrap_text(
   size_t max_width,
   span_t *additional_span
 ) {
-switch (overflow) {
+  switch (overflow_mode) {
     case CIG_TEXT_SHOW_ELLIPSIS: {
       /* How much of the text overflows? */
       const cig_vec2_t ellipsis_size = measure_callback("...", 3, display_font, style);
       const double overflow = bounds->x - (max_width - ellipsis_size.x);
       const double truncation_amount = 1.0 - (overflow / bounds->x);
+      /* This is a guesstimate and may not still fit properly */
       int new_length = round((double)text_length * truncation_amount);
       *slice = slice_utf8_string(*slice, 0, new_length);
       *bounds = measure_callback(slice->str, slice->byte_len, display_font, style);
@@ -345,8 +343,14 @@ switch (overflow) {
       /* How much of the text overflows? */
       const double overflow = bounds->x - max_width;
       const double truncation_amount = 1.0 - (overflow / bounds->x);
-      *slice = slice_utf8_string(*slice, 0, round((double)text_length * truncation_amount));
+      int new_length = round((double)text_length * truncation_amount);
+      *slice = slice_utf8_string(*slice, 0, new_length);
       *bounds = measure_callback(slice->str, slice->byte_len, display_font, style);
+      while (new_length > 0 && bounds->x > max_width) { /* Shorten even more */
+        new_length -= 1;
+        *slice = slice_utf8_string(*slice, 0, new_length);
+        *bounds = measure_callback(slice->str, slice->byte_len, display_font, style);
+      }
     } break;
 
     default: break;

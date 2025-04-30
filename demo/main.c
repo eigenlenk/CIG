@@ -77,6 +77,7 @@ int main(int argc, const char *argv[]) {
   load_texture(&images[IMAGE_START_ICON], "res/images/start.png");
   load_texture(&images[IMAGE_MY_COMPUTER_16], "res/images/my_computer.png");
   load_texture(&images[IMAGE_TIP_OF_THE_DAY], "res/images/tip_of_the_day.png");
+  load_texture(&images[IMAGE_CHECKMARK], "res/images/check.png");
 
   fonts[FONT_REGULAR].font = LoadFont("res/fonts/winr.fnt");
   fonts[FONT_REGULAR].baseline_offset = -2;
@@ -119,8 +120,10 @@ int main(int argc, const char *argv[]) {
   cig_set_text_render_callback(&render_text);
   cig_set_text_measure_callback(&measure_text);
   cig_set_font_query_callback(&font_query);
+
   cig_set_default_font(&fonts[FONT_REGULAR]);
-  
+  cig_set_default_text_color(&colors[COLOR_BLACK]);
+
   cig_set_draw_image_callback(&draw_image);
   cig_set_panel_render_callback(&render_panel);
   cig_set_draw_rectangle_callback(&draw_rectangle);
@@ -198,7 +201,7 @@ CIG_INLINED void render_text(
   // printf("render: |%s|\n", buf);
   
   // DrawRectangle(UNPACK_RECT(rect), GREEN);
-  DrawTextEx(fs->font, buf, (Vector2) { rect.x, rect.y }, fs->font.baseSize, 0, color ? *(Color*)color : colors[COLOR_BLACK]);
+  DrawTextEx(fs->font, buf, (Vector2) { rect.x, rect.y }, fs->font.baseSize, 0, *(Color*)color);
 }
 
 CIG_INLINED cig_vec2_t measure_text(

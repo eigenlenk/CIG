@@ -31,6 +31,7 @@ typedef enum {
   IMAGE_START_ICON,
   IMAGE_MY_COMPUTER_16,
   IMAGE_TIP_OF_THE_DAY,
+  IMAGE_CHECKMARK,
   __IMAGE_COUNT
 
 } image_id_t;

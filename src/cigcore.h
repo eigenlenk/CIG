@@ -175,14 +175,15 @@ typedef enum {
 	/* `CIG_PRESS_INSIDE` option specifies whether the press has to start
 	within the bounds of this element. Otherwise it can start outside and the 
 	element reflects pressed state as soon as mouse moves onto it */
-  CIG_PRESS_INSIDE = CIG_BIT(0)
+  CIG_PRESS_INSIDE = CIG_BIT(0),
+  CIG_PRESS_DEFAULT_OPTIONS = CIG_PRESS_INSIDE
 } cig_press_flags_t;
 
 typedef enum {
-  CIG_CLICK_STARTS_INSIDE = CIG_BIT(0),
-  CIG_CLICK_ON_PRESS = CIG_BIT(1),
-  CIG_CLICK_EXPIRE = CIG_BIT(2),
-	CIG_CLICK_DEFAULT_OPTIONS = CIG_CLICK_STARTS_INSIDE
+   CIG_CLICK_STARTS_INSIDE = CIG_BIT(0),
+   CIG_CLICK_ON_PRESS = CIG_BIT(1),
+   CIG_CLICK_EXPIRE = CIG_BIT(2),
+   CIG_CLICK_DEFAULT_OPTIONS = CIG_CLICK_STARTS_INSIDE
 } cig_click_flags_t;
 
 typedef cig_rect_t cig_clip_rect_t;

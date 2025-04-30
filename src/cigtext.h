@@ -114,6 +114,8 @@ void cig_set_font_query_callback(cig_font_query_callback_t);
    
 void cig_set_default_font(cig_font_ref);
 
+void cig_set_default_text_color(cig_text_color_ref);
+
 /* */
 void cig_label(cig_text_properties_t, const char*, ...);
 

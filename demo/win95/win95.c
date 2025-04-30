@@ -2,6 +2,7 @@
 #include "apps/welcome/welcome.h"
 #include "time.h"
 #include "cigcorem.h"
+#include <stdio.h>
 
 #define TASKBAR_H 28
 
@@ -271,20 +272,37 @@ bool standard_button(cig_rect_t rect, const char *title) {
 }
 
 bool checkbox(cig_rect_t rect, bool *value, const char *text) {
+  bool toggled = false;
   CIG_HSTACK(
     rect,
     CIG_PARAMS({
       CIG_SPACING(5)
     })
   ) {
+    cig_enable_interaction();
+
+    if (!value) {
+      value = CIG_ALLOCATE(bool);
+    }
+
+    const bool pressed = cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_DEFAULT_OPTIONS);
+
+    if (cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DEFAULT_OPTIONS)) {
+      *value = !*value;
+    }
+
     CIG(RECT_AUTO_W(13)) {
       CIG(RECT_CENTERED_VERTICALLY(RECT_SIZED(13, 13))) {
-        cig_fill_color(get_color(COLOR_WHITE));
+        cig_fill_color(pressed ? get_color(COLOR_DIALOG_BACKGROUND) : get_color(COLOR_WHITE));
         cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
         cig_draw_line(get_color(COLOR_BLACK), cig_vec2_make(2, 1), cig_vec2_make(11, 1), 1);
         cig_draw_line(get_color(COLOR_BLACK), cig_vec2_make(2, 1), cig_vec2_make(2, 11), 1);
         cig_draw_line(get_color(COLOR_DIALOG_BACKGROUND), cig_vec2_make(1, 11), cig_vec2_make(12, 11), 1);
         cig_draw_line(get_color(COLOR_DIALOG_BACKGROUND), cig_vec2_make(12, 11), cig_vec2_make(12, 1), 1);
+
+        if (*value) {
+          cig_image(get_image(IMAGE_CHECKMARK), CIG_IMAGE_MODE_CENTER);
+        }
       }
     }
     CIG(_) {
@@ -293,6 +311,7 @@ bool checkbox(cig_rect_t rect, bool *value, const char *text) {
       }, text);
     }
   }
+  return toggled;
 }
 
 window_message_t begin_window(window_t *wnd) {
