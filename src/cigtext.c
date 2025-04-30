@@ -32,7 +32,7 @@ static cig_text_style_t style;
 static void prepare_label(label_t *, cig_text_properties_t *, unsigned int, const char *);
 static span_t* create_span(label_t *, utf8_string, cig_font_ref, cig_text_color_ref, cig_text_style_t, cig_vec2_t);
 static void render_spans(span_t *, size_t, cig_font_ref, cig_text_color_ref, cig_text_horizontal_alignment_t, cig_text_vertical_alignment_t, bounds_t);
-// static void wrap_text(label_t *, utf8_string, cig_text_properties_t *, span_t *, span_t *, size_t, size_t, cig_vec2_t, cig_font_ref, size_t *, unsigned int);
+static void wrap_text(utf8_string *, size_t, cig_vec2_t *, cig_text_overflow_t, cig_font_ref, cig_font_ref, cig_text_color_ref, cig_text_style_t, size_t, span_t *);
 static bool parse_tag(tag_parser_t*, utf8_char, uint32_t);
 static void apply_tag(tag_parser_t*);
 
@@ -121,55 +121,6 @@ void cig_prepared_label(label_t *label) {
 /* ╔════════════════════════════════════════════╗
    ║            INTERNAL FUNCTIONS              ║
    ╚════════════════════════════════════════════╝ */
-
-static void wrap_text(
-  utf8_string *slice,
-  size_t text_length,
-  cig_vec2_t *bounds,
-  cig_text_overflow_t overflow,
-  cig_font_ref display_font,
-  cig_font_ref font_override,
-  cig_text_color_ref color_override,
-  cig_text_style_t style,
-  size_t max_width,
-  span_t *additional_span
-) {
-switch (overflow) {
-    case CIG_TEXT_SHOW_ELLIPSIS: {
-      /* How much of the text overflows? */
-      const cig_vec2_t ellipsis_size = measure_callback("...", 3, display_font, style);
-      const double overflow = bounds->x - (max_width - ellipsis_size.x);
-      const double truncation_amount = 1.0 - (overflow / bounds->x);
-      int new_length = round((double)text_length * truncation_amount);
-      *slice = slice_utf8_string(*slice, 0, new_length);
-      *bounds = measure_callback(slice->str, slice->byte_len, display_font, style);
-      while (new_length > 0 && bounds->x + ellipsis_size.x > max_width) { /* Shorten even more */
-        new_length -= 1;
-        *slice = slice_utf8_string(*slice, 0, new_length);
-        *bounds = measure_callback(slice->str, slice->byte_len, display_font, style);
-      }
-      *additional_span = (span_t) { 
-        .str = "...",
-        .font = font_override,
-        .color = color_override,
-        .bounds = { ellipsis_size.x, ellipsis_size.y },
-        .byte_len = 3,
-        .style_flags = style,
-        .newlines = 0
-      };
-    } break;
-
-    case CIG_TEXT_TRUNCATE: {
-      /* How much of the text overflows? */
-      const double overflow = bounds->x - max_width;
-      const double truncation_amount = 1.0 - (overflow / bounds->x);
-      *slice = slice_utf8_string(*slice, 0, round((double)text_length * truncation_amount));
-      *bounds = measure_callback(slice->str, slice->byte_len, display_font, style);
-    } break;
-
-    default: break;
-  }
-}
 
 static void prepare_label(
   label_t *label,
@@ -350,6 +301,55 @@ static void prepare_label(
     line_count = CIG_MAX(1, line_count);
     label->line_count = line_count;
     label->bounds.h = (line_count * base_font_info.height) + (line_count - 1) * base_font_info.line_spacing;
+  }
+}
+
+static void wrap_text(
+  utf8_string *slice,
+  size_t text_length,
+  cig_vec2_t *bounds,
+  cig_text_overflow_t overflow,
+  cig_font_ref display_font,
+  cig_font_ref font_override,
+  cig_text_color_ref color_override,
+  cig_text_style_t style,
+  size_t max_width,
+  span_t *additional_span
+) {
+switch (overflow) {
+    case CIG_TEXT_SHOW_ELLIPSIS: {
+      /* How much of the text overflows? */
+      const cig_vec2_t ellipsis_size = measure_callback("...", 3, display_font, style);
+      const double overflow = bounds->x - (max_width - ellipsis_size.x);
+      const double truncation_amount = 1.0 - (overflow / bounds->x);
+      int new_length = round((double)text_length * truncation_amount);
+      *slice = slice_utf8_string(*slice, 0, new_length);
+      *bounds = measure_callback(slice->str, slice->byte_len, display_font, style);
+      while (new_length > 0 && bounds->x + ellipsis_size.x > max_width) { /* Shorten even more */
+        new_length -= 1;
+        *slice = slice_utf8_string(*slice, 0, new_length);
+        *bounds = measure_callback(slice->str, slice->byte_len, display_font, style);
+      }
+      *additional_span = (span_t) { 
+        .str = "...",
+        .font = font_override,
+        .color = color_override,
+        .bounds = { ellipsis_size.x, ellipsis_size.y },
+        .byte_len = 3,
+        .style_flags = style,
+        .newlines = 0
+      };
+    } break;
+
+    case CIG_TEXT_TRUNCATE: {
+      /* How much of the text overflows? */
+      const double overflow = bounds->x - max_width;
+      const double truncation_amount = 1.0 - (overflow / bounds->x);
+      *slice = slice_utf8_string(*slice, 0, round((double)text_length * truncation_amount));
+      *bounds = measure_callback(slice->str, slice->byte_len, display_font, style);
+    } break;
+
+    default: break;
   }
 }
 
