@@ -17,6 +17,8 @@ static struct font_store {
 static Color colors[__COLOR_COUNT];
 static int panel_styles[__PANEL_COUNT];
 static Texture2D images[__IMAGE_COUNT];
+static Shader blue_dither_shader;
+static bool dithering_shader_enabled = false;
 
 /* Core API */
 static void set_clip_rect(cig_buffer_ref, cig_rect_t, bool);
@@ -60,6 +62,10 @@ void* get_panel(panel_id_t id) {
   return &panel_styles[id];
 }
 
+void enable_blue_selection_dithering(bool enabled) {
+  dithering_shader_enabled = enabled;
+}
+
 CIG_INLINED void load_texture(Texture2D *dst, const char *path) {
   *dst = LoadTexture(path);
   SetTextureFilter(*dst, TEXTURE_FILTER_POINT);
@@ -81,6 +87,8 @@ int main(int argc, const char *argv[]) {
   load_texture(&images[IMAGE_CHECKMARK], "res/images/check.png");
   load_texture(&images[IMAGE_WELCOME_APP_ICON], "res/images/welcome.png");
   load_texture(&images[IMAGE_BIN_EMPTY], "res/images/bin_empty.png");
+
+  blue_dither_shader = LoadShader(0, "res/shaders/blue_dither.fs");
 
   fonts[FONT_REGULAR].font = LoadFont("res/fonts/winr.fnt");
   fonts[FONT_REGULAR].baseline_offset = -2;
@@ -332,6 +340,10 @@ CIG_INLINED void draw_image(
 ) {
   Texture2D *tex = (Texture2D *)image;
 
+  if (dithering_shader_enabled) {
+    BeginShaderMode(blue_dither_shader);
+  }
+
   if (mode == CIG_IMAGE_MODE_ASPECT_FIT) {
     const float srcAspect = tex->width / tex->height;
     const float dstAspect = (float)rect.w / rect.h;
@@ -391,5 +403,9 @@ CIG_INLINED void draw_image(
       rect.y+(rect.h-tex->height)*positions[mode-CIG_IMAGE_MODE_CENTER].y,
       WHITE
     ); 
+  }
+
+  if (dithering_shader_enabled) {
+    EndShaderMode();
   }
 }

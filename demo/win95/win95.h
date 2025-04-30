@@ -90,6 +90,8 @@ void* get_font(font_id_t);
 void* get_color(color_id_t);
 void* get_image(image_id_t);
 void* get_panel(panel_id_t);
+/* Applies a dark blue checkerboard dither to following image draw calls */
+void enable_blue_selection_dithering(bool);
 
 typedef struct {
   /* Private */

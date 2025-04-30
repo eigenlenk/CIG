@@ -98,7 +98,7 @@ static bool do_desktop_icon(int icon, const char *title) {
     CIG_SPACING(6)
   })) {
     cig_enable_interaction();
- 
+
     double_clicked = cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DEFAULT_OPTIONS | CIG_CLICK_DOUBLE);
 
     CIG(RECT_AUTO_H(32)) {
@@ -124,9 +124,12 @@ static void do_desktop_icons() {
     return;
   }
 
+  enable_blue_selection_dithering(true);
   if (do_desktop_icon(IMAGE_MY_COMPUTER_32, "My Computer")) {
     printf("Open 'My Computer'\n");
   }
+  enable_blue_selection_dithering(false);
+  
   do_desktop_icon(IMAGE_BIN_EMPTY, "Recycle Bin");
   do_desktop_icon(IMAGE_WELCOME_APP_ICON, "Welcome");
 
