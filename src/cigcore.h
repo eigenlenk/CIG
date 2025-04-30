@@ -26,6 +26,7 @@ DECLARE_RECT_T   (int, cig_rect, cig_vec2, cig_insets) /* Declares `cig_rect_t` 
 #define RECT_AUTO_H(H) cig_rect_make(0, 0, CIG_AUTO_BIT, H)
 #define RECT_AUTO_W_OFFSET(W) cig_rect_make(0, 0, CIG_AUTO_BIT+W, CIG_AUTO_BIT)
 #define RECT_AUTO_H_OFFSET(H) cig_rect_make(0, 0, CIG_AUTO_BIT, CIG_AUTO_BIT+H)
+#define RECT(X, Y, W, H) cig_rect_make(X, Y, W, H)
 
 /* All layout element get a unique ID that tries to be unique across frames, but no promises.
    See `cig_next_id` how to definitely keep things consistent */

@@ -255,9 +255,11 @@ bool standard_button(cig_rect_t rect, const char *title) {
     
     cig_fill_panel(get_panel(PANEL_BUTTON), pressed ? CIG_PANEL_PRESSED : 0);
     
-    if (cig_push_frame_insets(RECT_AUTO,  pressed ? cig_insets_make(1, 3, -1, 2) : cig_insets_make(0, 1, 0, 2))) {
+    if (cig_push_frame_insets(RECT_AUTO,  pressed ? cig_insets_make(2, 3, 1, 2) : cig_insets_make(1, 1, 2, 2))) {
       cig_label((cig_text_properties_t) {
-        .font = get_font(FONT_REGULAR)
+        .font = get_font(FONT_REGULAR),
+        .max_lines = 1,
+        .overflow = CIG_TEXT_SHOW_ELLIPSIS
       }, title);
       cig_pop_frame();
     }

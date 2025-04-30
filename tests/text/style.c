@@ -86,7 +86,7 @@ TEST(text_style, font_override) {
   }, "Overriding font for <font=%x>IMPACT</font>", &fonts[1]);
   
   TEST_ASSERT_EQUAL_PTR(&fonts[0], spans.info[0].font); /* Default font */
-  TEST_ASSERT_EQUAL_PTR(&fonts[1], spans.info[3].font); /* Override */
+  TEST_ASSERT_EQUAL_PTR(&fonts[1], spans.info[1].font); /* Override */
 }
 
 TEST(text_style, color_override) {  
@@ -96,8 +96,9 @@ TEST(text_style, color_override) {
     .flags = CIG_TEXT_FORMATTED
   }, "Roll out the <color=%x>red</color> carpet", &red_color);
   
-  TEST_ASSERT_NULL(spans.info[0].color);
-  TEST_ASSERT_EQUAL_PTR(&red_color, spans.info[3].color); /* Override */
+  TEST_ASSERT_NULL(spans.info[0].color); /* "Roll out the " */
+  TEST_ASSERT_EQUAL_PTR(&red_color, spans.info[1].color); /* "red" */
+  TEST_ASSERT_NULL(spans.info[2].color); /* " carpet" */
 }
 
 TEST(text_style, bold) {  
@@ -159,8 +160,7 @@ TEST(text_style, unclosed_tag) {
   }, "Roll out the <color=%x>red carpet", &red_color);
   
   TEST_ASSERT_NULL(spans.info[0].color);
-  TEST_ASSERT_EQUAL_PTR(&red_color, spans.info[3].color); /* Override */
-  TEST_ASSERT_EQUAL_PTR(&red_color, spans.info[4].color); /* Override */
+  TEST_ASSERT_EQUAL_PTR(&red_color, spans.info[1].color); /* Override */
 }
 
 TEST(text_style, unknown_tag) {  
@@ -168,7 +168,7 @@ TEST(text_style, unknown_tag) {
   
   cig_label((cig_text_properties_t) {
     .flags = CIG_TEXT_FORMATTED
-  }, "<rainbow>Rain+sun</rainbow>", &red_color);
+  }, "<rainbow>Rain+sun</rainbow>");
   
   TEST_ASSERT_EQUAL_STRING("Rain+sun", spans.info[0].str);
 }

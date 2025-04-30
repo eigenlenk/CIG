@@ -5,7 +5,7 @@
 
 /* Label is a single line of text and a span is basically a word
    that can have its properties overriden */
-#define CIG_LABEL_SPANS_MAX 256
+#define CIG_LABEL_SPANS_MAX 64
 #define CIG_LABEL_PRINTF_BUF_LENGTH 512
 
 typedef void* cig_font_ref;
@@ -43,6 +43,13 @@ typedef enum {
 
 } cig_text_style_t;
 
+typedef enum {
+  CIG_TEXT_OVERFLOW = 0,    /* Text is allowed to flow out of bounds */
+  CIG_TEXT_TRUNCATE,        /* The last non-fitting word is truncated */
+  CIG_TEXT_SHOW_ELLIPSIS
+
+} cig_text_overflow_t;
+
 typedef struct {
   cig_font_ref font;
   cig_text_color_ref color;
@@ -50,11 +57,8 @@ typedef struct {
     cig_text_horizontal_alignment_t horizontal;
     cig_text_vertical_alignment_t vertical;
   } alignment;
-  enum {
-    CIG_TEXT_WORD_WRAP = 0,
-    CIG_TEXT_SHOW_ELLIPSIS,
-    CIG_TEXT_TRUNCATE
-  } overflow;
+  int max_lines;
+  cig_text_overflow_t overflow;
   enum {
     CIG_TEXT_FORMATTED = CIG_BIT(0)
   } flags;
@@ -62,13 +66,15 @@ typedef struct {
 
 } cig_text_properties_t;
 
+/* Span is an atomic text component, a piece of text that runs until
+   the horizontal bounds of the label, or until some property of the
+   text changes (font, color, link etc.) */
 typedef struct {
   const char *str;                        /* 4 */
   cig_font_ref font;                      /* 4 */
   cig_text_color_ref color;               /* 4 */
   struct { unsigned short w, h; } bounds; /* 4 */
   unsigned char byte_len;                 /* 1 */
-  unsigned char spacing_after;            /* 1 */
   unsigned char style_flags;              /* 1 */
   unsigned char newlines;                 /* 1 */
 
@@ -85,6 +91,7 @@ typedef struct {
   } alignment;
   struct { unsigned short w, h; } bounds; /* 4 */
   unsigned char span_count;               /* 1 */
+  unsigned char line_count;               /* 1 */
 
 } label_t;                                /* 330 bytes total */
 

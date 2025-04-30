@@ -8,7 +8,7 @@ typedef struct {
 static window_message_t process_main_window(window_t *this) {
   static const char *tips[] = {
     "This is not actually Windows 95 but a little demo application to develop and test a C immediate-mode GUI library called CIG.",
-    "You can find the library on GitHub by visiting the World Wide Web link below:\n\nhttps://github.com/eigenlenk/cig",
+    "You can find the library on GitHub by visiting the World Wide Web link below:\n\nhttps://github.com/eigenlenk/cig\n\nMore text!",
     "A fatal exception 0E has occurred at 0F:DEADBEEF. The current application will be shot and terminated."
   };
 
@@ -27,6 +27,7 @@ static window_message_t process_main_window(window_t *this) {
           .font = get_font(FONT_TIMES_NEW_ROMAN_32_BOLD),
           .color = get_color(COLOR_BLACK),
           .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
+          .max_lines = 1,
           .flags = CIG_TEXT_FORMATTED
         },
         "Welcome to <font=%x>Windows</font><font=%x><color=%x>95</color></font>",
@@ -72,7 +73,7 @@ static window_message_t process_main_window(window_t *this) {
       if (cig_push_vstack(_, cig_insets_zero(), (cig_layout_params_t) { .spacing = 6, .height = 23 })) {
         standard_button(_, "What's New");
         standard_button(_, "Online Registration");
-        if (standard_button(_, "Next Tip")) {
+        if (standard_button(_, "Next Tip long button title")) {
           window_data->tip_index = (window_data->tip_index+1)%3;
         }
         cig_spacer(58);
