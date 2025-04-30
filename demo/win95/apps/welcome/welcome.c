@@ -13,9 +13,7 @@ static window_message_t process_main_window(window_t *this) {
   };
 
 	window_data_t *window_data = (window_data_t*)this->data;
-	window_message_t msg = 0;
-
-	begin_window(this);
+	window_message_t msg = begin_window(this);
 
 	/* Main vertical stack */
 	if (cig_push_vstack(RECT_AUTO, cig_insets_make(14, 16, 10, 16), (cig_layout_params_t) { .spacing = 12 })) {
@@ -89,7 +87,9 @@ static window_message_t process_main_window(window_t *this) {
     /* Row 3: Checkbox and close button */
     if (cig_push_hstack(RECT_AUTO, cig_insets_zero(), (cig_layout_params_t) { .spacing = 12 })) {
 			checkbox(RECT_AUTO_W(330), NULL, "Show this Welcome Screen next time you start Windows");
-			standard_button(RECT_AUTO_H(23), "Close");
+			if (standard_button(RECT_AUTO_H(23), "Close")) {
+        msg = WINDOW_CLOSE;
+      }
 			cig_pop_frame();
 		}
 
@@ -106,6 +106,7 @@ application_t welcome_app() {
   data->tip_index = 0;
 
 	return (application_t) {
+    .id = "welcome",
 		.windows = {
 			(window_t) {
 				.proc = &process_main_window,

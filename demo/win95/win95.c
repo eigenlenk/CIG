@@ -219,10 +219,21 @@ static void run_apps() {
       }
     }
   }
+
+  /* Remove closed apps */
+  for (i = 0; i < this->running_apps; ++i) {
+    if (this->applications[i].closed) {
+      for (j = i+1; j < this->running_apps; ++j) {
+        this->applications[j-1] = this->applications[j];
+      }
+      this->running_apps--;
+    }
+  }
 }
 
 static void close_application(application_t *app) {
   app->proc = NULL;
+  app->closed = true;
   if (app->data) {
     free(app->data);
     app->data = NULL;

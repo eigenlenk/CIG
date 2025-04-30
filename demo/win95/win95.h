@@ -73,9 +73,11 @@ typedef struct window_t {
 } window_t;
 
 typedef struct application_t {
+  char id[16];
   application_proc_t proc;
   void *data;
   window_t windows[1];
+  bool closed;
 
 } application_t;
 
@@ -91,6 +93,7 @@ typedef struct {
   application_t applications[WIN95_APPS_MAX];
   size_t running_apps;
   window_t *selected_window;
+
 } win95_t;
 
 void start_win95(win95_t *);
