@@ -132,7 +132,7 @@ int main(int argc, const char *argv[]) {
   cig_set_draw_rectangle_callback(&draw_rectangle);
   cig_set_draw_line_callback(&draw_line);
   
-  cig_begin_layout(&ctx, NULL, cig_rect_make(0, 0, 640, 480));
+  cig_begin_layout(&ctx, NULL, cig_rect_make(0, 0, 640, 480), 0.f);
 
   win95_t win_instance = { 0 };
   start_win95(&win_instance);
@@ -144,7 +144,7 @@ int main(int argc, const char *argv[]) {
     BeginDrawing();
 
     BeginTextureMode(render_texture);
-    cig_begin_layout(&ctx, NULL, cig_rect_make(0, 0, 640, 480));
+    cig_begin_layout(&ctx, NULL, cig_rect_make(0, 0, 640, 480), GetFrameTime());
     
     cig_set_input_state(
       cig_vec2_make(GetMouseX()/2, GetMouseY()/2),

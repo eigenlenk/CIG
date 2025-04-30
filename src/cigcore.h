@@ -28,6 +28,8 @@ DECLARE_RECT_T   (int, cig_rect, cig_vec2, cig_insets) /* Declares `cig_rect_t` 
 #define RECT_AUTO_H_OFFSET(H) cig_rect_make(0, 0, CIG_AUTO_BIT, CIG_AUTO_BIT+H)
 #define RECT(X, Y, W, H) cig_rect_make(X, Y, W, H)
 
+#define CIG_CLICK_EXPIRE_IN_SECONDS 0.5f
+
 /* All layout element get a unique ID that tries to be unique across frames, but no promises.
    See `cig_next_id` how to definitely keep things consistent */
 typedef unsigned long cig_id_t;
@@ -148,10 +150,10 @@ typedef struct {
 	cig_vec2_t position;
   
 	enum {
-		NEITHER,	/* Button was neither pressed or released */
-		BEGAN,		/* Button was pressed down (click started) */
-		ENDED,		/* Button was released this (click ended) */
-		EXPIRED		/* Button was held longer than deemed appropriate */
+		NEITHER,  /* Button was neither pressed or released */
+		BEGAN,    /* Button was pressed down (click started) */
+		ENDED,    /* Button was released this (click ended) */
+		EXPIRED   /* Button was held longer than deemed appropriate */
 	} click_state;
   
 	struct {
@@ -165,7 +167,9 @@ typedef struct {
                   other elements should not be highlighted even if hovered while moving */
 	
 	/* PRIVATE: */								
-	unsigned int _press_start_tick;
+	float _press_start_time,
+         _click_end_time;
+   unsigned int _click_count;
 	cig_id_t _press_target_id, /* Element that was focused when button press began */
            _target_prev_tick,
            _target_this_tick;
@@ -183,6 +187,7 @@ typedef enum {
    CIG_CLICK_STARTS_INSIDE = CIG_BIT(0),
    CIG_CLICK_ON_PRESS = CIG_BIT(1),
    CIG_CLICK_EXPIRE = CIG_BIT(2),
+   CIG_CLICK_DOUBLE = CIG_BIT(3),
    CIG_CLICK_DEFAULT_OPTIONS = CIG_CLICK_STARTS_INSIDE
 } cig_click_flags_t;
 
@@ -211,6 +216,8 @@ typedef struct {
   cig_input_state_t input_state;
   cig_insets_t default_insets;
   cig_id_t next_id;
+  float delta_time,
+        elapsed_time;
   unsigned int tick;
   struct {
     cig_id_t id;
@@ -236,7 +243,7 @@ typedef struct {
 void cig_init_context(cig_context_t*);
 
 /* */
-void cig_begin_layout(cig_context_t*, CIG_OPTIONAL(cig_buffer_ref), cig_rect_t);
+void cig_begin_layout(cig_context_t*, CIG_OPTIONAL(cig_buffer_ref), cig_rect_t, float);
 
 /* */
 void cig_end_layout();

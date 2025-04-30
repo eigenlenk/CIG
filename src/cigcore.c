@@ -44,6 +44,7 @@ void cig_init_context(cig_context_t *context) {
   context->input_state = (cig_input_state_t) { 0 };
   context->next_id = 0;
   context->tick = 1;
+  context->elapsed_time = 0.f;
   
 	for (int i = 0; i < CIG_STATES_MAX; ++i) {
     context->state_list[i].id = 0;
@@ -59,13 +60,15 @@ void cig_init_context(cig_context_t *context) {
 void cig_begin_layout(
   cig_context_t *context,
   const cig_buffer_ref buffer,
-  const cig_rect_t rect
+  const cig_rect_t rect,
+  const float delta_time
 ) {
   current = context;
   
   current->frames.clear(&current->frames);
   current->buffers.clear(&current->buffers);
-  
+  current->delta_time = delta_time;
+  current->elapsed_time += delta_time;
   current->default_insets = cig_insets_zero();
   
   current->frames.push(&current->frames, (cig_frame_t) {
@@ -230,7 +233,7 @@ void cig_set_input_state(
 	current->input_state.action_mask = action_mask;
 
 	current->input_state.click_state = (!current->input_state.action_mask && previous_action_mask)
-		? (current->tick - current->input_state._press_start_tick) < 12
+		? (current->elapsed_time - current->input_state._press_start_time) <= CIG_CLICK_EXPIRE_IN_SECONDS
 			? ENDED
 			: EXPIRED
 		: (action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT && !(previous_action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT)) || (action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT && !(previous_action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT))
@@ -255,10 +258,32 @@ void cig_set_input_state(
 		current->input_state.last_action_ended = 0;
 	}
 
-	if (current->input_state.click_state == BEGAN) {
-		current->input_state._press_start_tick = current->tick;
-		current->input_state._press_target_id = current->input_state._target_prev_tick;
+	switch (current->input_state.click_state) {
+	case NEITHER:
+		{
+			if (current->input_state._click_count && current->elapsed_time - current->input_state._click_end_time > CIG_CLICK_EXPIRE_IN_SECONDS) {
+				current->input_state._click_count = 0;
+			}
+		} break;
+
+	case BEGAN:
+		{
+			current->input_state._press_start_time = current->elapsed_time;
+			current->input_state._press_target_id = current->input_state._target_prev_tick;
+		} break;
+
+	case ENDED:
+		{
+			current->input_state._click_count ++;
+			current->input_state._click_end_time = current->elapsed_time;
+		} break;
+
+	case EXPIRED:
+		{
+			current->input_state._click_count = 0;
+		} break;
 	}
+
 
 	if (current->input_state.action_mask) {
 		if (!current->input_state.drag.active) {
@@ -317,17 +342,25 @@ cig_input_action_type_t cig_clicked(
 		return 0;
 	}
 	
+	cig_input_action_type_t result;
+
 	if (options & CIG_CLICK_ON_PRESS) {
-		cig_input_action_type_t result;
 		if (current->input_state.click_state == BEGAN && (result = actions & current->input_state.action_mask)) {
 			return result;
 		}
 	} else {
-		if (current->input_state.click_state == ENDED || (current->input_state.click_state == EXPIRED && !(options & CIG_CLICK_EXPIRE))) {
+		const bool requires_double_click = options & CIG_CLICK_DOUBLE;
+		if (
+			(current->input_state.click_state == ENDED && (!requires_double_click || (requires_double_click && current->input_state._click_count == 2))) ||
+			(current->input_state.click_state == EXPIRED && !(options & CIG_CLICK_EXPIRE))
+		) {
 			if (options & CIG_CLICK_STARTS_INSIDE && current->input_state._press_target_id != cig_frame()->id) {
 				return 0;
 			}
-			return actions & current->input_state.last_action_ended;
+			if ((result = actions & current->input_state.last_action_ended)) {
+				current->input_state._click_count = 0;
+				return result;
+			}
 		}
 	}
 	

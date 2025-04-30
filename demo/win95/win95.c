@@ -91,10 +91,16 @@ static bool start_button(cig_rect_t rect) {
   return clicked;
 }
 
-static void do_desktop_icon(int icon, const char *title) {
+static bool do_desktop_icon(int icon, const char *title) {
+  bool double_clicked = false;
+
   CIG_VSTACK(RECT_AUTO, CIG_INSETS(cig_insets_make(2, 2, 2, 0)), CIG_PARAMS({
     CIG_SPACING(6)
   })) {
+    cig_enable_interaction();
+ 
+    double_clicked = cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DEFAULT_OPTIONS | CIG_CLICK_DOUBLE);
+
     CIG(RECT_AUTO_H(32)) {
       cig_image(get_image(icon), CIG_IMAGE_MODE_TOP);
     }
@@ -105,6 +111,8 @@ static void do_desktop_icon(int icon, const char *title) {
       }, title);
     }
   }
+
+  return double_clicked;
 }
 
 static void do_desktop_icons() {
@@ -116,7 +124,9 @@ static void do_desktop_icons() {
     return;
   }
 
-  do_desktop_icon(IMAGE_MY_COMPUTER_32, "My Computer");
+  if (do_desktop_icon(IMAGE_MY_COMPUTER_32, "My Computer")) {
+    printf("Open 'My Computer'\n");
+  }
   do_desktop_icon(IMAGE_BIN_EMPTY, "Recycle Bin");
   do_desktop_icon(IMAGE_WELCOME_APP_ICON, "Welcome");
 

@@ -13,7 +13,7 @@ TEST_SETUP(core_layout) {
   cig_init_context(&ctx);
     
   /* Begin laying out a screen that's 640 by 480 */
-	cig_begin_layout(&ctx, &main_buffer, cig_rect_make(0, 0, 640, 480));
+	cig_begin_layout(&ctx, &main_buffer, cig_rect_make(0, 0, 640, 480), 0.1f);
 }
 
 TEST_TEAR_DOWN(core_layout) {
@@ -799,11 +799,10 @@ TEST(core_layout, main_screen_subregion) {
 	
 	/* .. and start a new UI. Lets imagine we have a larger game screen but only want to render
 	   the UI in the bottom half of it. So on our 640x480 screen the Y and H would both be 240 */
-	cig_begin_layout(&ctx, &main_buffer, cig_rect_make(0, 240, 640, 240));
+	cig_begin_layout(&ctx, &main_buffer, cig_rect_make(0, 240, 640, 240), 0.1f);
 	
 	/* The UI should be clipped within that larger screen */
 	TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 240, 640, 240), cig_frame()->clipped_rect);
-	
 	
 	cig_push_frame(RECT_AUTO);
 	

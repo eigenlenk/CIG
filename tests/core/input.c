@@ -13,7 +13,7 @@ TEST_SETUP(core_input) {
 TEST_TEAR_DOWN(core_input) {}
 
 static void begin() {
-	cig_begin_layout(&ctx, NULL, cig_rect_make(0, 0, 640, 480));
+	cig_begin_layout(&ctx, NULL, cig_rect_make(0, 0, 640, 480), 0.1f);
 }
 
 static void end() {
