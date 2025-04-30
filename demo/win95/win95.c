@@ -91,9 +91,42 @@ static bool start_button(cig_rect_t rect) {
   return clicked;
 }
 
+static void do_desktop_icon(int icon, const char *title) {
+  CIG_VSTACK(RECT_AUTO, CIG_INSETS(cig_insets_make(2, 2, 2, 0)), CIG_PARAMS({
+    CIG_SPACING(6)
+  })) {
+    CIG(RECT_AUTO_H(32)) {
+      cig_image(get_image(icon), CIG_IMAGE_MODE_TOP);
+    }
+    CIG(_) {
+      cig_label((cig_text_properties_t) {
+        .color = get_color(COLOR_WHITE),
+        .alignment.vertical = CIG_TEXT_ALIGN_TOP
+      }, title);
+    }
+  }
+}
+
+static void do_desktop_icons() {
+  if (!cig_push_grid(RECT_AUTO, cig_insets_zero(), (cig_layout_params_t) {
+    .width = 75,
+    .height = 75,
+    .direction = CIG_LAYOUT_DIRECTION_VERTICAL
+  })) {
+    return;
+  }
+
+  do_desktop_icon(IMAGE_MY_COMPUTER_32, "My Computer");
+  do_desktop_icon(IMAGE_BIN_EMPTY, "Recycle Bin");
+  do_desktop_icon(IMAGE_WELCOME_APP_ICON, "Welcome");
+
+  cig_pop_frame();
+}
+
 static void do_desktop() {
   if (cig_push_frame(cig_rect_make(0, 0, CIG_W, CIG_H - TASKBAR_H))) {
     cig_fill_color(get_color(COLOR_DESKTOP));
+    do_desktop_icons();
     cig_pop_frame();
   }
 }
