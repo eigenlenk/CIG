@@ -356,6 +356,27 @@ bool standard_button(cig_rect_t rect, const char *title) {
   return clicked;
 }
 
+bool icon_button(cig_rect_t rect, image_id_t image_id) {
+  bool clicked = false;
+  
+  CIG(rect) {
+    cig_enable_interaction();
+    
+    const bool pressed = cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE);
+    
+    cig_fill_panel(get_panel(PANEL_BUTTON), pressed ? CIG_PANEL_PRESSED : 0);
+    
+    if (cig_push_frame_insets(RECT_AUTO, pressed ? cig_insets_make(3, 3, 1, 1) : cig_insets_make(2, 2, 2, 2))) {
+      cig_image(get_image(image_id), CIG_IMAGE_MODE_CENTER);
+      cig_pop_frame();
+    }
+    
+    clicked = cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DEFAULT_OPTIONS);
+  }
+  
+  return clicked;
+}
+
 bool checkbox(cig_rect_t rect, bool *value, const char *text) {
   bool toggled = false;
   CIG_HSTACK(
@@ -448,7 +469,7 @@ window_message_t begin_window(window_t *wnd) {
       .alignment.vertical = CIG_TEXT_ALIGN_MIDDLE
     }, wnd->title);
     
-    if (standard_button(cig_rect_make(CIG_W_INSET - 16, 0, 16, CIG_AUTO_BIT), "X")) {
+    if (icon_button(cig_rect_make(CIG_W_INSET - 16, 0, 16, CIG_AUTO_BIT), IMAGE_CROSS)) {
       msg = WINDOW_CLOSE;
     }
   }

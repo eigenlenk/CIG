@@ -31,7 +31,7 @@ void cig_set_draw_line_callback(cig_draw_line_callback_t f) {
 
 void cig_image(cig_image_ref image, cig_image_mode_t mode) {
   if (!draw_image) { /* Log an error? */ return; }
-  draw_image(cig_buffer(), cig_absolute_rect(), image, mode);
+  draw_image(cig_buffer(), cig_rect_inset(cig_absolute_rect(), cig_frame()->insets), image, mode);
 }
 
 void cig_fill_panel(cig_panel_ref panel, cig_panel_modifiers_t modifiers) {

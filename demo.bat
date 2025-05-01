@@ -1,4 +1,4 @@
 @ECHO off
 cd bin
-raylib-demo.exe
+win95.exe
 cd ..

@@ -92,7 +92,7 @@ int main(int argc, char **argv)
   }
   
   if (targets_included & TARGET_RAYLIB_DEMO) {
-    nob_copy_directory_recursively(DEMO_FOLDER"res", BIN_FOLDER"res");
+    nob_copy_directory_recursively(DEMO_FOLDER"win95/res", BIN_FOLDER"res");
     
     nob_cmd_append(
       &cmd,
@@ -107,13 +107,13 @@ int main(int argc, char **argv)
       
       "-DDEBUG",
 
-      "-o", BIN_FOLDER"raylib-demo",
+      "-o", BIN_FOLDER"win95",
 
       DEPS_FOLDER"utf8/utf8.c",
       SRC_FOLDER"cigcore.c",
       SRC_FOLDER"cigtext.c",
       SRC_FOLDER"ciggfx.c",
-      DEMO_FOLDER"main.c",
+      DEMO_FOLDER"win95/main.c",
       DEMO_FOLDER"win95/win95.c",
       DEMO_FOLDER"win95/apps/welcome/welcome.c",
       
