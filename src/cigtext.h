@@ -12,8 +12,7 @@ typedef void* cig_text_color_ref;
 typedef struct {
   int height,
       line_spacing,
-      baseline_offset,
-      word_spacing;
+      baseline_offset;
 } cig_font_info_t;
 
 #define CIG_TEXT_ALIGN_DEFAULT 0
@@ -76,14 +75,14 @@ typedef struct {
   struct {
     cig_text_horizontal_alignment_t horizontal;
     cig_text_vertical_alignment_t vertical;
-  } alignment;
+  } alignment;                            /* 8 */
   cig_id_t hash;                          /* 4 */
   cig_font_ref font;                      /* 4 */
   cig_text_color_ref color;               /* 4 */
   struct { unsigned short w, h; } bounds; /* 4 */
   unsigned char span_count;               /* 1 */
   unsigned char line_count;               /* 1 */
-} label_t;                                /* 1000 bytes total */
+} label_t;                                /* 988 bytes total */
 
 typedef void (*cig_text_render_callback_t)(const char*, size_t, cig_rect_t, cig_font_ref, cig_text_color_ref, cig_text_style_t);
 typedef cig_vec2_t (*cig_text_measure_callback_t)(const char*, size_t, cig_font_ref, cig_text_style_t);

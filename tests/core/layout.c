@@ -89,9 +89,9 @@ TEST(core_layout, identifiers) {
   register int a, b, c, d;
 
   TEST_ASSERT_EQUAL_UINT32(2090695081l, cig_frame()->id); // cig_hash("root")
-  
+
   const int n0 = 8;
-  
+
   for (a = 0; a < n0; ++a) {
     if (cig_push_frame(RECT_AUTO)) {
       assert_unique(cig_frame()->id, __LINE__);
