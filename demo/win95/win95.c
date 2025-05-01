@@ -3,6 +3,7 @@
 #include "time.h"
 #include "cigcorem.h"
 #include <stdio.h>
+#include <string.h>
 
 #define TASKBAR_H 28
 
@@ -142,11 +143,18 @@ static void do_desktop_icons() {
     return;
   }
 
-  if (do_desktop_icon(IMAGE_MY_COMPUTER_32, "My Computer")) {
-    printf("Open 'My Computer'\n");
-  }
+  do_desktop_icon(IMAGE_MY_COMPUTER_32, "My Computer");
   do_desktop_icon(IMAGE_BIN_EMPTY, "Recycle Bin");
-  do_desktop_icon(IMAGE_WELCOME_APP_ICON, "Welcome");
+
+  if (do_desktop_icon(IMAGE_WELCOME_APP_ICON, "Welcome")) {
+    application_t *app;
+    if ((app = win95_find_open_app("welcome"))) {
+      // todo: window manager -> bring to front (wnd)
+      cig_set_focused_id(app->windows[0].id);
+    } else {
+      win95_open_app(welcome_app());
+    }
+  }
 
   cig_pop_frame();
 }
@@ -235,6 +243,18 @@ void run_win95(win95_t *win95) {
 void win95_open_app(application_t app) {
   this->applications[this->running_apps++] = app;
   cig_set_focused_id(this->applications[this->running_apps-1].windows[0].id);
+}
+
+application_t *win95_find_open_app(const char *id) {
+  register size_t i;
+  application_t *app;
+  for (i = 0; i < this->running_apps; ++i) {
+    app = &this->applications[i];
+    if (!app->closed && !strcmp(app->id, id)) {
+      return app;
+    }
+  }
+  return NULL;
 }
 
 static void run_apps() {

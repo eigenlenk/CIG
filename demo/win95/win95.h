@@ -106,6 +106,7 @@ typedef struct {
 void start_win95(win95_t *);
 void run_win95(win95_t *);
 void win95_open_app(application_t);
+application_t *win95_find_open_app(const char *);
 
 /* Components */
 
