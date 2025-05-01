@@ -123,18 +123,18 @@ typedef struct {
 /* */
 typedef struct {
 	cig_id_t id;
-	cig_rect_t rect; /* Relative rect */
-	cig_rect_t clipped_rect; /* Relative clipped rect */
+	cig_rect_t rect;          /* Relative rect */
+	cig_rect_t clipped_rect;  /* Relative clipped rect */
 	cig_rect_t absolute_rect; /* Screen-space rect */
-	cig_insets_t insets; /* Insets affect child elements within this element */
+	cig_insets_t insets;      /* Insets affect child elements within this element */
 	
 	/* PRIVATE: */		
 	bool (*_layout_function)(cig_rect_t, cig_rect_t, cig_layout_params_t*, cig_rect_t*);
 	cig_layout_params_t _layout_params;
-  bool _clipped, _interaction_enabled;
-  cig_scroll_state_t *_scroll_state;
-  cig_state_t *_state;
-	unsigned int _id_counter;
+   bool _clipped, _interaction_enabled;
+   cig_scroll_state_t *_scroll_state;
+   cig_state_t *_state;
+   unsigned int _id_counter;
 } cig_frame_t;
 
 typedef enum {
