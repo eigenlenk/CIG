@@ -15,33 +15,35 @@ TEST_SETUP(core_state) {
 TEST_TEAR_DOWN(core_state) {}
 
 static void begin() {
-	cig_begin_layout(&ctx, NULL, cig_rect_make(0, 0, 640, 480), 0.1f);
+  cig_begin_layout(&ctx, NULL, cig_rect_make(0, 0, 640, 480), 0.1f);
 }
 
 static void end() {
-	cig_end_layout();
+  cig_end_layout();
 }
+
+/*  ┌────────────┐
+    │ TEST CASES │
+    └────────────┘ */
 
 TEST(core_state, activation_states) {
   cig_id_t persistent_id = 0;
-  
+
   for (int i = 0; i < 2; ++i) {
-		begin();
-    
+    begin();
     cig_push_frame(RECT_AUTO);
-    
+
     if (!persistent_id) { persistent_id = cig_frame()->id; }
     else { TEST_ASSERT_EQUAL_UINT32(persistent_id, cig_frame()->id); }
-    
+
     cig_state_t *state = cig_state();
-    
+
     TEST_ASSERT_NOT_NULL(state);
-    
+
     if (i == 0) { TEST_ASSERT_EQUAL(ACTIVATED, state->activation_state); }
     else if (i == 1) { TEST_ASSERT_EQUAL(ACTIVE, state->activation_state); }
-    
+
     cig_pop_frame();
-    
     end();
   }
 }
@@ -66,24 +68,24 @@ TEST(core_state, pool_limit) {
 
 TEST(core_state, stale) {
   begin();
-  /* Tick 1: Mark all states as used */
+  /*  Tick 1: Mark all states as used */
   for (int i = 0; i < CIG_STATES_MAX + 1; ++i) {
     cig_push_frame(RECT_AUTO);
     CIG_UNUSED(cig_state());
     cig_pop_frame();
   }
   end();
-  
-  /* Tick 2: State is considered stale if it hasn't been used during the last tick,
-     so at this point we don't expect there to be any available states */
+
+  /*  Tick 2: State is considered stale if it hasn't been used during the last tick,
+      so at this point we don't expect there to be any available states */
   begin();
   cig_set_next_id(12345);
   cig_push_frame(RECT_AUTO);
   TEST_ASSERT_NULL(cig_state());
   cig_pop_frame();
   end();
-  
-  /* Tick 3: Now there should be */
+
+  /*  Tick 3: Now there should be */
   begin();
   cig_set_next_id(12345);
   cig_push_frame(RECT_AUTO);
@@ -102,14 +104,14 @@ TEST(core_state, memory_arena) {
     unsigned long *ul = (unsigned long *)cig_state_allocate(sizeof(unsigned long));
     char *str = (char *)cig_state_allocate(sizeof(char[32]));
     void *hundred_whole_kilobytes = cig_state_allocate(sizeof(char[1024*100]));
-    
+
     TEST_ASSERT_NULL(hundred_whole_kilobytes); /* Doesn't fit */
-    
+
     TEST_ASSERT_EQUAL_UINT(
       sizeof(cig_vec2_t) + sizeof(unsigned long) + sizeof(char[32]),
       cig_state()->arena.mapped
     );
-    
+
     if (i == 0) { /* Store data */
       *vec2 = cig_vec2_make(13, 17);
       *ul = cig_frame()->id;
@@ -119,7 +121,7 @@ TEST(core_state, memory_arena) {
       TEST_ASSERT_EQUAL_UINT32(cig_frame()->id, *ul);
       TEST_ASSERT_EQUAL_STRING("Hello, World!", str);
     }
-    
+
     end();
   }
 }

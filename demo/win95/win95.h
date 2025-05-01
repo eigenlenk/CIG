@@ -94,11 +94,11 @@ void* get_font(font_id_t);
 void* get_color(color_id_t);
 void* get_image(image_id_t);
 void* get_panel(panel_id_t);
-/* Applies a dark blue checkerboard dither to following image draw calls */
+/*  Applies a dark blue checkerboard dither to following image draw calls */
 void enable_blue_selection_dithering(bool);
 
 typedef struct {
-  /* Private */
+  /*__PRIVATE__*/
   application_t applications[WIN95_APPS_MAX];
   size_t running_apps;
 
@@ -109,8 +109,9 @@ void run_win95(win95_t *);
 void win95_open_app(application_t);
 application_t *win95_find_open_app(const char *);
 
-/* Components */
-
+/*  ┌───────────────────┐
+    │ COMMON COMPONENTS │
+    └───────────────────┘ */
 bool standard_button(cig_rect_t, const char *);
 bool checkbox(cig_rect_t, bool *, const char *);
 window_message_t begin_window(window_t *);
