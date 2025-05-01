@@ -44,6 +44,7 @@ void cig_init_context(cig_context_t *context) {
   context->input_state = (cig_input_state_t) { 0 };
   context->next_id = 0;
   context->tick = 1;
+  context->delta_time = 0.f;
   context->elapsed_time = 0.f;
   
 	for (int i = 0; i < CIG_STATES_MAX; ++i) {
@@ -284,7 +285,6 @@ void cig_set_input_state(
 		} break;
 	}
 
-
 	if (current->input_state.action_mask) {
 		if (!current->input_state.drag.active) {
 			current->input_state.drag.active = true;
@@ -349,10 +349,10 @@ cig_input_action_type_t cig_clicked(
 			return result;
 		}
 	} else {
-		const bool requires_double_click = options & CIG_CLICK_DOUBLE;
+		const int required_clicks = options & CIG_CLICK_DOUBLE ? 2 : 1;
 		if (
-			(current->input_state.click_state == ENDED && (!requires_double_click || (requires_double_click && current->input_state._click_count == 2))) ||
-			(current->input_state.click_state == EXPIRED && !(options & CIG_CLICK_EXPIRE))
+			(current->input_state.click_state == ENDED && current->input_state._click_count == required_clicks) ||
+			(current->input_state.click_state == EXPIRED && !(options & CIG_CLICK_EXPIRE) && required_clicks == 1)
 		) {
 			if (options & CIG_CLICK_STARTS_INSIDE && current->input_state._press_target_id != cig_frame()->id) {
 				return 0;

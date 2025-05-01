@@ -410,20 +410,16 @@ TEST(core_layout, hstack_align_right) {
   }
 }
 
-/*
-	- Grid is the same stack layout builder but with both axis enabled.
-	- Grid will start adding frames horizontally/vertically, until the position exceeds
-	  the width/height or when the next proposed frame can't fit.
-	  Then the position moves to the next row/column.
-*/
+/* - Grid is the same stack layout builder but with both axis enabled.
+	 - Grid will start adding frames horizontally/vertically, until the position exceeds
+	   the width/height or when the next proposed frame can't fit.
+	   Then the position moves to the next row/column */
 
 TEST(core_layout, grid_with_fixed_rows_and_columns) {
-	/*
-	We are specifying a number of rows and columns - this will tell
-	how large each child needs to be by default (we *can* override).
-	Here it's a 5x5 grid, meaning on our 640x480 screen,
-	each cell would be 128x96.
-	*/
+	/* We are specifying a number of rows and columns - this will tell
+		 how large each child needs to be by default (we *can* override).
+		 Here it's a 5x5 grid, meaning on our 640x480 screen,
+		 each cell would be 128x96 */
 	if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_insets_zero(), (cig_layout_params_t) { 0,
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL,
     .spacing = 0,
@@ -447,26 +443,24 @@ TEST(core_layout, grid_with_fixed_rows_and_columns) {
 }
 
 TEST(core_layout, grid_with_fixed_cell_size) {
-	/*
-	Here we are defining a grid where each cell's width and height is fixed.
-	If columns and rows are not set, there will be as many cells horizontally
-	as could be fitted, in this case 640 / 200 = 3 and the remaining space will
-	be unused. Same vertically (480 / 200) = 2, 6 in total, looking something like this:
+	/* Here we are defining a grid where each cell's width and height is fixed.
+		 If columns and rows are not set, there will be as many cells horizontally
+		 as could be fitted, in this case 640 / 200 = 3 and the remaining space will
+		 be unused. Same vertically (480 / 200) = 2, 6 in total, looking something like this:
 	
-	┌─────────────────────────────────┐
-	│┌────────┐┌────────┐┌────────┐...│
-	││        ││        ││        │...│
-	││        ││        ││        │...│
-	││        ││        ││        │...│
-	│└────────┘└────────┘└────────┘...│
-	│┌────────┐┌────────┐┌────────┐...│
-	││        ││        ││        │...│
-	││        ││        ││        │...│
-	││        ││        ││        │...│
-	│└────────┘└────────┘└────────┘...│
-	│.................................│
-	└─────────────────────────────────┘
-	*/
+		 ┌─────────────────────────────────┐
+		 │┌────────┐┌────────┐┌────────┐...│
+		 ││        ││        ││        │...│
+		 ││        ││        ││        │...│
+		 ││        ││        ││        │...│
+		 │└────────┘└────────┘└────────┘...│
+		 │┌────────┐┌────────┐┌────────┐...│
+		 ││        ││        ││        │...│
+		 ││        ││        ││        │...│
+		 ││        ││        ││        │...│
+		 │└────────┘└────────┘└────────┘...│
+		 │.................................│
+		 └─────────────────────────────────┘ */
 	if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_insets_zero(), (cig_layout_params_t) { 0,
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL,
     .width = 200,
@@ -496,12 +490,10 @@ TEST(core_layout, grid_with_fixed_cell_size) {
 }
 
 TEST(core_layout, grid_with_varying_cell_size) {
-	/*
-	Third option is to specify a size for each of the cells at insertion time.
-	Then, again depending on the remaining space, cell will be inserted into the
-	current row or pushed to the next. In addition, you can still specify the number
-	of rows and columns, and these will now be used to limit number of cells on each axis.
-	*/
+	/* Third option is to specify a size for each of the cells at insertion time.
+		 Then, again depending on the remaining space, cell will be inserted into the
+		 current row or pushed to the next. In addition, you can still specify the number
+		 of rows and columns, and these will now be used to limit number of cells on each axis */
 	if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_insets_zero(), (cig_layout_params_t) { 0,
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL,
 		.limit.horizontal = 3
@@ -528,12 +520,10 @@ TEST(core_layout, grid_with_varying_cell_size) {
 	
 	TEST_ASSERT_EQUAL_INT(600, cig_frame()->_layout_params._h_pos);
 	
-	/*
-	Let's try to insert another cell that should fit width wise,
+	/* Let's try to insert another cell that should fit width wise,
 	but the grid would exceed the number of horizontal elements,
-	so it's pushed onto the next row.
-	*/
-	cig_push_frame(cig_rect_make(0, 0, 40, 160));
+	so it's pushed onto the next row */
+	cig_push_frame(cig_rect_make(0, 0, 40, 160)); /* (4) */
 	TEST_ASSERT_EQUAL_INT(0, 		cig_frame()->rect.x);
 	TEST_ASSERT_EQUAL_INT(160, 	cig_frame()->rect.y);
 	cig_pop_frame();
@@ -553,26 +543,24 @@ TEST(core_layout, grid_with_varying_cell_size) {
 	TEST_ASSERT_EQUAL_INT(160, 	cig_frame()->rect.h);
 	cig_pop_frame();
 	
-	/*
-	For visualisation:
-	┌──────────────────────┐
-	│┌──┐┌─────┐┌───────┐..│
-	││1 ││  2  ││   3   │..│ <- (4) could go here but we've
-	│└──┘└─────┘└───────┘..│    set a limit on 3 columns, or
-	│┌─┐┌────────────┐┌   ┐│    3 elements per row more precisely
-	││4││    5       │     │
-	│└─┘└────────────┘└   ┘│
-	│┌────────────────────┐│
-	││         6          ││
-	│└────────────────────┘│
-	└──────────────────────┘
-	*/
+	/* For visualisation:
+		┌──────────────────────┐
+		│┌──┐┌─────┐┌───────┐..│
+		││1 ││  2  ││   3   │..│ <- (4) could go here but we've
+		│└──┘└─────┘└───────┘..│    set a limit on 3 columns, or
+		│┌─┐┌────────────┐┌   ┐│    3 elements per row more precisely
+		││4││    5       │     │
+		│└─┘└────────────┘└   ┘│
+		│┌────────────────────┐│
+		││         6          ││
+		│└────────────────────┘│
+		└──────────────────────┘ */
 }
 
 TEST(core_layout, grid_with_down_direction) {
 	/* Grids support horizontal (default) and vertical layout direction. In vertical mode,
-	instead of filling and adding rows, columns are filled and added instead. Otherwise
-	they behave the same */
+		 instead of filling and adding rows, columns are filled and added instead. Otherwise
+		 they behave the same */
 	if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_insets_zero(), (cig_layout_params_t) { 0,
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL,
 		.direction = CIG_LAYOUT_DIRECTION_VERTICAL
@@ -601,10 +589,8 @@ TEST(core_layout, grid_with_down_direction) {
 	TEST_ASSERT_EQUAL_INT(200,	cig_frame()->_layout_params._h_pos);
 	TEST_ASSERT_EQUAL_INT(0,		cig_frame()->_layout_params._v_pos);
 	
-	/*
-	Without anything else configured on the grid, the next element will fill
-	the remaining space on the right.
-	*/
+	/* Without anything else configured on the grid, the next element will fill
+		 the remaining space on the right */
 	cig_push_frame(RECT_AUTO); /* (4) */
 	TEST_ASSERT_EQUAL_RECT(cig_rect_make(200, 0, 440, 480), cig_frame()->rect);
 	cig_pop_frame();
@@ -612,19 +598,19 @@ TEST(core_layout, grid_with_down_direction) {
 	TEST_ASSERT_EQUAL_INT(640, 	cig_frame()->_layout_params._h_pos);
 	
 	/* For visualisation:
-	┌────────────────────────┐
-	│┌───┐....┌─────────────┐│
-	││ 1 │....│             ││
-	│└───┘....│             ││
-	│┌─────┐..│             ││
-	││  2  │..│             ││
-	│└─────┘..│      4      ││
-	│┌───────┐│             ││
-	││       ││             ││
-	││   3   ││             ││
-	││       ││             ││
-	│└───────┘└─────────────┘│
-	└────────────────────────┘ */
+		┌────────────────────────┐
+		│┌───┐....┌─────────────┐│
+		││ 1 │....│             ││
+		│└───┘....│             ││
+		│┌─────┐..│             ││
+		││  2  │..│             ││
+		│└─────┘..│      4      ││
+		│┌───────┐│             ││
+		││       ││             ││
+		││   3   ││             ││
+		││       ││             ││
+		│└───────┘└─────────────┘│
+		└────────────────────────┘ */
 }
 
 TEST(core_layout, grid_with_flipped_alignment_and_direction) {
@@ -659,19 +645,19 @@ TEST(core_layout, grid_with_flipped_alignment_and_direction) {
   }
 
   /* For visualisation:
-  ┌────────────────────────────┐
-  │            ................│
-  │            ┌      ┐┌──────┐│
-  │             (4)    │ 2    ││
-  │                    │      ││
-  │                    │      ││
-  │            └      ┘└──────┘│
-  │            ┌──────┐┌──────┐│
-  │            │ 3    ││ 1    ││
-  │            │      ││      ││
-  │            │      ││      ││
-  │            └──────┘└──────┘│
-  └────────────────────────────┘ */
+	  ┌────────────────────────────┐
+	  │            ................│
+	  │            ┌      ┐┌──────┐│
+	  │             (4)    │ 2    ││
+	  │                    │      ││
+	  │                    │      ││
+	  │            └      ┘└──────┘│
+	  │            ┌──────┐┌──────┐│
+	  │            │ 3    ││ 1    ││
+	  │            │      ││      ││
+	  │            │      ││      ││
+	  │            └──────┘└──────┘│
+	  └────────────────────────────┘ */
 }
 
 TEST(core_layout, vstack_scroll) {
