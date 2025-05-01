@@ -314,7 +314,7 @@ void cig_enable_interaction() {
 
 bool cig_hovered() {
 	/* See `handle_frame_hover` */
-	return current->input_state.locked == false && cig_frame()->id == current->input_state._target_prev_tick;
+	return current->input_state.locked == false && cig_frame()->_interaction_enabled && cig_frame()->id == current->input_state._target_prev_tick;
 }
 
 cig_input_action_type_t cig_pressed(
@@ -709,7 +709,7 @@ static bool push_frame(
 }
 
 static void handle_frame_hover(const cig_frame_t *frame) {
-	if (frame->_interaction_enabled && cig_rect_contains(frame->absolute_rect, current->input_state.position)) {
+	if (cig_rect_contains(frame->absolute_rect, current->input_state.position)) {
 		current->input_state._target_this_tick = frame->id;
 	}
 }
