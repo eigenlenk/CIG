@@ -18,9 +18,11 @@ typedef enum {
 typedef enum {
   COLOR_BLACK = 0,
   COLOR_WHITE,
+  COLOR_YELLOW,
   COLOR_DESKTOP,
   COLOR_DIALOG_BACKGROUND,
   COLOR_WINDOW_ACTIVE_TITLEBAR,
+  COLOR_WINDOW_INACTIVE_TITLEBAR,
   __COLOR_COUNT
 
 } color_id_t;
@@ -67,6 +69,7 @@ typedef enum {
 typedef application_proc_result_t (*application_proc_t)(struct application_t *);
 
 typedef struct window_t {
+  cig_id_t id;
   win_proc_t proc;
   void *data;
   cig_rect_t rect;
@@ -97,7 +100,6 @@ typedef struct {
   /* Private */
   application_t applications[WIN95_APPS_MAX];
   size_t running_apps;
-  window_t *selected_window;
 
 } win95_t;
 

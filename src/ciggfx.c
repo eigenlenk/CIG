@@ -39,13 +39,17 @@ void cig_fill_panel(cig_panel_ref panel, cig_panel_modifiers_t modifiers) {
   panel_callback(panel, cig_absolute_rect(), modifiers);
 }
 
-void cig_fill_color(cig_color_ref color) {
+void cig_fill_solid(cig_color_ref color) {
   if (!draw_rectangle) { /* Log an error? */ return; }
   draw_rectangle(color, 0, cig_absolute_rect(), 0);
 }
 
-void cig_draw_line(cig_color_ref color, cig_vec2_t p0, cig_vec2_t p1, float thickness) {
+void cig_draw_line(cig_vec2_t p0, cig_vec2_t p1, cig_color_ref color, float thickness) {
   if (!draw_line) { /* Log an error? */ return; }
-  register const cig_vec2_t origin = cig_vec2_make(cig_absolute_rect().x, cig_absolute_rect().y);
-  draw_line(color, cig_vec2_add(origin, p0), cig_vec2_add(origin, p1), thickness);
+  draw_line(color, p0, p1, thickness);
+}
+
+void cig_draw_rect(cig_rect_t rect, cig_color_ref fill_color, cig_color_ref outline_color, float thickness) {
+  if (!draw_rectangle) { /* Log an error? */ return; }
+  draw_rectangle(fill_color, outline_color, rect, thickness);
 }

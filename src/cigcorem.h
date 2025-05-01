@@ -18,8 +18,8 @@
 #define CIG_Y_INSET (cig_rect().y + cig_frame()->insets.top)
 #define CIG_W_INSET (CIG_W - cig_frame()->insets.left - cig_frame()->insets.right)
 #define CIG_H_INSET (CIG_H - cig_frame()->insets.top - cig_frame()->insets.bottom)
-#define CIG_GX cig_absolute_rect().x
-#define CIG_GY cig_absolute_rect().y
+#define CIG_SX cig_absolute_rect().x
+#define CIG_SY cig_absolute_rect().y
 #define CIG_CENTER cig_vec2_make((CIG_W * 0.5), (CIG_H * 0.5))
 #define CIG_R (CIG_X + CIG_W)
 #define CIG_B (CIG_Y + CIG_H)

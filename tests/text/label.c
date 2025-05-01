@@ -239,13 +239,13 @@ TEST(text_label, prepare_single_long_word) {
   begin();
 
   label_t label;
-  cig_prepare_label(&label, (cig_text_properties_t) {}, 7, "Foobarbaz");
+  cig_prepare_label(&label, 7, (cig_text_properties_t) {}, "Foobarbaz");
 
   TEST_ASSERT_EQUAL_INT(9, label.bounds.w);
   TEST_ASSERT_EQUAL_INT(1, label.bounds.h);
 
   CIG(cig_rect_make(0, 0, 7, 1)) {
-    cig_prepared_label(&label);
+    cig_draw_label(&label);
 
     TEST_ASSERT_EQUAL_RECT(cig_rect_make(-1, 0, 9, 1), spans.rects[0]);
   }
@@ -255,13 +255,13 @@ TEST(text_label, prepare_multiple_long_words) {
   begin();
 
   label_t label;
-  cig_prepare_label(&label, (cig_text_properties_t) {}, 7, "Foobarbaz barbazfoo bazfoobar");
+  cig_prepare_label(&label, 7, (cig_text_properties_t) {}, "Foobarbaz barbazfoo bazfoobar");
   
   TEST_ASSERT_EQUAL_INT(9, label.bounds.w);
   TEST_ASSERT_EQUAL_INT(3, label.bounds.h);
 
   CIG(cig_rect_make(0, 0, 7, 3)) {
-    cig_prepared_label(&label);
+    cig_draw_label(&label);
 
     TEST_ASSERT_EQUAL_RECT(cig_rect_make(-1, 0, 9, 1), spans.rects[0]);
     TEST_ASSERT_EQUAL_RECT(cig_rect_make(-1, 1, 9, 1), spans.rects[1]);

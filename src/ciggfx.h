@@ -56,9 +56,11 @@ void cig_image(cig_image_ref, cig_image_mode_t);
 /* Fills current frame with the given panel style */
 void cig_fill_panel(cig_panel_ref, cig_panel_modifiers_t);
 
-/* */
-void cig_fill_color(cig_color_ref);
+/* Fills current frame with color */
+void cig_fill_solid(cig_color_ref);
 
-void cig_draw_line(cig_color_ref, cig_vec2_t, cig_vec2_t, float);
+void cig_draw_line(cig_vec2_t, cig_vec2_t, cig_color_ref, float);
+
+void cig_draw_rect(cig_rect_t, cig_color_ref, cig_color_ref, float);
 
 #endif

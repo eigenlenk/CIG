@@ -24,7 +24,8 @@ static bool taskbar_button(
     cig_enable_interaction();
     
     const bool pressed = cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE);
-    
+    clicked = cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DEFAULT_OPTIONS);
+
     cig_fill_panel(get_panel(PANEL_BUTTON), selected ? CIG_PANEL_SELECTED : (pressed ? CIG_PANEL_PRESSED : 0));
     
     CIG_HSTACK(
@@ -49,8 +50,6 @@ static bool taskbar_button(
         }
       }
     }
-
-    clicked = cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DEFAULT_OPTIONS);
   }
   
   return clicked;
@@ -99,16 +98,34 @@ static bool do_desktop_icon(int icon, const char *title) {
   })) {
     cig_enable_interaction();
 
+    const bool focused = cig_enable_focus();
     double_clicked = cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DEFAULT_OPTIONS | CIG_CLICK_DOUBLE);
 
     CIG(RECT_AUTO_H(32)) {
+      if (focused) { enable_blue_selection_dithering(true); }
       cig_image(get_image(icon), CIG_IMAGE_MODE_TOP);
+      if (focused) { enable_blue_selection_dithering(false); }
     }
-    CIG(_) {
-      cig_label((cig_text_properties_t) {
+
+    label_t *label = CIG_ALLOCATE(label_t);
+
+    /* We need to prepare the label here to know how large of a rectangle
+       to draw around it when the icon is focused */
+    cig_prepare_label(label, CIG_W, (cig_text_properties_t) {
         .color = get_color(COLOR_WHITE),
         .alignment.vertical = CIG_TEXT_ALIGN_TOP
       }, title);
+
+    CIG(_) {
+      if (focused) {
+        cig_draw_rect(
+          cig_rect_make(label->rect.x-2, label->rect.y-2, label->rect.w+4, label->rect.h+4),
+          get_color(COLOR_WINDOW_ACTIVE_TITLEBAR),
+          get_color(COLOR_YELLOW),
+          1
+        );
+      }
+      cig_draw_label(label);
     }
   }
 
@@ -124,12 +141,9 @@ static void do_desktop_icons() {
     return;
   }
 
-  enable_blue_selection_dithering(true);
   if (do_desktop_icon(IMAGE_MY_COMPUTER_32, "My Computer")) {
     printf("Open 'My Computer'\n");
   }
-  enable_blue_selection_dithering(false);
-  
   do_desktop_icon(IMAGE_BIN_EMPTY, "Recycle Bin");
   do_desktop_icon(IMAGE_WELCOME_APP_ICON, "Welcome");
 
@@ -138,7 +152,8 @@ static void do_desktop_icons() {
 
 static void do_desktop() {
   if (cig_push_frame(cig_rect_make(0, 0, CIG_W, CIG_H - TASKBAR_H))) {
-    cig_fill_color(get_color(COLOR_DESKTOP));
+    cig_fill_solid(get_color(COLOR_DESKTOP));
+    cig_enable_focus();
     do_desktop_icons();
     cig_pop_frame();
   }
@@ -155,8 +170,8 @@ static void do_taskbar() {
     cig_rect_make(0, CIG_H - TASKBAR_H, CIG_W, TASKBAR_H),
     CIG_INSETS(cig_insets_make(2, 4, 2, 2))
   ) {
-    cig_fill_color(get_color(COLOR_DIALOG_BACKGROUND));
-    cig_draw_line(get_color(COLOR_WHITE), cig_vec2_make(0, 1), cig_vec2_make(CIG_W, 1), 1);
+    cig_fill_solid(get_color(COLOR_DIALOG_BACKGROUND));
+    cig_draw_line(cig_vec2_make(CIG_SX, CIG_SY+1), cig_vec2_make(CIG_SX+CIG_W, CIG_SY+1), get_color(COLOR_WHITE), 1);
 
     /* Left: Start button */
     start_button(RECT_AUTO_W(start_button_width));
@@ -165,20 +180,19 @@ static void do_taskbar() {
     time_t t = time(NULL);
     struct tm *ct = localtime(&t);
 
-    cig_prepare_label(&clock_label, (cig_text_properties_t) { .flags = CIG_TEXT_FORMATTED }, 0, "%02d:%02d", ct->tm_hour, ct->tm_min);
+    cig_prepare_label(&clock_label, 0, (cig_text_properties_t) { .flags = CIG_TEXT_FORMATTED }, "%02d:%02d", ct->tm_hour, ct->tm_min);
 
-    const int clock_w = (clock_label.bounds.w+11*2);
+    const int clock_w = (clock_label.rect.w+11*2);
 
     CIG(
       cig_rect_make(CIG_W_INSET-clock_w, 0, clock_w, CIG_AUTO_BIT),
       CIG_INSETS(cig_insets_uniform(1))
     ) {
       cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
-      cig_prepared_label(&clock_label);
+      cig_draw_label(&clock_label);
     }
 
     /* Center: Fill remaining middle space with task buttons */
-
     CIG_HSTACK(
       cig_rect_make(start_button_width+spacing, 0, CIG_W_INSET-start_button_width-clock_w-spacing*2, CIG_AUTO_BIT),
       CIG_PARAMS({
@@ -193,17 +207,12 @@ static void do_taskbar() {
       for (i = 0; i < this->running_apps; ++i) {
         for (j = 0; j < 1; ++j) {
           wnd = &this->applications[i].windows[j];
-          taskbar_button(RECT_AUTO, wnd->title, wnd->icon, wnd == this->selected_window);
+          if (taskbar_button(RECT_AUTO, wnd->title, wnd->icon, wnd->id == cig_focused_id())) {
+            // todo: window manager -> bring to front (wnd)
+            cig_set_focused_id(wnd->id);
+          }
         }
       }
-
-      /*cig_prepare_label(&some_label, (cig_text_properties_t) { .flags = CIG_TEXT_FORMATTED }, 0, "Counter: %lu", cnt=cnt+(1+cnt*0.001));
-
-      CIG({
-        CIG_RECT(RECT_AUTO_W(some_label.bounds.w))
-      }) {
-        cig_prepared_label(&some_label);
-      }*/
     }
   }
 }
@@ -224,7 +233,7 @@ void run_win95(win95_t *win95) {
 
 void win95_open_app(application_t app) {
   this->applications[this->running_apps++] = app;
-  this->selected_window = &this->applications[this->running_apps-1].windows[0];
+  cig_set_focused_id(this->applications[this->running_apps-1].windows[0].id);
 }
 
 static void run_apps() {
@@ -256,9 +265,7 @@ static void run_apps() {
           case WINDOW_CLOSE: {
             close_window(wnd);
             close_application(app);
-            if (this->selected_window == wnd) {
-              // TODO: select new active window
-            }
+            
           } break;
           default: break;
         }
@@ -350,12 +357,12 @@ bool checkbox(cig_rect_t rect, bool *value, const char *text) {
 
     CIG(RECT_AUTO_W(13)) {
       CIG(RECT_CENTERED_VERTICALLY(RECT_SIZED(13, 13))) {
-        cig_fill_color(pressed ? get_color(COLOR_DIALOG_BACKGROUND) : get_color(COLOR_WHITE));
+        cig_fill_solid(pressed ? get_color(COLOR_DIALOG_BACKGROUND) : get_color(COLOR_WHITE));
         cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
-        cig_draw_line(get_color(COLOR_BLACK), cig_vec2_make(2, 1), cig_vec2_make(11, 1), 1);
-        cig_draw_line(get_color(COLOR_BLACK), cig_vec2_make(2, 1), cig_vec2_make(2, 11), 1);
-        cig_draw_line(get_color(COLOR_DIALOG_BACKGROUND), cig_vec2_make(1, 11), cig_vec2_make(12, 11), 1);
-        cig_draw_line(get_color(COLOR_DIALOG_BACKGROUND), cig_vec2_make(12, 11), cig_vec2_make(12, 1), 1);
+        cig_draw_line(cig_vec2_make(CIG_SX+2, CIG_SY+1), cig_vec2_make(CIG_SX+11, CIG_SY+1), get_color(COLOR_BLACK), 1);
+        cig_draw_line(cig_vec2_make(CIG_SX+2, CIG_SY+1), cig_vec2_make(CIG_SX+2, CIG_SY+11), get_color(COLOR_BLACK), 1);
+        cig_draw_line(cig_vec2_make(CIG_SX+1, CIG_SY+11), cig_vec2_make(CIG_SX+12, CIG_SY+11), get_color(COLOR_DIALOG_BACKGROUND), 1);
+        cig_draw_line(cig_vec2_make(CIG_SX+12, CIG_SY+11), cig_vec2_make(CIG_SX+12, CIG_SY+1), get_color(COLOR_DIALOG_BACKGROUND), 1);
 
         if (*value) {
           cig_image(get_image(IMAGE_CHECKMARK), CIG_IMAGE_MODE_CENTER);
@@ -374,8 +381,11 @@ bool checkbox(cig_rect_t rect, bool *value, const char *text) {
 window_message_t begin_window(window_t *wnd) {
   window_message_t msg = 0;
 
+  cig_set_next_id(wnd->id);
   cig_push_frame_insets(wnd->rect, cig_insets_uniform(3));
   cig_fill_panel(get_panel(PANEL_STANDARD_DIALOG), 0);
+
+  const bool focused = cig_enable_focus();
 
   /* Titlebar */
   CIG_HSTACK(
@@ -386,7 +396,7 @@ window_message_t begin_window(window_t *wnd) {
       CIG_ALIGNMENT_HORIZONTAL(CIG_LAYOUT_ALIGNS_RIGHT)
     })
   ) {
-    cig_fill_color(get_color(wnd == this->selected_window ? COLOR_WINDOW_ACTIVE_TITLEBAR : COLOR_DESKTOP));
+    cig_fill_solid(get_color(focused ? COLOR_WINDOW_ACTIVE_TITLEBAR : COLOR_WINDOW_INACTIVE_TITLEBAR));
 
     cig_label((cig_text_properties_t) {
       .font = get_font(FONT_BOLD),

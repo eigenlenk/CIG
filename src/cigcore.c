@@ -227,6 +227,11 @@ void cig_set_input_state(
 		current->input_state._target_prev_tick = current->input_state._target_this_tick;
 		current->input_state._target_this_tick = 0;
 	}
+
+	if (current->input_state._focus_target_this > 0) {
+		current->input_state._focus_target = current->input_state._focus_target_this;
+		current->input_state._focus_target_this = 0;
+	}
 	
 	const cig_input_action_type_t previous_action_mask = current->input_state.action_mask;
 
@@ -365,6 +370,28 @@ cig_input_action_type_t cig_clicked(
 	}
 	
 	return 0;
+}
+
+bool cig_enable_focus() {
+	const cig_frame_t *frame = cig_frame();
+
+	if (current->input_state.click_state == BEGAN && cig_rect_contains(frame->absolute_rect, current->input_state.position)) {
+		current->input_state._focus_target_this = frame->id;
+	}
+
+	return cig_focused();
+}
+
+bool cig_focused() {
+	return cig_focused_id() == cig_frame()->id;
+}
+
+cig_id_t cig_focused_id() {
+	return current->input_state._focus_target;
+}
+
+void cig_set_focused_id(cig_id_t id) {
+	current->input_state._focus_target = id;
 }
 
 /* ┌─────────────┐

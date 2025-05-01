@@ -3,9 +3,7 @@
 
 #include "cigcore.h"
 
-/* Label is a single line of text and a span is basically a word
-   that can have its properties overriden */
-#define CIG_LABEL_SPANS_MAX 64
+#define CIG_LABEL_SPANS_MAX 48
 #define CIG_LABEL_PRINTF_BUF_LENGTH 512
 
 typedef void* cig_font_ref;
@@ -81,7 +79,8 @@ typedef struct {
 } span_t;                                 /* 20 bytes total */
 
 typedef struct {
-  span_t spans[CIG_LABEL_SPANS_MAX];      /* 320 */
+  span_t spans[CIG_LABEL_SPANS_MAX];      /* 960 */
+  cig_rect_t rect;                        /* 16 */
   cig_id_t hash;                          /* 4 */
   cig_font_ref font;                      /* 4 */
   cig_text_color_ref color;               /* 4 */
@@ -89,11 +88,10 @@ typedef struct {
     cig_text_horizontal_alignment_t horizontal;
     cig_text_vertical_alignment_t vertical;
   } alignment;
-  struct { unsigned short w, h; } bounds; /* 4 */
   unsigned char span_count;               /* 1 */
   unsigned char line_count;               /* 1 */
 
-} label_t;                                /* 330 bytes total */
+} label_t;                                /* 1000 bytes total */
 
 /* ┌─────────────────────┐
 ───┤  BACKEND CALLBACKS  │
@@ -117,15 +115,15 @@ void cig_set_default_font(cig_font_ref);
 void cig_set_default_text_color(cig_text_color_ref);
 
 /* */
-void cig_label(cig_text_properties_t, const char*, ...);
+label_t* cig_label(cig_text_properties_t, const char*, ...);
 
 /* For more advanced text display you can prepare a piece of text.
    This enables accessing the text bounds before rendering it to
    pass as a size for the next layout frame for example. It also exposes
    the underlying spans (smallest text components) */
-label_t* cig_prepare_label(label_t *, cig_text_properties_t, unsigned int, const char *, ...);
+label_t* cig_prepare_label(label_t *, unsigned int, cig_text_properties_t, const char *, ...);
 
 /* Renders a prepared label */
-void cig_prepared_label(label_t *);
+void cig_draw_label(label_t *);
 
 #endif

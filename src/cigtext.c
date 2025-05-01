@@ -18,8 +18,6 @@ typedef struct {
        value[MAX_TAG_VALUE_LEN];
 } tag_parser_t;
 
-typedef struct { unsigned short w, h; } bounds_t;
-
 static cig_text_render_callback_t render_callback = NULL;
 static cig_text_measure_callback_t measure_callback = NULL;
 static cig_font_query_callback_t font_query = NULL;
@@ -32,7 +30,7 @@ static cig_text_style_t style;
 
 static void prepare_label(label_t *, const cig_text_properties_t *, const unsigned int, const char *);
 static span_t* create_span(label_t *, utf8_string, cig_font_ref, cig_text_color_ref, cig_text_style_t, cig_vec2_t);
-static void render_spans(span_t *, size_t, cig_font_ref, cig_text_color_ref, cig_text_horizontal_alignment_t, cig_text_vertical_alignment_t, bounds_t);
+static void render_spans(span_t *, size_t, cig_font_ref, cig_text_color_ref, cig_text_horizontal_alignment_t, cig_text_vertical_alignment_t, cig_rect_t);
 static void wrap_text(utf8_string *, size_t, cig_vec2_t *, cig_text_overflow_t, cig_font_ref, cig_font_ref, cig_text_color_ref, cig_text_style_t, size_t, span_t *);
 static bool parse_tag(tag_parser_t*, utf8_char, uint32_t);
 static void apply_tag(tag_parser_t*);
@@ -61,7 +59,7 @@ void cig_set_default_text_color(cig_text_color_ref color) {
   default_text_color = color;
 }
 
-void cig_label(cig_text_properties_t props, const char *text, ...) {
+label_t* cig_label(cig_text_properties_t props, const char *text, ...) {
   register const cig_rect_t absolute_rect = cig_rect_inset(cig_absolute_rect(), cig_frame()->insets);
 
   label_t *label = CIG_ALLOCATE(label_t);
@@ -84,15 +82,17 @@ void cig_label(cig_text_properties_t props, const char *text, ...) {
       label->color,
       label->alignment.horizontal,
       label->alignment.vertical,
-      (bounds_t) { label->bounds.w, label->bounds.h }
+      label->rect
     );
   }
+
+  return label;
 }
 
 label_t* cig_prepare_label(
   label_t *label,
-  cig_text_properties_t props,
   unsigned int max_width,
+  cig_text_properties_t props,
   const char *text,
   ...
 ) {
@@ -109,7 +109,7 @@ label_t* cig_prepare_label(
   return label;
 }
 
-void cig_prepared_label(label_t *label) {
+void cig_draw_label(label_t *label) {
   if (render_callback) {
     render_spans(
       &label->spans[0],
@@ -118,7 +118,7 @@ void cig_prepared_label(label_t *label) {
       label->color,
       label->alignment.horizontal,
       label->alignment.vertical,
-      (bounds_t) { label->bounds.w, label->bounds.h }
+      label->rect
     );
   }
 }
@@ -133,21 +133,21 @@ static void prepare_label(
   const unsigned int max_width,
   const char *str
 ) {
-  cig_id_t hash = cig_hash(str);
+  cig_id_t hash = cig_hash(str) + (cig_id_t)props->font;
+
+  label->color = props->color ? props->color : default_text_color;
+  label->alignment.horizontal = props->alignment.horizontal == CIG_TEXT_ALIGN_DEFAULT
+    ? CIG_TEXT_ALIGN_CENTER
+    : props->alignment.horizontal;
+  label->alignment.vertical = props->alignment.vertical == CIG_TEXT_ALIGN_DEFAULT
+    ? CIG_TEXT_ALIGN_MIDDLE
+    : props->alignment.vertical;
 
   if (label->hash != hash) {
     label->hash = hash;
     label->span_count = 0;
-    label->bounds.w = 0;
-    label->bounds.h = 0;
+    label->rect = cig_rect_zero();
     label->font = props->font ? props->font : default_font;
-    label->color = props->color ? props->color : default_text_color;
-    label->alignment.horizontal = props->alignment.horizontal == CIG_TEXT_ALIGN_DEFAULT
-      ? CIG_TEXT_ALIGN_CENTER
-      : props->alignment.horizontal;
-    label->alignment.vertical = props->alignment.vertical == CIG_TEXT_ALIGN_DEFAULT
-      ? CIG_TEXT_ALIGN_MIDDLE
-      : props->alignment.vertical;
 
     utf8_string utext = make_utf8_string(str);
     utf8_char_iter iter = make_utf8_char_iter(utext);
@@ -244,7 +244,7 @@ static void prepare_label(
               span.last_fitting.str = NULL;
               span.reading = false;
               line_width += bounds.x;
-              label->bounds.w = CIG_MAX(label->bounds.w, line_width);
+              label->rect.w = CIG_MAX(label->rect.w, line_width);
             }
           } else {
             if (span.last_fitting.str && (!props->max_lines || line_count < props->max_lines)) {
@@ -253,7 +253,7 @@ static void prepare_label(
               line_count += new_span->newlines = 1;
               iter.str = span.last_fitting.str;
               i = span.last_fitting.index;
-              label->bounds.w = CIG_MAX(label->bounds.w, span.last_fitting.bounds.x);
+              label->rect.w = CIG_MAX(label->rect.w, span.last_fitting.bounds.x);
               line_width = 0;
               span.last_fitting.str = NULL;
               span.reading = false;
@@ -277,13 +277,13 @@ static void prepare_label(
               span.last_fitting.str = NULL;
               span.reading = false;
               line_width = 0;
-              label->bounds.w = CIG_MAX(label->bounds.w, bounds.x);
+              label->rect.w = CIG_MAX(label->rect.w, bounds.x);
             }
           }
         } else {
           // printf("\tForced end of span (2)!\n");
           create_span(label, slice, font_override, color_override, props->style | style, bounds);
-          label->bounds.w = CIG_MAX(label->bounds.w, bounds.x);
+          label->rect.w = CIG_MAX(label->rect.w, bounds.x);
           span.reading = false;
         }
 
@@ -297,7 +297,7 @@ static void prepare_label(
 
     line_count = CIG_MAX(1, line_count);
     label->line_count = line_count;
-    label->bounds.h = (line_count * base_font_info.height) + (line_count - 1) * base_font_info.line_spacing;
+    label->rect.h = (line_count * base_font_info.height) + (line_count - 1) * base_font_info.line_spacing;
   }
 }
 
@@ -385,7 +385,7 @@ static void render_spans(
   cig_text_color_ref base_color,
   cig_text_horizontal_alignment_t horizontal_alignment,
   cig_text_vertical_alignment_t vertical_alignment,
-  bounds_t bounds
+  cig_rect_t rect
 ) {
   if (!count) { return; }
 
@@ -396,7 +396,7 @@ static void render_spans(
   
   static double alignment_constant[3] = { 0, 0.5, 1 };
   
-  dy = absolute_rect.y + (int)((absolute_rect.h - bounds.h) * alignment_constant[vertical_alignment-1]);
+  dy = absolute_rect.y + (int)((absolute_rect.h - rect.h) * alignment_constant[vertical_alignment-1]);
   line_start = span = first;
   w = 0;
 

@@ -78,6 +78,10 @@ int main(int argc, const char *argv[]) {
   SetTargetFPS(60);
   // ToggleFullscreen();
 
+  printf("Sizeof span_t: %lu\n", sizeof(span_t));
+  printf("Sizeof label_t: %lu\n", sizeof(label_t));
+  printf("Sizeof cig_rect_t: %lu\n", sizeof(cig_rect_t));
+
   load_texture(&images[IMAGE_BRIGHT_YELLOW_PATTERN], "res/images/light_yellow_pattern.png");
   load_texture(&images[IMAGE_GRAY_DITHER], "res/images/gray_dither.png");
   load_texture(&images[IMAGE_START_ICON], "res/images/start.png");
@@ -118,9 +122,11 @@ int main(int argc, const char *argv[]) {
   
   colors[COLOR_BLACK] = (Color) { 0, 0, 0, 255 };
   colors[COLOR_WHITE] = (Color) { 255, 255, 255, 255 };
-  colors[COLOR_DESKTOP] = (Color) { 0, 130, 130, 255 };
+  colors[COLOR_YELLOW] = (Color) { 255, 255, 0, 255 };
+  colors[COLOR_DESKTOP] = (Color) { 0, 127, 127, 255 };
   colors[COLOR_DIALOG_BACKGROUND] = (Color) { 195, 195, 195, 255 };
-  colors[COLOR_WINDOW_ACTIVE_TITLEBAR] = (Color) { 0, 0, 130, 255 };
+  colors[COLOR_WINDOW_ACTIVE_TITLEBAR] = (Color) { 0, 0, 127, 255 };
+  colors[COLOR_WINDOW_INACTIVE_TITLEBAR] = (Color) { 127, 127, 127, 255 };
   
   for (register int i = 0; i < __PANEL_COUNT; ++i) { panel_styles[i] = i; }
 
@@ -249,7 +255,7 @@ CIG_INLINED void render_panel(cig_panel_ref panel, cig_rect_t rect, cig_panel_mo
   
   switch (panel_style) {
     case PANEL_STANDARD_DIALOG: {
-      DrawRectangle(UNPACK_RECT(rect), colors[COLOR_DIALOG_BACKGROUND]);
+      DrawRectangleRec(RAYLIB_RECT(rect), colors[COLOR_DIALOG_BACKGROUND]);
 
       DrawLine(rect.x, rect.y + rect.h - 1, rect.x + rect.w, rect.y + rect.h - 1, (Color) { 0, 0, 0, 255 });
       DrawLine(rect.x + rect.w, rect.y, rect.x + rect.w, rect.y + rect.h - 1, (Color) { 0, 0, 0, 255 });

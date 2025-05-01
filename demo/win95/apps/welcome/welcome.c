@@ -109,6 +109,7 @@ application_t welcome_app() {
     .id = "welcome",
 		.windows = {
 			(window_t) {
+        .id = cig_hash("welcome"),
 				.proc = &process_main_window,
 				.data = data,
 				.rect = RECT_CENTERED(488, 280),
@@ -119,49 +120,3 @@ application_t welcome_app() {
 		.data = NULL
 	};
 }
-
-
-        /*CIG_GRID({
-          CIG_INSETS(cig_insets_uniform(10)),
-          CIG_PARAMS({
-            CIG_COLUMNS(3),
-            CIG_ROWS(3),
-            CIG_SPACING(5)
-          })
-        }) {
-          CIG({ CIG_RECT(CIG_FILL) }) {
-            cig_fill_color(get_color(COLOR_DESKTOP));
-            cig_image(get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_ASPECT_FIT);
-          }
-
-          CIG({ CIG_RECT(CIG_FILL) }) {
-            cig_enable_interaction();
-            bool *clipping_on = CIG_ALLOCATE(bool);
-            if (cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DEFAULT_OPTIONS)) {
-              *clipping_on = !*clipping_on;
-            }
-            cig_fill_color(get_color(COLOR_DESKTOP));
-            if (*clipping_on) {
-              cig_enable_clipping();
-            }
-            cig_image(get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_ASPECT_FILL);
-          }
-
-          CIG({ CIG_RECT(CIG_FILL) }) {
-            cig_fill_color(get_color(COLOR_DESKTOP));
-            cig_image(get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_SCALE_TO_FILL);
-          }
-
-          CIG({ CIG_RECT(CIG_FILL) }) {
-            cig_fill_color(get_color(COLOR_DESKTOP));
-            cig_image(get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_CENTER);
-            cig_image(get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_TOP);
-            cig_image(get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_TOP_LEFT);
-            cig_image(get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_TOP_RIGHT);
-            cig_image(get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_LEFT);
-            cig_image(get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_RIGHT);
-            cig_image(get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_BOTTOM);
-            cig_image(get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_BOTTOM_LEFT);
-            cig_image(get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_BOTTOM_RIGHT);
-          }
-        }*/

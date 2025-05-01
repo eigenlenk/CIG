@@ -130,11 +130,11 @@ typedef struct {
 	
 	/* PRIVATE: */		
 	bool (*_layout_function)(cig_rect_t, cig_rect_t, cig_layout_params_t*, cig_rect_t*);
-	cig_layout_params_t _layout_params;
-   bool _clipped, _interaction_enabled;
    cig_scroll_state_t *_scroll_state;
    cig_state_t *_state;
+	cig_layout_params_t _layout_params;
    unsigned int _id_counter;
+   bool _clipped, _interaction_enabled;
 } cig_frame_t;
 
 typedef enum {
@@ -172,7 +172,9 @@ typedef struct {
    unsigned int _click_count;
 	cig_id_t _press_target_id, /* Element that was focused when button press began */
            _target_prev_tick,
-           _target_this_tick;
+           _target_this_tick,
+           _focus_target_this,
+           _focus_target;
 } cig_input_state_t;
 
 typedef enum {
@@ -314,9 +316,9 @@ CIG_OPTIONAL(void*) cig_state_allocate(size_t);
 
 /* Similar to `cig_begin_layout` where you start rendering into a new buffer,
    in the current element's coordinate system. All subsequent elements `absolute_rect`-s
-	 are relative to this buffer/screen/texture.
+	are relative to this buffer/screen/texture.
 	 
-	 This is mostly when you want to cache
+	This is mostly when you want to cache
    some more complex widget, like a large text view or similar. You can internally
    check whether you need to redraw or just re-render the old buffer/screen/texture */	 
 void cig_push_buffer(cig_buffer_ref);
@@ -325,9 +327,9 @@ void cig_push_buffer(cig_buffer_ref);
    of the UI, unlike `cig_end_layout` */
 void cig_pop_buffer();
 
-/* ┌─────────────────────┐
-───┤  MOUSE INTERACTION  │
-   └─────────────────────┘ */
+/* ┌────────────────────────────┐
+───┤  MOUSE INTERACTION & FOCUS │
+   └────────────────────────────┘ */
 
 /* Pass mouse coordinates and button press state[s] */
 void cig_set_input_state(cig_vec2_t, cig_input_action_type_t);
@@ -349,6 +351,21 @@ cig_input_action_type_t cig_pressed(cig_input_action_type_t, cig_press_flags_t);
 /* Checks if the current element is hovered and mouse button was clicked or released
    depending on the options. See `cig_click_flags_t` declaration for more info */
 cig_input_action_type_t cig_clicked(cig_input_action_type_t, cig_click_flags_t);
+
+/* Makes this frame focusable. Focus is gained by pressing mouse button in this frame
+   regardless of interaction being enabled or not. Returns whether the same element
+   was focused last */
+bool cig_enable_focus();
+
+/* Returns whether this frame is the current focus target. Requires `cig_enable_focus` to
+   have been called */
+bool cig_focused();
+
+/* */
+cig_id_t cig_focused_id();
+
+/* Explicitly set focus to given frame ID */
+void cig_set_focused_id(cig_id_t);
 
 /* ┌─────────────┐
 ───┤  SCROLLING  │

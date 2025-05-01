@@ -14,8 +14,8 @@
    Internal storage is just for convenience */
 #define CIG_STATES_MAX 32
 
-/* Size of the memory arena for each state (32KB) */
-#define CIG_STATE_MEM_ARENA_BYTES 1024*32
+/* Size of the memory arena for each state (1KB) */
+#define CIG_STATE_MEM_ARENA_BYTES 1024
 
 /* How large is the buffer stack. Generally not too deeply nested? */
 #define CIG_BUFFERS_MAX 4
