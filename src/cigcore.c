@@ -304,6 +304,7 @@ void cig_set_input_state(
 	} else if (current->input_state.drag.active) {
 		current->input_state.drag.active = false;
 		current->input_state.drag.change = cig_vec2_zero();
+		current->input_state.locked = false;
 	}
 }
 

@@ -400,6 +400,11 @@ bool checkbox(cig_rect_t rect, bool *value, const char *text) {
 }
 
 window_message_t begin_window(window_t *wnd) {
+  static struct {
+    bool active;
+    cig_rect_t original_rect;
+  } window_drag = { 0 };
+
   window_message_t msg = 0;
 
   cig_set_next_id(wnd->id);
@@ -418,6 +423,23 @@ window_message_t begin_window(window_t *wnd) {
     })
   ) {
     cig_fill_solid(get_color(focused ? COLOR_WINDOW_ACTIVE_TITLEBAR : COLOR_WINDOW_INACTIVE_TITLEBAR));
+    cig_enable_interaction();
+
+    /* TODO: This could probably be a little nicer to deal with */
+    if (!window_drag.active && cig_pressed(CIG_INPUT_MOUSE_BUTTON_LEFT, CIG_PRESS_INSIDE) && cig_input_state()->drag.active) {
+      cig_input_state()->locked = true;
+      window_drag.active = true;
+      window_drag.original_rect = wnd->rect;
+    } else if (window_drag.active && cig_input_state()->drag.active) {
+      wnd->rect = cig_rect_make(
+        CIG_CLAMP(window_drag.original_rect.x + cig_input_state()->drag.change.x, -(wnd->rect.w - 50), 640 - 30),
+        CIG_CLAMP(window_drag.original_rect.y + cig_input_state()->drag.change.y, 0, 480 - 50),
+        wnd->rect.w,
+        wnd->rect.h
+      );
+    } else {
+      window_drag.active = false;
+    }
 
     cig_label((cig_text_properties_t) {
       .font = get_font(FONT_BOLD),

@@ -164,7 +164,8 @@ typedef struct {
   
 	bool locked; /* Elements are not tracked. Set to TRUE by widgets that want exclusive
 	                use of drag state. A scrollbar thumb for example where buttons and
-                  other elements should not be highlighted even if hovered while moving */
+                   other elements should not be highlighted even if hovered while moving.
+                   Reset to FALSE when drag ends */
 	
 	/* PRIVATE: */								
 	float _press_start_time,
