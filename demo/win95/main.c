@@ -12,7 +12,7 @@ static cig_context_t ctx = { 0 };
 
 static struct font_store {
   Font font;
-  int baseline_offset, word_spacing;
+  int baseline_offset;
 } fonts[__FONT_COUNT];
 static Color colors[__COLOR_COUNT];
 static int panel_styles[__PANEL_COUNT];
@@ -78,10 +78,6 @@ int main(int argc, const char *argv[]) {
   SetTargetFPS(60);
   // ToggleFullscreen();
 
-  printf("Sizeof span_t: %lu\n", sizeof(span_t));
-  printf("Sizeof label_t: %lu\n", sizeof(label_t));
-  printf("Sizeof cig_rect_t: %lu\n", sizeof(cig_rect_t));
-
   load_texture(&images[IMAGE_BRIGHT_YELLOW_PATTERN], "res/images/light_yellow_pattern.png");
   load_texture(&images[IMAGE_GRAY_DITHER], "res/images/gray_dither.png");
   load_texture(&images[IMAGE_START_ICON], "res/images/start.png");
@@ -97,24 +93,19 @@ int main(int argc, const char *argv[]) {
 
   fonts[FONT_REGULAR].font = LoadFont("res/fonts/winr.fnt");
   fonts[FONT_REGULAR].baseline_offset = -2;
-  fonts[FONT_REGULAR].word_spacing = 3;
   
   fonts[FONT_BOLD].font = LoadFont("res/fonts/winb.fnt");
   fonts[FONT_BOLD].baseline_offset = -2;
-  fonts[FONT_BOLD].word_spacing = 3;
   
   fonts[FONT_TIMES_NEW_ROMAN_32_BOLD].font = LoadFont("res/fonts/tnr32b.fnt");
   fonts[FONT_TIMES_NEW_ROMAN_32_BOLD].baseline_offset = -6;
-  fonts[FONT_TIMES_NEW_ROMAN_32_BOLD].word_spacing = 9;
   
   fonts[FONT_ARIAL_BLACK_32].font = LoadFont("res/fonts/arbl32.fnt");
   fonts[FONT_ARIAL_BLACK_32].baseline_offset = -7;
-  fonts[FONT_ARIAL_BLACK_32].word_spacing = 8;
   
   fonts[FONT_FRANKLIN_GOTHIC_BOOK_32].font = LoadFont("res/fonts/gothbook32.fnt");
   fonts[FONT_FRANKLIN_GOTHIC_BOOK_32].baseline_offset = -8;
-  fonts[FONT_FRANKLIN_GOTHIC_BOOK_32].word_spacing = 8;
-  
+
   SetTextureFilter(fonts[FONT_REGULAR].font.texture, TEXTURE_FILTER_POINT);
   SetTextureFilter(fonts[FONT_BOLD].font.texture, TEXTURE_FILTER_POINT);
   SetTextureFilter(fonts[FONT_TIMES_NEW_ROMAN_32_BOLD].font.texture, TEXTURE_FILTER_POINT);
@@ -190,9 +181,6 @@ int main(int argc, const char *argv[]) {
 
   return 0;
 }
-
-
-
 CIG_INLINED void set_clip_rect(cig_buffer_ref buffer, cig_rect_t rect, bool is_root) {
   if (is_root) {
     EndScissorMode();
@@ -246,8 +234,7 @@ CIG_INLINED cig_font_info_t font_query(cig_font_ref font_ref) {
   return (cig_font_info_t) {
     .height = fs->font.baseSize,
     .line_spacing = 0,
-    .baseline_offset = fs->baseline_offset,
-    .word_spacing = fs->word_spacing
+    .baseline_offset = fs->baseline_offset
   };
 }
 
