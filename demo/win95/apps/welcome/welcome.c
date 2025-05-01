@@ -12,14 +12,14 @@ static window_message_t process_main_window(window_t *this) {
     "A fatal exception 0E has occurred at 0F:DEADBEEF. The current application will be shot and terminated."
   };
 
-	window_data_t *window_data = (window_data_t*)this->data;
-	window_message_t msg = begin_window(this);
+  window_data_t *window_data = (window_data_t*)this->data;
+  window_message_t msg = begin_window(this);
 
-	/* Main vertical stack */
-	if (cig_push_vstack(RECT_AUTO, cig_insets_make(14, 16, 10, 16), (cig_layout_params_t) { .spacing = 12 })) {
+  /*  Main vertical stack */
+  if (cig_push_vstack(RECT_AUTO, cig_insets_make(14, 16, 10, 16), (cig_layout_params_t) { .spacing = 12 })) {
 
-		/* Row 1: Large title label */
-		if (cig_push_frame(RECT_AUTO_H(20))) {
+    /*  Row 1: Large title label */
+    if (cig_push_frame(RECT_AUTO_H(20))) {
       cig_label(
         (cig_text_properties_t) {
           .font = get_font(FONT_TIMES_NEW_ROMAN_32_BOLD),
@@ -36,34 +36,34 @@ static window_message_t process_main_window(window_t *this) {
       cig_pop_frame();
     }
 
-    /* Row 2: Horizontal stack consisting of tip view and stack of buttons next to it */
+    /*  Row 2: Horizontal stack consisting of tip view and stack of buttons next to it */
     if (cig_push_hstack(RECT_AUTO_H(154), cig_insets_uniform(1), (cig_layout_params_t) { .spacing = 12 })) {
-    	if (cig_push_frame_insets(RECT_AUTO_W(330), cig_insets_make(14, 20, 14, 20))) {
+      if (cig_push_frame_insets(RECT_AUTO_W(330), cig_insets_make(14, 20, 14, 20))) {
         cig_fill_panel(get_panel(PANEL_LIGHT_YELLOW), 0);
         cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
         if (cig_push_hstack(RECT_AUTO, cig_insets_zero(), (cig_layout_params_t) { .spacing = 14 })) {
-        	if (cig_push_frame(cig_rect_make(0, 0, 32, 32))) {
-        		cig_image(get_image(IMAGE_TIP_OF_THE_DAY), CIG_IMAGE_MODE_CENTER);
-        		cig_pop_frame();
-        	}
-        	if (cig_push_vstack(RECT_AUTO, cig_insets_zero(), (cig_layout_params_t) { .spacing = 8 })) {
-        		if (cig_push_frame(RECT_AUTO_H(32))) {
-          		cig_label((cig_text_properties_t) {
-          			.font = get_font(FONT_BOLD),
-          			.alignment.horizontal = CIG_TEXT_ALIGN_LEFT
-          		}, "Did you know...");
-          		cig_pop_frame();
-          	}
-          	if (cig_push_frame(RECT_AUTO)) {
-          		cig_label((cig_text_properties_t) {
-          			.alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
-          			.alignment.vertical = CIG_TEXT_ALIGN_TOP
-          		}, tips[window_data->tip_index]);
-          		cig_pop_frame();
-          	}
-          	cig_pop_frame();
-        	}
-        	cig_pop_frame();
+          if (cig_push_frame(cig_rect_make(0, 0, 32, 32))) {
+            cig_image(get_image(IMAGE_TIP_OF_THE_DAY), CIG_IMAGE_MODE_CENTER);
+            cig_pop_frame();
+          }
+          if (cig_push_vstack(RECT_AUTO, cig_insets_zero(), (cig_layout_params_t) { .spacing = 8 })) {
+            if (cig_push_frame(RECT_AUTO_H(32))) {
+              cig_label((cig_text_properties_t) {
+                .font = get_font(FONT_BOLD),
+                .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
+              }, "Did you know...");
+              cig_pop_frame();
+            }
+            if (cig_push_frame(RECT_AUTO)) {
+              cig_label((cig_text_properties_t) {
+                .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
+                .alignment.vertical = CIG_TEXT_ALIGN_TOP
+              }, tips[window_data->tip_index]);
+              cig_pop_frame();
+            }
+            cig_pop_frame();
+          }
+          cig_pop_frame();
         }
         cig_pop_frame();
       }
@@ -76,47 +76,47 @@ static window_message_t process_main_window(window_t *this) {
         }
         cig_spacer(58);
         if (cig_push_frame(RECT_AUTO_H(2))) { /* Separator */
-        	cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
-        	cig_pop_frame();
+          cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
+          cig_pop_frame();
         }
         cig_pop_frame();
       }
       cig_pop_frame();
     }
 
-    /* Row 3: Checkbox and close button */
+    /*  Row 3: Checkbox and close button */
     if (cig_push_hstack(RECT_AUTO, cig_insets_zero(), (cig_layout_params_t) { .spacing = 12 })) {
-			checkbox(RECT_AUTO_W(330), NULL, "Show this Welcome Screen next time you start Windows");
-			if (standard_button(RECT_AUTO_H(23), "Close")) {
+      checkbox(RECT_AUTO_W(330), NULL, "Show this Welcome Screen next time you start Windows");
+      if (standard_button(RECT_AUTO_H(23), "Close")) {
         msg = WINDOW_CLOSE;
       }
-			cig_pop_frame();
-		}
+      cig_pop_frame();
+    }
 
-		cig_pop_frame();
+    cig_pop_frame();
   }
 
-	end_window();
+  end_window();
 
-	return msg;
+  return msg;
 }
 
 application_t welcome_app() {
   window_data_t *data = malloc(sizeof(window_data_t));
   data->tip_index = 0;
 
-	return (application_t) {
+  return (application_t) {
     .id = "welcome",
-		.windows = {
-			(window_t) {
+    .windows = {
+      (window_t) {
         .id = cig_hash("welcome"),
-				.proc = &process_main_window,
-				.data = data,
-				.rect = RECT_CENTERED(488, 280),
-				.title = "Welcome",
-				.icon = -1
-			}
-		},
-		.data = NULL
-	};
+        .proc = &process_main_window,
+        .data = data,
+        .rect = RECT_CENTERED(488, 280),
+        .title = "Welcome",
+        .icon = -1
+      }
+    },
+    .data = NULL
+  };
 }

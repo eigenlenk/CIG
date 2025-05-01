@@ -3,7 +3,7 @@
 
 #include "cigmac.h"
 
-/* Macro for declaring a insets<T> type */
+/*  Macro for declaring a insets<T> type */
 #define DECLARE_INSETS_T(T, DECLNAME)                                        \
                                                                              \
 typedef struct {                                                             \

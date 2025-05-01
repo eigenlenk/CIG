@@ -10,9 +10,9 @@
 
 int main(int argc, char **argv)
 {
-  /* Having trouble running this consistently, so I'm disabling it for now.
-     Just re-run the init/bootstrap process if you make any changes here */
-	/* NOB_GO_REBUILD_URSELF(argc, argv); */
+  /*  Having trouble running this consistently, so I'm disabling it for now.
+      Just re-run the init/bootstrap process if you make any changes here */
+  // NOB_GO_REBUILD_URSELF(argc, argv);
   
   enum targets {
     TARGET_TEST = 1,
@@ -44,11 +44,11 @@ int main(int argc, char **argv)
     }
   }
 
-	if (!nob_mkdir_if_not_exists(BIN_FOLDER)) {
-		return 1;
-	}
+  if (!nob_mkdir_if_not_exists(BIN_FOLDER)) {
+    return 1;
+  }
 
-	Nob_Cmd cmd = { 0 };
+  Nob_Cmd cmd = { 0 };
 
   if (targets_included & TARGET_TEST) {
     nob_cmd_append(
@@ -126,5 +126,5 @@ int main(int argc, char **argv)
     if (!nob_cmd_run_sync_and_reset(&cmd)) return 1;
   }
 
-	return 0;
+  return 0;
 }
