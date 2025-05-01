@@ -20,10 +20,10 @@ static Texture2D images[__IMAGE_COUNT];
 static Shader blue_dither_shader;
 static bool dithering_shader_enabled = false;
 
-/* Core API */
+/*  Core API */
 static void set_clip_rect(cig_buffer_ref, cig_rect_t, bool);
 
-/* Text API */
+/*  Text API */
 static void render_text(
   const char *,
   size_t,

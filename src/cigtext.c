@@ -11,11 +11,11 @@
 #define MAX_TAG_VALUE_LEN 32
 
 typedef struct {
-  bool open,
-       terminating,
-       _naming;
-  char name[MAX_TAG_NAME_LEN],
-       value[MAX_TAG_VALUE_LEN];
+  bool  open,
+        terminating,
+        _naming;
+  char  name[MAX_TAG_NAME_LEN],
+        value[MAX_TAG_VALUE_LEN];
 } tag_parser_t;
 
 typedef struct { unsigned short w, h; } bounds_t;
@@ -37,6 +37,10 @@ static void wrap_text(utf8_string *, size_t, cig_vec2_t *, cig_text_overflow_t, 
 static bool parse_tag(tag_parser_t*, utf8_char, uint32_t);
 static void apply_tag(tag_parser_t*);
 
+/*  ┌───────────────────┐
+    │ BACKEND CALLBACKS │
+    └───────────────────┘ */
+
 void cig_set_text_render_callback(cig_text_render_callback_t callback) {
   render_callback = callback;
 }
@@ -49,9 +53,9 @@ void cig_set_font_query_callback(cig_font_query_callback_t callback) {
   font_query = callback;
 }
 
-/* ┌────────────────┐
-───┤  TEXT DISPLAY  │
-   └────────────────┘ */
+/*  ┌──────────────┐
+    │ TEXT DISPLAY │
+    └──────────────┘ */
 
 void cig_set_default_font(cig_font_ref font) {
   default_font = font;
@@ -125,9 +129,9 @@ void cig_draw_label(label_t *label) {
   }
 }
 
-/* ╔════════════════════════════════════════════╗
-   ║            INTERNAL FUNCTIONS              ║
-   ╚════════════════════════════════════════════╝ */
+/*  ┌────────────────────┐
+    │ INTERNAL FUNCTIONS │
+    └────────────────────┘ */
 
 static void prepare_label(
   label_t *label,
@@ -227,8 +231,6 @@ static void prepare_label(
               break;
             }
           }
-
-          // printf("\tNewlines: %i\n", newlines);
         }
 
         // printf("Checking [%i...%i] (w = %i/%i, bx = %i): |%.*s|\n", span.start, i, line_width, max_width, bounds.x, (int)length, &str[span.start]);
@@ -262,7 +264,7 @@ static void prepare_label(
               span.reading = false;
             } else {
               if (!end_of_string && props->max_lines == line_count && props->overflow == CIG_TEXT_OVERFLOW) {
-                /* All text will be place on one line, no matter it going out of bounds */
+                /*  All text will be place on one line, no matter it going out of bounds */
                 i += ch.byte_len;
                 continue;
               }
@@ -396,9 +398,9 @@ static void render_spans(
   register int w, dx, dy;
   register span_t *span, *line_start, *line_end, *last = first + (count-1);
   register const cig_font_info_t font_info = font_query(base_font);
-  
+
   static double alignment_constant[3] = { 0, 0.5, 1 };
-  
+
   dy = absolute_rect.y + (int)((absolute_rect.h - bounds.h) * alignment_constant[vertical_alignment-1]);
   line_start = span = first;
   w = 0;
@@ -412,7 +414,7 @@ static void render_spans(
 
       for (span = line_start; span <= line_end; span++) {
         cig_font_info_t span_font_info = span->font ? font_query(span->font) : font_info;
-        
+
         render_callback(
           span->str,
           span->byte_len,
@@ -426,14 +428,14 @@ static void render_spans(
           span->color ? span->color : base_color,
           span->style_flags
         );
-        
+
         dx += span->bounds.w;
       }
 
       dy += line_end->newlines * font_info.height;
       w = 0;
       span = line_start = line_end+1;
-      
+
       continue;
     }
 
@@ -469,7 +471,7 @@ static bool parse_tag(tag_parser_t *this, utf8_char ch, uint32_t cp) {
       }
     }
   }
-  
+
   return false;
 }
 
@@ -510,7 +512,5 @@ static void apply_tag(tag_parser_t *tag) {
     } else {
       style |= CIG_TEXT_STRIKETHROUGH;
     }
-  } else {
-    // Log warning?
-  }
+  } else { /* Log warning? */ }
 }

@@ -1,6 +1,5 @@
 #include "unity.h"
 #include "fixture.h"
-#include <stdbool.h>
 #include <stdio.h>
 
 static void run_all_tests(void) {

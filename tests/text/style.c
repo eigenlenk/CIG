@@ -73,10 +73,14 @@ TEST_SETUP(text_style) {
 TEST_TEAR_DOWN(text_style) {}
 
 static void begin() {
-  /* In the context of these tests we work with a terminal/text-mode where
-     bounds and positions are calculated in number of characters rather than pixels */
-	cig_begin_layout(&ctx, NULL, cig_rect_make(0, 0, 80, 25), 0.1f); /* 80 x 25 character terminal */
+  /*  In the context of these tests we work with a terminal/text-mode where
+      bounds and positions are calculated in number of characters rather than pixels */
+  cig_begin_layout(&ctx, NULL, cig_rect_make(0, 0, 80, 25), 0.1f); /* 80 x 25 character terminal */
 }
+
+/*  ┌────────────┐
+    │ TEST CASES │
+    └────────────┘ */
 
 TEST(text_style, font_override) {  
   begin();

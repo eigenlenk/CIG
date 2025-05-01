@@ -1,13 +1,13 @@
 #include "ciggfx.h"
 
-/* ┌─────────────────────┐
-───┤  BACKEND CALLBACKS  │
-   └─────────────────────┘ */
-
 static cig_panel_render_callback_t panel_callback = NULL;
 static cig_draw_rectangle_callback_t draw_rectangle = NULL;
 static cig_draw_line_callback_t draw_line = NULL;
 static cig_draw_image_callback_t draw_image = NULL;
+
+/*  ┌───────────────────┐
+    │ BACKEND CALLBACKS │
+    └───────────────────┘ */
 
 void cig_set_draw_image_callback(cig_draw_image_callback_t f) {
   draw_image = f;
@@ -25,9 +25,9 @@ void cig_set_draw_line_callback(cig_draw_line_callback_t f) {
   draw_line = f;
 }
 
-/* ┌───────┐
-───┤  API  │
-   └───────┘ */
+/*  ┌───────────────────────────┐
+    │ IMAGE & 2D DRAW FUNCTIONS │
+    └───────────────────────────┘ */
 
 void cig_image(cig_image_ref image, cig_image_mode_t mode) {
   if (!draw_image) { /* Log an error? */ return; }

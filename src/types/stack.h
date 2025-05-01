@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <assert.h>
 
-/* Macro for declaring a stack<T> type */
+/*  Macro for declaring a stack<T> type */
 #define DECLARE_ARRAY_STACK_T(T)                                    \
                                                                     \
 typedef struct T##_stack {                                          \

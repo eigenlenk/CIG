@@ -3,9 +3,9 @@
 
 #include "cigmac.h"
 
-/* Macro for declaring a rect<T> type. VEC2 and INSETS define which
-   type to use for some of the arguments and return values. Ideally
-   they'd all use the same datatype */
+/*  Macro for declaring a rect<T> type. VEC2 and INSETS define which
+    type to use for some of the arguments and return values. Ideally
+    they'd all use the same datatype */
 #define DECLARE_RECT_T(T, DECLNAME, VEC2, INSETS)                                            \
                                                                                              \
 typedef struct {                                                                             \
