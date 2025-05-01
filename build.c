@@ -26,7 +26,7 @@ int main(int argc, char **argv)
     printf("Builds the specified target.\n\n");
     printf("Arguments:\n");
     printf("\ttest\tBuilds the test target\n");
-    printf("\tdemo\tBuilds the demo target (NOT IMPLEMENTED YET)\n");
+    printf("\tdemo\tBuilds the demo target\n");
     printf("\tall\tBuilds both test and demo targets\n");
     return 0;
   } else {
