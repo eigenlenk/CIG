@@ -118,10 +118,11 @@ static bool do_desktop_icon(int icon, const char *title) {
 
     CIG(_) {
       if (focused) {
+        int text_x_in_parent = (CIG_W - label->bounds.w) * 0.5;
         cig_draw_rect(
-          cig_rect_make(label->rect.x-2, label->rect.y-2, label->rect.w+4, label->rect.h+4),
+          cig_rect_make(CIG_SX+text_x_in_parent-1, CIG_SY-1, label->bounds.w+2, label->bounds.h+2),
           get_color(COLOR_WINDOW_ACTIVE_TITLEBAR),
-          get_color(COLOR_YELLOW),
+          0,
           1
         );
       }
@@ -182,7 +183,7 @@ static void do_taskbar() {
 
     cig_prepare_label(&clock_label, 0, (cig_text_properties_t) { .flags = CIG_TEXT_FORMATTED }, "%02d:%02d", ct->tm_hour, ct->tm_min);
 
-    const int clock_w = (clock_label.rect.w+11*2);
+    const int clock_w = (clock_label.bounds.w+11*2);
 
     CIG(
       cig_rect_make(CIG_W_INSET-clock_w, 0, clock_w, CIG_AUTO_BIT),

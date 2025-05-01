@@ -80,14 +80,14 @@ typedef struct {
 
 typedef struct {
   span_t spans[CIG_LABEL_SPANS_MAX];      /* 960 */
-  cig_rect_t rect;                        /* 16 */
-  cig_id_t hash;                          /* 4 */
-  cig_font_ref font;                      /* 4 */
-  cig_text_color_ref color;               /* 4 */
   struct {
     cig_text_horizontal_alignment_t horizontal;
     cig_text_vertical_alignment_t vertical;
   } alignment;
+  cig_id_t hash;                          /* 4 */
+  cig_font_ref font;                      /* 4 */
+  cig_text_color_ref color;               /* 4 */
+  struct { unsigned short w, h; } bounds; /* 4 */
   unsigned char span_count;               /* 1 */
   unsigned char line_count;               /* 1 */
 

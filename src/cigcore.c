@@ -224,6 +224,9 @@ void cig_set_input_state(
 	cig_input_action_type_t action_mask
 ) {
 	if (current->input_state.locked == false) {
+		if (current->input_state._target_prev_tick != current->input_state._target_this_tick) {
+			current->input_state._click_count = 0;
+		}
 		current->input_state._target_prev_tick = current->input_state._target_this_tick;
 		current->input_state._target_this_tick = 0;
 	}
