@@ -11,9 +11,7 @@ typedef void* cig_text_color_ref;
 
 typedef struct {
   int height,
-      line_spacing,
-      baseline_offset,
-      word_spacing;
+      baseline_offset;
 } cig_font_info_t;
 
 #define CIG_TEXT_ALIGN_DEFAULT 0
@@ -50,7 +48,8 @@ typedef struct {
     cig_text_horizontal_alignment_t horizontal;
     cig_text_vertical_alignment_t vertical;
   } alignment;
-  int max_lines;
+  int max_lines,
+      line_spacing;
   cig_text_overflow_t overflow;
   enum {
     CIG_TEXT_FORMATTED = CIG_BIT(0)
@@ -62,28 +61,29 @@ typedef struct {
     the horizontal bounds of the label, or until some property of the
     text changes (font, color, link etc.) */
 typedef struct {
-  const char *str;                        /* 4 */
-  cig_font_ref font;                      /* 4 */
-  cig_text_color_ref color;               /* 4 */
-  struct { unsigned short w, h; } bounds; /* 4 */
-  unsigned char byte_len;                 /* 1 */
-  unsigned char style_flags;              /* 1 */
-  unsigned char newlines;                 /* 1 */
-} span_t;                                 /* 20 bytes total */
+  const char *str;
+  CIG_OPTIONAL(cig_font_ref) font_override;
+  CIG_OPTIONAL(cig_text_color_ref) color_override;
+  struct { unsigned short w, h; } bounds;
+  unsigned char byte_len;
+  unsigned char style_flags;
+  unsigned char newlines;
+} cig_span_t;
 
 typedef struct {
-  span_t spans[CIG_LABEL_SPANS_MAX];      /* 960 */
+  cig_span_t spans[CIG_LABEL_SPANS_MAX];
   struct {
     cig_text_horizontal_alignment_t horizontal;
     cig_text_vertical_alignment_t vertical;
   } alignment;
-  cig_id_t hash;                          /* 4 */
-  cig_font_ref font;                      /* 4 */
-  cig_text_color_ref color;               /* 4 */
-  struct { unsigned short w, h; } bounds; /* 4 */
-  unsigned char span_count;               /* 1 */
-  unsigned char line_count;               /* 1 */
-} label_t;                                /* 1000 bytes total */
+  cig_id_t hash;
+  cig_font_ref font;
+  cig_text_color_ref color;
+  struct { unsigned short w, h; } bounds;
+  unsigned char span_count;
+  unsigned char line_count;
+  char line_spacing;
+} cig_label_t;
 
 typedef void (*cig_text_render_callback_t)(const char*, size_t, cig_rect_t, cig_font_ref, cig_text_color_ref, cig_text_style_t);
 typedef cig_vec2_t (*cig_text_measure_callback_t)(const char*, size_t, cig_font_ref, cig_text_style_t);
@@ -108,15 +108,15 @@ void cig_set_default_font(cig_font_ref);
 void cig_set_default_text_color(cig_text_color_ref);
 
 /* */
-label_t* cig_label(cig_text_properties_t, const char*, ...);
+cig_label_t* cig_label(cig_text_properties_t, const char*, ...);
 
 /*  For more advanced text display you can prepare a piece of text.
     This enables accessing the text bounds before rendering it to
     pass as a size for the next layout frame for example. It also exposes
     the underlying spans (smallest text components) */
-label_t* cig_prepare_label(label_t *, unsigned int, cig_text_properties_t, const char *, ...);
+cig_label_t* cig_prepare_label(cig_label_t *, unsigned int, cig_text_properties_t, const char *, ...);
 
 /*  Renders a prepared label */
-void cig_draw_label(label_t *);
+void cig_draw_label(cig_label_t *);
 
 #endif

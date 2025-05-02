@@ -43,7 +43,6 @@ CIG_INLINED cig_vec2_t text_measure(
 CIG_INLINED cig_font_info_t font_query(cig_font_ref font_ref) {
   return (cig_font_info_t) {
     .height = 1,
-    .line_spacing = 0,
     .baseline_offset = 0
   };
 }
@@ -75,6 +74,11 @@ static void end() {
 /*  ┌────────────┐
     │ TEST CASES │
     └────────────┘ */
+
+TEST(text_label, fits_arena) {
+  begin();
+  TEST_ASSERT_NOT_NULL(CIG_ALLOCATE(cig_label_t));
+}
 
 TEST(text_label, single) {  
   /*  Runing to iterations to test that text is measured only once
@@ -241,7 +245,7 @@ TEST(text_label, forced_line_change) {
 TEST(text_label, prepare_single_long_word) {
   begin();
 
-  label_t label;
+  cig_label_t label;
   cig_prepare_label(&label, 7, (cig_text_properties_t) {}, "Foobarbaz");
 
   TEST_ASSERT_EQUAL_INT(9, label.bounds.w);
@@ -257,7 +261,7 @@ TEST(text_label, prepare_single_long_word) {
 TEST(text_label, prepare_multiple_long_words) {
   begin();
 
-  label_t label;
+  cig_label_t label;
   cig_prepare_label(&label, 7, (cig_text_properties_t) {}, "Foobarbaz barbazfoo bazfoobar");
 
   TEST_ASSERT_EQUAL_INT(9, label.bounds.w);
@@ -350,6 +354,7 @@ TEST(text_label, multiline_overflow_ellipsis) {
 }
 
 TEST_GROUP_RUNNER(text_label) {
+  RUN_TEST_CASE(text_label, fits_arena);
   RUN_TEST_CASE(text_label, single);
   RUN_TEST_CASE(text_label, multiline);
   RUN_TEST_CASE(text_label, horizontal_alignment_left);
