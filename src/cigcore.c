@@ -3,10 +3,6 @@
 #include <string.h>
 #include <assert.h>
 
-#ifdef DEBUG
-#include <stdio.h>
-#endif
-
 static cig_context_t *current = NULL;
 static cig_set_clip_rect_callback_t set_clip = NULL;
 
