@@ -66,6 +66,9 @@ The demo serves as a work-in-progress testbed for the library. I like retro comp
 
 ![image](https://github.com/user-attachments/assets/5f05c3f4-b88b-417d-8189-6d771cbd6ed5)
 
+#### Here's how the final image is rendered piece by piece
+https://github.com/user-attachments/assets/80a5a0f1-f1fc-41ed-8c5a-699056a58b9b
+
 # Getting started
 The library uses [nob.h](https://github.com/tsoding/nob.h) to bootstrap the build command to build the test and demo target.
 
