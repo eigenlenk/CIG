@@ -97,3 +97,5 @@ Adds an image element as well as line and rectangle drawing (pipings calls to th
 * Shoutout to Dear ImGui for introducing the concept of immediate-mode GUIs to wider audiences (including me) all these years ago
 * More recently I came across [Clay](https://github.com/nicbarker/clay) which reinforced some of the ideas and encouraged me to continue
 
+# What now?
+This is pretty much my first open-source library, so if you find this interesting or it gives you an idea how to make that thing of your own, that's awesome. If you want to try and use it, that's even better! Willing to contribute a fix or a new feature? OMG! We can chat on [Discord](https://discord.gg/X379hyV37f) 👋
