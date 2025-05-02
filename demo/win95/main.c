@@ -464,11 +464,13 @@ static void debug_step_visualize(cig_rect_t parent, cig_rect_t rect) {
 
   BeginTextureMode(render_texture);
 
-  WaitTime(0.5);
+  /* Automatically */
+  // WaitTime(0.5);
 
-  /*while (1) {
+  /* Manually */
+  while (1) {
     PollInputEvents();
-    if (IsKeyPressed(KEY_SPACE)) {
+    if (IsKeyPressed(KEY_SPACE) || IsKeyPressedRepeat(KEY_SPACE)) {
       break;
     } else if (IsKeyPressed(KEY_ESCAPE)) {
       cig_cancel_debug_stepper();
@@ -476,7 +478,7 @@ static void debug_step_visualize(cig_rect_t parent, cig_rect_t rect) {
     } else {
       WaitTime(1.0/60);
     }
-  }*/
+  }
 }
 
 #endif
