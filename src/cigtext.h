@@ -61,31 +61,29 @@ typedef struct {
     the horizontal bounds of the label, or until some property of the
     text changes (font, color, link etc.) */
 typedef struct {
-  const char *str;                        /* 4 */
-  cig_font_ref font;                      /* 4 */
-  cig_text_color_ref color;               /* 4 */
-  struct { unsigned short w, h; } bounds; /* 4 */
-  unsigned char byte_len;                 /* 1 */
-  unsigned char style_flags;              /* 1 */
-  unsigned char newlines;                 /* 1 */
-                                          /* (1) */
-} cig_span_t;                             /* 20 bytes total */
+  const char *str;
+  CIG_OPTIONAL(cig_font_ref) font_override;
+  CIG_OPTIONAL(cig_text_color_ref) color_override;
+  struct { unsigned short w, h; } bounds;
+  unsigned char byte_len;
+  unsigned char style_flags;
+  unsigned char newlines;
+} cig_span_t;
 
 typedef struct {
-  cig_span_t spans[CIG_LABEL_SPANS_MAX];  /* 960 */
+  cig_span_t spans[CIG_LABEL_SPANS_MAX];
   struct {
     cig_text_horizontal_alignment_t horizontal;
     cig_text_vertical_alignment_t vertical;
-  } alignment;                            /* 8 */
-  cig_id_t hash;                          /* 4 */
-  cig_font_ref font;                      /* 4 */
-  cig_text_color_ref color;               /* 4 */
-  struct { unsigned short w, h; } bounds; /* 4 */
-  unsigned char span_count;               /* 1 */
-  unsigned char line_count;               /* 1 */
-  char line_spacing;                      /* 1 */
-                                          /* (1) */
-} cig_label_t;                            /* 988 bytes total */
+  } alignment;
+  cig_id_t hash;
+  cig_font_ref font;
+  cig_text_color_ref color;
+  struct { unsigned short w, h; } bounds;
+  unsigned char span_count;
+  unsigned char line_count;
+  char line_spacing;
+} cig_label_t;
 
 typedef void (*cig_text_render_callback_t)(const char*, size_t, cig_rect_t, cig_font_ref, cig_text_color_ref, cig_text_style_t);
 typedef cig_vec2_t (*cig_text_measure_callback_t)(const char*, size_t, cig_font_ref, cig_text_style_t);

@@ -55,7 +55,7 @@
 #define CIG_PARAMS(P...) .params = (cig_layout_params_t) P
 #define CIG_BUILDER(F) .builder = F
 
-#define CIG_ALLOCATE(T) (T*)cig_state_allocate(sizeof(T));
+#define CIG_ALLOCATE(T) (T*)cig_state_allocate(sizeof(T))
 
 #define _ RECT_AUTO
 

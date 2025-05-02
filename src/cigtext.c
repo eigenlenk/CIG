@@ -338,8 +338,8 @@ static void wrap_text(
       }
       *additional_span = (cig_span_t) { 
         .str = "...",
-        .font = font_override,
-        .color = color_override,
+        .font_override = font_override,
+        .color_override = color_override,
         .bounds = { ellipsis_size.x, ellipsis_size.y },
         .byte_len = 3,
         .style_flags = style,
@@ -375,8 +375,8 @@ static cig_span_t* create_span(
 ) {
   label->spans[label->span_count++] = (cig_span_t) { 
     .str = slice.str,
-    .font = font_override,
-    .color = color_override,
+    .font_override = font_override,
+    .color_override = color_override,
     .bounds = { bounds.x, bounds.y },
     .byte_len = (unsigned char)slice.byte_len,
     .style_flags = style,
@@ -417,19 +417,19 @@ static void render_spans(
       dx = absolute_rect.x + (int)((absolute_rect.w - w) * alignment_constant[horizontal_alignment-1]);
 
       for (span = line_start; span <= line_end; span++) {
-        cig_font_info_t span_font_info = span->font ? font_query(span->font) : font_info;
+        cig_font_info_t span_font_info = span->font_override ? font_query(span->font_override) : font_info;
 
         render_callback(
           span->str,
           span->byte_len,
           cig_rect_make(
             dx,
-            dy + (span->font ? ((font_info.height+font_info.baseline_offset)-(span_font_info.height+span_font_info.baseline_offset)) : 0),
+            dy + (span->font_override ? ((font_info.height+font_info.baseline_offset)-(span_font_info.height+span_font_info.baseline_offset)) : 0),
             span->bounds.w,
             span->bounds.h
           ),
-          span->font ? span->font : base_font,
-          span->color ? span->color : base_color,
+          span->font_override ? span->font_override : base_font,
+          span->color_override ? span->color_override : base_color,
           span->style_flags
         );
 

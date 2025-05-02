@@ -75,6 +75,11 @@ static void end() {
     │ TEST CASES │
     └────────────┘ */
 
+TEST(text_label, fits_arena) {
+  begin();
+  TEST_ASSERT_NOT_NULL(CIG_ALLOCATE(cig_label_t));
+}
+
 TEST(text_label, single) {  
   /*  Runing to iterations to test that text is measured only once
       and cached data is used on consecutive layout passes */
@@ -349,6 +354,7 @@ TEST(text_label, multiline_overflow_ellipsis) {
 }
 
 TEST_GROUP_RUNNER(text_label) {
+  RUN_TEST_CASE(text_label, fits_arena);
   RUN_TEST_CASE(text_label, single);
   RUN_TEST_CASE(text_label, multiline);
   RUN_TEST_CASE(text_label, horizontal_alignment_left);
