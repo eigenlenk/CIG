@@ -11,8 +11,8 @@ static cig_context_t *current = NULL;
 static cig_set_clip_rect_callback_t set_clip = NULL;
 
 #ifdef DEBUG
-static cig_debug_stepper_draw_callback_t debug_stepper = NULL;
-static bool requested_debug_stepper = false;
+static cig_layout_breakpoint_callback_t layout_breakpoint_callback = NULL;
+static bool requested_layout_step_mode = false;
 #endif
 
 /*  Forward delcarations */
@@ -78,12 +78,11 @@ void cig_begin_layout(
   current->default_insets = cig_insets_zero();
 
 #ifdef DEBUG
-  if (requested_debug_stepper && current->step_mode == false) {
-    requested_debug_stepper = false;
+  if (requested_layout_step_mode && current->step_mode == false) {
+    requested_layout_step_mode = false;
     current->step_mode = true;
   } else if (current->step_mode) {
     current->step_mode = false;
-    printf("Disabling debug stepper\n");
   }
 #endif
 
@@ -98,7 +97,7 @@ void cig_begin_layout(
   });
 
 #ifdef DEBUG
-  cig_trigger_debug_stepper_breakpoint(cig_rect_zero(), cig_rect_make(0, 0, rect.w, rect.h));
+  cig_trigger_layout_breakpoint(cig_rect_zero(), cig_rect_make(0, 0, rect.w, rect.h));
 #endif
 
   cig_push_buffer(buffer);
@@ -754,7 +753,7 @@ static bool push_frame(
   current->next_id = 0;
 
 #ifdef DEBUG
-  cig_trigger_debug_stepper_breakpoint(top->absolute_rect, absolute_rect);
+  cig_trigger_layout_breakpoint(top->absolute_rect, absolute_rect);
 #endif
 
   return true;
@@ -861,23 +860,21 @@ static void pop_clip() {
     │ DEBUG MODE │
     └────────────┘ */
 
-void cig_set_debug_step_draw_callback(cig_debug_stepper_draw_callback_t fp) {
-  debug_stepper = fp;
+void cig_set_layout_breakpoint_callback(cig_layout_breakpoint_callback_t fp) {
+  layout_breakpoint_callback = fp;
 }
 
 void cig_enable_debug_stepper() {
-  printf("Enabling debug stepper for the next loop\n");
-  requested_debug_stepper = true;
+  requested_layout_step_mode = true;
 }
 
-void cig_cancel_debug_stepper() {
-  printf("Debug stepper cancelled!\n");
+void cig_disable_debug_stepper() {
   current->step_mode = false;
 }
 
-void cig_trigger_debug_stepper_breakpoint(cig_rect_t parent, cig_rect_t rect) {
-  if (current->step_mode && debug_stepper) {
-    debug_stepper(parent, rect);
+void cig_trigger_layout_breakpoint(cig_rect_t container, cig_rect_t rect) {
+  if (current->step_mode && layout_breakpoint_callback) {
+    layout_breakpoint_callback(container, rect);
   }
 }
 

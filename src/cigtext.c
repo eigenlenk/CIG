@@ -418,28 +418,24 @@ static void render_spans(
 
       for (span = line_start; span <= line_end; span++) {
         cig_font_info_t span_font_info = span->font_override ? font_query(span->font_override) : font_info;
+        const cig_rect_t span_rect = cig_rect_make(
+          dx,
+          dy + (span->font_override ? ((font_info.height+font_info.baseline_offset)-(span_font_info.height+span_font_info.baseline_offset)) : 0),
+          span->bounds.w,
+          span->bounds.h
+        );
 
         render_callback(
           span->str,
           span->byte_len,
-          cig_rect_make(
-            dx,
-            dy + (span->font_override ? ((font_info.height+font_info.baseline_offset)-(span_font_info.height+span_font_info.baseline_offset)) : 0),
-            span->bounds.w,
-            span->bounds.h
-          ),
+          span_rect,
           span->font_override ? span->font_override : base_font,
           span->color_override ? span->color_override : base_color,
           span->style_flags
         );
 
 #ifdef DEBUG
-        cig_trigger_debug_stepper_breakpoint(absolute_rect, cig_rect_make(
-            dx,
-            dy + (span->font_override ? ((font_info.height+font_info.baseline_offset)-(span_font_info.height+span_font_info.baseline_offset)) : 0),
-            span->bounds.w,
-            span->bounds.h
-          ));
+        cig_trigger_layout_breakpoint(absolute_rect, span_rect);
 #endif
 
         dx += span->bounds.w;

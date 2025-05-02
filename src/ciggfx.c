@@ -33,7 +33,7 @@ void cig_image(cig_image_ref image, cig_image_mode_t mode) {
   if (!draw_image) { /* Log an error? */ return; }
   draw_image(cig_buffer(), cig_rect_inset(cig_absolute_rect(), cig_frame()->insets), image, mode);
 #ifdef DEBUG
-  cig_trigger_debug_stepper_breakpoint(cig_rect_inset(cig_absolute_rect(), cig_frame()->insets), cig_rect_zero());
+  cig_trigger_layout_breakpoint(cig_rect_inset(cig_absolute_rect(), cig_frame()->insets), cig_rect_zero());
 #endif
 }
 

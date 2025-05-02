@@ -49,7 +49,7 @@ static void draw_line(cig_color_ref, cig_vec2_t, cig_vec2_t, float);
 
 #ifdef DEBUG
 static RenderTexture2D debug_texture;
-static void debug_step_visualize(cig_rect_t, cig_rect_t);
+static void layout_breakpoint(cig_rect_t, cig_rect_t);
 #endif
 
 void* get_font(font_id_t id) {
@@ -145,7 +145,7 @@ int main(int argc, const char *argv[]) {
   cig_set_draw_line_callback(&draw_line);
 
 #ifdef DEBUG
-  cig_set_debug_step_draw_callback(&debug_step_visualize);
+  cig_set_layout_breakpoint_callback(&layout_breakpoint);
 #endif
   
   cig_begin_layout(&ctx, NULL, cig_rect_make(0, 0, 640, 480), 0.f);
@@ -431,22 +431,23 @@ CIG_INLINED void draw_image(
 
 #ifdef DEBUG
 
-static void debug_step_visualize(cig_rect_t parent, cig_rect_t rect) {
+static void layout_breakpoint(cig_rect_t container, cig_rect_t rect) {
+  /* Ends current render texture so we could draw things as they currently stand */
   EndTextureMode();
 
   BeginDrawing();
   BeginTextureMode(debug_texture);
-  ClearBackground((Color){0,0,0,255});
+  ClearBackground((Color){ 0, 0, 0, 255 });
   DrawTexturePro(
     render_texture.texture,
-    (Rectangle) { 0, 0, (float)render_texture.texture.width, (float)-render_texture.texture.height },
-    (Rectangle) { 0, 0, (float)render_texture.texture.width, (float)-render_texture.texture.height },
+    (Rectangle) { 0, 0, render_texture.texture.width, -render_texture.texture.height },
+    (Rectangle) { 0, 0, render_texture.texture.width, render_texture.texture.height },
     (Vector2) { 0, 0 },
     0,
     WHITE
   );
-  if (parent.w > 0 && parent.h > 0) {
-    DrawRectangleLinesEx(RAYLIB_RECT(parent), 1, (Color) { 128, 0, 0, 255 });
+  if (container.w > 0 && container.h > 0) {
+    DrawRectangleLinesEx(RAYLIB_RECT(container), 1, (Color) { 128, 0, 0, 255 });
   }
   if (rect.w > 0 && rect.h > 0) {
     DrawRectangleLinesEx(RAYLIB_RECT(rect), 1, (Color) { 255, 0, 0, 255 });
@@ -454,7 +455,7 @@ static void debug_step_visualize(cig_rect_t parent, cig_rect_t rect) {
   EndTextureMode();
   DrawTexturePro(
     debug_texture.texture,
-    (Rectangle) { 0, 0, (float)debug_texture.texture.width, (float)-debug_texture.texture.height },
+    (Rectangle) { 0, 0, debug_texture.texture.width, -debug_texture.texture.height },
     (Rectangle) { 0, 0, GetScreenWidth(), GetScreenHeight() },
     (Vector2) { 0, 0 },
     0,
@@ -462,18 +463,19 @@ static void debug_step_visualize(cig_rect_t parent, cig_rect_t rect) {
   );
   EndDrawing();
 
+  /* Go back to previous render texture to continue with our application */
   BeginTextureMode(render_texture);
 
-  /* Automatically */
+  /* You can continue automatically */
   // WaitTime(0.5);
 
-  /* Manually */
+  /* Or manually */
   while (1) {
     PollInputEvents();
     if (IsKeyPressed(KEY_SPACE) || IsKeyPressedRepeat(KEY_SPACE)) {
       break;
     } else if (IsKeyPressed(KEY_ESCAPE)) {
-      cig_cancel_debug_stepper();
+      cig_disable_debug_stepper();
       break;
     } else {
       WaitTime(1.0/60);
