@@ -51,7 +51,6 @@ void cig_image(cig_image_ref image, cig_image_mode_t mode) {
       const float scale = (mode == CIG_IMAGE_MODE_ASPECT_FIT ? (src_aspect > dst_aspect) : (src_aspect < dst_aspect))
           ? ((float)container.w / size.x)
           : ((float)container.h / size.y);
-
       const int scaled_w = round(size.x * scale);
       const int scaled_h = round(size.y * scale);
 
