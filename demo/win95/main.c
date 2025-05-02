@@ -19,6 +19,7 @@ static int panel_styles[__PANEL_COUNT];
 static Texture2D images[__IMAGE_COUNT];
 static Shader blue_dither_shader;
 static bool dithering_shader_enabled = false;
+static RenderTexture2D render_texture;
 
 /*  Core API */
 static void set_clip_rect(cig_buffer_ref, cig_rect_t, bool);
@@ -45,6 +46,11 @@ static void draw_image(cig_buffer_ref, cig_rect_t, cig_image_ref, cig_image_mode
 static void render_panel(cig_panel_ref, cig_rect_t, cig_panel_modifiers_t);
 static void draw_rectangle(cig_color_ref, cig_color_ref, cig_rect_t, unsigned int);
 static void draw_line(cig_color_ref, cig_vec2_t, cig_vec2_t, float);
+
+#ifdef DEBUG
+static RenderTexture2D debug_texture;
+static void layout_breakpoint(cig_rect_t, cig_rect_t);
+#endif
 
 void* get_font(font_id_t id) {
   return &fonts[id];
@@ -137,19 +143,39 @@ int main(int argc, const char *argv[]) {
   cig_set_panel_render_callback(&render_panel);
   cig_set_draw_rectangle_callback(&draw_rectangle);
   cig_set_draw_line_callback(&draw_line);
+
+#ifdef DEBUG
+  cig_set_layout_breakpoint_callback(&layout_breakpoint);
+#endif
   
   cig_begin_layout(&ctx, NULL, cig_rect_make(0, 0, 640, 480), 0.f);
 
   win95_t win_instance = { 0 };
   start_win95(&win_instance);
 
-  RenderTexture2D render_texture = LoadRenderTexture(640, 480);
+  render_texture = LoadRenderTexture(640, 480);
   SetTextureFilter(render_texture.texture, TEXTURE_FILTER_POINT);
+
+#ifdef DEBUG
+  debug_texture = LoadRenderTexture(render_texture.texture.width, render_texture.texture.height);
+  SetTextureFilter(render_texture.texture, TEXTURE_FILTER_POINT);
+#endif
 
   while (!WindowShouldClose()) {
     BeginDrawing();
 
+#ifdef DEBUG
+    if (IsKeyPressed(KEY_F10)) {
+      cig_enable_debug_stepper(true);
+    }
+#endif
+
     BeginTextureMode(render_texture);
+
+#ifdef DEBUG
+    ClearBackground((Color){0});
+#endif
+
     cig_begin_layout(&ctx, NULL, cig_rect_make(0, 0, 640, 480), GetFrameTime());
     
     cig_set_input_state(
@@ -402,3 +428,59 @@ CIG_INLINED void draw_image(
     EndShaderMode();
   }
 }
+
+#ifdef DEBUG
+
+static void layout_breakpoint(cig_rect_t container, cig_rect_t rect) {
+  /* Ends current render texture so we could draw things as they currently stand */
+  EndTextureMode();
+
+  BeginDrawing();
+  BeginTextureMode(debug_texture);
+  ClearBackground((Color){ 0, 0, 0, 255 });
+  DrawTexturePro(
+    render_texture.texture,
+    (Rectangle) { 0, 0, render_texture.texture.width, -render_texture.texture.height },
+    (Rectangle) { 0, 0, render_texture.texture.width, render_texture.texture.height },
+    (Vector2) { 0, 0 },
+    0,
+    WHITE
+  );
+  if (container.w > 0 && container.h > 0) {
+    DrawRectangleLinesEx(RAYLIB_RECT(container), 1, (Color) { 128, 0, 0, 255 });
+  }
+  if (rect.w > 0 && rect.h > 0) {
+    DrawRectangleLinesEx(RAYLIB_RECT(rect), 1, (Color) { 255, 0, 0, 255 });
+  }
+  EndTextureMode();
+  DrawTexturePro(
+    debug_texture.texture,
+    (Rectangle) { 0, 0, debug_texture.texture.width, -debug_texture.texture.height },
+    (Rectangle) { 0, 0, GetScreenWidth(), GetScreenHeight() },
+    (Vector2) { 0, 0 },
+    0,
+    WHITE
+  );
+  EndDrawing();
+
+  /* Go back to previous render texture to continue with our application */
+  BeginTextureMode(render_texture);
+
+  /* You can continue automatically */
+  // WaitTime(0.5);
+
+  /* Or manually */
+  while (1) {
+    PollInputEvents();
+    if (IsKeyPressed(KEY_SPACE) || IsKeyPressedRepeat(KEY_SPACE)) {
+      break;
+    } else if (IsKeyPressed(KEY_ESCAPE)) {
+      cig_disable_debug_stepper();
+      break;
+    } else {
+      WaitTime(1.0/60);
+    }
+  }
+}
+
+#endif

@@ -6,6 +6,11 @@
 static cig_context_t *current = NULL;
 static cig_set_clip_rect_callback_t set_clip = NULL;
 
+#ifdef DEBUG
+static cig_layout_breakpoint_callback_t layout_breakpoint_callback = NULL;
+static bool requested_layout_step_mode = false;
+#endif
+
 /*  Forward delcarations */
 static CIG_OPTIONAL(cig_state_t*) find_state(cig_id_t);
 static CIG_OPTIONAL(cig_scroll_state_t*) find_scroll_state(cig_id_t);
@@ -68,6 +73,15 @@ void cig_begin_layout(
   current->elapsed_time += delta_time;
   current->default_insets = cig_insets_zero();
 
+#ifdef DEBUG
+  if (requested_layout_step_mode && current->step_mode == false) {
+    requested_layout_step_mode = false;
+    current->step_mode = true;
+  } else if (current->step_mode) {
+    current->step_mode = false;
+  }
+#endif
+
   current->frames.push(&current->frames, (cig_frame_t) {
     .id = current->next_id ? current->next_id : cig_hash("root"),
     .rect = cig_rect_make(0, 0, rect.w, rect.h),
@@ -77,6 +91,10 @@ void cig_begin_layout(
     ._layout_function = NULL,
     ._layout_params = (cig_layout_params_t) { 0 }
   });
+
+#ifdef DEBUG
+  cig_trigger_layout_breakpoint(cig_rect_zero(), cig_rect_make(0, 0, rect.w, rect.h));
+#endif
 
   cig_push_buffer(buffer);
   // cig_enable_clipping();
@@ -730,6 +748,10 @@ static bool push_frame(
 
   current->next_id = 0;
 
+#ifdef DEBUG
+  cig_trigger_layout_breakpoint(top->absolute_rect, absolute_rect);
+#endif
+
   return true;
 }
 
@@ -827,3 +849,29 @@ static void pop_clip() {
     set_clip(cig_buffer(), restored_clip_rect, clip_rects->size == 1);
   }
 }
+
+#ifdef DEBUG
+
+/*  ┌────────────┐
+    │ DEBUG MODE │
+    └────────────┘ */
+
+void cig_set_layout_breakpoint_callback(cig_layout_breakpoint_callback_t fp) {
+  layout_breakpoint_callback = fp;
+}
+
+void cig_enable_debug_stepper() {
+  requested_layout_step_mode = true;
+}
+
+void cig_disable_debug_stepper() {
+  current->step_mode = false;
+}
+
+void cig_trigger_layout_breakpoint(cig_rect_t container, cig_rect_t rect) {
+  if (current->step_mode && layout_breakpoint_callback) {
+    layout_breakpoint_callback(container, rect);
+  }
+}
+
+#endif
