@@ -3,8 +3,17 @@
 #include <string.h>
 #include <assert.h>
 
+#ifdef DEBUG
+#include <stdio.h>
+#endif
+
 static cig_context_t *current = NULL;
 static cig_set_clip_rect_callback_t set_clip = NULL;
+
+#ifdef DEBUG
+static cig_debug_stepper_draw_callback_t debug_stepper = NULL;
+static bool requested_debug_stepper = false;
+#endif
 
 /*  Forward delcarations */
 static CIG_OPTIONAL(cig_state_t*) find_state(cig_id_t);
@@ -68,6 +77,16 @@ void cig_begin_layout(
   current->elapsed_time += delta_time;
   current->default_insets = cig_insets_zero();
 
+#ifdef DEBUG
+  if (requested_debug_stepper && current->step_mode == false) {
+    requested_debug_stepper = false;
+    current->step_mode = true;
+  } else if (current->step_mode) {
+    current->step_mode = false;
+    printf("Disabling debug stepper\n");
+  }
+#endif
+
   current->frames.push(&current->frames, (cig_frame_t) {
     .id = current->next_id ? current->next_id : cig_hash("root"),
     .rect = cig_rect_make(0, 0, rect.w, rect.h),
@@ -77,6 +96,10 @@ void cig_begin_layout(
     ._layout_function = NULL,
     ._layout_params = (cig_layout_params_t) { 0 }
   });
+
+#ifdef DEBUG
+  cig_trigger_debug_stepper_breakpoint(cig_rect_zero(), cig_rect_make(0, 0, rect.w, rect.h));
+#endif
 
   cig_push_buffer(buffer);
   // cig_enable_clipping();
@@ -730,6 +753,10 @@ static bool push_frame(
 
   current->next_id = 0;
 
+#ifdef DEBUG
+  cig_trigger_debug_stepper_breakpoint(top->absolute_rect, absolute_rect);
+#endif
+
   return true;
 }
 
@@ -827,3 +854,31 @@ static void pop_clip() {
     set_clip(cig_buffer(), restored_clip_rect, clip_rects->size == 1);
   }
 }
+
+#ifdef DEBUG
+
+/*  ┌────────────┐
+    │ DEBUG MODE │
+    └────────────┘ */
+
+void cig_set_debug_step_draw_callback(cig_debug_stepper_draw_callback_t fp) {
+  debug_stepper = fp;
+}
+
+void cig_enable_debug_stepper() {
+  printf("Enabling debug stepper for the next loop\n");
+  requested_debug_stepper = true;
+}
+
+void cig_cancel_debug_stepper() {
+  printf("Debug stepper cancelled!\n");
+  current->step_mode = false;
+}
+
+void cig_trigger_debug_stepper_breakpoint(cig_rect_t parent, cig_rect_t rect) {
+  if (current->step_mode && debug_stepper) {
+    debug_stepper(parent, rect);
+  }
+}
+
+#endif

@@ -235,6 +235,9 @@ typedef struct {
     cig_state_t value;
     unsigned int last_tick;
   } state_list[CIG_STATES_MAX];
+#ifdef DEBUG
+  bool step_mode;
+#endif
 } cig_context_t;
 
 /*  ┌─────────────┐
@@ -441,5 +444,20 @@ bool cig_push_grid(cig_rect_t, cig_insets_t, cig_layout_params_t);
     └───────────────────┘ */
 
 void cig_set_clip_rect_callback(cig_set_clip_rect_callback_t);
+
+#ifdef DEBUG
+
+/*  ┌────────────┐
+    │ DEBUG MODE │
+    └────────────┘ */
+
+typedef void (*cig_debug_stepper_draw_callback_t)(cig_rect_t, cig_rect_t);
+
+void cig_set_debug_step_draw_callback(cig_debug_stepper_draw_callback_t);
+void cig_enable_debug_stepper();
+void cig_cancel_debug_stepper();
+void cig_trigger_debug_stepper_breakpoint(cig_rect_t, cig_rect_t);
+
+#endif
 
 #endif

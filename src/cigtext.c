@@ -433,6 +433,15 @@ static void render_spans(
           span->style_flags
         );
 
+#ifdef DEBUG
+        cig_trigger_debug_stepper_breakpoint(absolute_rect, cig_rect_make(
+            dx,
+            dy + (span->font_override ? ((font_info.height+font_info.baseline_offset)-(span_font_info.height+span_font_info.baseline_offset)) : 0),
+            span->bounds.w,
+            span->bounds.h
+          ));
+#endif
+
         dx += span->bounds.w;
       }
 
