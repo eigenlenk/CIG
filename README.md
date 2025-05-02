@@ -89,7 +89,7 @@ Adds an image element as well as line and rectangle drawing (pipings calls to th
 
 # TODO
 * Validate and refine the API by working on the demo
-* Improve image element and pre-calculate more of the aspect ratio data before making a backend call
+* ~~Improve image element and pre-calculate more of the aspect ratio data before making a backend call~~
 * Explore a concept of "anchors" to simplify layout creation
 * Improve text support (for large pages of text with scrolling)
 * Consider bundling commonly used widgets or at least establish best practices
