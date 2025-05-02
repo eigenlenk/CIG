@@ -10,6 +10,7 @@ static void run_all_tests(void) {
   RUN_TEST_GROUP(core_macros);
   RUN_TEST_GROUP(text_label);
   RUN_TEST_GROUP(text_style);
+  RUN_TEST_GROUP(gfx_image);
 }
 
 int main(int argc, const char *argv[]) {

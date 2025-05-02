@@ -42,7 +42,8 @@ static cig_vec2_t measure_text(
 static cig_font_info_t font_query(cig_font_ref);
 
 /* Gfx API */
-static void draw_image(cig_buffer_ref, cig_rect_t, cig_image_ref, cig_image_mode_t);
+static void draw_image(cig_buffer_ref, cig_rect_t, cig_rect_t, cig_image_ref, cig_image_mode_t);
+static cig_vec2_t measure_image(cig_image_ref);
 static void render_panel(cig_panel_ref, cig_rect_t, cig_panel_modifiers_t);
 static void draw_rectangle(cig_color_ref, cig_color_ref, cig_rect_t, unsigned int);
 static void draw_line(cig_color_ref, cig_vec2_t, cig_vec2_t, float);
@@ -140,6 +141,7 @@ int main(int argc, const char *argv[]) {
   cig_set_default_text_color(&colors[COLOR_BLACK]);
 
   cig_set_draw_image_callback(&draw_image);
+  cig_set_measure_image_callback(&measure_image);
   cig_set_panel_render_callback(&render_panel);
   cig_set_draw_rectangle_callback(&draw_rectangle);
   cig_set_draw_line_callback(&draw_line);
@@ -351,8 +353,14 @@ CIG_INLINED void draw_line(
   DrawLineEx(RAYLIB_VEC2(p0), RAYLIB_VEC2(p1), thickness, *(Color*)color);
 }
 
+CIG_INLINED cig_vec2_t measure_image(cig_image_ref image) {
+  Texture2D *tex = (Texture2D *)image;
+  return cig_vec2_make(tex->width, tex->height);
+}
+
 CIG_INLINED void draw_image(
   cig_buffer_ref buffer,
+  cig_rect_t container,
   cig_rect_t rect,
   cig_image_ref image,
   cig_image_mode_t mode
@@ -363,66 +371,14 @@ CIG_INLINED void draw_image(
     BeginShaderMode(blue_dither_shader);
   }
 
-  if (mode == CIG_IMAGE_MODE_ASPECT_FIT) {
-    const float srcAspect = tex->width / tex->height;
-    const float dstAspect = (float)rect.w / rect.h;
-    const float scale = (srcAspect > dstAspect)
-        ? ((float)rect.w / tex->width)
-        : ((float)rect.h / tex->height);
-    DrawTextureEx(
-      *tex,
-      (Vector2) {
-        rect.x+(rect.w-tex->width*scale)*0.5,
-        rect.y+(rect.h-tex->height*scale)*0.5
-      },
-      0,
-      scale,
-      WHITE
-    );
-  } else if (mode == CIG_IMAGE_MODE_ASPECT_FILL) {
-    const float srcAspect = tex->width / tex->height;
-    const float dstAspect = (float)rect.w / rect.h;
-    const float scale = (srcAspect < dstAspect)
-        ? ((float)rect.w / tex->width)
-        : ((float)rect.h / tex->height);
-    DrawTextureEx(
-      *tex,
-      (Vector2) {
-        rect.x+(rect.w-tex->width*scale)*0.5,
-        rect.y+(rect.h-tex->height*scale)*0.5
-      },
-      0,
-      scale,
-      WHITE
-    );
-  } else if (mode == CIG_IMAGE_MODE_SCALE_TO_FILL) {
-    DrawTexturePro(
-      *tex,
-      (Rectangle) { 0, 0, tex->width, tex->height },
-      RAYLIB_RECT(rect),
-      (Vector2) { 0, 0 },
-      0,
-      WHITE
-    );
-  } else if (mode >= CIG_IMAGE_MODE_CENTER) {
-    Vector2 positions[9] = {
-      { 0.5, 0.5 }, /* CIG_IMAGE_MODE_CENTER */
-      { 0.0, 0.5 }, /* CIG_IMAGE_MODE_LEFT */
-      { 1.0, 0.5 }, /* CIG_IMAGE_MODE_RIGHT */
-      { 0.5, 0.0 }, /* CIG_IMAGE_MODE_TOP */
-      { 0.5, 1.0 }, /* CIG_IMAGE_MODE_BOTTOM */
-      { 0.0, 0.0 }, /* CIG_IMAGE_MODE_TOP_LEFT */
-      { 1.0, 0.0 }, /* CIG_IMAGE_MODE_TOP_RIGHT */
-      { 0.0, 1.0 }, /* CIG_IMAGE_MODE_BOTTOM_LEFT */
-      { 1.0, 1.0 }, /* CIG_IMAGE_MODE_BOTTOM_RIGHT */
-    };
-    DrawTexture(
-      *tex,
-      rect.x+(rect.w-tex->width)*positions[mode-CIG_IMAGE_MODE_CENTER].x,
-      rect.y+(rect.h-tex->height)*positions[mode-CIG_IMAGE_MODE_CENTER].y,
-      WHITE
-    ); 
-  }
+  DrawTexturePro(
+    *tex,
+    (Rectangle) { 0, 0, tex->width, tex->height },
+    RAYLIB_RECT(rect),
+    (Vector2) { 0, 0 },
+    0,
+    WHITE
+  );
 
   if (dithering_shader_enabled) {
     EndShaderMode();

@@ -30,7 +30,8 @@ typedef enum {
   CIG_PANEL_FOCUSED = CIG_BIT(3),
 } cig_panel_modifiers_t;
 
-typedef void (*cig_draw_image_callback_t)(cig_buffer_ref, cig_rect_t, cig_image_ref, cig_image_mode_t);
+typedef cig_vec2_t (*cig_measure_image_callback_t)(cig_image_ref);
+typedef void (*cig_draw_image_callback_t)(cig_buffer_ref, cig_rect_t, cig_rect_t, cig_image_ref, cig_image_mode_t);
 typedef void (*cig_panel_render_callback_t)(cig_panel_ref, cig_rect_t, cig_panel_modifiers_t);
 typedef void (*cig_draw_rectangle_callback_t)(cig_color_ref, cig_color_ref, cig_rect_t, unsigned int);
 typedef void (*cig_draw_line_callback_t)(cig_color_ref, cig_vec2_t, cig_vec2_t, float);
@@ -38,6 +39,8 @@ typedef void (*cig_draw_line_callback_t)(cig_color_ref, cig_vec2_t, cig_vec2_t, 
 /*  ┌───────────────────┐
     │ BACKEND CALLBACKS │
     └───────────────────┘ */
+
+void cig_set_measure_image_callback(cig_measure_image_callback_t);
 
 void cig_set_draw_image_callback(cig_draw_image_callback_t);
 
