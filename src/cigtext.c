@@ -30,10 +30,10 @@ static struct { size_t count; cig_font_ref fonts[4]; } font_stack;
 static struct { size_t count; cig_text_color_ref colors[4]; } color_stack;
 static cig_text_style_t style;
 
-static void prepare_label(label_t *, const cig_text_properties_t *, const unsigned int, const char *);
-static span_t* create_span(label_t *, utf8_string, cig_font_ref, cig_text_color_ref, cig_text_style_t, cig_vec2_t);
-static void render_spans(span_t *, size_t, cig_font_ref, cig_text_color_ref, cig_text_horizontal_alignment_t, cig_text_vertical_alignment_t, bounds_t);
-static void wrap_text(utf8_string *, size_t, cig_vec2_t *, cig_text_overflow_t, cig_font_ref, cig_font_ref, cig_text_color_ref, cig_text_style_t, size_t, span_t *);
+static void prepare_label(cig_label_t *, const cig_text_properties_t *, const unsigned int, const char *);
+static cig_span_t* create_span(cig_label_t *, utf8_string, cig_font_ref, cig_text_color_ref, cig_text_style_t, cig_vec2_t);
+static void render_spans(cig_span_t *, size_t, cig_font_ref, cig_text_color_ref, cig_text_horizontal_alignment_t, cig_text_vertical_alignment_t, bounds_t, int);
+static void wrap_text(utf8_string *, size_t, cig_vec2_t *, cig_text_overflow_t, cig_font_ref, cig_font_ref, cig_text_color_ref, cig_text_style_t, size_t, cig_span_t *);
 static bool parse_tag(tag_parser_t*, utf8_char, uint32_t);
 static void apply_tag(tag_parser_t*);
 
@@ -65,10 +65,10 @@ void cig_set_default_text_color(cig_text_color_ref color) {
   default_text_color = color;
 }
 
-label_t* cig_label(cig_text_properties_t props, const char *text, ...) {
+cig_label_t* cig_label(cig_text_properties_t props, const char *text, ...) {
   register const cig_rect_t absolute_rect = cig_rect_inset(cig_absolute_rect(), cig_frame()->insets);
 
-  label_t *label = CIG_ALLOCATE(label_t);
+  cig_label_t *label = CIG_ALLOCATE(cig_label_t);
 
   if (props.flags & CIG_TEXT_FORMATTED) {
     va_list args;
@@ -88,15 +88,16 @@ label_t* cig_label(cig_text_properties_t props, const char *text, ...) {
       label->color,
       label->alignment.horizontal,
       label->alignment.vertical,
-      (bounds_t) { label->bounds.w, label->bounds.h }
+      (bounds_t) { label->bounds.w, label->bounds.h },
+      label->line_spacing
     );
   }
 
   return label;
 }
 
-label_t* cig_prepare_label(
-  label_t *label,
+cig_label_t* cig_prepare_label(
+  cig_label_t *label,
   unsigned int max_width,
   cig_text_properties_t props,
   const char *text,
@@ -115,7 +116,7 @@ label_t* cig_prepare_label(
   return label;
 }
 
-void cig_draw_label(label_t *label) {
+void cig_draw_label(cig_label_t *label) {
   if (render_callback) {
     render_spans(
       &label->spans[0],
@@ -124,7 +125,8 @@ void cig_draw_label(label_t *label) {
       label->color,
       label->alignment.horizontal,
       label->alignment.vertical,
-      (bounds_t) { label->bounds.w, label->bounds.h }
+      (bounds_t) { label->bounds.w, label->bounds.h },
+      label->line_spacing
     );
   }
 }
@@ -134,7 +136,7 @@ void cig_draw_label(label_t *label) {
     └────────────────────┘ */
 
 static void prepare_label(
-  label_t *label,
+  cig_label_t *label,
   const cig_text_properties_t *props,
   const unsigned int max_width,
   const char *str
@@ -154,6 +156,7 @@ static void prepare_label(
     label->span_count = 0;
     label->bounds.w = 0;
     label->bounds.h = 0;
+    label->line_spacing = props->line_spacing;
     label->font = props->font ? props->font : default_font;
 
     utf8_string utext = make_utf8_string(str);
@@ -244,7 +247,7 @@ static void prepare_label(
 
             if (terminates_span) {
               // printf("\tForced end of span (1)!\n");
-              span_t *new_span = create_span(label, slice, font_override, color_override, props->style | style, bounds);
+              cig_span_t *new_span = create_span(label, slice, font_override, color_override, props->style | style, bounds);
               line_count += new_span->newlines = newlines;
               span.last_fitting.str = NULL;
               span.reading = false;
@@ -254,7 +257,7 @@ static void prepare_label(
           } else {
             if (span.last_fitting.str && (!props->max_lines || line_count < props->max_lines)) {
               // printf("\tNo fit. Use last range [%i...%i]: |%.*s|\n", span.start, span.last_fitting.index, span.last_fitting.slice.byte_len, span.last_fitting.slice.str);
-              span_t *new_span = create_span(label, span.last_fitting.slice, font_override, color_override, props->style | style, span.last_fitting.bounds);
+              cig_span_t *new_span = create_span(label, span.last_fitting.slice, font_override, color_override, props->style | style, span.last_fitting.bounds);
               line_count += new_span->newlines = 1;
               iter.str = span.last_fitting.str;
               i = span.last_fitting.index;
@@ -269,11 +272,11 @@ static void prepare_label(
                 continue;
               }
               // printf("\tForcing a span!\n");
-              span_t additional_span = { 0 };
+              cig_span_t additional_span = { 0 };
               if (bounds.x > max_width && (!props->max_lines || props->max_lines == line_count)) {
                 wrap_text(&slice, length, &bounds, props->overflow, display_font, font_override, color_override, props->style | style, max_width, &additional_span);
               }
-              span_t *new_span = create_span(label, slice, font_override, color_override, props->style | style, bounds);
+              cig_span_t *new_span = create_span(label, slice, font_override, color_override, props->style | style, bounds);
               if (additional_span.str) {
                 label->spans[label->span_count++] = additional_span;
               } else if (!end_of_string) {
@@ -302,7 +305,7 @@ static void prepare_label(
 
     line_count = CIG_MAX(1, line_count);
     label->line_count = line_count;
-    label->bounds.h = (line_count * base_font_info.height) + (line_count - 1) * base_font_info.line_spacing;
+    label->bounds.h = (line_count * base_font_info.height) + (line_count - 1) * label->line_spacing;
   }
 }
 
@@ -316,7 +319,7 @@ static void wrap_text(
   cig_text_color_ref color_override,
   cig_text_style_t style,
   size_t max_width,
-  span_t *additional_span
+  cig_span_t *additional_span
 ) {
   switch (overflow_mode) {
     case CIG_TEXT_SHOW_ELLIPSIS: {
@@ -333,7 +336,7 @@ static void wrap_text(
         *slice = slice_utf8_string(*slice, 0, new_length);
         *bounds = measure_callback(slice->str, slice->byte_len, display_font, style);
       }
-      *additional_span = (span_t) { 
+      *additional_span = (cig_span_t) { 
         .str = "...",
         .font = font_override,
         .color = color_override,
@@ -362,15 +365,15 @@ static void wrap_text(
   }
 }
 
-static span_t* create_span(
-  label_t *label,
+static cig_span_t* create_span(
+  cig_label_t *label,
   utf8_string slice,
   cig_font_ref font_override,
   cig_text_color_ref color_override,
   cig_text_style_t style,
   cig_vec2_t bounds
 ) {
-  label->spans[label->span_count++] = (span_t) { 
+  label->spans[label->span_count++] = (cig_span_t) { 
     .str = slice.str,
     .font = font_override,
     .color = color_override,
@@ -384,19 +387,20 @@ static span_t* create_span(
 }
 
 static void render_spans(
-  span_t *first,
+  cig_span_t *first,
   size_t count,
   cig_font_ref base_font,
   cig_text_color_ref base_color,
   cig_text_horizontal_alignment_t horizontal_alignment,
   cig_text_vertical_alignment_t vertical_alignment,
-  bounds_t bounds
+  bounds_t bounds,
+  int line_spacing
 ) {
   if (!count) { return; }
 
   register const cig_rect_t absolute_rect = cig_rect_inset(cig_absolute_rect(), cig_frame()->insets);
   register int w, dx, dy;
-  register span_t *span, *line_start, *line_end, *last = first + (count-1);
+  register cig_span_t *span, *line_start, *line_end, *last = first + (count-1);
   register const cig_font_info_t font_info = font_query(base_font);
 
   static double alignment_constant[3] = { 0, 0.5, 1 };
@@ -432,7 +436,7 @@ static void render_spans(
         dx += span->bounds.w;
       }
 
-      dy += line_end->newlines * font_info.height;
+      dy += (line_end->newlines * (font_info.height + line_spacing));
       w = 0;
       span = line_start = line_end+1;
 

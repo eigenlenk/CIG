@@ -11,7 +11,6 @@ typedef void* cig_text_color_ref;
 
 typedef struct {
   int height,
-      line_spacing,
       baseline_offset;
 } cig_font_info_t;
 
@@ -49,7 +48,8 @@ typedef struct {
     cig_text_horizontal_alignment_t horizontal;
     cig_text_vertical_alignment_t vertical;
   } alignment;
-  int max_lines;
+  int max_lines,
+      line_spacing;
   cig_text_overflow_t overflow;
   enum {
     CIG_TEXT_FORMATTED = CIG_BIT(0)
@@ -68,10 +68,11 @@ typedef struct {
   unsigned char byte_len;                 /* 1 */
   unsigned char style_flags;              /* 1 */
   unsigned char newlines;                 /* 1 */
-} span_t;                                 /* 20 bytes total */
+                                          /* (1) */
+} cig_span_t;                             /* 20 bytes total */
 
 typedef struct {
-  span_t spans[CIG_LABEL_SPANS_MAX];      /* 960 */
+  cig_span_t spans[CIG_LABEL_SPANS_MAX];  /* 960 */
   struct {
     cig_text_horizontal_alignment_t horizontal;
     cig_text_vertical_alignment_t vertical;
@@ -82,7 +83,9 @@ typedef struct {
   struct { unsigned short w, h; } bounds; /* 4 */
   unsigned char span_count;               /* 1 */
   unsigned char line_count;               /* 1 */
-} label_t;                                /* 988 bytes total */
+  char line_spacing;                      /* 1 */
+                                          /* (1) */
+} cig_label_t;                            /* 988 bytes total */
 
 typedef void (*cig_text_render_callback_t)(const char*, size_t, cig_rect_t, cig_font_ref, cig_text_color_ref, cig_text_style_t);
 typedef cig_vec2_t (*cig_text_measure_callback_t)(const char*, size_t, cig_font_ref, cig_text_style_t);
@@ -107,15 +110,15 @@ void cig_set_default_font(cig_font_ref);
 void cig_set_default_text_color(cig_text_color_ref);
 
 /* */
-label_t* cig_label(cig_text_properties_t, const char*, ...);
+cig_label_t* cig_label(cig_text_properties_t, const char*, ...);
 
 /*  For more advanced text display you can prepare a piece of text.
     This enables accessing the text bounds before rendering it to
     pass as a size for the next layout frame for example. It also exposes
     the underlying spans (smallest text components) */
-label_t* cig_prepare_label(label_t *, unsigned int, cig_text_properties_t, const char *, ...);
+cig_label_t* cig_prepare_label(cig_label_t *, unsigned int, cig_text_properties_t, const char *, ...);
 
 /*  Renders a prepared label */
-void cig_draw_label(label_t *);
+void cig_draw_label(cig_label_t *);
 
 #endif

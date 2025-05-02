@@ -233,7 +233,6 @@ CIG_INLINED cig_font_info_t font_query(cig_font_ref font_ref) {
   
   return (cig_font_info_t) {
     .height = fs->font.baseSize,
-    .line_spacing = 0,
     .baseline_offset = fs->baseline_offset
   };
 }

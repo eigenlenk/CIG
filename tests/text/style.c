@@ -53,7 +53,6 @@ CIG_INLINED cig_vec2_t text_measure(
 CIG_INLINED cig_font_info_t font_query(cig_font_ref font_ref) {
   return (cig_font_info_t) {
     .height = 1,
-    .line_spacing = 0,
     .baseline_offset = 0
   };
 }

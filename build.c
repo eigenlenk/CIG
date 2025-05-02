@@ -98,6 +98,7 @@ int main(int argc, char **argv)
       &cmd,
       "gcc",
       "-std=gnu99",
+      "-Wall",
       "-Wfatal-errors",
       
       "-I"SRC_FOLDER,

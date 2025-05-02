@@ -108,7 +108,7 @@ static bool do_desktop_icon(int icon, const char *title) {
       if (focused) { enable_blue_selection_dithering(false); }
     }
 
-    label_t *label = CIG_ALLOCATE(label_t);
+    cig_label_t *label = CIG_ALLOCATE(cig_label_t);
 
     /* We need to prepare the label here to know how large of a rectangle
        to draw around it when the icon is focused */
@@ -169,8 +169,7 @@ static void do_desktop() {
 }
 
 static void do_taskbar() {
-  static label_t some_label, clock_label;
-  static unsigned long cnt = 0;
+  static cig_label_t clock_label;
 
   const int start_button_width = 54;
   const int spacing = 4;
