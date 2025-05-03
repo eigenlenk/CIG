@@ -428,6 +428,9 @@ window_message_t begin_window(window_t *wnd) {
   window_message_t msg = 0;
 
   cig_set_next_id(wnd->id);
+  /*  We're not checking the return value here, so if it's FALSE (= culled)
+      it would crash. Easiest fix is to make sure the window can't be dragged
+      off-screen all the way. */
   cig_push_frame_insets(wnd->rect, cig_insets_uniform(3));
   cig_fill_panel(get_panel(PANEL_STANDARD_DIALOG), 0);
 

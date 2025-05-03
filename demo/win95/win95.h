@@ -12,7 +12,6 @@ typedef enum {
   FONT_ARIAL_BLACK_32,
   FONT_FRANKLIN_GOTHIC_BOOK_32,
   __FONT_COUNT
-
 } font_id_t;
 
 typedef enum {
@@ -24,7 +23,6 @@ typedef enum {
   COLOR_WINDOW_ACTIVE_TITLEBAR,
   COLOR_WINDOW_INACTIVE_TITLEBAR,
   __COLOR_COUNT
-
 } color_id_t;
 
 typedef enum {
@@ -39,7 +37,6 @@ typedef enum {
   IMAGE_WELCOME_APP_ICON,
   IMAGE_BIN_EMPTY,
   __IMAGE_COUNT
-
 } image_id_t;
 
 typedef enum {
@@ -49,7 +46,6 @@ typedef enum {
   PANEL_GRAY_DITHER,
   PANEL_INNER_BEVEL_NO_FILL,
   __PANEL_COUNT
-
 } panel_id_t;
 
 struct application_t;
@@ -57,7 +53,6 @@ struct window_t;
 
 typedef enum {
   WINDOW_CLOSE = 1
-
 } window_message_t;
 
 typedef window_message_t (*win_proc_t)(struct window_t *);
@@ -76,7 +71,6 @@ typedef struct window_t {
   cig_rect_t rect;
   char *title;
   int icon;
-
 } window_t;
 
 typedef struct application_t {
@@ -85,7 +79,6 @@ typedef struct application_t {
   void *data;
   window_t windows[1];
   bool closed;
-
 } application_t;
 
 void application_open_window(application_t *, window_t);
@@ -101,7 +94,6 @@ typedef struct {
   /*__PRIVATE__*/
   application_t applications[WIN95_APPS_MAX];
   size_t running_apps;
-
 } win95_t;
 
 void start_win95(win95_t *);
