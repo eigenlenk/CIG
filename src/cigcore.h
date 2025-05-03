@@ -9,24 +9,30 @@
 #include "types/stack.h"
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 /*  ┌──────────────────────────┐
     │ PUBLIC TYPE DECLARATIONS │
     └──────────────────────────┘ */
 
 /*  These macros declare a templated type essentially */
-DECLARE_VEC2_T   (int, cig_vec2, -999999)               /* Declares `cig_vec2_t` */
-DECLARE_INSETS_T (int, cig_insets)                      /* Declares `cig_cig_insets_t` */
-DECLARE_RECT_T   (int, cig_rect, cig_vec2, cig_insets)  /* Declares `cig_rect_t` */
+DECLARE_VEC2_T   (int32_t, cig_vec2, -999999)               /* Declares `cig_vec2_t` */
+DECLARE_INSETS_T (int32_t, cig_insets)                      /* Declares `cig_cig_insets_t` */
+DECLARE_RECT_T   (int32_t, cig_rect, cig_vec2, cig_insets)  /* Declares `cig_rect_t` */
 
-#define CIG_AUTO_BIT CIG_BIT(30)
+#define CIG__AUTO_BIT CIG_BIT(30)
+#define CIG__REL_BIT CIG_BIT(29)
 
-#define RECT_AUTO cig_rect_make(0, 0, CIG_AUTO_BIT, CIG_AUTO_BIT)
-#define RECT_AUTO_W(W) cig_rect_make(0, 0, W, CIG_AUTO_BIT)
-#define RECT_AUTO_H(H) cig_rect_make(0, 0, CIG_AUTO_BIT, H)
-#define RECT_AUTO_W_OFFSET(W) cig_rect_make(0, 0, CIG_AUTO_BIT+W, CIG_AUTO_BIT)
-#define RECT_AUTO_H_OFFSET(H) cig_rect_make(0, 0, CIG_AUTO_BIT, CIG_AUTO_BIT+H)
+#define CIG_AUTO(OFFSET) (OFFSET < 0 ? (OFFSET & ~CIG__AUTO_BIT) : (CIG__AUTO_BIT | OFFSET))
+#define CIG_REL(PERCENTAGE) (PERCENTAGE < 0 ? ((int)(PERCENTAGE * 100000) & ~CIG__REL_BIT) : (CIG__REL_BIT | (int)(PERCENTAGE * 100000)))
+
+#define RECT_AUTO cig_rect_make(0, 0, CIG_AUTO(0), CIG_AUTO(0))
+#define RECT_AUTO_W(W) cig_rect_make(0, 0, W, CIG_AUTO(0))
+#define RECT_AUTO_H(H) cig_rect_make(0, 0, CIG_AUTO(0), H)
+#define RECT_AUTO_W_OFFSET(W) cig_rect_make(0, 0, CIG_AUTO(W), CIG_AUTO(0))
+#define RECT_AUTO_H_OFFSET(H) cig_rect_make(0, 0, CIG_AUTO(0), CIG_AUTO(H))
 #define RECT(X, Y, W, H) cig_rect_make(X, Y, W, H)
+#define RECT_REL(X, Y, W, H) cig_rect_make(CIG_REL(X), CIG_REL(Y), CIG_REL(W), CIG_REL(H))
 
 #define CIG_CLICK_EXPIRE_IN_SECONDS 0.5f
 
@@ -67,17 +73,17 @@ typedef struct {
   } alignment;
 
   /*  Some common parameters the layout builder could use */
-  int spacing, width, height, columns, rows;
+  int16_t spacing, width, height, columns, rows;
 
   /*  Limits how many elements can be added per axis on in total.
       Total number of elements is checked in `cig_push_frame` but horizontal
       and vertical limits are only used in the default stack/grid builder */
   struct {
-    int horizontal, vertical, total;
+    int16_t horizontal, vertical, total;
   } limit;
 
   struct {
-    int width, height;
+    int32_t width, height;
   } size_max, size_min;
 
   /*  Some basic layout flags */
@@ -89,9 +95,9 @@ typedef struct {
   void *custom_data;
 
   /*__PRIVATE__*/
-  int _h_pos, _v_pos, _h_size, _v_size;
+  int32_t _h_pos, _v_pos, _h_size, _v_size;
   struct {
-    int h_cur, v_cur, total;
+    int16_t h_cur, v_cur, total;
   } _count; /* h_ and v_cur are only counted in stacks/grids */
 } cig_layout_params_t;
 
