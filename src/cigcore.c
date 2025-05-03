@@ -31,8 +31,28 @@ CIG_INLINED int limit(int v, const int minv_or_zero, const int maxv_or_zero) {
   return v;
 }
 
-CIG_INLINED int clearbits(int n) {
-  return (n&~CIG_AUTO_BIT);
+/*  Is CIG__AUTO_BIT set? For negative numbers we invert the mask because two's complement */
+CIG_INLINED bool is_auto(int32_t n) {
+  return (n < 0 ? n & ~CIG__AUTO_BIT : n) & CIG__AUTO_BIT;
+}
+
+/*  Is CIG__REL_BIT set? For negative numbers we invert the mask because two's complement */
+CIG_INLINED bool is_rel(int32_t n) {
+  return (n < 0 ? n & ~CIG__REL_BIT : n) & CIG__REL_BIT;
+}
+
+/*  Clear option bits and get either absolute value, AUTO value or REL value */
+CIG_INLINED int get_value(int32_t n, int relating_to) {
+  register bool rel = is_rel(n);
+  if (rel || is_auto(n)) {
+    register int v = n < 0 ? (n | CIG__AUTO_BIT | CIG__REL_BIT) : ((n&~CIG__AUTO_BIT)&~CIG__REL_BIT);
+    if (rel) {
+      return (v/100000.0)*relating_to;
+    } else {
+      return relating_to+v;
+    }
+  }
+  return n;
 }
 
 /*  ┌─────────────┐
@@ -514,29 +534,27 @@ bool cig_default_layout_builder(
   const bool v_axis = prm->axis & CIG_LAYOUT_AXIS_VERTICAL;
   const bool is_grid = h_axis && v_axis;
 
-  int x = prm->_h_pos,
+  int x = prm->_h_pos, /* TODO: Should these *not* ignore relative offsets? */
       y = prm->_v_pos,
       w,
       h;
 
   if (h_axis) {
-    if (rect.w & CIG_AUTO_BIT) {
+    if (rect.w & CIG__AUTO_BIT) {
       if (prm->width > 0) {
-        w = prm->width;
+        w = get_value(rect.w, prm->width);
       } else if (prm->columns) {
-        w = (container.w - ((prm->columns - 1) * prm->spacing)) / prm->columns;
+        w = get_value(rect.w, (container.w - ((prm->columns - 1) * prm->spacing)) / prm->columns);
       } else if (is_grid && prm->_h_size && prm->direction == CIG_LAYOUT_DIRECTION_VERTICAL) {
-        w = prm->_h_size;
+        w = get_value(rect.w, prm->_h_size);
       } else {
-        w = container.w - prm->_h_pos;
+        w = get_value(rect.w, container.w - prm->_h_pos);
       }
     } else {
-      w = clearbits(rect.w);
+      w = get_value(rect.w, container.w);
     }
   } else {
-    w = rect.w & CIG_AUTO_BIT
-      ? container.w - prm->_h_pos
-      : clearbits(rect.w);
+    w = get_value(rect.w, (rect.w & CIG__AUTO_BIT) ? container.w - prm->_h_pos : container.w);
 
     /*  Reset any remaining horizontal positioning in case we modify axis mid-layout */
     prm->_h_pos = 0;
@@ -544,23 +562,21 @@ bool cig_default_layout_builder(
   }
 
   if (v_axis) {
-    if (rect.h & CIG_AUTO_BIT) {
+    if (rect.h & CIG__AUTO_BIT) {
       if (prm->height > 0) {
-        h = prm->height;
+        h = get_value(rect.h, prm->height);
       } else if (prm->rows) {
-        h = (container.h - ((prm->rows - 1) * prm->spacing)) / prm->rows;
+        h = get_value(rect.h, (container.h - ((prm->rows - 1) * prm->spacing)) / prm->rows);
       } else if (is_grid && prm->_v_size && prm->direction == CIG_LAYOUT_DIRECTION_HORIZONTAL) {
-        h = prm->_v_size;
+        h = get_value(rect.h, prm->_v_size);
       } else {
-        h = container.h - prm->_v_pos;
+        h = get_value(rect.h, container.h - prm->_v_pos);
       }
     } else {
-      h = clearbits(rect.h);
+      h = get_value(rect.h, container.h);
     }
   } else {
-    h = rect.h & CIG_AUTO_BIT
-      ? container.h - prm->_v_pos
-      : clearbits(rect.h);
+    h = get_value(rect.h, (rect.h & CIG__AUTO_BIT) ? container.h - prm->_v_pos : container.h);
 
     /*  Reset any remaining vertical positioning in case we modify axis mid-layout */
     prm->_v_pos = 0;
@@ -667,15 +683,17 @@ static cig_rect_t resolve_size(const cig_rect_t rect, const cig_frame_t *parent)
   const cig_rect_t content_rect = cig_rect_inset(parent->rect, parent->insets);
 
   return cig_rect_make(
-    rect.x,
-    rect.y,
+    /*  X & Y components can only have the RELATIVE flag set, AUTO makes
+        no sense in this context */
+    is_rel(rect.x) ? get_value(rect.x, content_rect.w) : rect.x,
+    is_rel(rect.y) ? get_value(rect.y, content_rect.h) : rect.y,
     limit(
-      clearbits(rect.w & CIG_AUTO_BIT ? content_rect.w : rect.w),
+      get_value(rect.w, content_rect.w),
       parent->_layout_params.size_min.width,
       parent->_layout_params.size_max.width
     ),
     limit(
-      clearbits(rect.h & CIG_AUTO_BIT ? content_rect.h : rect.h),
+      get_value(rect.h, content_rect.h),
       parent->_layout_params.size_min.height,
       parent->_layout_params.size_max.height
     )

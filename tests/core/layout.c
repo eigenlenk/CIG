@@ -538,7 +538,7 @@ TEST(core_layout, grid_with_varying_cell_size) {
   cig_pop_frame();
   
   /* Spacer fills the remaining space on the second row. Internally this is just a frame push + pop */
-  cig_spacer(CIG_AUTO_BIT);
+  cig_spacer(CIG__AUTO_BIT);
   
   /* Insert an element to fill all the space on the third row */
   cig_push_frame(RECT_AUTO); /* (6) */
@@ -800,6 +800,51 @@ TEST(core_layout, main_screen_subregion) {
   cig_pop_frame();
 }
 
+TEST(core_layout, auto_size_offset) {
+  /*  Auto width and height can also take an offset constant into account.
+      RECT_AUTO_W_OFFSET(-10) means to fill the width but subtract -10 in the end.
+      This macro is the same as cig_rect_make(0, 0, CIG_AUTO(-10), CIG_AUTO(0)) */
+  if (cig_push_frame(RECT_AUTO_W_OFFSET(-10))) {
+    TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 630, 480), cig_frame()->rect);
+    cig_pop_frame();
+  }
+
+  if (cig_push_frame(RECT_AUTO_H_OFFSET(10))) {
+    TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 640, 490), cig_frame()->rect);
+    cig_pop_frame();
+  }
+}
+
+TEST(core_layout, relative_values) {
+  /*  CIG_REL allows us to create frames with relative sizes */
+  if (cig_push_frame(RECT(0, 0, CIG_REL(0.5), CIG_REL(0.75)))) {
+    TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 320, 360), cig_frame()->rect);
+    cig_pop_frame();
+  }
+
+  /*  The same works for X and Y */
+  if (cig_push_frame(RECT(CIG_REL(0.5), CIG_REL(0.5), 100, 100))) {
+    TEST_ASSERT_EQUAL_RECT(cig_rect_make(320, 240, 100, 100), cig_frame()->rect);
+    cig_pop_frame();
+  }
+
+  /*  CIG_REL and CIG_AUTO can also work together. In standard frames
+      CIG_AUTO(CIG_REL(0.5)) is equivalent to CIG_REL(0.5),
+      but in stacks for example it can yield different values */
+  if (cig_push_vstack(RECT_AUTO, cig_insets_zero(), (cig_layout_params_t) {
+    .height = 140
+  })) {
+    /*  This stack has 140px rows by default but we can specify we want HALF that.
+        This isn't very intuitive though. */
+    if (cig_push_frame(RECT(0, 0, CIG_AUTO(0), CIG_AUTO(CIG_REL(0.5))))) {
+      TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 640, 70), cig_frame()->rect);
+      cig_pop_frame();
+    }
+
+    cig_pop_frame();
+  }
+}
+
 TEST_GROUP_RUNNER(core_layout) {
   RUN_TEST_CASE(core_layout, basic_checks);
   RUN_TEST_CASE(core_layout, default_insets);
@@ -824,4 +869,6 @@ TEST_GROUP_RUNNER(core_layout) {
   RUN_TEST_CASE(core_layout, clipping);
   RUN_TEST_CASE(core_layout, additional_buffers);
   RUN_TEST_CASE(core_layout, main_screen_subregion);
+  RUN_TEST_CASE(core_layout, auto_size_offset);
+  RUN_TEST_CASE(core_layout, relative_values);
 }
