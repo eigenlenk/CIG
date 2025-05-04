@@ -64,10 +64,12 @@ typedef struct {
   struct {
     enum {
       CIG_LAYOUT_ALIGNS_LEFT = 0,
+      CIG_LAYOUT_ALIGNS_CENTER, /* Only works with v-stack */
       CIG_LAYOUT_ALIGNS_RIGHT
     } horizontal;
     enum {
       CIG_LAYOUT_ALIGNS_TOP = 0,
+      CIG_LAYOUT_ALIGNS_MIDDLE, /* Only works with h-stack */
       CIG_LAYOUT_ALIGNS_BOTTOM
     } vertical;
   } alignment;
