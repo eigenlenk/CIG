@@ -85,7 +85,10 @@ static window_message_t process_main_window(window_t *this) {
     }
 
     /*  Row 3: Checkbox and close button */
-    if (cig_push_hstack(RECT_AUTO, cig_insets_zero(), (cig_layout_params_t) { .spacing = 12 })) {
+    if (cig_push_hstack(RECT_AUTO, cig_insets_zero(), (cig_layout_params_t) {
+      .spacing = 12,
+      .alignment.vertical = CIG_LAYOUT_ALIGNS_MIDDLE
+    })) {
       checkbox(RECT_AUTO_W(330), NULL, "Show this Welcome Screen next time you start Windows");
       if (standard_button(RECT_AUTO_H(23), "Close")) {
         msg = WINDOW_CLOSE;
