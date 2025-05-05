@@ -639,12 +639,16 @@ bool cig_default_layout_builder(
     prm->_count.v_cur ++;
   }
 
-  if (prm->alignment.horizontal == CIG_LAYOUT_ALIGNS_RIGHT) {
-    x = (container.w - (x+w));
+  switch (prm->alignment.horizontal) {
+  case CIG_LAYOUT_ALIGNS_CENTER: { x = (container.w - w) * 0.5; } break;
+  case CIG_LAYOUT_ALIGNS_RIGHT: { x = (container.w - (x+w)); } break;
+  default: break;
   }
 
-  if (prm->alignment.vertical == CIG_LAYOUT_ALIGNS_BOTTOM) {
-    y = (container.h - (y+h));
+  switch (prm->alignment.vertical) {
+  case CIG_LAYOUT_ALIGNS_CENTER: { y = (container.h - h) * 0.5; } break;
+  case CIG_LAYOUT_ALIGNS_BOTTOM: { y = (container.h - (y+h)); } break;
+  default: break;
   }
 
   *result = cig_rect_make(x, y, w, h);
@@ -684,7 +688,8 @@ static cig_rect_t resolve_size(const cig_rect_t rect, const cig_frame_t *parent)
 
   return cig_rect_make(
     /*  X & Y components can only have the RELATIVE flag set, AUTO makes
-        no sense in this context */
+        no sense in this context. They are relative to W & H respectively.
+        Eg. X = 25% = W * 0.25 */
     is_rel(rect.x) ? get_value(rect.x, content_rect.w) : rect.x,
     is_rel(rect.y) ? get_value(rect.y, content_rect.h) : rect.y,
     limit(
