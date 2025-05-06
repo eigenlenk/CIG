@@ -31,9 +31,9 @@ static struct { size_t count; cig_text_color_ref colors[4]; } color_stack;
 static cig_text_style_t style;
 
 static void prepare_label(cig_label_t *, const cig_text_properties_t *, const unsigned int, const char *);
-static cig_span_t* create_span(cig_label_t *, utf8_string, cig_font_ref, cig_text_color_ref, cig_text_style_t, cig_vec2_t);
+static cig_span_t* create_span(cig_label_t *, utf8_string, cig_font_ref, cig_text_color_ref, cig_text_style_t, cig_v);
 static void render_spans(cig_span_t *, size_t, cig_font_ref, cig_text_color_ref, cig_text_horizontal_alignment_t, cig_text_vertical_alignment_t, bounds_t, int);
-static void wrap_text(utf8_string *, size_t, cig_vec2_t *, cig_text_overflow_t, cig_font_ref, cig_font_ref, cig_text_color_ref, cig_text_style_t, size_t, cig_span_t *);
+static void wrap_text(utf8_string *, size_t, cig_v *, cig_text_overflow_t, cig_font_ref, cig_font_ref, cig_text_color_ref, cig_text_style_t, size_t, cig_span_t *);
 static bool parse_tag(tag_parser_t*, utf8_char, uint32_t);
 static void apply_tag(tag_parser_t*);
 
@@ -66,7 +66,7 @@ void cig_set_default_text_color(cig_text_color_ref color) {
 }
 
 cig_label_t* cig_label(cig_text_properties_t props, const char *text, ...) {
-  register const cig_rect_t absolute_rect = cig_rect_inset(cig_absolute_rect(), cig_frame()->insets);
+  register const cig_r absolute_rect = cig_r_inset(cig_absolute_rect(), cig_frame()->insets);
 
   cig_label_t *label = CIG_ALLOCATE(cig_label_t);
 
@@ -177,7 +177,7 @@ static void prepare_label(
         char *str;
         size_t index;
         utf8_string slice;
-        cig_vec2_t bounds;
+        cig_v bounds;
       } last_fitting;
     } span = { 0 };
 
@@ -217,7 +217,7 @@ static void prepare_label(
         cig_text_color_ref color_override = color_stack.count > 0 ? color_stack.colors[color_stack.count-1] : 0;
         cig_font_ref font_override = font_stack.count > 0 ? font_stack.fonts[font_stack.count-1] : 0;
         cig_font_ref display_font = font_override ? font_override : label->font;
-        cig_vec2_t bounds = measure_callback(slice.str, slice.byte_len, display_font, style);
+        cig_v bounds = measure_callback(slice.str, slice.byte_len, display_font, style);
         size_t newlines = is_newline ? 1 : 0;
 
         if (is_newline) { /* Look ahead and count all additional newlines */
@@ -312,7 +312,7 @@ static void prepare_label(
 static void wrap_text(
   utf8_string *slice,
   size_t text_length,
-  cig_vec2_t *bounds,
+  cig_v *bounds,
   cig_text_overflow_t overflow_mode,
   cig_font_ref display_font,
   cig_font_ref font_override,
@@ -324,7 +324,7 @@ static void wrap_text(
   switch (overflow_mode) {
     case CIG_TEXT_SHOW_ELLIPSIS: {
       /* How much of the text overflows? */
-      const cig_vec2_t ellipsis_size = measure_callback("...", 3, display_font, style);
+      const cig_v ellipsis_size = measure_callback("...", 3, display_font, style);
       const double overflow = bounds->x - (max_width - ellipsis_size.x);
       const double truncation_amount = 1.0 - (overflow / bounds->x);
       /* This is a guesstimate and may not still fit properly */
@@ -371,7 +371,7 @@ static cig_span_t* create_span(
   cig_font_ref font_override,
   cig_text_color_ref color_override,
   cig_text_style_t style,
-  cig_vec2_t bounds
+  cig_v bounds
 ) {
   label->spans[label->span_count++] = (cig_span_t) { 
     .str = slice.str,
@@ -398,7 +398,7 @@ static void render_spans(
 ) {
   if (!count) { return; }
 
-  register const cig_rect_t absolute_rect = cig_rect_inset(cig_absolute_rect(), cig_frame()->insets);
+  register const cig_r absolute_rect = cig_r_inset(cig_absolute_rect(), cig_frame()->insets);
   register int w, dx, dy;
   register cig_span_t *span, *line_start, *line_end, *last = first + (count-1);
   register const cig_font_info_t font_info = font_query(base_font);
@@ -418,7 +418,7 @@ static void render_spans(
 
       for (span = line_start; span <= line_end; span++) {
         cig_font_info_t span_font_info = span->font_override ? font_query(span->font_override) : font_info;
-        const cig_rect_t span_rect = cig_rect_make(
+        const cig_r span_rect = cig_r_make(
           dx,
           dy + (span->font_override ? ((font_info.height+font_info.baseline_offset)-(span_font_info.height+span_font_info.baseline_offset)) : 0),
           span->bounds.w,

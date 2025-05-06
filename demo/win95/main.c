@@ -22,18 +22,18 @@ static bool dithering_shader_enabled = false;
 static RenderTexture2D render_texture;
 
 /*  Core API */
-static void set_clip_rect(cig_buffer_ref, cig_rect_t, bool);
+static void set_clip_rect(cig_buffer_ref, cig_r, bool);
 
 /*  Text API */
 static void render_text(
   const char *,
   size_t,
-  cig_rect_t,
+  cig_r,
   cig_font_ref,
   cig_text_color_ref,
   cig_text_style_t
 );
-static cig_vec2_t measure_text(
+static cig_v measure_text(
   const char *,
   size_t,
   cig_font_ref,
@@ -42,15 +42,15 @@ static cig_vec2_t measure_text(
 static cig_font_info_t font_query(cig_font_ref);
 
 /* Gfx API */
-static void draw_image(cig_buffer_ref, cig_rect_t, cig_rect_t, cig_image_ref, cig_image_mode_t);
-static cig_vec2_t measure_image(cig_image_ref);
-static void render_panel(cig_panel_ref, cig_rect_t, cig_panel_modifiers_t);
-static void draw_rectangle(cig_color_ref, cig_color_ref, cig_rect_t, unsigned int);
-static void draw_line(cig_color_ref, cig_vec2_t, cig_vec2_t, float);
+static void draw_image(cig_buffer_ref, cig_r, cig_r, cig_image_ref, cig_image_mode_t);
+static cig_v measure_image(cig_image_ref);
+static void render_panel(cig_panel_ref, cig_r, cig_panel_modifiers_t);
+static void draw_rectangle(cig_color_ref, cig_color_ref, cig_r, unsigned int);
+static void draw_line(cig_color_ref, cig_v, cig_v, float);
 
 #ifdef DEBUG
 static RenderTexture2D debug_texture;
-static void layout_breakpoint(cig_rect_t, cig_rect_t);
+static void layout_breakpoint(cig_r, cig_r);
 #endif
 
 void* get_font(font_id_t id) {
@@ -150,7 +150,7 @@ int main(int argc, const char *argv[]) {
   cig_set_layout_breakpoint_callback(&layout_breakpoint);
 #endif
   
-  cig_begin_layout(&ctx, NULL, cig_rect_make(0, 0, 640, 480), 0.f);
+  cig_begin_layout(&ctx, NULL, cig_r_make(0, 0, 640, 480), 0.f);
 
   win95_t win_instance = { 0 };
   start_win95(&win_instance);
@@ -178,10 +178,10 @@ int main(int argc, const char *argv[]) {
     ClearBackground((Color){0});
 #endif
 
-    cig_begin_layout(&ctx, NULL, cig_rect_make(0, 0, 640, 480), GetFrameTime());
+    cig_begin_layout(&ctx, NULL, cig_r_make(0, 0, 640, 480), GetFrameTime());
     
     cig_set_input_state(
-      cig_vec2_make(GetMouseX()/2, GetMouseY()/2),
+      cig_v_make(GetMouseX()/2, GetMouseY()/2),
       IsMouseButtonDown(MOUSE_BUTTON_LEFT) ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0 +
       IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? CIG_INPUT_MOUSE_BUTTON_RIGHT : 0
     );
@@ -209,7 +209,7 @@ int main(int argc, const char *argv[]) {
 
   return 0;
 }
-CIG_INLINED void set_clip_rect(cig_buffer_ref buffer, cig_rect_t rect, bool is_root) {
+CIG_INLINED void set_clip_rect(cig_buffer_ref buffer, cig_r rect, bool is_root) {
   if (is_root) {
     EndScissorMode();
   } else {
@@ -221,7 +221,7 @@ CIG_INLINED void set_clip_rect(cig_buffer_ref buffer, cig_rect_t rect, bool is_r
 CIG_INLINED void render_text(
   const char *str,
   size_t len,
-  cig_rect_t rect,
+  cig_r rect,
   cig_font_ref font,
   cig_text_color_ref color,
   cig_text_style_t style
@@ -238,7 +238,7 @@ CIG_INLINED void render_text(
   DrawTextEx(fs->font, buf, (Vector2) { rect.x, rect.y }, fs->font.baseSize, 0, *(Color*)color);
 }
 
-CIG_INLINED cig_vec2_t measure_text(
+CIG_INLINED cig_v measure_text(
   const char *str,
   size_t len,
   cig_font_ref font,
@@ -251,7 +251,7 @@ CIG_INLINED cig_vec2_t measure_text(
   struct font_store *fs = (struct font_store*)font;
   Vector2 bounds = MeasureTextEx(fs->font, buf, fs->font.baseSize, 0);
   
-  return cig_vec2_make(bounds.x, bounds.y);
+  return cig_v_make(bounds.x, bounds.y);
 }
 
 CIG_INLINED cig_font_info_t font_query(cig_font_ref font_ref) {
@@ -265,7 +265,7 @@ CIG_INLINED cig_font_info_t font_query(cig_font_ref font_ref) {
   };
 }
 
-CIG_INLINED void render_panel(cig_panel_ref panel, cig_rect_t rect, cig_panel_modifiers_t modifiers) {
+CIG_INLINED void render_panel(cig_panel_ref panel, cig_r rect, cig_panel_modifiers_t modifiers) {
   const int panel_style = *(int*)panel;
   
   switch (panel_style) {
@@ -333,7 +333,7 @@ CIG_INLINED void render_panel(cig_panel_ref panel, cig_rect_t rect, cig_panel_mo
 CIG_INLINED void draw_rectangle(
   cig_color_ref fill_color,
   cig_color_ref border_color,
-  cig_rect_t rect,
+  cig_r rect,
   unsigned int border_width
 ) {
   if (fill_color) {
@@ -346,22 +346,22 @@ CIG_INLINED void draw_rectangle(
 
 CIG_INLINED void draw_line(
   cig_color_ref color,
-  cig_vec2_t p0,
-  cig_vec2_t p1,
+  cig_v p0,
+  cig_v p1,
   float thickness
 ) {
   DrawLineEx(RAYLIB_VEC2(p0), RAYLIB_VEC2(p1), thickness, *(Color*)color);
 }
 
-CIG_INLINED cig_vec2_t measure_image(cig_image_ref image) {
+CIG_INLINED cig_v measure_image(cig_image_ref image) {
   Texture2D *tex = (Texture2D *)image;
-  return cig_vec2_make(tex->width, tex->height);
+  return cig_v_make(tex->width, tex->height);
 }
 
 CIG_INLINED void draw_image(
   cig_buffer_ref buffer,
-  cig_rect_t container,
-  cig_rect_t rect,
+  cig_r container,
+  cig_r rect,
   cig_image_ref image,
   cig_image_mode_t mode
 ) {
@@ -387,7 +387,7 @@ CIG_INLINED void draw_image(
 
 #ifdef DEBUG
 
-static void layout_breakpoint(cig_rect_t container, cig_rect_t rect) {
+static void layout_breakpoint(cig_r container, cig_r rect) {
   /* Ends current render texture so we could draw things as they currently stand */
   EndTextureMode();
 

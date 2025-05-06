@@ -16,7 +16,7 @@ static window_message_t process_main_window(window_t *this) {
   window_message_t msg = begin_window(this);
 
   /*  Main vertical stack */
-  if (cig_push_vstack(RECT_AUTO, cig_insets_make(14, 16, 10, 16), (cig_layout_params_t) { .spacing = 12 })) {
+  if (cig_push_vstack(RECT_AUTO, cig_i_make(14, 16, 10, 16), (cig_layout_params_t) { .spacing = 12 })) {
 
     /*  Row 1: Large title label */
     if (cig_push_frame(RECT_AUTO_H(20))) {
@@ -37,16 +37,16 @@ static window_message_t process_main_window(window_t *this) {
     }
 
     /*  Row 2: Horizontal stack consisting of tip view and stack of buttons next to it */
-    if (cig_push_hstack(RECT_AUTO_H(154), cig_insets_uniform(1), (cig_layout_params_t) { .spacing = 12 })) {
-      if (cig_push_frame_insets(RECT_AUTO_W(330), cig_insets_make(14, 20, 14, 20))) {
+    if (cig_push_hstack(RECT_AUTO_H(154), cig_i_uniform(1), (cig_layout_params_t) { .spacing = 12 })) {
+      if (cig_push_frame_insets(RECT_AUTO_W(330), cig_i_make(14, 20, 14, 20))) {
         cig_fill_panel(get_panel(PANEL_LIGHT_YELLOW), 0);
         cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
-        if (cig_push_hstack(RECT_AUTO, cig_insets_zero(), (cig_layout_params_t) { .spacing = 14 })) {
-          if (cig_push_frame(cig_rect_make(0, 0, 32, 32))) {
+        if (cig_push_hstack(RECT_AUTO, cig_i_zero(), (cig_layout_params_t) { .spacing = 14 })) {
+          if (cig_push_frame(cig_r_make(0, 0, 32, 32))) {
             cig_image(get_image(IMAGE_TIP_OF_THE_DAY), CIG_IMAGE_MODE_CENTER);
             cig_pop_frame();
           }
-          if (cig_push_vstack(RECT_AUTO, cig_insets_zero(), (cig_layout_params_t) { .spacing = 8 })) {
+          if (cig_push_vstack(RECT_AUTO, cig_i_zero(), (cig_layout_params_t) { .spacing = 8 })) {
             if (cig_push_frame(RECT_AUTO_H(32))) {
               cig_label((cig_text_properties_t) {
                 .font = get_font(FONT_BOLD),
@@ -68,7 +68,7 @@ static window_message_t process_main_window(window_t *this) {
         cig_pop_frame();
       }
 
-      if (cig_push_vstack(_, cig_insets_zero(), (cig_layout_params_t) { .spacing = 6, .height = 23 })) {
+      if (cig_push_vstack(_, cig_i_zero(), (cig_layout_params_t) { .spacing = 6, .height = 23 })) {
         standard_button(_, "What's New");
         standard_button(_, "Online Registration");
         if (standard_button(_, "Next Tip")) {
@@ -85,7 +85,7 @@ static window_message_t process_main_window(window_t *this) {
     }
 
     /*  Row 3: Checkbox and close button */
-    if (cig_push_hstack(RECT_AUTO, cig_insets_zero(), (cig_layout_params_t) {
+    if (cig_push_hstack(RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
       .spacing = 12,
       .alignment.vertical = CIG_LAYOUT_ALIGNS_MIDDLE
     })) {

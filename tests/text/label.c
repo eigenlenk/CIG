@@ -10,7 +10,7 @@ TEST_GROUP(text_label);
 static cig_context_t ctx;
 static int text_measure_calls;
 static struct {
-  cig_rect_t rects[16];
+  cig_r rects[16];
   char strings[16][128];
   size_t count;
 } spans;
@@ -18,7 +18,7 @@ static struct {
 CIG_INLINED void text_render(
   const char *str,
   size_t len,
-  cig_rect_t rect,
+  cig_r rect,
   cig_font_ref font,
   cig_text_color_ref color,
   cig_text_style_t style
@@ -28,7 +28,7 @@ CIG_INLINED void text_render(
   sprintf(spans.strings[i], "%.*s", len, str);
 }
 
-CIG_INLINED cig_vec2_t text_measure(
+CIG_INLINED cig_v text_measure(
   const char *str,
   size_t len,
   cig_font_ref font,
@@ -37,7 +37,7 @@ CIG_INLINED cig_vec2_t text_measure(
   utf8_string slice = (utf8_string) { str, len };
   text_measure_calls ++;
   // printf("MEASURE: %.*s = %d\n", len, str, utf8_char_count(slice));
-  return cig_vec2_make(utf8_char_count(slice), 1);
+  return cig_v_make(utf8_char_count(slice), 1);
 }
 
 CIG_INLINED cig_font_info_t font_query(cig_font_ref font_ref) {
@@ -62,7 +62,7 @@ TEST_TEAR_DOWN(text_label) {}
 static void begin() {
   /*  In the context of these tests we work with a terminal/text-mode where
       bounds and positions are calculated in number of characters rather than pixels */
-	cig_begin_layout(&ctx, NULL, cig_rect_make(0, 0, 80, 25), 0.1f); /* 80 x 25 character terminal */
+	cig_begin_layout(&ctx, NULL, cig_r_make(0, 0, 80, 25), 0.1f); /* 80 x 25 character terminal */
 
   spans.count = 0;
 }
@@ -94,7 +94,7 @@ TEST(text_label, single) {
         the horizontal bounds of the label, or until some property of the
         text changes (font, color, link etc.) */
     TEST_ASSERT_EQUAL(1, spans.count);
-    TEST_ASSERT_EQUAL_RECT(cig_rect_make(35, 12, 10, 1), spans.rects[0]);
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(35, 12, 10, 1), spans.rects[0]);
 
     end();
   }
@@ -111,8 +111,8 @@ TEST(text_label, multiline) {
     cig_label((cig_text_properties_t) { }, "Olá mundo!\nHello world!");
 
     TEST_ASSERT_EQUAL(2, spans.count);
-    TEST_ASSERT_EQUAL_RECT(cig_rect_make(35, 11, 10, 1), spans.rects[0]);
-    TEST_ASSERT_EQUAL_RECT(cig_rect_make(34, 12, 12, 1), spans.rects[1]);
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(35, 11, 10, 1), spans.rects[0]);
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(34, 12, 12, 1), spans.rects[1]);
 
     end();
   }
@@ -128,7 +128,7 @@ TEST(text_label, horizontal_alignment_left) {
       .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
     }, "Label");
 
-    TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 5, 1), spans.rects[0]);
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 5, 1), spans.rects[0]);
   }
 }
 
@@ -140,7 +140,7 @@ TEST(text_label, horizontal_alignment_center) {
       .alignment.horizontal = CIG_TEXT_ALIGN_CENTER
     }, "Label");
 
-    TEST_ASSERT_EQUAL_RECT(cig_rect_make(37, 0, 5, 1), spans.rects[0]);
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(37, 0, 5, 1), spans.rects[0]);
   }
 }
 
@@ -152,7 +152,7 @@ TEST(text_label, horizontal_alignment_right) {
       .alignment.horizontal = CIG_TEXT_ALIGN_RIGHT
     }, "Label");
 
-    TEST_ASSERT_EQUAL_RECT(cig_rect_make(75, 0, 5, 1), spans.rects[0]);
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(75, 0, 5, 1), spans.rects[0]);
   }
 }
 
@@ -164,7 +164,7 @@ TEST(text_label, vertical_alignment_top) {
       .alignment.vertical = CIG_TEXT_ALIGN_TOP
     }, "Label");
 
-    TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 5, 1), spans.rects[0]);
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 5, 1), spans.rects[0]);
   }
 }
 
@@ -176,7 +176,7 @@ TEST(text_label, vertical_alignment_middle) {
       .alignment.vertical = CIG_TEXT_ALIGN_MIDDLE
     }, "Label");
 
-    TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 12, 5, 1), spans.rects[0]);
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 12, 5, 1), spans.rects[0]);
   }
 }
 
@@ -188,14 +188,14 @@ TEST(text_label, vertical_alignment_bottom) {
       .alignment.vertical = CIG_TEXT_ALIGN_BOTTOM
     }, "Label");
 
-    TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 24, 5, 1), spans.rects[0]);
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 24, 5, 1), spans.rects[0]);
   }
 }
 
 TEST(text_label, forced_line_change) {
   begin();
 
-  CIG(cig_rect_make(0, 0, 8, 2)) {
+  CIG(cig_r_make(0, 0, 8, 2)) {
     /*  Left aligned text */
     CIG(_) {
       cig_label((cig_text_properties_t) {
@@ -207,8 +207,8 @@ TEST(text_label, forced_line_change) {
           ║Olá_____║  
           ║mundo!__║  
           ╚════════╝ */
-      TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 3, 1), spans.rects[0]);
-      TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 1, 6, 1), spans.rects[1]);
+      TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 3, 1), spans.rects[0]);
+      TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 1, 6, 1), spans.rects[1]);
     }
 
     /*  Centered text */
@@ -221,8 +221,8 @@ TEST(text_label, forced_line_change) {
           ║_Hello__║  
           ║_world!_║  
           ╚════════╝ */
-      TEST_ASSERT_EQUAL_RECT(cig_rect_make(1, 0, 5, 1), spans.rects[2]);
-      TEST_ASSERT_EQUAL_RECT(cig_rect_make(1, 1, 6, 1), spans.rects[3]);
+      TEST_ASSERT_EQUAL_RECT(cig_r_make(1, 0, 5, 1), spans.rects[2]);
+      TEST_ASSERT_EQUAL_RECT(cig_r_make(1, 1, 6, 1), spans.rects[3]);
     }
     
     /*  Right aligned text */
@@ -236,8 +236,8 @@ TEST(text_label, forced_line_change) {
           ║____Tere║  
           ║_maailm!║  
           ╚════════╝ */
-      TEST_ASSERT_EQUAL_RECT(cig_rect_make(4, 0, 4, 1), spans.rects[4]);
-      TEST_ASSERT_EQUAL_RECT(cig_rect_make(1, 1, 7, 1), spans.rects[5]);
+      TEST_ASSERT_EQUAL_RECT(cig_r_make(4, 0, 4, 1), spans.rects[4]);
+      TEST_ASSERT_EQUAL_RECT(cig_r_make(1, 1, 7, 1), spans.rects[5]);
     }
   }
 }
@@ -251,10 +251,10 @@ TEST(text_label, prepare_single_long_word) {
   TEST_ASSERT_EQUAL_INT(9, label.bounds.w);
   TEST_ASSERT_EQUAL_INT(1, label.bounds.h);
 
-  CIG(cig_rect_make(0, 0, 7, 1)) {
+  CIG(cig_r_make(0, 0, 7, 1)) {
     cig_draw_label(&label);
 
-    TEST_ASSERT_EQUAL_RECT(cig_rect_make(-1, 0, 9, 1), spans.rects[0]);
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(-1, 0, 9, 1), spans.rects[0]);
   }
 }
 
@@ -267,12 +267,12 @@ TEST(text_label, prepare_multiple_long_words) {
   TEST_ASSERT_EQUAL_INT(9, label.bounds.w);
   TEST_ASSERT_EQUAL_INT(3, label.bounds.h);
 
-  CIG(cig_rect_make(0, 0, 7, 3)) {
+  CIG(cig_r_make(0, 0, 7, 3)) {
     cig_draw_label(&label);
 
-    TEST_ASSERT_EQUAL_RECT(cig_rect_make(-1, 0, 9, 1), spans.rects[0]);
-    TEST_ASSERT_EQUAL_RECT(cig_rect_make(-1, 1, 9, 1), spans.rects[1]);
-    TEST_ASSERT_EQUAL_RECT(cig_rect_make(-1, 2, 9, 1), spans.rects[2]);
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(-1, 0, 9, 1), spans.rects[0]);
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(-1, 1, 9, 1), spans.rects[1]);
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(-1, 2, 9, 1), spans.rects[2]);
   }
 }
 
@@ -285,7 +285,7 @@ TEST(text_label, overflow_enabled) {
       .max_lines = 1,
     }, "This text is going places");
 
-    TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 25, 1), spans.rects[0]);
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 25, 1), spans.rects[0]);
     TEST_ASSERT_EQUAL_STRING("This text is going places", spans.strings[0]);
   }
   end();
@@ -300,7 +300,7 @@ TEST(text_label, single_line_overflow_truncate) {
       .overflow = CIG_TEXT_TRUNCATE
     }, "Text becomes truncated");
 
-    TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 16, 1), spans.rects[0]);
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 16, 1), spans.rects[0]);
     TEST_ASSERT_EQUAL_STRING("Text becomes tru", spans.strings[0]);
   }
   end();
@@ -315,7 +315,7 @@ TEST(text_label, single_line_overflow_ellipsis) {
       .overflow = CIG_TEXT_SHOW_ELLIPSIS
     }, "Lorem ipsum dolor sit");
 
-    TEST_ASSERT_EQUAL_RECT(cig_rect_make(0, 0, 13, 1), spans.rects[0]);
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 13, 1), spans.rects[0]);
     TEST_ASSERT_EQUAL_STRING("Lorem ipsum d", spans.strings[0]);
     TEST_ASSERT_EQUAL_STRING("...", spans.strings[1]);
   }

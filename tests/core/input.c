@@ -15,7 +15,7 @@ TEST_SETUP(core_input) {
 TEST_TEAR_DOWN(core_input) {}
 
 static void begin(float frame_time) {
-  cig_begin_layout(&ctx, NULL, cig_rect_make(0, 0, 640, 480), frame_time);
+  cig_begin_layout(&ctx, NULL, cig_r_make(0, 0, 640, 480), frame_time);
 }
 
 static void end() {
@@ -29,8 +29,8 @@ static void end() {
 TEST(core_input, hover_and_press) {
   for (int i = 0; i < 2; ++i) {
     begin(FRAME_TIME);
-    cig_set_input_state(cig_vec2_make(50, 50), i == 1 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
-    cig_push_frame(cig_rect_make(0, 0, 100, 100));
+    cig_set_input_state(cig_v_make(50, 50), i == 1 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
+    cig_push_frame(cig_r_make(0, 0, 100, 100));
     cig_enable_interaction(); /* This element now tracks mouse inputs */
 
     if (i == 1) {
@@ -46,8 +46,8 @@ TEST(core_input, hover_and_press) {
 TEST(core_input, overlapping_hover_and_press) {
   for (int i = 0; i < 2; ++i) {
     begin(FRAME_TIME);
-    cig_set_input_state(cig_vec2_make(75, 75), i == 1 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
-    cig_push_frame(cig_rect_make(0, 0, 100, 100));
+    cig_set_input_state(cig_v_make(75, 75), i == 1 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
+    cig_push_frame(cig_r_make(0, 0, 100, 100));
     cig_enable_interaction(); /* This element now tracks mouse inputs */
 
     if (i == 1) {
@@ -56,7 +56,7 @@ TEST(core_input, overlapping_hover_and_press) {
     }
 
     cig_pop_frame();
-    cig_push_frame(cig_rect_make(50, 50, 100, 100));
+    cig_push_frame(cig_r_make(50, 50, 100, 100));
     cig_enable_interaction();
 
     if (i == 1) {
@@ -76,10 +76,10 @@ TEST(core_input, overlapping_hover_and_press) {
 TEST(core_input, click_on_release) {
   for (int i = 0; i < 3; ++i) {
     begin(FRAME_TIME);
-    cig_set_input_state(cig_vec2_make(75, 75), i == 1 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
-    cig_push_frame(cig_rect_make(0, 0, 100, 100));
+    cig_set_input_state(cig_v_make(75, 75), i == 1 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
+    cig_push_frame(cig_r_make(0, 0, 100, 100));
     cig_pop_frame();
-    cig_push_frame(cig_rect_make(50, 50, 100, 100));
+    cig_push_frame(cig_r_make(50, 50, 100, 100));
     cig_enable_interaction();
 
     if (i == 2) {
@@ -94,8 +94,8 @@ TEST(core_input, click_on_release) {
 TEST(core_input, click_on_button_down) {
   for (int i = 0; i < 2; ++i) {
     begin(FRAME_TIME);
-    cig_set_input_state(cig_vec2_make(75, 75), i == 1 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
-    cig_push_frame(cig_rect_make(50, 50, 100, 100));
+    cig_set_input_state(cig_v_make(75, 75), i == 1 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
+    cig_push_frame(cig_r_make(50, 50, 100, 100));
     cig_enable_interaction();
 
     if (i == 1) {
@@ -114,14 +114,14 @@ TEST(core_input, click_starts_outside) {
 
     /*  Simulate mouse change over time */
     if (i == 0) {
-      cig_set_input_state(cig_vec2_make(25, 25), 0);
+      cig_set_input_state(cig_v_make(25, 25), 0);
     } else if (i == 1) {
-      cig_set_input_state(cig_vec2_make(75, 75), CIG_INPUT_MOUSE_BUTTON_LEFT);
+      cig_set_input_state(cig_v_make(75, 75), CIG_INPUT_MOUSE_BUTTON_LEFT);
     } else if (i == 2) {
-      cig_set_input_state(cig_vec2_make(75, 75), 0);
+      cig_set_input_state(cig_v_make(75, 75), 0);
     }
 
-    cig_push_frame(cig_rect_make(50, 50, 100, 100));
+    cig_push_frame(cig_r_make(50, 50, 100, 100));
     cig_enable_interaction();
 
     if (i == 2) {
@@ -138,8 +138,8 @@ TEST(core_input, click_starts_outside) {
 TEST(core_input, double_click) {
   for (int i = 0; i < 5; ++i) {
     begin(FRAME_TIME);
-    cig_set_input_state(cig_vec2_make(75, 75), i == 1 || i == 3 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
-    cig_push_frame(cig_rect_make(50, 50, 100, 100));
+    cig_set_input_state(cig_v_make(75, 75), i == 1 || i == 3 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
+    cig_push_frame(cig_r_make(50, 50, 100, 100));
     cig_enable_interaction();
 
     if (i == 4) {
@@ -155,8 +155,8 @@ TEST(core_input, double_click_too_slow) {
   /*  Default maximum time between clicks is 0.5 seconds */
   for (int i = 0; i < 5; ++i) {
     begin(FRAME_TIME * 10);
-    cig_set_input_state(cig_vec2_make(75, 75), i == 1 || i == 3 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
-    cig_push_frame(cig_rect_make(50, 50, 100, 100));
+    cig_set_input_state(cig_v_make(75, 75), i == 1 || i == 3 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
+    cig_push_frame(cig_r_make(50, 50, 100, 100));
     cig_enable_interaction();
 
     if (i == 4) {
@@ -174,7 +174,7 @@ TEST(core_input, simple_drag) {
 
     /*  Simulate mouse change over time */
     if (i == 0) {
-      cig_set_input_state(cig_vec2_make(25, 25), CIG_INPUT_MOUSE_BUTTON_LEFT);
+      cig_set_input_state(cig_v_make(25, 25), CIG_INPUT_MOUSE_BUTTON_LEFT);
 
       /*  Taking exlusive ownership of the mouse. See `cig_mouse_state_t` for more info */
       cig_input_state()->locked = true;
@@ -182,19 +182,19 @@ TEST(core_input, simple_drag) {
       /*  Drag is activated on mouse button down */
       TEST_ASSERT_TRUE(cig_input_state()->drag.active);
       TEST_ASSERT_TRUE(cig_input_state()->action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT);
-      TEST_ASSERT_EQUAL_VEC2(cig_vec2_make(25, 25), cig_input_state()->drag.start_position);
-      TEST_ASSERT_EQUAL_VEC2(cig_vec2_zero(), cig_input_state()->drag.change);
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(25, 25), cig_input_state()->drag.start_position);
+      TEST_ASSERT_EQUAL_VEC2(cig_v_zero(), cig_input_state()->drag.change);
     } else if (i == 1) {
-      cig_set_input_state(cig_vec2_make(50, 50), CIG_INPUT_MOUSE_BUTTON_LEFT);
+      cig_set_input_state(cig_v_make(50, 50), CIG_INPUT_MOUSE_BUTTON_LEFT);
 
-      TEST_ASSERT_EQUAL_VEC2(cig_vec2_make(25, 25), cig_input_state()->drag.change);
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(25, 25), cig_input_state()->drag.change);
     } else if (i == 2) {
-      cig_set_input_state(cig_vec2_make(75, 75), 0);
+      cig_set_input_state(cig_v_make(75, 75), 0);
 
       TEST_ASSERT_FALSE(cig_input_state()->drag.active);
     }
 
-    cig_push_frame(cig_rect_make(0, 0, 100, 100));
+    cig_push_frame(cig_r_make(0, 0, 100, 100));
     cig_enable_interaction();
 
     if (i == 1) {
@@ -210,7 +210,7 @@ TEST(core_input, simple_drag) {
 
 TEST(core_input, button_states) {
   /* (Time 0) */
-  cig_set_input_state(cig_vec2_zero(), CIG_INPUT_MOUSE_BUTTON_LEFT);
+  cig_set_input_state(cig_v_zero(), CIG_INPUT_MOUSE_BUTTON_LEFT);
 
   TEST_ASSERT_TRUE(cig_input_state()->action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT);
   TEST_ASSERT_EQUAL(CIG_INPUT_MOUSE_BUTTON_LEFT, cig_input_state()->last_action_began);
@@ -218,7 +218,7 @@ TEST(core_input, button_states) {
   TEST_ASSERT_EQUAL(BEGAN, cig_input_state()->click_state);
 
   /* (T1) */
-  cig_set_input_state(cig_vec2_zero(), CIG_INPUT_MOUSE_BUTTON_LEFT | CIG_INPUT_MOUSE_BUTTON_RIGHT);
+  cig_set_input_state(cig_v_zero(), CIG_INPUT_MOUSE_BUTTON_LEFT | CIG_INPUT_MOUSE_BUTTON_RIGHT);
 
   TEST_ASSERT_TRUE(cig_input_state()->action_mask & CIG_MOUSE_BUTTON_ANY);
   TEST_ASSERT_EQUAL(CIG_INPUT_MOUSE_BUTTON_RIGHT, cig_input_state()->last_action_began);
@@ -228,14 +228,14 @@ TEST(core_input, button_states) {
   TEST_ASSERT_EQUAL(NEITHER, cig_input_state()->click_state);
 
   /* (T2) */
-  cig_set_input_state(cig_vec2_zero(), CIG_INPUT_MOUSE_BUTTON_RIGHT);
+  cig_set_input_state(cig_v_zero(), CIG_INPUT_MOUSE_BUTTON_RIGHT);
   
   TEST_ASSERT_TRUE(cig_input_state()->action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT);
   TEST_ASSERT_EQUAL(CIG_INPUT_MOUSE_BUTTON_LEFT, cig_input_state()->last_action_ended);
   TEST_ASSERT_EQUAL(NEITHER, cig_input_state()->click_state);
 
   /* (T3) */
-  cig_set_input_state(cig_vec2_zero(), 0);
+  cig_set_input_state(cig_v_zero(), 0);
   
   TEST_ASSERT_EQUAL(0, cig_input_state()->action_mask);
   TEST_ASSERT_EQUAL(CIG_INPUT_MOUSE_BUTTON_RIGHT, cig_input_state()->last_action_ended);

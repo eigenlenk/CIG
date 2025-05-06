@@ -68,7 +68,7 @@ typedef struct window_t {
   cig_id_t id;
   win_proc_t proc;
   void *data;
-  cig_rect_t rect;
+  cig_r rect;
   char *title;
   int icon;
 } window_t;
@@ -104,8 +104,8 @@ application_t *win95_find_open_app(const char *);
 /*  ┌───────────────────┐
     │ COMMON COMPONENTS │
     └───────────────────┘ */
-bool standard_button(cig_rect_t, const char *);
-bool checkbox(cig_rect_t, bool *, const char *);
+bool standard_button(cig_r, const char *);
+bool checkbox(cig_r, bool *, const char *);
 window_message_t begin_window(window_t *);
 void end_window();
 

@@ -16,9 +16,9 @@
     └──────────────────────────┘ */
 
 /*  These macros declare a templated type essentially */
-DECLARE_VEC2_T   (int32_t, cig_vec2, -999999)               /* Declares `cig_vec2_t` */
-DECLARE_INSETS_T (int32_t, cig_insets)                      /* Declares `cig_cig_insets_t` */
-DECLARE_RECT_T   (int32_t, cig_rect, cig_vec2, cig_insets)  /* Declares `cig_rect_t` */
+DECLARE_VEC2_T(int32_t, cig_v, -999999)
+DECLARE_INSETS_T(int32_t, cig_i)
+DECLARE_RECT_T(int32_t, cig_r, cig_v, cig_i)
 
 #define CIG__AUTO_BIT CIG_BIT(30)
 #define CIG__REL_BIT CIG_BIT(29)
@@ -26,13 +26,13 @@ DECLARE_RECT_T   (int32_t, cig_rect, cig_vec2, cig_insets)  /* Declares `cig_rec
 #define CIG_AUTO(OFFSET) (OFFSET < 0 ? (OFFSET & ~CIG__AUTO_BIT) : (CIG__AUTO_BIT | OFFSET))
 #define CIG_REL(PERCENTAGE) (PERCENTAGE < 0 ? ((int)(PERCENTAGE * 100000) & ~CIG__REL_BIT) : (CIG__REL_BIT | (int)(PERCENTAGE * 100000)))
 
-#define RECT_AUTO cig_rect_make(0, 0, CIG_AUTO(0), CIG_AUTO(0))
-#define RECT_AUTO_W(W) cig_rect_make(0, 0, W, CIG_AUTO(0))
-#define RECT_AUTO_H(H) cig_rect_make(0, 0, CIG_AUTO(0), H)
-#define RECT_AUTO_W_OFFSET(W) cig_rect_make(0, 0, CIG_AUTO(W), CIG_AUTO(0))
-#define RECT_AUTO_H_OFFSET(H) cig_rect_make(0, 0, CIG_AUTO(0), CIG_AUTO(H))
-#define RECT(X, Y, W, H) cig_rect_make(X, Y, W, H)
-#define RECT_REL(X, Y, W, H) cig_rect_make(CIG_REL(X), CIG_REL(Y), CIG_REL(W), CIG_REL(H))
+#define RECT_AUTO cig_r_make(0, 0, CIG_AUTO(0), CIG_AUTO(0))
+#define RECT_AUTO_W(W) cig_r_make(0, 0, W, CIG_AUTO(0))
+#define RECT_AUTO_H(H) cig_r_make(0, 0, CIG_AUTO(0), H)
+#define RECT_AUTO_W_OFFSET(W) cig_r_make(0, 0, CIG_AUTO(W), CIG_AUTO(0))
+#define RECT_AUTO_H_OFFSET(H) cig_r_make(0, 0, CIG_AUTO(0), CIG_AUTO(H))
+#define RECT(X, Y, W, H) cig_r_make(X, Y, W, H)
+#define RECT_REL(X, Y, W, H) cig_r_make(CIG_REL(X), CIG_REL(Y), CIG_REL(W), CIG_REL(H))
 
 #define CIG_CLICK_EXPIRE_IN_SECONDS 0.5f
 
@@ -43,7 +43,7 @@ typedef unsigned long cig_id_t;
 /*  Opaque pointer to a buffer/screen/texture/etc to be renderered into */
 typedef void* cig_buffer_ref;
 
-typedef void (*cig_set_clip_rect_callback_t)(cig_buffer_ref, cig_rect_t, bool);
+typedef void (*cig_set_clip_rect_callback_t)(cig_buffer_ref, cig_r, bool);
 
 /*  Structure containing parameters passed to layout function */
 typedef struct {
@@ -119,27 +119,27 @@ typedef struct {
 
 /* */
 typedef struct {
-  cig_vec2_t offset;
-  cig_vec2_t content_size;
+  cig_v offset;
+  cig_v content_size;
 } cig_scroll_state_t;
 
 typedef struct {
-  cig_rect_t rect;
-  cig_insets_t insets;
+  cig_r rect;
+  cig_i insets;
   cig_layout_params_t params;
-  bool (*builder)(cig_rect_t, cig_rect_t, cig_layout_params_t*, cig_rect_t*);
+  bool (*builder)(cig_r, cig_r, cig_layout_params_t*, cig_r*);
 } cig_frame_args_t;
 
 /* */
 typedef struct {
   cig_id_t id;
-  cig_rect_t  rect,           /* Relative rect */
+  cig_r  rect,           /* Relative rect */
               clipped_rect,   /* Relative clipped rect */
               absolute_rect;  /* Screen-space rect */
-  cig_insets_t insets;        /* Insets affect child elements within this element */
+  cig_i insets;        /* Insets affect child elements within this element */
 
   /*__PRIVATE__*/      
-  bool (*_layout_function)(cig_rect_t, cig_rect_t, cig_layout_params_t*, cig_rect_t*);
+  bool (*_layout_function)(cig_r, cig_r, cig_layout_params_t*, cig_r*);
   cig_scroll_state_t *_scroll_state;
   cig_state_t *_state;
   cig_layout_params_t _layout_params;
@@ -157,7 +157,7 @@ typedef struct {
   cig_input_action_type_t action_mask,
                           last_action_began,
                           last_action_ended;
-  cig_vec2_t position;
+  cig_v position;
 
   enum {
     NEITHER,  /* Button was neither pressed or released */
@@ -168,8 +168,8 @@ typedef struct {
 
   struct {
     bool active;
-    cig_vec2_t start_position;
-    cig_vec2_t change;
+    cig_v start_position;
+    cig_v change;
   } drag;
 
   /*  Elements are not tracked. Set to TRUE by widgets that want exclusive
@@ -205,13 +205,13 @@ typedef enum {
   CIG_CLICK_DEFAULT_OPTIONS = CIG_CLICK_STARTS_INSIDE
 } cig_click_flags_t;
 
-typedef cig_rect_t cig_clip_rect_t;
+typedef cig_r cig_clip_rect_t;
 #define STACK_CAPACITY_cig_clip_rect_t CIG_BUFFER_CLIP_REGIONS_MAX
 DECLARE_ARRAY_STACK_T(cig_clip_rect_t);
 
 typedef struct {
   cig_buffer_ref buffer;
-  cig_vec2_t origin;
+  cig_v origin;
   cig_clip_rect_t_stack_t clip_rects;
 } cig_buffer_element_t;
 
@@ -228,7 +228,7 @@ typedef struct {
   cig_frame_t_stack_t frames;
   cig_buffer_element_t_stack_t buffers;
   cig_input_state_t input_state;
-  cig_insets_t default_insets;
+  cig_i default_insets;
   cig_id_t next_id;
   float delta_time,
         elapsed_time;
@@ -256,7 +256,7 @@ typedef struct {
 void cig_init_context(cig_context_t*);
 
 /* */
-void cig_begin_layout(cig_context_t*, CIG_OPTIONAL(cig_buffer_ref), cig_rect_t, float);
+void cig_begin_layout(cig_context_t*, CIG_OPTIONAL(cig_buffer_ref), cig_r, float);
 
 /* */
 void cig_end_layout();
@@ -270,22 +270,22 @@ bool cig_push_frame_args(cig_frame_args_t);
 
 /*  Pushes a new frame with default insets (see `cig_set_default_insets`) to layout stack.
     @return TRUE if rect is visible within current container, FALSE otherwise */
-bool cig_push_frame(cig_rect_t);
+bool cig_push_frame(cig_r);
 
 /*  Push a new frame with custom insets to layout stack.
     @return TRUE if rect is visible within current container, FALSE otherwise */
-bool cig_push_frame_insets(cig_rect_t, cig_insets_t);
+bool cig_push_frame_insets(cig_r, cig_i);
 
 /*  Push a new frame with custom insets and params to layout stack.
     @return TRUE if rect is visible within current container, FALSE otherwise */
-bool cig_push_frame_insets_params(cig_rect_t, cig_insets_t, cig_layout_params_t);
+bool cig_push_frame_insets_params(cig_r, cig_i, cig_layout_params_t);
 
 /*  Push layout builder function to layout stack.
     @return TRUE if rect is visible within current container, FALSE otherwise */
 bool cig_push_layout_function(
-  bool (*)(cig_rect_t, cig_rect_t, cig_layout_params_t*, cig_rect_t*),
-  cig_rect_t,
-  cig_insets_t,
+  bool (*)(cig_r, cig_r, cig_layout_params_t*, cig_r*),
+  cig_r,
+  cig_i,
   cig_layout_params_t
 );
 
@@ -293,22 +293,22 @@ bool cig_push_layout_function(
 cig_frame_t* cig_pop_frame();
 
 /*  Sets insets used by all consecutive `cig_push_frame` calls */
-void cig_set_default_insets(cig_insets_t);
+void cig_set_default_insets(cig_i);
 
 /*  @return Current layout element */
 cig_frame_t* cig_frame();
 
 /*  @return Current local rect relative to its parent */
-CIG_INLINED cig_rect_t cig_rect() { return cig_frame()->rect; }
+CIG_INLINED cig_r cig_rect() { return cig_frame()->rect; }
 
 /*  @return Current local rect that's been clipped */
-CIG_INLINED cig_rect_t cig_clipped_rect() { return cig_frame()->clipped_rect; }
+CIG_INLINED cig_r cig_clipped_rect() { return cig_frame()->clipped_rect; }
 
 /*  @return Current screen-space rect */
-CIG_INLINED cig_rect_t cig_absolute_rect() { return cig_frame()->absolute_rect; }
+CIG_INLINED cig_r cig_absolute_rect() { return cig_frame()->absolute_rect; }
 
 /*  Converts a relative rect to a screen-space rect */
-cig_rect_t cig_convert_relative_rect(cig_rect_t);
+cig_r cig_convert_relative_rect(cig_r);
 
 /*  @return Pointer to the current layout element stack. Avoid accessing if possible. */
 cig_frame_t_stack_t* cig_frame_stack();
@@ -343,7 +343,7 @@ void cig_pop_buffer();
     └───────────────────────────┘ */
 
 /*  Pass mouse coordinates and button press state[s] */
-void cig_set_input_state(cig_vec2_t, cig_input_action_type_t);
+void cig_set_input_state(cig_v, cig_input_action_type_t);
 
 /*  @return Current mouse state as updated by last `cig_set_input_state` call */
 CIG_OPTIONAL(cig_input_state_t*) cig_input_state();
@@ -397,16 +397,16 @@ bool cig_enable_scroll(cig_scroll_state_t *);
 CIG_OPTIONAL(cig_scroll_state_t*) cig_scroll_state();
 
 /*  Set scroll offset values */
-void cig_set_offset(cig_vec2_t);
+void cig_set_offset(cig_v);
 
 /*  Change scroll offset values */
-void cig_change_offset(cig_vec2_t);
+void cig_change_offset(cig_v);
 
 /*  @return Scroller offset */
-cig_vec2_t cig_offset();
+cig_v cig_offset();
 
 /*  @return Scroller content size */
-cig_vec2_t cig_content_size();
+cig_v cig_content_size();
 
 /*  ┌────────────────┐
     │ LAYOUT HELPERS │
@@ -439,13 +439,13 @@ void cig_empty();
 void cig_spacer(int size);
 
 /*  Default layout function for stack and grid type */
-bool cig_default_layout_builder(cig_rect_t, cig_rect_t, cig_layout_params_t*, cig_rect_t*);
+bool cig_default_layout_builder(cig_r, cig_r, cig_layout_params_t*, cig_r*);
 
-bool cig_push_hstack(cig_rect_t, cig_insets_t, cig_layout_params_t);
+bool cig_push_hstack(cig_r, cig_i, cig_layout_params_t);
 
-bool cig_push_vstack(cig_rect_t, cig_insets_t, cig_layout_params_t);
+bool cig_push_vstack(cig_r, cig_i, cig_layout_params_t);
 
-bool cig_push_grid(cig_rect_t, cig_insets_t, cig_layout_params_t);
+bool cig_push_grid(cig_r, cig_i, cig_layout_params_t);
 
 /*  ┌───────────────────┐
     │ BACKEND CALLBACKS │
@@ -459,7 +459,7 @@ void cig_set_clip_rect_callback(cig_set_clip_rect_callback_t);
     │ DEBUG MODE │
     └────────────┘ */
 
-typedef void (*cig_layout_breakpoint_callback_t)(cig_rect_t, cig_rect_t);
+typedef void (*cig_layout_breakpoint_callback_t)(cig_r, cig_r);
 
 void cig_set_layout_breakpoint_callback(cig_layout_breakpoint_callback_t);
 
@@ -472,7 +472,7 @@ void cig_disable_debug_stepper();
 /*  If step mode is active, triggers a breakpoint you can use to
     visualize the layout as it currently stands. Two rectangles
     indicate what is being laid out into what */
-void cig_trigger_layout_breakpoint(cig_rect_t container, cig_rect_t rect);
+void cig_trigger_layout_breakpoint(cig_r container, cig_r rect);
 
 #endif
 

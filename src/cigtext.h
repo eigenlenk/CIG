@@ -85,8 +85,8 @@ typedef struct {
   char line_spacing;
 } cig_label_t;
 
-typedef void (*cig_text_render_callback_t)(const char*, size_t, cig_rect_t, cig_font_ref, cig_text_color_ref, cig_text_style_t);
-typedef cig_vec2_t (*cig_text_measure_callback_t)(const char*, size_t, cig_font_ref, cig_text_style_t);
+typedef void (*cig_text_render_callback_t)(const char*, size_t, cig_r, cig_font_ref, cig_text_color_ref, cig_text_style_t);
+typedef cig_v (*cig_text_measure_callback_t)(const char*, size_t, cig_font_ref, cig_text_style_t);
 typedef cig_font_info_t (*cig_font_query_callback_t)(cig_font_ref);
 
 /*  ┌───────────────────┐
