@@ -14,14 +14,14 @@ static void close_application(application_t *);
 static void close_window(window_t *);
 
 static bool taskbar_button(
-  cig_rect_t rect,
+  cig_r rect,
   const char *title,
   int icon,
   bool selected
 ) {
   bool clicked = false;
   
-  CIG(rect, CIG_INSETS(cig_insets_make(4, 2, 4, 2))) {
+  CIG(rect, CIG_INSETS(cig_i_make(4, 2, 4, 2))) {
     cig_enable_interaction();
     
     const bool pressed = cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE);
@@ -31,7 +31,7 @@ static bool taskbar_button(
     
     CIG_HSTACK(
       _,
-      CIG_INSETS(selected ? cig_insets_make(0, 1, 0, -1) : cig_insets_zero()),
+      CIG_INSETS(selected ? cig_i_make(0, 1, 0, -1) : cig_i_zero()),
       CIG_PARAMS({
         CIG_SPACING(2)
       })
@@ -56,10 +56,10 @@ static bool taskbar_button(
   return clicked;
 }
 
-static bool start_button(cig_rect_t rect) {
+static bool start_button(cig_r rect) {
   bool clicked = false;
   
-  CIG(rect, CIG_INSETS(cig_insets_make(4, 2, 4, 2))) {
+  CIG(rect, CIG_INSETS(cig_i_make(4, 2, 4, 2))) {
     cig_enable_interaction();
     
     const bool pressed = cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE);
@@ -68,7 +68,7 @@ static bool start_button(cig_rect_t rect) {
     
     CIG_HSTACK(
       _,
-      CIG_INSETS(pressed ? cig_insets_make(0, 1, 0, -1) : cig_insets_zero()),
+      CIG_INSETS(pressed ? cig_i_make(0, 1, 0, -1) : cig_i_zero()),
       CIG_PARAMS({
         CIG_SPACING(2)
       })
@@ -94,7 +94,7 @@ static bool start_button(cig_rect_t rect) {
 static bool do_desktop_icon(int icon, const char *title) {
   bool double_clicked = false;
 
-  CIG_VSTACK(RECT_AUTO, CIG_INSETS(cig_insets_make(2, 2, 2, 0)), CIG_PARAMS({
+  CIG_VSTACK(RECT_AUTO, CIG_INSETS(cig_i_make(2, 2, 2, 0)), CIG_PARAMS({
     CIG_SPACING(6)
   })) {
     cig_enable_interaction();
@@ -121,7 +121,7 @@ static bool do_desktop_icon(int icon, const char *title) {
       if (focused) {
         int text_x_in_parent = (CIG_W - label->bounds.w) * 0.5;
         cig_draw_rect(
-          cig_rect_make(CIG_SX+text_x_in_parent-1, CIG_SY-1, label->bounds.w+2, label->bounds.h+2),
+          cig_r_make(CIG_SX+text_x_in_parent-1, CIG_SY-1, label->bounds.w+2, label->bounds.h+2),
           get_color(COLOR_WINDOW_ACTIVE_TITLEBAR),
           0,
           1
@@ -135,7 +135,7 @@ static bool do_desktop_icon(int icon, const char *title) {
 }
 
 static void do_desktop_icons() {
-  if (!cig_push_grid(RECT_AUTO, cig_insets_zero(), (cig_layout_params_t) {
+  if (!cig_push_grid(RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
     .width = 75,
     .height = 75,
     .direction = CIG_LAYOUT_DIRECTION_VERTICAL
@@ -160,7 +160,7 @@ static void do_desktop_icons() {
 }
 
 static void do_desktop() {
-  if (cig_push_frame(cig_rect_make(0, 0, CIG_W, CIG_H - TASKBAR_H))) {
+  if (cig_push_frame(cig_r_make(0, 0, CIG_W, CIG_H - TASKBAR_H))) {
     cig_fill_solid(get_color(COLOR_DESKTOP));
     cig_enable_focus();
     do_desktop_icons();
@@ -175,11 +175,11 @@ static void do_taskbar() {
   const int spacing = 4;
 
   CIG(
-    cig_rect_make(0, CIG_H - TASKBAR_H, CIG_W, TASKBAR_H),
-    CIG_INSETS(cig_insets_make(2, 4, 2, 2))
+    cig_r_make(0, CIG_H - TASKBAR_H, CIG_W, TASKBAR_H),
+    CIG_INSETS(cig_i_make(2, 4, 2, 2))
   ) {
     cig_fill_solid(get_color(COLOR_DIALOG_BACKGROUND));
-    cig_draw_line(cig_vec2_make(CIG_SX, CIG_SY+1), cig_vec2_make(CIG_SX+CIG_W, CIG_SY+1), get_color(COLOR_WHITE), 1);
+    cig_draw_line(cig_v_make(CIG_SX, CIG_SY+1), cig_v_make(CIG_SX+CIG_W, CIG_SY+1), get_color(COLOR_WHITE), 1);
 
     /* Left: Start button */
     start_button(RECT_AUTO_W(start_button_width));
@@ -193,8 +193,8 @@ static void do_taskbar() {
     const int clock_w = (clock_label.bounds.w+11*2);
 
     CIG(
-      cig_rect_make(CIG_W_INSET-clock_w, 0, clock_w, CIG_AUTO(0)),
-      CIG_INSETS(cig_insets_uniform(1))
+      cig_r_make(CIG_W_INSET-clock_w, 0, clock_w, CIG_AUTO(0)),
+      CIG_INSETS(cig_i_uniform(1))
     ) {
       cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
       cig_draw_label(&clock_label);
@@ -202,7 +202,7 @@ static void do_taskbar() {
 
     /* Center: Fill remaining middle space with task buttons */
     CIG_HSTACK(
-      cig_rect_make(start_button_width+spacing, 0, CIG_W_INSET-start_button_width-clock_w-spacing*2, CIG_AUTO(0)),
+      cig_r_make(start_button_width+spacing, 0, CIG_W_INSET-start_button_width-clock_w-spacing*2, CIG_AUTO(0)),
       CIG_PARAMS({
         CIG_SPACING(spacing),
         CIG_COLUMNS(this->running_apps),
@@ -330,7 +330,7 @@ void application_open_window(application_t *app, window_t wnd) {
 
 /* Components */
 
-bool standard_button(cig_rect_t rect, const char *title) {
+bool standard_button(cig_r rect, const char *title) {
   bool clicked = false;
   
   CIG(rect) {
@@ -340,7 +340,7 @@ bool standard_button(cig_rect_t rect, const char *title) {
     
     cig_fill_panel(get_panel(PANEL_BUTTON), pressed ? CIG_PANEL_PRESSED : 0);
     
-    if (cig_push_frame_insets(RECT_AUTO,  pressed ? cig_insets_make(2, 3, 1, 2) : cig_insets_make(1, 1, 2, 2))) {
+    if (cig_push_frame_insets(RECT_AUTO,  pressed ? cig_i_make(2, 3, 1, 2) : cig_i_make(1, 1, 2, 2))) {
       cig_label((cig_text_properties_t) {
         .font = get_font(FONT_REGULAR),
         .max_lines = 1,
@@ -355,7 +355,7 @@ bool standard_button(cig_rect_t rect, const char *title) {
   return clicked;
 }
 
-bool icon_button(cig_rect_t rect, image_id_t image_id) {
+bool icon_button(cig_r rect, image_id_t image_id) {
   bool clicked = false;
   
   CIG(rect) {
@@ -365,7 +365,7 @@ bool icon_button(cig_rect_t rect, image_id_t image_id) {
     
     cig_fill_panel(get_panel(PANEL_BUTTON), pressed ? CIG_PANEL_PRESSED : 0);
     
-    if (cig_push_frame_insets(RECT_AUTO, pressed ? cig_insets_make(3, 3, 1, 1) : cig_insets_make(2, 2, 2, 2))) {
+    if (cig_push_frame_insets(RECT_AUTO, pressed ? cig_i_make(3, 3, 1, 1) : cig_i_make(2, 2, 2, 2))) {
       cig_image(get_image(image_id), CIG_IMAGE_MODE_CENTER);
       cig_pop_frame();
     }
@@ -376,7 +376,7 @@ bool icon_button(cig_rect_t rect, image_id_t image_id) {
   return clicked;
 }
 
-bool checkbox(cig_rect_t rect, bool *value, const char *text) {
+bool checkbox(cig_r rect, bool *value, const char *text) {
   bool toggled = false;
   CIG_HSTACK(
     rect,
@@ -400,10 +400,10 @@ bool checkbox(cig_rect_t rect, bool *value, const char *text) {
       CIG(RECT_CENTERED_VERTICALLY(RECT_SIZED(13, 13))) {
         cig_fill_solid(pressed ? get_color(COLOR_DIALOG_BACKGROUND) : get_color(COLOR_WHITE));
         cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
-        cig_draw_line(cig_vec2_make(CIG_SX+2, CIG_SY+1), cig_vec2_make(CIG_SX+11, CIG_SY+1), get_color(COLOR_BLACK), 1);
-        cig_draw_line(cig_vec2_make(CIG_SX+2, CIG_SY+1), cig_vec2_make(CIG_SX+2, CIG_SY+11), get_color(COLOR_BLACK), 1);
-        cig_draw_line(cig_vec2_make(CIG_SX+1, CIG_SY+11), cig_vec2_make(CIG_SX+12, CIG_SY+11), get_color(COLOR_DIALOG_BACKGROUND), 1);
-        cig_draw_line(cig_vec2_make(CIG_SX+12, CIG_SY+11), cig_vec2_make(CIG_SX+12, CIG_SY+1), get_color(COLOR_DIALOG_BACKGROUND), 1);
+        cig_draw_line(cig_v_make(CIG_SX+2, CIG_SY+1), cig_v_make(CIG_SX+11, CIG_SY+1), get_color(COLOR_BLACK), 1);
+        cig_draw_line(cig_v_make(CIG_SX+2, CIG_SY+1), cig_v_make(CIG_SX+2, CIG_SY+11), get_color(COLOR_BLACK), 1);
+        cig_draw_line(cig_v_make(CIG_SX+1, CIG_SY+11), cig_v_make(CIG_SX+12, CIG_SY+11), get_color(COLOR_DIALOG_BACKGROUND), 1);
+        cig_draw_line(cig_v_make(CIG_SX+12, CIG_SY+11), cig_v_make(CIG_SX+12, CIG_SY+1), get_color(COLOR_DIALOG_BACKGROUND), 1);
 
         if (*value) {
           cig_image(get_image(IMAGE_CHECKMARK), CIG_IMAGE_MODE_CENTER);
@@ -422,7 +422,7 @@ bool checkbox(cig_rect_t rect, bool *value, const char *text) {
 window_message_t begin_window(window_t *wnd) {
   static struct {
     bool active;
-    cig_rect_t original_rect;
+    cig_r original_rect;
   } window_drag = { 0 };
 
   window_message_t msg = 0;
@@ -431,7 +431,7 @@ window_message_t begin_window(window_t *wnd) {
   /*  We're not checking the return value here, so if it's FALSE (= culled)
       it would crash. Easiest fix is to make sure the window can't be dragged
       off-screen all the way. */
-  cig_push_frame_insets(wnd->rect, cig_insets_uniform(3));
+  cig_push_frame_insets(wnd->rect, cig_i_uniform(3));
   cig_fill_panel(get_panel(PANEL_STANDARD_DIALOG), 0);
 
   const bool focused = cig_enable_focus();
@@ -439,7 +439,7 @@ window_message_t begin_window(window_t *wnd) {
   /* Titlebar */
   CIG_HSTACK(
     RECT_AUTO_H(18),
-    CIG_INSETS(cig_insets_uniform(2)),
+    CIG_INSETS(cig_i_uniform(2)),
     CIG_PARAMS({
       CIG_SPACING(2),
       CIG_ALIGNMENT_HORIZONTAL(CIG_LAYOUT_ALIGNS_RIGHT)
@@ -454,7 +454,7 @@ window_message_t begin_window(window_t *wnd) {
       window_drag.active = true;
       window_drag.original_rect = wnd->rect;
     } else if (window_drag.active && cig_input_state()->drag.active) {
-      wnd->rect = cig_rect_make(
+      wnd->rect = cig_r_make(
         CIG_CLAMP(window_drag.original_rect.x + cig_input_state()->drag.change.x, -(wnd->rect.w - 50), 640 - 30),
         CIG_CLAMP(window_drag.original_rect.y + cig_input_state()->drag.change.y, 0, 480 - 50),
         wnd->rect.w,
@@ -471,15 +471,15 @@ window_message_t begin_window(window_t *wnd) {
       .alignment.vertical = CIG_TEXT_ALIGN_MIDDLE
     }, wnd->title);
     
-    if (icon_button(cig_rect_make(CIG_W_INSET - 16, 0, 16, CIG_AUTO(0)), IMAGE_CROSS)) {
+    if (icon_button(cig_r_make(CIG_W_INSET - 16, 0, 16, CIG_AUTO(0)), IMAGE_CROSS)) {
       msg = WINDOW_CLOSE;
     }
   }
 
   cig_push_layout_function(
     &cig_default_layout_builder,
-    cig_rect_make(0, 18, CIG_AUTO(0), CIG_H_INSET - 18),
-    cig_insets_zero(),
+    cig_r_make(0, 18, CIG_AUTO(0), CIG_H_INSET - 18),
+    cig_i_zero(),
     (cig_layout_params_t) { 0 }
   );
     

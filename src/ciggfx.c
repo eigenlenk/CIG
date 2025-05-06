@@ -37,10 +37,10 @@ void cig_set_draw_line_callback(cig_draw_line_callback_t fp) {
 void cig_image(cig_image_ref image, cig_image_mode_t mode) {
   if (!draw_image || !measure_image) { /* Log an error? */ return; }
 
-  const cig_rect_t container = cig_rect_inset(cig_absolute_rect(), cig_frame()->insets);
-  const cig_vec2_t size = measure_image(image);
+  const cig_r container = cig_r_inset(cig_absolute_rect(), cig_frame()->insets);
+  const cig_v size = measure_image(image);
 
-  cig_rect_t rect = container; /* Output image rect */
+  cig_r rect = container; /* Output image rect */
 
   switch (mode) {
   case CIG_IMAGE_MODE_ASPECT_FIT:
@@ -54,7 +54,7 @@ void cig_image(cig_image_ref image, cig_image_mode_t mode) {
       const int scaled_w = round(size.x * scale);
       const int scaled_h = round(size.y * scale);
 
-      rect = cig_rect_make(
+      rect = cig_r_make(
         container.x + (container.w - scaled_w) * 0.5,
         container.y + (container.h - scaled_h) * 0.5,
         scaled_w,
@@ -80,7 +80,7 @@ void cig_image(cig_image_ref image, cig_image_mode_t mode) {
         { 1.0, 1.0 }, /* CIG_IMAGE_MODE_BOTTOM_RIGHT */
       };
 
-      rect = cig_rect_make(
+      rect = cig_r_make(
         container.x + (container.w - size.x) * positions[mode-CIG_IMAGE_MODE_CENTER][0],
         container.y + (container.h - size.y) * positions[mode-CIG_IMAGE_MODE_CENTER][1],
         size.x,
@@ -106,12 +106,12 @@ void cig_fill_solid(cig_color_ref color) {
   draw_rectangle(color, 0, cig_absolute_rect(), 0);
 }
 
-void cig_draw_line(cig_vec2_t p0, cig_vec2_t p1, cig_color_ref color, float thickness) {
+void cig_draw_line(cig_v p0, cig_v p1, cig_color_ref color, float thickness) {
   if (!draw_line) { /* Log an error? */ return; }
   draw_line(color, p0, p1, thickness);
 }
 
-void cig_draw_rect(cig_rect_t rect, cig_color_ref fill_color, cig_color_ref outline_color, float thickness) {
+void cig_draw_rect(cig_r rect, cig_color_ref fill_color, cig_color_ref outline_color, float thickness) {
   if (!draw_rectangle) { /* Log an error? */ return; }
   draw_rectangle(fill_color, outline_color, rect, thickness);
 }

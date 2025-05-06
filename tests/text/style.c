@@ -14,7 +14,7 @@ static int red_color;
 
 static struct {
   struct info {
-    cig_rect_t rect;
+    cig_r rect;
     cig_font_ref font;
     cig_text_color_ref color;
     cig_text_style_t style;
@@ -26,7 +26,7 @@ static struct {
 CIG_INLINED void text_render(
   const char *str,
   size_t len,
-  cig_rect_t rect,
+  cig_r rect,
   cig_font_ref font,
   cig_text_color_ref color,
   cig_text_style_t style
@@ -40,14 +40,14 @@ CIG_INLINED void text_render(
   strncat(spans.info[spans.count-1].str, str, len);
 }
 
-CIG_INLINED cig_vec2_t text_measure(
+CIG_INLINED cig_v text_measure(
   const char *str,
   size_t len,
   cig_font_ref font,
   cig_text_style_t style
 ) {
   utf8_string slice = (utf8_string) { str, len };
-  return cig_vec2_make(utf8_char_count(slice), 1);
+  return cig_v_make(utf8_char_count(slice), 1);
 }
 
 CIG_INLINED cig_font_info_t font_query(cig_font_ref font_ref) {
@@ -73,7 +73,7 @@ TEST_TEAR_DOWN(text_style) {}
 static void begin() {
   /*  In the context of these tests we work with a terminal/text-mode where
       bounds and positions are calculated in number of characters rather than pixels */
-  cig_begin_layout(&ctx, NULL, cig_rect_make(0, 0, 80, 25), 0.1f); /* 80 x 25 character terminal */
+  cig_begin_layout(&ctx, NULL, cig_r_make(0, 0, 80, 25), 0.1f); /* 80 x 25 character terminal */
 }
 
 /*  ┌────────────┐

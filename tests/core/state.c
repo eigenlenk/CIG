@@ -15,7 +15,7 @@ TEST_SETUP(core_state) {
 TEST_TEAR_DOWN(core_state) {}
 
 static void begin() {
-  cig_begin_layout(&ctx, NULL, cig_rect_make(0, 0, 640, 480), 0.1f);
+  cig_begin_layout(&ctx, NULL, cig_r_make(0, 0, 640, 480), 0.1f);
 }
 
 static void end() {
@@ -100,7 +100,7 @@ TEST(core_state, memory_arena) {
 
     TEST_ASSERT_EQUAL_UINT(0, cig_state()->arena.mapped);
 
-    cig_vec2_t *vec2 = (cig_vec2_t *)cig_state_allocate(sizeof(cig_vec2_t));
+    cig_v *vec2 = (cig_v *)cig_state_allocate(sizeof(cig_v));
     unsigned long *ul = (unsigned long *)cig_state_allocate(sizeof(unsigned long));
     char *str = (char *)cig_state_allocate(sizeof(char[32]));
     void *hundred_whole_kilobytes = cig_state_allocate(sizeof(char[1024*100]));
@@ -108,16 +108,16 @@ TEST(core_state, memory_arena) {
     TEST_ASSERT_NULL(hundred_whole_kilobytes); /* Doesn't fit */
 
     TEST_ASSERT_EQUAL_UINT(
-      sizeof(cig_vec2_t) + sizeof(unsigned long) + sizeof(char[32]),
+      sizeof(cig_v) + sizeof(unsigned long) + sizeof(char[32]),
       cig_state()->arena.mapped
     );
 
     if (i == 0) { /* Store data */
-      *vec2 = cig_vec2_make(13, 17);
+      *vec2 = cig_v_make(13, 17);
       *ul = cig_frame()->id;
       strcpy(str, "Hello, World!");
     } else { /* Read data */
-      TEST_ASSERT_EQUAL_VEC2(cig_vec2_make(13, 17), *vec2);
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(13, 17), *vec2);
       TEST_ASSERT_EQUAL_UINT32(cig_frame()->id, *ul);
       TEST_ASSERT_EQUAL_STRING("Hello, World!", str);
     }
