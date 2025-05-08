@@ -48,3 +48,9 @@ Thumbs.db
 *.mov
 *.wmv
 
+# C
+*.o
+*.pspimage
+*.old
+dev/
+bin/
