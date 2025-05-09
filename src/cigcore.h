@@ -57,6 +57,8 @@ DECLARE_RECT_T(int32_t, cig_r, cig_v, cig_i)
 #define CIG_FILL CIG_REL(1.0)
 #define RECT_FILL cig_r_make(0, 0, CIG_FILL, CIG_FILL)
 
+#define NO_INSETS cig_i_zero()
+
 #define CIG_CLICK_EXPIRE_IN_SECONDS 0.5f
 
 /*  All layout element get a unique ID that tries to be unique across frames, but no promises.
