@@ -505,19 +505,19 @@ TEST(core_layout, grid_with_varying_cell_size) {
   }
 
   /* Add 3 elements with increasing width. They should fit on the first row */
-  cig_push_frame(cig_r_make(0, 0, 100, 160)); /* (1) */
+  cig_push_frame(RECT_SIZED(100, 160)); /* (1) */
   TEST_ASSERT_EQUAL_INT(0, cig_frame()->rect.x);
   cig_pop_frame();
   
   TEST_ASSERT_EQUAL_INT(100, cig_frame()->_layout_params._h_pos);
   
-  cig_push_frame(cig_r_make(0, 0, 200, 160)); /* (2) */
+  cig_push_frame(RECT_SIZED(200, 160)); /* (2) */
   TEST_ASSERT_EQUAL_INT(100, cig_frame()->rect.x);
   cig_pop_frame();
   
   TEST_ASSERT_EQUAL_INT(300, cig_frame()->_layout_params._h_pos);
   
-  cig_push_frame(cig_r_make(0, 0, 300, 160)); /* (3) */
+  cig_push_frame(RECT_SIZED(300, 160)); /* (3) */
   TEST_ASSERT_EQUAL_INT(300, cig_frame()->rect.x);
   cig_pop_frame();
   
@@ -526,13 +526,13 @@ TEST(core_layout, grid_with_varying_cell_size) {
   /* Let's try to insert another cell that should fit width wise,
   but the grid would exceed the number of horizontal elements,
   so it's pushed onto the next row */
-  cig_push_frame(cig_r_make(0, 0, 40, 160)); /* (4) */
+  cig_push_frame(RECT_SIZED(40, 160)); /* (4) */
   TEST_ASSERT_EQUAL_INT(0,    cig_frame()->rect.x);
   TEST_ASSERT_EQUAL_INT(160,  cig_frame()->rect.y);
   cig_pop_frame();
   
   /* This one should be inserted normally onto the second row */
-  cig_push_frame(cig_r_make(0, 0, 400, 160)); /* (5) */
+  cig_push_frame(RECT_SIZED(400, 160)); /* (5) */
   TEST_ASSERT_EQUAL_INT(40,   cig_frame()->rect.x);
   TEST_ASSERT_EQUAL_INT(160,  cig_frame()->rect.y);
   cig_pop_frame();
@@ -572,19 +572,19 @@ TEST(core_layout, grid_with_down_direction) {
   }
   
   /* Add 3 elements with increasing height and width. They should fit in the first column */
-  cig_push_frame(cig_r_make(0, 0, 100, 120)); /* (1) */
+  cig_push_frame(RECT_SIZED(100, 120)); /* (1) */
   TEST_ASSERT_EQUAL_INT(0,    cig_frame()->rect.y);
   cig_pop_frame();
   
   TEST_ASSERT_EQUAL_INT(120,  cig_frame()->_layout_params._v_pos);
   
-  cig_push_frame(cig_r_make(0, 0, 150, 160)); /* (2) */
+  cig_push_frame(RECT_SIZED(150, 160)); /* (2) */
   TEST_ASSERT_EQUAL_INT(120,  cig_frame()->rect.y);
   cig_pop_frame();
   
   TEST_ASSERT_EQUAL_INT(280,  cig_frame()->_layout_params._v_pos);
   
-  cig_push_frame(cig_r_make(0, 0, 200, 200)); /* (3) */
+  cig_push_frame(RECT_SIZED(200, 200)); /* (3) */
   TEST_ASSERT_EQUAL_INT(280,  cig_frame()->rect.y);
   cig_pop_frame();
   
@@ -800,21 +800,6 @@ TEST(core_layout, main_screen_subregion) {
   cig_pop_frame();
 }
 
-TEST(core_layout, auto_size_offset) {
-  /*  Auto width and height can also take an offset constant into account.
-      RECT_AUTO_W_OFFSET(-10) means to fill the width but subtract -10 in the end.
-      This macro is the same as cig_r_make(0, 0, CIG_AUTO(-10), CIG_AUTO(0)) */
-  if (cig_push_frame(RECT_AUTO_W_OFFSET(-10))) {
-    TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 630, 480), cig_frame()->rect);
-    cig_pop_frame();
-  }
-
-  if (cig_push_frame(RECT_AUTO_H_OFFSET(10))) {
-    TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 640, 490), cig_frame()->rect);
-    cig_pop_frame();
-  }
-}
-
 TEST(core_layout, relative_values) {
   /*  CIG_REL allows us to create frames with relative sizes */
   if (cig_push_frame(RECT(0, 0, CIG_REL(0.5), CIG_REL(0.75)))) {
@@ -823,8 +808,8 @@ TEST(core_layout, relative_values) {
   }
 
   /*  The same works for X and Y */
-  if (cig_push_frame(RECT(CIG_REL(0.5), CIG_REL(0.5), 100, 100))) {
-    TEST_ASSERT_EQUAL_RECT(cig_r_make(320, 240, 100, 100), cig_frame()->rect);
+  if (cig_push_frame(RECT(-CIG_REL(0.5), CIG_REL(0.5), 100, 100))) {
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(-320, 240, 100, 100), cig_frame()->rect);
     cig_pop_frame();
   }
 
@@ -832,16 +817,14 @@ TEST(core_layout, relative_values) {
       CIG_AUTO(CIG_REL(0.5)) is equivalent to CIG_REL(0.5),
       but in stacks for example it can yield different values */
   if (cig_push_vstack(RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
-    .height = 140
+    .height = 70
   })) {
-    /*  This stack has 140px rows by default but we can specify we want HALF that.
-        This isn't very intuitive though. */
-    if (cig_push_frame(RECT(0, 0, CIG_AUTO(0), CIG_AUTO(CIG_REL(0.5))))) {
-      TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 640, 70), cig_frame()->rect);
+    /*  This stack has 70px rows by default but we can specify we want DOUBLE that.
+        This isn't very intuitive though? */
+    if (cig_push_frame(RECT(0, 0, CIG_AUTO(), CIG_AUTO(CIG_REL(2.0))))) {
+      TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 640, 140), cig_frame()->rect);
       cig_pop_frame();
     }
-
-    cig_pop_frame();
   }
 }
 
@@ -869,6 +852,5 @@ TEST_GROUP_RUNNER(core_layout) {
   RUN_TEST_CASE(core_layout, clipping);
   RUN_TEST_CASE(core_layout, additional_buffers);
   RUN_TEST_CASE(core_layout, main_screen_subregion);
-  RUN_TEST_CASE(core_layout, auto_size_offset);
   RUN_TEST_CASE(core_layout, relative_values);
 }

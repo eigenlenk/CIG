@@ -20,19 +20,42 @@ DECLARE_VEC2_T(int32_t, cig_v, -999999)
 DECLARE_INSETS_T(int32_t, cig_i)
 DECLARE_RECT_T(int32_t, cig_r, cig_v, cig_i)
 
+/*  A couple of option bits we can use with rect components */
 #define CIG__AUTO_BIT CIG_BIT(30)
 #define CIG__REL_BIT CIG_BIT(29)
 
-#define CIG_AUTO(OFFSET) (OFFSET < 0 ? (OFFSET & ~CIG__AUTO_BIT) : (CIG__AUTO_BIT | OFFSET))
+/*  Indicates the size of this element will be auto-calculated.
+    When used in standard layout frames, AUTO essentially means to fill parent.
+    In stack and grid builders it's more flexible and mostly follows parent's layout rules.
+    You can pass in an additional value using CIG_REL to modify the final size.
+
+    Eg. CIG_AUTO(CIG_REL(2)) to get a rectangle that's double the size */
+#define CIG_AUTO(...) CIG__AUTO_X(,##__VA_ARGS__, CIG__AUTO_1(__VA_ARGS__), CIG__AUTO_0(__VA_ARGS__))
+
+#define CIG__AUTO_0() CIG__AUTO_BIT
+#define CIG__AUTO_1(VALUE) (VALUE < 0 ? (VALUE & ~CIG__AUTO_BIT) : (CIG__AUTO_BIT | VALUE))
+#define CIG__AUTO_X(__X__,A,FUNC,...) FUNC
+
+/*  Allows setting a relative position or size. Always relative to parent size,
+    or in case of stacks and grids, the size available to the next element. */
 #define CIG_REL(PERCENTAGE) (PERCENTAGE < 0 ? ((int)(PERCENTAGE * 100000) & ~CIG__REL_BIT) : (CIG__REL_BIT | (int)(PERCENTAGE * 100000)))
 
-#define RECT_AUTO cig_r_make(0, 0, CIG_AUTO(0), CIG_AUTO(0))
-#define RECT_AUTO_W(W) cig_r_make(0, 0, W, CIG_AUTO(0))
-#define RECT_AUTO_H(H) cig_r_make(0, 0, CIG_AUTO(0), H)
-#define RECT_AUTO_W_OFFSET(W) cig_r_make(0, 0, CIG_AUTO(W), CIG_AUTO(0))
-#define RECT_AUTO_H_OFFSET(H) cig_r_make(0, 0, CIG_AUTO(0), CIG_AUTO(H))
+/*  Full AUTO rect */
+#define RECT_AUTO cig_r_make(0, 0, CIG_AUTO(), CIG_AUTO())
+
+/*  Full AUTO rect, but with overridable width or height */
+#define RECT_AUTO_W(W) cig_r_make(0, 0, W, CIG_AUTO())
+#define RECT_AUTO_H(H) cig_r_make(0, 0, CIG_AUTO(), H)
+
+/*  Standard rectangle helpers */
 #define RECT(X, Y, W, H) cig_r_make(X, Y, W, H)
+#define RECT_SIZED(W, H) cig_r_make(0, 0, W, H)
+
+/*  All-relative rectangle. All values should be in the range [0.0 ... 1.0] */
 #define RECT_REL(X, Y, W, H) cig_r_make(CIG_REL(X), CIG_REL(Y), CIG_REL(W), CIG_REL(H))
+
+#define CIG_FILL CIG_REL(1.0)
+#define RECT_FILL cig_r_make(0, 0, CIG_FILL, CIG_FILL)
 
 #define CIG_CLICK_EXPIRE_IN_SECONDS 0.5f
 
