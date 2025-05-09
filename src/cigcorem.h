@@ -57,6 +57,8 @@
 #define CIG_ALLOCATE(T) (T*)cig_state_allocate(sizeof(T))
 
 #define _ RECT_AUTO
+#define _W(W) RECT_AUTO_W(W)
+#define _H(H) RECT_AUTO_H(H)
 
 #define CIG_HSTACK(RECT, ARGS...) for (struct { int pushed; cig_frame_args_t args; } __cig = { 0, (cig_frame_args_t) { .rect=RECT, ARGS } }; !(__cig.pushed++)&&cig_push_hstack(__cig.args.rect, __cig.args.insets, __cig.args.params); cig_pop_frame())
 #define CIG_VSTACK(RECT, ARGS...) for (struct { int pushed; cig_frame_args_t args; } __cig = { 0, (cig_frame_args_t) { .rect=RECT, ARGS } }; !(__cig.pushed++)&&cig_push_vstack(__cig.args.rect, __cig.args.insets, __cig.args.params); cig_pop_frame())

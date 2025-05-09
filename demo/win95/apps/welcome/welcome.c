@@ -78,8 +78,10 @@ static window_message_t process_main_window(window_t *this) {
       if (standard_button(_, "Next Tip")) {
         window_data->tip_index = (window_data->tip_index+1)%3;
       }
-      CIG(RECT_FILL) {
-        CIG(RECT(0, CIG_H - 2, CIG_AUTO(), 2)) { /* Separator */
+      CIG(RECT_FILL, NO_INSETS, CIG_PARAMS({
+        CIG_ALIGNMENT_VERTICAL(CIG_LAYOUT_ALIGNS_BOTTOM)
+      })) {
+        CIG(_H(2)) { /* Separator */
           cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
         }
       }

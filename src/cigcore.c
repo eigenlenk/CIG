@@ -17,7 +17,8 @@ static CIG_OPTIONAL(cig_scroll_state_t*) find_scroll_state(cig_id_t);
 static void handle_frame_hover(const cig_frame_t*);
 static void push_clip(cig_frame_t*);
 static void pop_clip();
-static cig_r resolve_size(cig_r, const cig_frame_t*);
+static cig_r calculate_rect_in_parent(cig_r, const cig_frame_t*);
+static cig_r align_rect_in_parent(cig_r, cig_r, const cig_layout_params_t*);
 static bool next_layout_rect(cig_r, cig_frame_t*, cig_r*);
 static bool push_frame(cig_r, cig_i, cig_layout_params_t, bool (*)(cig_r, cig_r, cig_layout_params_t*, cig_r*));
 
@@ -641,19 +642,7 @@ bool cig_default_layout_builder(
     prm->_count.v_cur ++;
   }
 
-  switch (prm->alignment.horizontal) {
-  case CIG_LAYOUT_ALIGNS_CENTER: { x = (container.w - w) * 0.5; } break;
-  case CIG_LAYOUT_ALIGNS_RIGHT: { x = (container.w - (x+w)); } break;
-  default: break;
-  }
-
-  switch (prm->alignment.vertical) {
-  case CIG_LAYOUT_ALIGNS_CENTER: { y = (container.h - h) * 0.5; } break;
-  case CIG_LAYOUT_ALIGNS_BOTTOM: { y = (container.h - (y+h)); } break;
-  default: break;
-  }
-
-  *result = cig_r_make(x, y, w, h);
+  *result = align_rect_in_parent(cig_r_make(x, y, w, h), container, prm);
   
   return true;
 }
@@ -685,10 +674,10 @@ void cig_set_clip_rect_callback(cig_set_clip_rect_callback_t fp) {
     │ INTERNAL FUNCTIONS │
     └────────────────────┘ */
 
-static cig_r resolve_size(const cig_r rect, const cig_frame_t *parent) {
+static cig_r calculate_rect_in_parent(const cig_r rect, const cig_frame_t *parent) {
   const cig_r content_rect = cig_r_inset(parent->rect, parent->insets);
 
-  return cig_r_make(
+  return align_rect_in_parent(cig_r_make(
     /*  When X or Y component have REL flag set, they are relative to W & H respectively.
         AUTO is not taken into consideration here */
     get_value_if_rel(rect.x, content_rect.w),
@@ -703,7 +692,31 @@ static cig_r resolve_size(const cig_r rect, const cig_frame_t *parent) {
       parent->_layout_params.size_min.height,
       parent->_layout_params.size_max.height
     )
-  );
+  ), content_rect, &parent->_layout_params);
+}
+
+static cig_r align_rect_in_parent(cig_r rect, cig_r parent_rect, const cig_layout_params_t *prm) {
+  switch (prm->alignment.horizontal) {
+  case CIG_LAYOUT_ALIGNS_CENTER: {
+    rect.x = (parent_rect.w - rect.w) * 0.5;
+  } break;
+  case CIG_LAYOUT_ALIGNS_RIGHT: {
+    rect.x = (parent_rect.w - (rect.x+rect.w));
+  } break;
+  default: break;
+  }
+
+  switch (prm->alignment.vertical) {
+  case CIG_LAYOUT_ALIGNS_CENTER: {
+    rect.y = (parent_rect.h - rect.h) * 0.5;
+  } break;
+  case CIG_LAYOUT_ALIGNS_BOTTOM: {
+    rect.y = (parent_rect.h - (rect.y+rect.h));
+  } break;
+  default: break;
+  }
+
+  return rect;
 }
 
 static bool next_layout_rect(const cig_r proposed, cig_frame_t *parent, cig_r *result) {
@@ -715,7 +728,7 @@ static bool next_layout_rect(const cig_r proposed, cig_frame_t *parent, cig_r *r
       result
     );
   } else {
-    *result = resolve_size(proposed, parent);
+    *result = calculate_rect_in_parent(proposed, parent);
     return true;
   }
 }
