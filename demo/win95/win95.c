@@ -193,7 +193,7 @@ static void do_taskbar() {
     const int clock_w = (clock_label.bounds.w+11*2);
 
     CIG(
-      cig_r_make(CIG_W_INSET-clock_w, 0, clock_w, CIG_AUTO(0)),
+      cig_r_make(CIG_W_INSET-clock_w, 0, clock_w, CIG_AUTO()),
       CIG_INSETS(cig_i_uniform(1))
     ) {
       cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
@@ -202,7 +202,7 @@ static void do_taskbar() {
 
     /* Center: Fill remaining middle space with task buttons */
     CIG_HSTACK(
-      cig_r_make(start_button_width+spacing, 0, CIG_W_INSET-start_button_width-clock_w-spacing*2, CIG_AUTO(0)),
+      cig_r_make(start_button_width+spacing, 0, CIG_W_INSET-start_button_width-clock_w-spacing*2, CIG_AUTO()),
       CIG_PARAMS({
         CIG_SPACING(spacing),
         CIG_COLUMNS(this->running_apps),
@@ -471,17 +471,13 @@ window_message_t begin_window(window_t *wnd) {
       .alignment.vertical = CIG_TEXT_ALIGN_MIDDLE
     }, wnd->title);
     
-    if (icon_button(cig_r_make(CIG_W_INSET - 16, 0, 16, CIG_AUTO(0)), IMAGE_CROSS)) {
+    /*  This container is right-aligned, so X will be 0 */
+    if (icon_button(RECT_AUTO_W(16), IMAGE_CROSS)) {
       msg = WINDOW_CLOSE;
     }
   }
 
-  cig_push_layout_function(
-    &cig_default_layout_builder,
-    cig_r_make(0, 18, CIG_AUTO(0), CIG_H_INSET - 18),
-    cig_i_zero(),
-    (cig_layout_params_t) { 0 }
-  );
+  cig_push_frame(cig_r_make(0, 18, CIG_AUTO(), CIG_H_INSET - 18));
     
   return msg;
 }

@@ -32,27 +32,29 @@ CIG_INLINED int limit(int v, const int minv_or_zero, const int maxv_or_zero) {
 }
 
 /*  Is CIG__AUTO_BIT set? For negative numbers we invert the mask because two's complement */
-CIG_INLINED bool is_auto(int32_t n) {
-  return (n < 0 ? n & ~CIG__AUTO_BIT : n) & CIG__AUTO_BIT;
-}
+#define CIG__IS_AUTO(N) (((N < 0 ? N & ~CIG__AUTO_BIT : N) & CIG__AUTO_BIT))
 
 /*  Is CIG__REL_BIT set? For negative numbers we invert the mask because two's complement */
-CIG_INLINED bool is_rel(int32_t n) {
-  return (n < 0 ? n & ~CIG__REL_BIT : n) & CIG__REL_BIT;
+#define CIG__IS_REL(N) ((N < 0 ? N & ~CIG__REL_BIT : N) & CIG__REL_BIT)
+
+/*  Clear option bits and get REL value if option set */
+CIG_INLINED int get_value_if_rel(int32_t n, int32_t base) {
+  if (CIG__IS_REL(n)) {
+    return ((n < 0 ? (n | CIG__AUTO_BIT | CIG__REL_BIT) : (n & ~(CIG__AUTO_BIT | CIG__REL_BIT))) * 0.00001) * base;
+  } else {
+    return n;
+  }
 }
 
-/*  Clear option bits and get either absolute value, AUTO value or REL value */
-CIG_INLINED int get_value(int32_t n, int relating_to) {
-  register bool rel = is_rel(n);
-  if (rel || is_auto(n)) {
-    register int v = n < 0 ? (n | CIG__AUTO_BIT | CIG__REL_BIT) : ((n&~CIG__AUTO_BIT)&~CIG__REL_BIT);
-    if (rel) {
-      return (v/100000.0)*relating_to;
-    } else {
-      return relating_to+v;
-    }
+/*  Clear option bits and get REL or AUTO value if option set */
+CIG_INLINED int get_value(int32_t n, int32_t base) {
+  if (CIG__IS_REL(n)) {
+    return ((n < 0 ? (n | CIG__AUTO_BIT | CIG__REL_BIT) : ((n&~CIG__AUTO_BIT)&~CIG__REL_BIT)) * 0.00001) * base;
+  } else if (CIG__IS_AUTO(n)) {
+    return base;
+  } else {
+    return n;
   }
-  return n;
 }
 
 /*  ┌─────────────┐
@@ -188,7 +190,7 @@ cig_r cig_convert_relative_rect(const cig_r rect) {
   const cig_frame_t *frame = cig_frame();
   
   return cig_r_offset(
-    resolve_size(rect, frame),
+    rect,
     frame->absolute_rect.x + frame->insets.left - buffer_element->origin.x,
     frame->absolute_rect.y + frame->insets.top - buffer_element->origin.y
   );
@@ -534,13 +536,13 @@ bool cig_default_layout_builder(
   const bool v_axis = prm->axis & CIG_LAYOUT_AXIS_VERTICAL;
   const bool is_grid = h_axis && v_axis;
 
-  int x = prm->_h_pos, /* TODO: Should these *not* ignore relative offsets? */
+  int x = prm->_h_pos,
       y = prm->_v_pos,
       w,
       h;
 
   if (h_axis) {
-    if (rect.w & CIG__AUTO_BIT) {
+    if (CIG__IS_AUTO(rect.w)) {
       if (prm->width > 0) {
         w = get_value(rect.w, prm->width);
       } else if (prm->columns) {
@@ -551,10 +553,10 @@ bool cig_default_layout_builder(
         w = get_value(rect.w, container.w - prm->_h_pos);
       }
     } else {
-      w = get_value(rect.w, container.w);
+      w = get_value_if_rel(rect.w, container.w - prm->_h_pos);
     }
   } else {
-    w = get_value(rect.w, (rect.w & CIG__AUTO_BIT) ? container.w - prm->_h_pos : container.w);
+    w = get_value(rect.w, container.w - prm->_h_pos);
 
     /*  Reset any remaining horizontal positioning in case we modify axis mid-layout */
     prm->_h_pos = 0;
@@ -562,7 +564,7 @@ bool cig_default_layout_builder(
   }
 
   if (v_axis) {
-    if (rect.h & CIG__AUTO_BIT) {
+    if (CIG__IS_AUTO(rect.h)) {
       if (prm->height > 0) {
         h = get_value(rect.h, prm->height);
       } else if (prm->rows) {
@@ -573,10 +575,10 @@ bool cig_default_layout_builder(
         h = get_value(rect.h, container.h - prm->_v_pos);
       }
     } else {
-      h = get_value(rect.h, container.h);
+      h = get_value_if_rel(rect.h, container.h - prm->_v_pos);
     }
   } else {
-    h = get_value(rect.h, (rect.h & CIG__AUTO_BIT) ? container.h - prm->_v_pos : container.h);
+    h = get_value(rect.h, container.h - prm->_v_pos);
 
     /*  Reset any remaining vertical positioning in case we modify axis mid-layout */
     prm->_v_pos = 0;
@@ -687,11 +689,10 @@ static cig_r resolve_size(const cig_r rect, const cig_frame_t *parent) {
   const cig_r content_rect = cig_r_inset(parent->rect, parent->insets);
 
   return cig_r_make(
-    /*  X & Y components can only have the RELATIVE flag set, AUTO makes
-        no sense in this context. They are relative to W & H respectively.
-        Eg. X = 25% = W * 0.25 */
-    is_rel(rect.x) ? get_value(rect.x, content_rect.w) : rect.x,
-    is_rel(rect.y) ? get_value(rect.y, content_rect.h) : rect.y,
+    /*  When X or Y component have REL flag set, they are relative to W & H respectively.
+        AUTO is not taken into consideration here */
+    get_value_if_rel(rect.x, content_rect.w),
+    get_value_if_rel(rect.y, content_rect.h),
     limit(
       get_value(rect.w, content_rect.w),
       parent->_layout_params.size_min.width,
