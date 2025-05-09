@@ -158,9 +158,9 @@ typedef struct {
 /* */
 typedef struct {
   cig_id_t id;
-  cig_r  rect,           /* Relative rect */
-              clipped_rect,   /* Relative clipped rect */
-              absolute_rect;  /* Screen-space rect */
+  cig_r rect,          /* Relative rect */
+        clipped_rect,  /* Relative clipped rect */
+        absolute_rect; /* Screen-space rect */
   cig_i insets;        /* Insets affect child elements within this element */
 
   /*__PRIVATE__*/      
@@ -240,8 +240,9 @@ typedef struct {
   cig_clip_rect_t_stack_t clip_rects;
 } cig_buffer_element_t;
 
-#define STACK_CAPACITY_cig_frame_t CIG_NESTED_ELEMENTS_MAX
-DECLARE_ARRAY_STACK_T(cig_frame_t);
+typedef cig_frame_t* cig_frame_ref;
+#define STACK_CAPACITY_cig_frame_ref CIG_NESTED_ELEMENTS_MAX
+DECLARE_ARRAY_STACK_T(cig_frame_ref);
 
 #define STACK_CAPACITY_cig_buffer_element_t CIG_BUFFERS_MAX
 DECLARE_ARRAY_STACK_T(cig_buffer_element_t);
@@ -250,7 +251,7 @@ DECLARE_ARRAY_STACK_T(cig_buffer_element_t);
     Should be considered an opaque type! */
 typedef struct {
   /*  __PRIVATE__ */
-  cig_frame_t_stack_t frames;
+  cig_frame_ref_stack_t frame_stack;
   cig_buffer_element_t_stack_t buffers;
   cig_input_state_t input_state;
   cig_i default_insets;
@@ -268,6 +269,10 @@ typedef struct {
     cig_state_t value;
     unsigned int last_tick;
   } state_list[CIG_STATES_MAX];
+  struct {
+    cig_frame_t elements[CIG_ELEMENTS_MAX];
+    size_t count;
+  } frames;
 #ifdef DEBUG
   bool step_mode;
 #endif
@@ -290,24 +295,24 @@ void cig_end_layout();
 cig_buffer_ref cig_buffer();
 
 /*  Pushes a new frame with args struct containing all relevant data.
-    @return TRUE if rect is visible within current container, FALSE otherwise */
-bool cig_push_frame_args(cig_frame_args_t);
+    @return Reference to new element if rect is visible within current container, NULL otherwise */
+cig_frame_t* cig_push_frame_args(cig_frame_args_t);
 
 /*  Pushes a new frame with default insets (see `cig_set_default_insets`) to layout stack.
-    @return TRUE if rect is visible within current container, FALSE otherwise */
-bool cig_push_frame(cig_r);
+    @return Reference to new element if rect is visible within current container, NULL otherwise */
+cig_frame_t* cig_push_frame(cig_r);
 
 /*  Push a new frame with custom insets to layout stack.
-    @return TRUE if rect is visible within current container, FALSE otherwise */
-bool cig_push_frame_insets(cig_r, cig_i);
+    @return Reference to new element if rect is visible within current container, NULL otherwise */
+cig_frame_t* cig_push_frame_insets(cig_r, cig_i);
 
 /*  Push a new frame with custom insets and params to layout stack.
-    @return TRUE if rect is visible within current container, FALSE otherwise */
-bool cig_push_frame_insets_params(cig_r, cig_i, cig_layout_params_t);
+    @return Reference to new element if rect is visible within current container, NULL otherwise */
+cig_frame_t* cig_push_frame_insets_params(cig_r, cig_i, cig_layout_params_t);
 
 /*  Push layout builder function to layout stack.
-    @return TRUE if rect is visible within current container, FALSE otherwise */
-bool cig_push_layout_function(
+    @return Reference to new element if rect is visible within current container, NULL otherwise */
+cig_frame_t* cig_push_layout_function(
   bool (*)(cig_r, cig_r, cig_layout_params_t*, cig_r*),
   cig_r,
   cig_i,
@@ -336,7 +341,7 @@ CIG_INLINED cig_r cig_absolute_rect() { return cig_frame()->absolute_rect; }
 cig_r cig_convert_relative_rect(cig_r);
 
 /*  @return Pointer to the current layout element stack. Avoid accessing if possible. */
-cig_frame_t_stack_t* cig_frame_stack();
+cig_frame_ref_stack_t* cig_frame_stack();
 
 /*  ┌───────┐
     │ STATE │
@@ -438,7 +443,7 @@ cig_v cig_content_size();
     └────────────────┘ */
 
 /*  By default, when adding rects that are completely outside the bounds
-    of the parent, `cig_push_frame` calls return FALSE. You can disable that
+    of the parent, `cig_push_frame` calls return NULL. You can disable that
     behavior with this */
 void cig_disable_culling();
 
@@ -466,11 +471,11 @@ void cig_spacer(int size);
 /*  Default layout function for stack and grid type */
 bool cig_default_layout_builder(cig_r, cig_r, cig_layout_params_t*, cig_r*);
 
-bool cig_push_hstack(cig_r, cig_i, cig_layout_params_t);
+cig_frame_t* cig_push_hstack(cig_r, cig_i, cig_layout_params_t);
 
-bool cig_push_vstack(cig_r, cig_i, cig_layout_params_t);
+cig_frame_t* cig_push_vstack(cig_r, cig_i, cig_layout_params_t);
 
-bool cig_push_grid(cig_r, cig_i, cig_layout_params_t);
+cig_frame_t* cig_push_grid(cig_r, cig_i, cig_layout_params_t);
 
 /*  ┌───────────────────┐
     │ BACKEND CALLBACKS │

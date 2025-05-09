@@ -16,8 +16,8 @@ typedef struct T##_stack {                                          \
   void (*push)(struct T##_stack*, T);                               \
   T (*pop)(struct T##_stack*);                                      \
   T (*peek)(struct T##_stack*, size_t);                             \
-  T* (*_pop)(struct T##_stack*);                                    \
-  T* (*_peek)(struct T##_stack*, size_t);                           \
+  T* (*pop_ref)(struct T##_stack*);                                 \
+  T* (*peek_ref)(struct T##_stack*, size_t);                        \
 } T##_stack_t;                                                      \
                                                                     \
 CIG_INLINED void stack_##T##_clear(T##_stack_t *s) {                \
@@ -39,12 +39,12 @@ CIG_INLINED T stack_##T##_peek(T##_stack_t *s, size_t offset) {     \
   return s->elements[s->size-1-offset];                             \
 }                                                                   \
                                                                     \
-CIG_INLINED T* stack_##T##__pop(T##_stack_t *s) {                   \
+CIG_INLINED T* stack_##T##_pop_ref(T##_stack_t *s) {                \
   assert(s->size > 0);                                              \
   return &s->elements[--s->size];                                   \
 }                                                                   \
                                                                     \
-CIG_INLINED T* stack_##T##__peek(T##_stack_t *s, size_t offset) {   \
+CIG_INLINED T* stack_##T##_peek_ref(T##_stack_t *s, size_t offset) {\
   assert(s->size > 0);                                              \
   return &s->elements[s->size-1-offset];                            \
 }
@@ -55,8 +55,8 @@ CIG_INLINED T* stack_##T##__peek(T##_stack_t *s, size_t offset) {   \
   .push = &stack_##T##_push,          \
   .pop = &stack_##T##_pop,            \
   .peek = &stack_##T##_peek,          \
-  ._pop = &stack_##T##__pop,          \
-  ._peek = &stack_##T##__peek         \
+  .pop_ref = &stack_##T##_pop_ref,    \
+  .peek_ref = &stack_##T##_peek_ref   \
 }
 
 #endif

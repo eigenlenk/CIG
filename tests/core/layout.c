@@ -90,23 +90,23 @@ TEST(core_layout, identifiers) {
 
   TEST_ASSERT_EQUAL_UINT32(2090695081l, cig_frame()->id); // cig_hash("root")
 
-  const int n0 = 8;
+  const int n0 = 4;
 
   for (a = 0; a < n0; ++a) {
     if (cig_push_frame(RECT_AUTO)) {
       assert_unique(cig_frame()->id, __LINE__);
       ids.recorded[ids.n++] = cig_frame()->id;
-      const int n1 = 8;
+      const int n1 = 2;
       for (b = 0; b < n1; ++b) {
         if (cig_push_frame(RECT_AUTO)) {
           assert_unique(cig_frame()->id, __LINE__);
           ids.recorded[ids.n++] = cig_frame()->id;
-          const int n2 = 8;
+          const int n2 = 2;
           for (c = 0; c < n2; ++c) {
             if (cig_push_frame(RECT_AUTO)) {
               assert_unique(cig_frame()->id, __LINE__);
               ids.recorded[ids.n++] = cig_frame()->id;
-              const int n3 = 8;
+              const int n3 = 2;
               for (d = 0; d < n3; ++d) {
                 if (cig_push_frame(RECT_AUTO)) {
                   assert_unique(cig_frame()->id, __LINE__);
