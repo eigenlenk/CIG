@@ -116,9 +116,11 @@ application_t welcome_app() {
         .data = data,
         .rect = RECT_CENTERED(488, 280),
         .title = "Welcome",
-        .icon = -1
+        .icon = -1,
+        .flags = IS_PRIMARY_WINDOW
       }
     },
-    .data = NULL
+    .data = NULL,
+    .flags = KILL_WHEN_PRIMARY_WINDOW_CLOSED
   };
 }

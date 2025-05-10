@@ -4,6 +4,7 @@
 #include "cig.h"
 
 #define WIN95_APPS_MAX 16
+#define WIN95_OPEN_WINDOWS_MAX 16
 
 typedef enum {
   FONT_REGULAR = 0,
@@ -65,12 +66,16 @@ typedef enum {
 typedef application_proc_result_t (*application_proc_t)(struct application_t *);
 
 typedef struct window_t {
+  struct application_t *owner;
   cig_id_t id;
   win_proc_t proc;
   void *data;
   cig_r rect;
   char *title;
   int icon;
+  enum {
+    IS_PRIMARY_WINDOW = (1 << 0)
+  } flags;
 } window_t;
 
 typedef struct application_t {
@@ -78,10 +83,16 @@ typedef struct application_t {
   application_proc_t proc;
   void *data;
   window_t windows[1];
-  bool closed;
+  enum {
+    KILL_WHEN_PRIMARY_WINDOW_CLOSED = (1 << 0)
+  } flags;
 } application_t;
 
-void application_open_window(application_t *, window_t);
+typedef struct {
+  window_t windows[WIN95_OPEN_WINDOWS_MAX];
+  window_t *order[WIN95_OPEN_WINDOWS_MAX];
+  size_t count;
+} window_manager_t;
 
 void* get_font(font_id_t);
 void* get_color(color_id_t);
@@ -93,6 +104,7 @@ void enable_blue_selection_dithering(bool);
 typedef struct {
   /*__PRIVATE__*/
   application_t applications[WIN95_APPS_MAX];
+  window_manager_t window_manager;
   size_t running_apps;
 } win95_t;
 
@@ -100,6 +112,15 @@ void start_win95(win95_t *);
 void run_win95(win95_t *);
 void win95_open_app(application_t);
 application_t *win95_find_open_app(const char *);
+
+/*  ┌────────────────┐
+    │ WINDOW MANAGER │
+    └────────────────┘ */
+
+window_t* window_manager_create(window_manager_t*, application_t*, window_t);
+void window_manager_close(window_manager_t*, window_t*);
+void window_manager_bring_to_front(window_manager_t*, cig_id_t);
+window_t* window_manager_find_primary_window(window_manager_t*, application_t*);
 
 /*  ┌───────────────────┐
     │ COMMON COMPONENTS │

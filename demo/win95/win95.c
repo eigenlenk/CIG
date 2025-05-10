@@ -9,9 +9,9 @@
 
 static win95_t *this = NULL;
 
-static void run_apps();
+static void process_apps();
+static void process_windows();
 static void close_application(application_t *);
-static void close_window(window_t *);
 
 static bool taskbar_button(
   cig_r rect,
@@ -148,9 +148,13 @@ static void do_desktop_icons() {
 
   if (do_desktop_icon(IMAGE_WELCOME_APP_ICON, "Welcome")) {
     application_t *app;
+    window_t *primary_wnd;
     if ((app = win95_find_open_app("welcome"))) {
-      // todo: window manager -> bring to front (wnd)
-      cig_set_focused_id(app->windows[0].id);
+      if ((primary_wnd = window_manager_find_primary_window(&this->window_manager, app))) {
+        window_manager_bring_to_front(&this->window_manager, primary_wnd->id);
+      } else {
+        window_manager_create(&this->window_manager, app, app->windows[0]);
+      }
     } else {
       win95_open_app(welcome_app());
     }
@@ -209,16 +213,10 @@ static void do_taskbar() {
         CIG_MAX_WIDTH(150)
       })
     ) {
-      register size_t i, j;
-      window_t *wnd;
-
-      for (i = 0; i < this->running_apps; ++i) {
-        for (j = 0; j < 1; ++j) {
-          wnd = &this->applications[i].windows[j];
-          if (taskbar_button(RECT_AUTO, wnd->title, wnd->icon, wnd->id == cig_focused_id())) {
-            // todo: window manager -> bring to front (wnd)
-            cig_set_focused_id(wnd->id);
-          }
+      for (register size_t i = 0; i < WIN95_OPEN_WINDOWS_MAX; ++i) {
+        window_t *wnd = &this->window_manager.windows[i];
+        if (wnd->id && taskbar_button(RECT_AUTO, wnd->title, wnd->icon, wnd->id == cig_focused_id())) {
+          cig_set_focused_id(wnd->id);
         }
       }
     }
@@ -235,13 +233,15 @@ void run_win95(win95_t *win95) {
   this = win95;
 
   do_desktop();
-  run_apps();
+  process_apps();
+  process_windows();
   do_taskbar();
 }
 
 void win95_open_app(application_t app) {
-  this->applications[this->running_apps++] = app;
-  cig_set_focused_id(this->applications[this->running_apps-1].windows[0].id);
+  application_t *new_app = &this->applications[this->running_apps++];
+  *new_app = app;
+  window_manager_create(&this->window_manager, new_app, new_app->windows[0]);
 }
 
 application_t *win95_find_open_app(const char *id) {
@@ -249,53 +249,60 @@ application_t *win95_find_open_app(const char *id) {
   application_t *app;
   for (i = 0; i < this->running_apps; ++i) {
     app = &this->applications[i];
-    if (!app->closed && !strcmp(app->id, id)) {
+    if (!strcmp(app->id, id)) {
       return app;
     }
   }
   return NULL;
 }
 
-static void run_apps() {
-  register size_t i, j;
+static void process_apps() {
+  register size_t i;
   application_t *app;
-  window_t *wnd;
 
   for (i = 0; i < this->running_apps; ++i) {
     app = &this->applications[i];
 
     if (app->proc) {
-      switch (app->proc(app)) {
-        case APPLICATION_KILL: {
-          for (j = 0; j < 1; ++j) {
-            close_window(&app->windows[j]);
-          }
-          close_application(app);
+      /* App results not really implemented right now */
+      app->proc(app);
+      // switch (app->proc(app)) { }
+    }
+  }
+}
+
+static void process_windows() {
+  /* Make sure focused window is the topmost one */
+  if (this->window_manager.count > 0 && this->window_manager.order[this->window_manager.count-1]->id != cig_focused_id()) {
+    window_manager_bring_to_front(&this->window_manager, cig_focused_id());
+  }
+
+  for (register size_t i = 0; i < this->window_manager.count;) {
+    window_t *wnd = this->window_manager.order[i];
+
+    if (wnd->proc) {
+      switch (wnd->proc(wnd)) {
+        case WINDOW_CLOSE: {
+          window_manager_close(&this->window_manager, wnd);
           continue;
-        }
+        };
         default: break;
       }
     }
 
-    for (j = 0; j < 1; ++j) {
-      wnd = &app->windows[j];
-
-      if (wnd->proc) {
-        switch (wnd->proc(wnd)) {
-          case WINDOW_CLOSE: {
-            close_window(wnd);
-            close_application(app);
-            
-          } break;
-          default: break;
-        }
-      }
-    }
+    ++i;
   }
+}
 
-  /* Remove closed apps */
+static void close_application(application_t *app) {
+  register size_t i, j;
+  app->proc = NULL;
+  if (app->data) {
+    free(app->data);
+    app->data = NULL;
+  }
   for (i = 0; i < this->running_apps; ++i) {
-    if (this->applications[i].closed) {
+    if (&this->applications[i] == app) {
       for (j = i+1; j < this->running_apps; ++j) {
         this->applications[j-1] = this->applications[j];
       }
@@ -304,31 +311,67 @@ static void run_apps() {
   }
 }
 
-static void close_application(application_t *app) {
-  app->proc = NULL;
-  app->closed = true;
-  if (app->data) {
-    free(app->data);
-    app->data = NULL;
+/*  ┌────────────────┐
+    │ WINDOW MANAGER │
+    └────────────────┘ */
+
+window_t* window_manager_create(window_manager_t *manager, application_t *app, window_t wnd) {
+  for (register size_t i = 0; i < WIN95_OPEN_WINDOWS_MAX; ++i) {
+    if (manager->windows[i].id) {
+      continue;
+    }
+    wnd.owner = app;
+    wnd.id += rand() % 10000000;
+    manager->windows[i] = wnd;
+    manager->order[manager->count++] = &manager->windows[i];
+    cig_set_focused_id(wnd.id);
+    return manager->order[manager->count-1];
+  }
+  return NULL;
+}
+
+void window_manager_close(window_manager_t *manager, window_t *wnd) {
+  register size_t i, j;
+  if (wnd->owner && wnd->flags & IS_PRIMARY_WINDOW && wnd->owner->flags & KILL_WHEN_PRIMARY_WINDOW_CLOSED) {
+    close_application(wnd->owner);
+  }
+  wnd->id = 0;
+  for (i = 0; i < manager->count; ++i) {
+    if (manager->order[i] == wnd) {
+      for (j = i+1; j < manager->count; ++j) {
+        manager->order[j-1] = manager->order[j];
+      }
+      break;
+    }
+  }
+  manager->count--;
+}
+
+void window_manager_bring_to_front(window_manager_t *manager, cig_id_t wnd_id) {
+  for (register size_t i = 0; i < manager->count; ++i) {
+    if (manager->order[i]->id == wnd_id) {
+      window_t *wnd = manager->order[i];
+      manager->order[i] = manager->order[manager->count-1];
+      manager->order[manager->count-1] = wnd;
+      cig_set_focused_id(wnd_id);
+      break;
+    }
   }
 }
 
-static void close_window(window_t *wnd) {
-  wnd->proc = NULL;
-  wnd->title = NULL;
-  if (wnd->data) {
-    free(wnd->data);
-    wnd->data = NULL;
+window_t* window_manager_find_primary_window(window_manager_t *manager, application_t *app) {
+  for (register size_t i = 0; i < manager->count; ++i) {
+    if (manager->order[i]->owner == app && manager->order[i]->flags & IS_PRIMARY_WINDOW) {
+      return manager->order[i];
+    }
   }
+
+  return NULL;
 }
 
-/* Application */
-
-void application_open_window(application_t *app, window_t wnd) {
-  app->windows[0] = wnd;
-}
-
-/* Components */
+/*  ┌───────────────────┐
+    │ COMMON COMPONENTS │
+    └───────────────────┘ */
 
 bool standard_button(cig_r rect, const char *title) {
   bool clicked = false;
@@ -421,6 +464,7 @@ bool checkbox(cig_r rect, bool *value, const char *text) {
 
 window_message_t begin_window(window_t *wnd) {
   static struct {
+    window_t *selected_window;
     bool active;
     cig_r original_rect;
   } window_drag = { 0 };
@@ -453,15 +497,18 @@ window_message_t begin_window(window_t *wnd) {
       cig_input_state()->locked = true;
       window_drag.active = true;
       window_drag.original_rect = wnd->rect;
-    } else if (window_drag.active && cig_input_state()->drag.active) {
-      wnd->rect = cig_r_make(
-        CIG_CLAMP(window_drag.original_rect.x + cig_input_state()->drag.change.x, -(wnd->rect.w - 50), 640 - 30),
-        CIG_CLAMP(window_drag.original_rect.y + cig_input_state()->drag.change.y, 0, 480 - 50),
-        wnd->rect.w,
-        wnd->rect.h
-      );
-    } else {
-      window_drag.active = false;
+      window_drag.selected_window = wnd;
+    } else if (window_drag.selected_window == wnd) {
+      if (window_drag.active && cig_input_state()->drag.active) {
+        wnd->rect = cig_r_make(
+          CIG_CLAMP(window_drag.original_rect.x + cig_input_state()->drag.change.x, -(wnd->rect.w - 50), 640 - 30),
+          CIG_CLAMP(window_drag.original_rect.y + cig_input_state()->drag.change.y, 0, 480 - 50),
+          wnd->rect.w,
+          wnd->rect.h
+        );
+      } else {
+        window_drag.active = false;
+      }
     }
 
     cig_label((cig_text_properties_t) {
