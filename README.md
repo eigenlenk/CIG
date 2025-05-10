@@ -64,7 +64,7 @@ The secondary goal with this library is to keep the core layout separate from vi
 # Demo
 The demo serves as a work-in-progress testbed for the library. I like retro computing, so **obviously** I chose Windows 95 to ~~re~~demake. Rendering is done using Raylib as that was easy to get up and running with. But as mentioned earlier, nothing about CIG is tied to a particular renderer. Of course if you opt to use this library, you can integrate it more tightly with your graphics-ware and don't have to have another layer of abstraction like this.
 
-![image](https://github.com/user-attachments/assets/5f05c3f4-b88b-417d-8189-6d771cbd6ed5)
+![image](https://github.com/user-attachments/assets/74280199-5f6b-4fad-b6e1-f0a9a09c612e)
 
 #### Here's how the final image is rendered piece by piece
 https://github.com/user-attachments/assets/80a5a0f1-f1fc-41ed-8c5a-699056a58b9b
