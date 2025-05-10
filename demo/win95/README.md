@@ -23,5 +23,5 @@ Decided to demake Windows 95 because of how relatively simple and boxy its GUI e
 ![image](https://github.com/user-attachments/assets/23c67f14-3eaa-4eb3-a60f-6027b6129478)
 
 #### Resources:
-https://guidebookgallery.org/screenshots/win95
-https://www.pcjs.org/software/pcx86/sys/windows/win95/4.00.950/
+* https://guidebookgallery.org/screenshots/win95
+* https://www.pcjs.org/software/pcx86/sys/windows/win95/4.00.950/
