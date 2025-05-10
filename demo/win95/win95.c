@@ -1,7 +1,8 @@
 #include "win95.h"
+#include "apps/explorer/explorer.h"
 #include "apps/welcome/welcome.h"
-#include "time.h"
 #include "cigcorem.h"
+#include <time.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -12,6 +13,7 @@ static win95_t *this = NULL;
 static void process_apps();
 static void process_windows();
 static void close_application(application_t *);
+static void open_explorer_at(const char*);
 
 static bool taskbar_button(
   cig_r rect,
@@ -91,49 +93,6 @@ static bool start_button(cig_r rect) {
   return clicked;
 }
 
-static bool do_desktop_icon(int icon, const char *title) {
-  bool double_clicked = false;
-
-  CIG_VSTACK(RECT_AUTO, CIG_INSETS(cig_i_make(2, 2, 2, 0)), CIG_PARAMS({
-    CIG_SPACING(6)
-  })) {
-    cig_enable_interaction();
-
-    const bool focused = cig_enable_focus();
-    double_clicked = cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DEFAULT_OPTIONS | CIG_CLICK_DOUBLE);
-
-    CIG(RECT_AUTO_H(32)) {
-      if (focused) { enable_blue_selection_dithering(true); }
-      cig_image(get_image(icon), CIG_IMAGE_MODE_TOP);
-      if (focused) { enable_blue_selection_dithering(false); }
-    }
-
-    cig_label_t *label = CIG_ALLOCATE(cig_label_t);
-
-    /* We need to prepare the label here to know how large of a rectangle
-       to draw around it when the icon is focused */
-    cig_prepare_label(label, CIG_W, (cig_text_properties_t) {
-        .color = get_color(COLOR_WHITE),
-        .alignment.vertical = CIG_TEXT_ALIGN_TOP
-      }, title);
-
-    CIG(_) {
-      if (focused) {
-        int text_x_in_parent = (CIG_W - label->bounds.w) * 0.5;
-        cig_draw_rect(
-          cig_r_make(CIG_SX+text_x_in_parent-1, CIG_SY-1, label->bounds.w+2, label->bounds.h+2),
-          get_color(COLOR_WINDOW_ACTIVE_TITLEBAR),
-          0,
-          1
-        );
-      }
-      cig_draw_label(label);
-    }
-  }
-
-  return double_clicked;
-}
-
 static void do_desktop_icons() {
   if (!cig_push_grid(RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
     .width = 75,
@@ -143,10 +102,15 @@ static void do_desktop_icons() {
     return;
   }
 
-  do_desktop_icon(IMAGE_MY_COMPUTER_32, "My Computer");
-  do_desktop_icon(IMAGE_BIN_EMPTY, "Recycle Bin");
+  if (large_file_icon(IMAGE_MY_COMPUTER_32, "My Computer", COLOR_WHITE)) {
+    open_explorer_at(explorer_path_my_computer);
+  }
+  
+  if (large_file_icon(IMAGE_BIN_EMPTY, "Recycle Bin", COLOR_WHITE)) {
+    open_explorer_at(explorer_path_recycle_bin);
+  }
 
-  if (do_desktop_icon(IMAGE_WELCOME_APP_ICON, "Welcome")) {
+  if (large_file_icon(IMAGE_WELCOME_APP_ICON, "Welcome", COLOR_WHITE)) {
     application_t *app;
     window_t *primary_wnd;
     if ((app = win95_find_open_app("welcome"))) {
@@ -226,6 +190,7 @@ static void do_taskbar() {
 void start_win95(win95_t *win95) {
   this = win95;
 
+  win95_open_app(explorer_app());
   win95_open_app(welcome_app());
 }
 
@@ -241,7 +206,9 @@ void run_win95(win95_t *win95) {
 void win95_open_app(application_t app) {
   application_t *new_app = &this->applications[this->running_apps++];
   *new_app = app;
-  window_manager_create(&this->window_manager, new_app, new_app->windows[0]);
+  if (new_app->windows[0].id) {
+    window_manager_create(&this->window_manager, new_app, new_app->windows[0]);
+  }
 }
 
 application_t *win95_find_open_app(const char *id) {
@@ -311,17 +278,21 @@ static void close_application(application_t *app) {
   }
 }
 
+static void open_explorer_at(const char *path) {
+  application_t *explorer = win95_find_open_app("explorer");
+  assert(explorer != NULL);
+  window_manager_create(&this->window_manager, explorer, explorer_create_window(explorer, path));
+}
+
 /*  ┌────────────────┐
     │ WINDOW MANAGER │
     └────────────────┘ */
 
 window_t* window_manager_create(window_manager_t *manager, application_t *app, window_t wnd) {
   for (register size_t i = 0; i < WIN95_OPEN_WINDOWS_MAX; ++i) {
-    if (manager->windows[i].id) {
-      continue;
-    }
+    if (manager->windows[i].id) { continue; }
     wnd.owner = app;
-    wnd.id += rand() % 10000000;
+    if (!wnd.id) { wnd.id = rand(); }
     manager->windows[i] = wnd;
     manager->order[manager->count++] = &manager->windows[i];
     cig_set_focused_id(wnd.id);
@@ -462,6 +433,49 @@ bool checkbox(cig_r rect, bool *value, const char *text) {
   return toggled;
 }
 
+bool large_file_icon(int icon, const char *title, color_id_t text_color) {
+  bool double_clicked = false;
+
+  CIG_VSTACK(RECT_AUTO, CIG_INSETS(cig_i_make(2, 2, 2, 0)), CIG_PARAMS({
+    CIG_SPACING(6)
+  })) {
+    cig_enable_interaction();
+
+    const bool focused = cig_enable_focus();
+    double_clicked = cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DEFAULT_OPTIONS | CIG_CLICK_DOUBLE);
+
+    CIG(RECT_AUTO_H(32)) {
+      if (focused) { enable_blue_selection_dithering(true); }
+      cig_image(get_image(icon), CIG_IMAGE_MODE_TOP);
+      if (focused) { enable_blue_selection_dithering(false); }
+    }
+
+    cig_label_t *label = CIG_ALLOCATE(cig_label_t);
+
+    /* We need to prepare the label here to know how large of a rectangle
+       to draw around it when the icon is focused */
+    cig_prepare_label(label, CIG_W, (cig_text_properties_t) {
+        .color = focused ? get_color(COLOR_WHITE) : get_color(text_color),
+        .alignment.vertical = CIG_TEXT_ALIGN_TOP
+      }, title);
+
+    CIG(_) {
+      if (focused) {
+        int text_x_in_parent = (CIG_W - label->bounds.w) * 0.5;
+        cig_draw_rect(
+          cig_r_make(CIG_SX+text_x_in_parent-1, CIG_SY-1, label->bounds.w+2, label->bounds.h+2),
+          get_color(COLOR_WINDOW_ACTIVE_TITLEBAR),
+          0,
+          1
+        );
+      }
+      cig_draw_label(label);
+    }
+  }
+
+  return double_clicked;
+}
+
 window_message_t begin_window(window_t *wnd) {
   static struct {
     window_t *selected_window;
@@ -475,7 +489,7 @@ window_message_t begin_window(window_t *wnd) {
   /*  We're not checking the return value here, so if it's FALSE (= culled)
       it would crash. Easiest fix is to make sure the window can't be dragged
       off-screen all the way. */
-  cig_push_frame_insets(wnd->rect, cig_i_uniform(3));
+  cig_push_frame_insets(wnd->rect, cig_i_uniform(4));
   cig_fill_panel(get_panel(PANEL_STANDARD_DIALOG), 0);
 
   const bool focused = cig_enable_focus();
@@ -511,20 +525,30 @@ window_message_t begin_window(window_t *wnd) {
       }
     }
 
-    cig_label((cig_text_properties_t) {
-      .font = get_font(FONT_BOLD),
-      .color = get_color(COLOR_WHITE),
-      .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
-      .alignment.vertical = CIG_TEXT_ALIGN_MIDDLE
-    }, wnd->title);
-    
     /*  This container is right-aligned, so X will be 0 */
     if (icon_button(RECT_AUTO_W(16), IMAGE_CROSS)) {
       msg = WINDOW_CLOSE;
     }
+
+    CIG_HSTACK(_, CIG_PARAMS({
+      CIG_SPACING(2)
+    })) {
+      if (wnd->icon >= 0) {
+        CIG(RECT_AUTO_W(16)) {
+          cig_image(get_image(wnd->icon), CIG_IMAGE_MODE_CENTER);
+        }
+      }
+      CIG(_) {
+        cig_label((cig_text_properties_t) {
+          .font = get_font(FONT_BOLD),
+          .color = focused ? get_color(COLOR_WHITE) : get_color(COLOR_DIALOG_BACKGROUND),
+          .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
+        }, wnd->title);
+      }
+    }
   }
 
-  cig_push_frame(cig_r_make(0, 18, CIG_AUTO(), CIG_H_INSET - 18));
+  cig_push_frame(cig_r_make(0, 19, CIG_AUTO(), CIG_H_INSET - 19));
     
   return msg;
 }

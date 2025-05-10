@@ -37,6 +37,12 @@ typedef enum {
   IMAGE_CROSS,
   IMAGE_WELCOME_APP_ICON,
   IMAGE_BIN_EMPTY,
+  IMAGE_DRIVE_A_16,
+  IMAGE_DRIVE_A_32,
+  IMAGE_DRIVE_C_16,
+  IMAGE_DRIVE_C_32,
+  IMAGE_DRIVE_D_16,
+  IMAGE_DRIVE_D_32,
   __IMAGE_COUNT
 } image_id_t;
 
@@ -46,6 +52,7 @@ typedef enum {
   PANEL_LIGHT_YELLOW,
   PANEL_GRAY_DITHER,
   PANEL_INNER_BEVEL_NO_FILL,
+  PANEL_FILES_CONTENT_BEVEL,
   __PANEL_COUNT
 } panel_id_t;
 
@@ -127,6 +134,7 @@ window_t* window_manager_find_primary_window(window_manager_t*, application_t*);
     └───────────────────┘ */
 bool standard_button(cig_r, const char *);
 bool checkbox(cig_r, bool *, const char *);
+bool large_file_icon(int, const char *, color_id_t);
 window_message_t begin_window(window_t *);
 void end_window();
 

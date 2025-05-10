@@ -95,6 +95,12 @@ int main(int argc, const char *argv[]) {
   load_texture(&images[IMAGE_CROSS], "res/images/cross.png");
   load_texture(&images[IMAGE_WELCOME_APP_ICON], "res/images/welcome.png");
   load_texture(&images[IMAGE_BIN_EMPTY], "res/images/bin_empty.png");
+  load_texture(&images[IMAGE_DRIVE_A_16], "res/images/drive_a_16.png");
+  load_texture(&images[IMAGE_DRIVE_A_32], "res/images/drive_a_32.png");
+  load_texture(&images[IMAGE_DRIVE_C_16], "res/images/drive_c_16.png");
+  load_texture(&images[IMAGE_DRIVE_C_32], "res/images/drive_c_32.png");
+  load_texture(&images[IMAGE_DRIVE_D_16], "res/images/drive_d_16.png");
+  load_texture(&images[IMAGE_DRIVE_D_32], "res/images/drive_d_32.png");
 
   blue_dither_shader = LoadShader(0, "res/shaders/blue_dither.fs");
 
@@ -326,6 +332,18 @@ CIG_INLINED void render_panel(cig_panel_ref panel, cig_r rect, cig_panel_modifie
       DrawLine(rect.x + 1, rect.y, rect.x + 1, rect.y + rect.h - 1, (Color) { 130, 130, 130, 255 });
       DrawLine(rect.x, rect.y + rect.h - 1, rect.x + rect.w , rect.y + rect.h - 1, (Color) { 255, 255, 255, 255 });
       DrawLine(rect.x + rect.w , rect.y, rect.x + rect.w , rect.y + rect.h, (Color) { 255, 255, 255, 255 });
+    } break;
+
+  case PANEL_FILES_CONTENT_BEVEL:
+    {
+      DrawLine(rect.x, rect.y, rect.x + rect.w - 1, rect.y, (Color) { 130, 130, 130, 255 });
+      DrawLine(rect.x + 1, rect.y, rect.x + 1, rect.y + rect.h - 1, (Color) { 130, 130, 130, 255 });
+      DrawLine(rect.x, rect.y + rect.h - 1, rect.x + rect.w , rect.y + rect.h - 1, (Color) { 255, 255, 255, 255 });
+      DrawLine(rect.x + rect.w , rect.y, rect.x + rect.w , rect.y + rect.h, (Color) { 255, 255, 255, 255 });
+      DrawLine(rect.x + 1, rect.y + 1, rect.x + rect.w - 2, rect.y + 1, (Color){ 0, 0, 0, 255 });
+      DrawLine(rect.x + 2, rect.y + 2, rect.x + 2, rect.y + rect.h - 2, (Color){ 0, 0, 0, 255 });
+      DrawLine(rect.x + 1, rect.y + rect.h - 2, rect.x + rect.w - 1, rect.y + rect.h - 2, (Color){ 223, 223, 223, 255 });
+      DrawLine(rect.x + rect.w - 1, rect.y + 1, rect.x + rect.w - 1, rect.y + rect.h - 2, (Color){ 223, 223, 223, 255 });
     } break;
   }
 }
