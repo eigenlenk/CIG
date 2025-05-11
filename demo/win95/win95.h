@@ -43,6 +43,7 @@ typedef enum {
   IMAGE_DRIVE_C_32,
   IMAGE_DRIVE_D_16,
   IMAGE_DRIVE_D_32,
+  IMAGE_RESIZE_HANDLE,
   __IMAGE_COUNT
 } image_id_t;
 
@@ -78,10 +79,12 @@ typedef struct window_t {
   win_proc_t proc;
   void *data;
   cig_r rect;
+  cig_v min_size;
   char *title;
   int icon;
   enum {
-    IS_PRIMARY_WINDOW = (1 << 0)
+    IS_PRIMARY_WINDOW = CIG_BIT(0),
+    IS_RESIZABLE = CIG_BIT(1)
   } flags;
 } window_t;
 

@@ -8,14 +8,26 @@
 
 #define TASKBAR_H 28
 
+typedef enum {
+  WINDOW_RESIZE_BOTTOM_RIGHT = 0,
+  WINDOW_RESIZE_RIGHT,
+  WINDOW_RESIZE_TOP_RIGHT,
+  WINDOW_RESIZE_TOP,
+  WINDOW_RESIZE_TOP_LEFT,
+  WINDOW_RESIZE_LEFT,
+  WINDOW_RESIZE_BOTTOM_LEFT,
+  WINDOW_RESIZE_BOTTOM
+} window_resize_edge_t;
+
 static win95_t *this = NULL;
 
 static void process_apps();
 static void process_windows();
 static void close_application(application_t *);
 static bool begin_window(window_t*, window_message_t*, bool*);
-static void end_window();
+static void end_window(window_t*);
 static void open_explorer_at(const char*);
+static void handle_window_resize(window_t*, window_resize_edge_t);
 
 static bool taskbar_button(
   cig_r rect,
@@ -268,7 +280,7 @@ static void process_windows() {
         };
         default: break;
       }
-      end_window();
+      end_window(wnd);
     }
 
     ++i;
@@ -370,8 +382,45 @@ static bool begin_window(window_t *wnd, window_message_t *msg, bool *focused) {
   return true;
 }
 
-static void end_window() {
+static void end_window(window_t *wnd) {
   cig_pop_frame(); /* Content frame */
+
+  /*  Add resizable edge regions and the bottom corner thumb gfx.
+      Resetting insets makes adding the resize regions easier to calculate */
+  
+  cig_frame()->insets = cig_i_zero();
+
+  if (wnd->flags & IS_RESIZABLE) {
+    struct {
+      cig_r rect;
+      window_resize_edge_t edge;
+    } resize_regions[10] = {
+      { cig_r_make(CIG_W-4, 20, 4, CIG_H-(20+16)), WINDOW_RESIZE_RIGHT },
+      { cig_r_make(CIG_W-4, 4, 4, 16), WINDOW_RESIZE_TOP_RIGHT },
+      { cig_r_make(CIG_W-20, 0, 20, 4), WINDOW_RESIZE_TOP_RIGHT },
+      { cig_r_make(20, 0, CIG_W-(20+20), 4), WINDOW_RESIZE_TOP },
+      { cig_r_make(0, 4, 4, 16), WINDOW_RESIZE_TOP_LEFT },
+      { cig_r_make(0, 0, 20, 4), WINDOW_RESIZE_TOP_LEFT },
+      { cig_r_make(0, 20, 4, CIG_H-(20+16)), WINDOW_RESIZE_LEFT },
+      { cig_r_make(0, CIG_H-20, 4, 16), WINDOW_RESIZE_BOTTOM_LEFT },
+      { cig_r_make(0, CIG_H-4, 20, 4), WINDOW_RESIZE_BOTTOM_LEFT },
+      { cig_r_make(20, CIG_H-4, CIG_W-(20+16), 4), WINDOW_RESIZE_BOTTOM },
+    };
+
+    for (int i = 0; i < 10; ++i) {
+      CIG(resize_regions[i].rect) {
+        cig_enable_interaction();
+        handle_window_resize(wnd, resize_regions[i].edge);
+      }
+    }
+
+    CIG(RECT(CIG_W_INSET-16, CIG_H_INSET-16, 16, 16)) {
+      cig_image(get_image(IMAGE_RESIZE_HANDLE), CIG_IMAGE_MODE_TOP_LEFT);
+      cig_enable_interaction();
+      handle_window_resize(wnd, WINDOW_RESIZE_BOTTOM_RIGHT);
+    }
+  }
+
   cig_pop_frame(); /* Window panel */
 }
 
@@ -379,6 +428,58 @@ static void open_explorer_at(const char *path) {
   application_t *explorer = win95_find_open_app("explorer");
   assert(explorer != NULL);
   window_manager_create(&this->window_manager, explorer, explorer_create_window(explorer, path));
+}
+
+static void handle_window_resize(window_t *wnd, window_resize_edge_t edge) {
+  static struct {
+    window_t *selected_window;
+    window_resize_edge_t active_edge;
+    bool active;
+    cig_r original_rect;
+  } window_resize = { 0 };
+
+  const struct {
+    int x, y, w, h;
+  } edge_adjustments[8] = {
+    { 0, 0, 1, 1 }, /* WINDOW_RESIZE_BOTTOM_RIGHT */
+    { 0, 0, 1, 0 }, /* WINDOW_RESIZE_RIGHT */
+    { 0, 1, 1, 0 }, /* WINDOW_RESIZE_TOP_RIGHT */
+    { 0, 1, 0, 0 }, /* WINDOW_RESIZE_TOP */
+    { 1, 1, 0, 0 }, /* WINDOW_RESIZE_TOP_LEFT */
+    { 1, 0, 0, 0 }, /* WINDOW_RESIZE_LEFT */
+    { 1, 0, 0, 1 }, /* WINDOW_RESIZE_BOTTOM_LEFT */
+    { 0, 0, 0, 1 }, /* WINDOW_RESIZE_BOTTOM */
+  };
+
+  if (!window_resize.active && cig_pressed(CIG_INPUT_MOUSE_BUTTON_LEFT, CIG_PRESS_INSIDE) && cig_input_state()->drag.active) {
+    cig_input_state()->locked = true;
+    window_resize.active = true;
+    window_resize.original_rect = wnd->rect;
+    window_resize.selected_window = wnd;
+    window_resize.active_edge = edge;
+  } else if (window_resize.selected_window == wnd && window_resize.active_edge == edge) {
+    if (window_resize.active && cig_input_state()->drag.active) {
+      const int dx = cig_input_state()->drag.change.x,
+                dy = cig_input_state()->drag.change.y;
+
+      if (edge_adjustments[edge].x) {
+        wnd->rect.w = CIG_MAX(wnd->min_size.x, window_resize.original_rect.w - dx);
+        wnd->rect.x = window_resize.original_rect.x + (window_resize.original_rect.w - wnd->rect.w);
+      }
+      if (edge_adjustments[edge].y) {
+        wnd->rect.h = CIG_MAX(wnd->min_size.y, window_resize.original_rect.h - dy);
+        wnd->rect.y = window_resize.original_rect.y + (window_resize.original_rect.h - wnd->rect.h);
+      }
+      if (edge_adjustments[edge].w) {
+        wnd->rect.w = CIG_MAX(wnd->min_size.x, window_resize.original_rect.w + dx);
+      }
+      if (edge_adjustments[edge].h) {
+        wnd->rect.h = CIG_MAX(wnd->min_size.y, window_resize.original_rect.h + dy);
+      }
+    } else {
+      window_resize.active = false;
+    }
+  }
 }
 
 /*  ┌────────────────┐

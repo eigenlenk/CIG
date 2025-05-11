@@ -93,8 +93,6 @@ int main(int argc, char **argv)
   }
   
   if (targets_included & TARGET_RAYLIB_DEMO) {
-    nob_copy_directory_recursively(DEMO_FOLDER"win95/res", BIN_FOLDER"res");
-    
     nob_cmd_append(
       &cmd,
       "gcc",
@@ -127,6 +125,8 @@ int main(int argc, char **argv)
     );
 
     if (!nob_cmd_run_sync_and_reset(&cmd)) return 1;
+
+    nob_copy_directory_recursively(DEMO_FOLDER"win95/res", BIN_FOLDER"res");
   }
 
   return 0;

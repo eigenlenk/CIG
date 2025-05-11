@@ -101,6 +101,7 @@ int main(int argc, const char *argv[]) {
   load_texture(&images[IMAGE_DRIVE_C_32], "res/images/drive_c_32.png");
   load_texture(&images[IMAGE_DRIVE_D_16], "res/images/drive_d_16.png");
   load_texture(&images[IMAGE_DRIVE_D_32], "res/images/drive_d_32.png");
+  load_texture(&images[IMAGE_RESIZE_HANDLE], "res/images/resize_handle.png");
 
   blue_dither_shader = LoadShader(0, "res/shaders/blue_dither.fs");
 

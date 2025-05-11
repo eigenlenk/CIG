@@ -26,8 +26,14 @@ static void window_proc(window_t *this, window_message_t *msg, bool window_focus
         cig_enable_clipping();
 
         /* TODO: Status bar */
-        CIG(_W(400)) {
+        CIG(_W(CIG_MIN(144, CIG_W_INSET))) {
           cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
+        }
+        if (CIG_W_INSET > (144+2)) {
+          int remaining_space = CIG_W_INSET - (144+2);
+          CIG(RECT(CIG_W_INSET-remaining_space, 0, remaining_space, CIG_AUTO())) {
+            cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
+          }
         }
       }
 
@@ -73,7 +79,9 @@ window_t explorer_create_window(application_t *app, const char *path) {
     .proc = &window_proc,
     .data = data,
     .rect = RECT_CENTERED(265, 220),
+    .min_size = { 220, 160 },
     .title = "My Computer",
-    .icon = IMAGE_MY_COMPUTER_16
+    .icon = IMAGE_MY_COMPUTER_16,
+    .flags = IS_RESIZABLE
   };
 }
