@@ -63,7 +63,7 @@ typedef enum {
   WINDOW_CLOSE = 1
 } window_message_t;
 
-typedef window_message_t (*win_proc_t)(struct window_t *);
+typedef void (*win_proc_t)(struct window_t*, window_message_t*, bool);
 
 typedef enum {
   APPLICATION_KILL = 1
@@ -133,9 +133,8 @@ window_t* window_manager_find_primary_window(window_manager_t*, application_t*);
     │ COMMON COMPONENTS │
     └───────────────────┘ */
 bool standard_button(cig_r, const char *);
+bool icon_button(cig_r, image_id_t);
 bool checkbox(cig_r, bool *, const char *);
-bool large_file_icon(int, const char *, color_id_t);
-window_message_t begin_window(window_t *);
-void end_window();
+bool large_file_icon(int, const char *, color_id_t, bool);
 
 #endif

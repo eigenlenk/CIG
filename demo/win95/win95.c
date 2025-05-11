@@ -13,6 +13,8 @@ static win95_t *this = NULL;
 static void process_apps();
 static void process_windows();
 static void close_application(application_t *);
+static bool begin_window(window_t*, window_message_t*, bool*);
+static void end_window();
 static void open_explorer_at(const char*);
 
 static bool taskbar_button(
@@ -94,6 +96,8 @@ static bool start_button(cig_r rect) {
 }
 
 static void do_desktop_icons() {
+  const bool desktop_focused = cig_focused();
+
   if (!cig_push_grid(RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
     .width = 75,
     .height = 75,
@@ -102,15 +106,15 @@ static void do_desktop_icons() {
     return;
   }
 
-  if (large_file_icon(IMAGE_MY_COMPUTER_32, "My Computer", COLOR_WHITE)) {
+  if (large_file_icon(IMAGE_MY_COMPUTER_32, "My Computer", COLOR_WHITE, desktop_focused)) {
     open_explorer_at(explorer_path_my_computer);
   }
   
-  if (large_file_icon(IMAGE_BIN_EMPTY, "Recycle Bin", COLOR_WHITE)) {
+  if (large_file_icon(IMAGE_BIN_EMPTY, "Recycle Bin", COLOR_WHITE, desktop_focused)) {
     open_explorer_at(explorer_path_recycle_bin);
   }
 
-  if (large_file_icon(IMAGE_WELCOME_APP_ICON, "Welcome", COLOR_WHITE)) {
+  if (large_file_icon(IMAGE_WELCOME_APP_ICON, "Welcome", COLOR_WHITE, desktop_focused)) {
     application_t *app;
     window_t *primary_wnd;
     if ((app = win95_find_open_app("welcome"))) {
@@ -244,20 +248,32 @@ static void process_windows() {
     window_manager_bring_to_front(&this->window_manager, cig_focused_id());
   }
 
+  window_message_t msg;
+  bool focused;
+
   for (register size_t i = 0; i < this->window_manager.count;) {
     window_t *wnd = this->window_manager.order[i];
 
     if (wnd->proc) {
-      switch (wnd->proc(wnd)) {
+      msg = 0;
+      focused = false;
+      if (!begin_window(wnd, &msg, &focused)) {
+        continue;
+      }
+      wnd->proc(wnd, &msg, focused);
+      switch (msg) {
         case WINDOW_CLOSE: {
           window_manager_close(&this->window_manager, wnd);
-          continue;
+          goto skip_increment;
         };
         default: break;
       }
+      end_window();
     }
 
     ++i;
+    
+    skip_increment:;
   }
 }
 
@@ -276,6 +292,87 @@ static void close_application(application_t *app) {
       this->running_apps--;
     }
   }
+}
+
+static bool begin_window(window_t *wnd, window_message_t *msg, bool *focused) {
+  static struct {
+    window_t *selected_window;
+    bool active;
+    cig_r original_rect;
+  } window_drag = { 0 };
+
+  cig_set_next_id(wnd->id);
+  
+  if (!cig_push_frame_insets(wnd->rect, cig_i_uniform(4))) {
+    return false;
+  }
+
+  cig_fill_panel(get_panel(PANEL_STANDARD_DIALOG), 0);
+
+  *focused = cig_enable_focus();
+
+  /* Titlebar */
+  CIG_HSTACK(
+    RECT_AUTO_H(18),
+    CIG_INSETS(cig_i_uniform(2)),
+    CIG_PARAMS({
+      CIG_SPACING(2),
+      CIG_ALIGNMENT_HORIZONTAL(CIG_LAYOUT_ALIGNS_RIGHT)
+    })
+  ) {
+    cig_fill_solid(get_color(*focused ? COLOR_WINDOW_ACTIVE_TITLEBAR : COLOR_WINDOW_INACTIVE_TITLEBAR));
+    cig_enable_interaction();
+
+    /* TODO: This could probably be a little nicer to deal with */
+    if (!window_drag.active && cig_pressed(CIG_INPUT_MOUSE_BUTTON_LEFT, CIG_PRESS_INSIDE) && cig_input_state()->drag.active) {
+      cig_input_state()->locked = true;
+      window_drag.active = true;
+      window_drag.original_rect = wnd->rect;
+      window_drag.selected_window = wnd;
+    } else if (window_drag.selected_window == wnd) {
+      if (window_drag.active && cig_input_state()->drag.active) {
+        wnd->rect = cig_r_make(
+          CIG_CLAMP(window_drag.original_rect.x + cig_input_state()->drag.change.x, -(wnd->rect.w - 50), 640 - 30),
+          CIG_CLAMP(window_drag.original_rect.y + cig_input_state()->drag.change.y, 0, 480 - 50),
+          wnd->rect.w,
+          wnd->rect.h
+        );
+      } else {
+        window_drag.active = false;
+      }
+    }
+
+    /*  This container is right-aligned, so X will be 0 */
+    if (icon_button(RECT_AUTO_W(16), IMAGE_CROSS)) {
+      *msg = WINDOW_CLOSE;
+    }
+
+    CIG_HSTACK(_, CIG_PARAMS({
+      CIG_SPACING(2)
+    })) {
+      if (wnd->icon >= 0) {
+        CIG(RECT_AUTO_W(16)) {
+          cig_image(get_image(wnd->icon), CIG_IMAGE_MODE_CENTER);
+        }
+      }
+      CIG(_) {
+        cig_label((cig_text_properties_t) {
+          .font = get_font(FONT_BOLD),
+          .color = *focused ? get_color(COLOR_WHITE) : get_color(COLOR_DIALOG_BACKGROUND),
+          .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
+        }, wnd->title);
+      }
+    }
+  }
+
+  cig_push_frame(cig_r_make(0, 19, CIG_AUTO(), CIG_H_INSET - 19));
+    
+  return true;
+}
+
+static void end_window() {
+  cig_pop_frame(); /* Content frame */
+  cig_pop_frame(); /* Window panel */
 }
 
 static void open_explorer_at(const char *path) {
@@ -433,7 +530,8 @@ bool checkbox(cig_r rect, bool *value, const char *text) {
   return toggled;
 }
 
-bool large_file_icon(int icon, const char *title, color_id_t text_color) {
+bool large_file_icon(int icon, const char *title, color_id_t text_color, bool group_focused) {
+  static cig_id_t selected_file_id = 0;
   bool double_clicked = false;
 
   CIG_VSTACK(RECT_AUTO, CIG_INSETS(cig_i_make(2, 2, 2, 0)), CIG_PARAMS({
@@ -441,26 +539,30 @@ bool large_file_icon(int icon, const char *title, color_id_t text_color) {
   })) {
     cig_enable_interaction();
 
-    const bool focused = cig_enable_focus();
+    if (cig_pressed(CIG_INPUT_MOUSE_BUTTON_LEFT, CIG_PRESS_DEFAULT_OPTIONS)) {
+      selected_file_id = cig_frame()->id;
+    }
+
+    const bool shows_selection = group_focused && selected_file_id == cig_frame()->id;
     double_clicked = cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DEFAULT_OPTIONS | CIG_CLICK_DOUBLE);
 
     CIG(RECT_AUTO_H(32)) {
-      if (focused) { enable_blue_selection_dithering(true); }
+      if (shows_selection) { enable_blue_selection_dithering(true); }
       cig_image(get_image(icon), CIG_IMAGE_MODE_TOP);
-      if (focused) { enable_blue_selection_dithering(false); }
+      if (shows_selection) { enable_blue_selection_dithering(false); }
     }
 
     cig_label_t *label = CIG_ALLOCATE(cig_label_t);
 
     /* We need to prepare the label here to know how large of a rectangle
-       to draw around it when the icon is focused */
+       to draw around it when the icon is selected */
     cig_prepare_label(label, CIG_W, (cig_text_properties_t) {
-        .color = focused ? get_color(COLOR_WHITE) : get_color(text_color),
+        .color = shows_selection ? get_color(COLOR_WHITE) : get_color(text_color),
         .alignment.vertical = CIG_TEXT_ALIGN_TOP
       }, title);
 
     CIG(_) {
-      if (focused) {
+      if (shows_selection) {
         int text_x_in_parent = (CIG_W - label->bounds.w) * 0.5;
         cig_draw_rect(
           cig_r_make(CIG_SX+text_x_in_parent-1, CIG_SY-1, label->bounds.w+2, label->bounds.h+2),
@@ -474,86 +576,4 @@ bool large_file_icon(int icon, const char *title, color_id_t text_color) {
   }
 
   return double_clicked;
-}
-
-window_message_t begin_window(window_t *wnd) {
-  static struct {
-    window_t *selected_window;
-    bool active;
-    cig_r original_rect;
-  } window_drag = { 0 };
-
-  window_message_t msg = 0;
-
-  cig_set_next_id(wnd->id);
-  /*  We're not checking the return value here, so if it's FALSE (= culled)
-      it would crash. Easiest fix is to make sure the window can't be dragged
-      off-screen all the way. */
-  cig_push_frame_insets(wnd->rect, cig_i_uniform(4));
-  cig_fill_panel(get_panel(PANEL_STANDARD_DIALOG), 0);
-
-  const bool focused = cig_enable_focus();
-
-  /* Titlebar */
-  CIG_HSTACK(
-    RECT_AUTO_H(18),
-    CIG_INSETS(cig_i_uniform(2)),
-    CIG_PARAMS({
-      CIG_SPACING(2),
-      CIG_ALIGNMENT_HORIZONTAL(CIG_LAYOUT_ALIGNS_RIGHT)
-    })
-  ) {
-    cig_fill_solid(get_color(focused ? COLOR_WINDOW_ACTIVE_TITLEBAR : COLOR_WINDOW_INACTIVE_TITLEBAR));
-    cig_enable_interaction();
-
-    /* TODO: This could probably be a little nicer to deal with */
-    if (!window_drag.active && cig_pressed(CIG_INPUT_MOUSE_BUTTON_LEFT, CIG_PRESS_INSIDE) && cig_input_state()->drag.active) {
-      cig_input_state()->locked = true;
-      window_drag.active = true;
-      window_drag.original_rect = wnd->rect;
-      window_drag.selected_window = wnd;
-    } else if (window_drag.selected_window == wnd) {
-      if (window_drag.active && cig_input_state()->drag.active) {
-        wnd->rect = cig_r_make(
-          CIG_CLAMP(window_drag.original_rect.x + cig_input_state()->drag.change.x, -(wnd->rect.w - 50), 640 - 30),
-          CIG_CLAMP(window_drag.original_rect.y + cig_input_state()->drag.change.y, 0, 480 - 50),
-          wnd->rect.w,
-          wnd->rect.h
-        );
-      } else {
-        window_drag.active = false;
-      }
-    }
-
-    /*  This container is right-aligned, so X will be 0 */
-    if (icon_button(RECT_AUTO_W(16), IMAGE_CROSS)) {
-      msg = WINDOW_CLOSE;
-    }
-
-    CIG_HSTACK(_, CIG_PARAMS({
-      CIG_SPACING(2)
-    })) {
-      if (wnd->icon >= 0) {
-        CIG(RECT_AUTO_W(16)) {
-          cig_image(get_image(wnd->icon), CIG_IMAGE_MODE_CENTER);
-        }
-      }
-      CIG(_) {
-        cig_label((cig_text_properties_t) {
-          .font = get_font(FONT_BOLD),
-          .color = focused ? get_color(COLOR_WHITE) : get_color(COLOR_DIALOG_BACKGROUND),
-          .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
-        }, wnd->title);
-      }
-    }
-  }
-
-  cig_push_frame(cig_r_make(0, 19, CIG_AUTO(), CIG_H_INSET - 19));
-    
-  return msg;
-}
-
-void end_window() {
-  cig_pop_frame(); /* Content frame */
-  cig_pop_frame(); /* Window panel */
 }
