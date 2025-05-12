@@ -23,6 +23,7 @@
 #define CIG_CENTER cig_v_make((CIG_W * 0.5), (CIG_H * 0.5))
 #define CIG_R (CIG_X + CIG_W)
 #define CIG_B (CIG_Y + CIG_H)
+#define CIG_SPACE cig_frame()->_layout_params.spacing
 
 #define RECT_CENTERED(W, H) cig_r_make((CIG_W * 0.5) - (W * 0.5), (CIG_H * 0.5) - (H * 0.5), W, H)
 #define RECT_CENTERED_VERTICALLY(R) cig_r_make(R.x, (CIG_H * 0.5) - (R.h * 0.5), R.w, R.h)
@@ -68,6 +69,6 @@ extern cig_frame_t *cig__macro_last_closed;
 #define CIG_GRID(RECT, ARGS...) cig__macro_last_closed=NULL; for (struct { int pushed; cig_frame_args_t args; } __cig = { 0, (cig_frame_args_t) { .rect=RECT, ARGS } }; !(__cig.pushed++)&&cig_push_grid(__cig.args.rect, __cig.args.insets, __cig.args.params); cig__macro_last_closed=cig_pop_frame())
 
 #define CIG_LAST() cig__macro_last_closed
-#define CIG_CAPTURE(VAR, BODY) cig_frame_t*VAR; BODY; VAR=CIG_LAST();
+#define CIG_CAPTURE(VAR, BODY) BODY; VAR=CIG_LAST();
 
 #endif

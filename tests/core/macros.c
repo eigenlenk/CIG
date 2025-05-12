@@ -22,6 +22,8 @@ TEST_TEAR_DOWN(core_macros) {
     └────────────┘ */
 
 TEST(core_macros, cig) {
+  cig_frame_t *out_of_bounds, *main_frame; 
+
   CIG(_) {}
 
   /*  AVERT YOUR EYES - HACK AHEAD

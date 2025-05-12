@@ -676,6 +676,8 @@ static void end_window(window_t *wnd) {
 }
 
 static cig_frame_t* large_file_icon(int icon, const char *title, color_id_t text_color, bool *double_clicked, bool *selected) {
+  cig_frame_t *file_element;
+  
   CIG_CAPTURE(file_element, CIG_VSTACK(RECT_AUTO, CIG_INSETS(cig_i_make(2, 2, 2, 0)), CIG_PARAMS({
     CIG_SPACING(6)
   })) {
