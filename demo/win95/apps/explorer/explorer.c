@@ -57,6 +57,7 @@ static void my_computer_content(bool window_focused) {
   if (file_item(IMAGE_DRIVE_A_32, "3½ Floppy (A:)")) { }
   if (file_item(IMAGE_DRIVE_C_32, "(C:)")) { }
   if (file_item(IMAGE_DRIVE_D_32, "(D:)")) { }
+  if (file_item(IMAGE_CONTROLS_FOLDER_32, "Control Panel")) { }
 
   end_file_browser();
 }
