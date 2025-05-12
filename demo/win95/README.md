@@ -2,13 +2,13 @@
 Decided to demake Windows 95 because of how relatively simple and boxy its GUI elements are. Obviously not going to mimic it all but it's a good testbed for developing and testing CIG features.
 
 ## What's there
-* Basic window support with moving
+* Basic window support with moving and resizing
 * Dialog buttons and checkbox element
 * Large file icon with text
 
 ## What's not there
 * Start menu
-* Window resizing
+* Window minimzing, maximizing
 * Window menubar
 * Moving around icons (not sure if needed - would be more about the demo architecture rather than CIG functionality)
 * Task manager
