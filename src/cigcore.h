@@ -145,7 +145,6 @@ typedef struct {
 /* */
 typedef struct {
   cig_v offset;
-  cig_v content_size;
 } cig_scroll_state_t;
 
 typedef struct {
@@ -160,7 +159,8 @@ typedef struct {
   cig_id_t id;
   cig_r rect,          /* Relative rect */
         clipped_rect,  /* Relative clipped rect */
-        absolute_rect; /* Screen-space rect */
+        absolute_rect, /* Screen-space rect */
+        content_rect;  /* Relative rect bounding the content */
   cig_i insets;        /* Insets affect child elements within this element */
 
   /*__PRIVATE__*/      
@@ -337,6 +337,9 @@ CIG_INLINED cig_r cig_clipped_rect() { return cig_frame()->clipped_rect; }
 /*  @return Current screen-space rect */
 CIG_INLINED cig_r cig_absolute_rect() { return cig_frame()->absolute_rect; }
 
+/*  @return Relative bounding rect for current content */
+CIG_INLINED cig_r cig_content_rect() { return cig_frame()->content_rect; }
+
 /*  Converts a relative rect to a screen-space rect */
 cig_r cig_convert_relative_rect(cig_r);
 
@@ -441,9 +444,6 @@ void cig_change_offset(cig_v);
 
 /*  @return Scroller offset */
 cig_v cig_offset();
-
-/*  @return Scroller content size */
-cig_v cig_content_size();
 
 /*  ┌────────────────┐
     │ LAYOUT HELPERS │

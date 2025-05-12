@@ -489,11 +489,6 @@ cig_v cig_offset() {
   return cig_scroll_state()->offset;
 }
 
-cig_v cig_content_size() {
-  assert(cig_scroll_state());
-  return cig_scroll_state()->content_size;
-}
-
 /*  ┌────────────────┐
     │ LAYOUT HELPERS │
     └────────────────┘ */
@@ -775,9 +770,9 @@ static cig_frame_t* push_frame(
     return NULL;
   }
 
+  top->content_rect = cig_r_containing(top->content_rect, next);
+
   if (top->_scroll_state) {
-    top->_scroll_state->content_size.x = CIG_MAX(top->_scroll_state->content_size.x, next.x + next.w);
-    top->_scroll_state->content_size.y = CIG_MAX(top->_scroll_state->content_size.y, next.y + next.h);
     next = cig_r_offset(next, -top->_scroll_state->offset.x, -top->_scroll_state->offset.y);
   }
 
@@ -884,7 +879,6 @@ static CIG_OPTIONAL(cig_scroll_state_t*) find_scroll_state(const cig_id_t id) {
 
     current->scroll_elements[i].id = id;
     current->scroll_elements[i].value.offset = cig_v_zero();
-    current->scroll_elements[i].value.content_size = cig_v_zero();
     current->scroll_elements[i].last_tick = current->tick;
 
     return &current->scroll_elements[i].value;

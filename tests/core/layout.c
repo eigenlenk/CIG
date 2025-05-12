@@ -291,6 +291,16 @@ TEST(core_layout, culling) {
   }
 }
 
+TEST(core_layout, content_bounds) {
+  TEST_ASSERT_EQUAL_RECT(cig_r_zero(), cig_content_rect());
+
+  if (cig_push_frame(cig_r_make(-35, -25, 100, 50))) { cig_pop_frame(); }
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(-35, -25, 100, 50), cig_content_rect());
+
+  if (cig_push_frame(cig_r_make(600, 400, 100, 100))) { cig_pop_frame(); }
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(-35, -25, 735, 525), cig_content_rect());
+}
+
 TEST(core_layout, vstack_layout) {
   /* Pushing a stack that lays out frames vertically with a 10pt spacing */
   if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
@@ -698,7 +708,7 @@ TEST(core_layout, vstack_scroll) {
   cig_scroll_state_t *scroll = cig_scroll_state();
 
   TEST_ASSERT_EQUAL_VEC2(cig_v_zero(), scroll->offset);
-  TEST_ASSERT_EQUAL_VEC2(cig_v_zero(), scroll->content_size);
+  TEST_ASSERT_EQUAL_RECT(cig_r_zero(), cig_content_rect());
 
   scroll->offset.y = 220;
 
@@ -711,7 +721,7 @@ TEST(core_layout, vstack_scroll) {
     }
   }
 
-  TEST_ASSERT_EQUAL_VEC2(cig_v_make(640, 100*10), scroll->content_size);
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 640, 100*10), cig_content_rect());
 }
 
 TEST(core_layout, clipping) {
@@ -852,6 +862,7 @@ TEST_GROUP_RUNNER(core_layout) {
   RUN_TEST_CASE(core_layout, insets);
   RUN_TEST_CASE(core_layout, overlay);
   RUN_TEST_CASE(core_layout, culling);
+  RUN_TEST_CASE(core_layout, content_bounds);
   RUN_TEST_CASE(core_layout, vstack_layout);
   RUN_TEST_CASE(core_layout, hstack_layout);
   RUN_TEST_CASE(core_layout, hstack_mix);
