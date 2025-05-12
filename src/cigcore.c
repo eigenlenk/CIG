@@ -216,6 +216,7 @@ CIG_OPTIONAL(cig_state_t*) cig_state() {
   }
   if ((frame->_state = find_state(frame->id))) {
     frame->_state->arena.mapped = 0;
+    frame->_state->arena.read = 0;
   }
   return frame->_state;
 }
@@ -231,6 +232,24 @@ CIG_OPTIONAL(void*) cig_state_allocate(size_t bytes) {
 
   void *result = &state->arena.bytes[state->arena.mapped];
   state->arena.mapped += bytes;
+  return result;
+}
+
+CIG_OPTIONAL(void*) cig_state_read(bool from_start, size_t bytes) {
+  cig_state_t *state = cig_state();
+
+  if (!state) {
+    return NULL;
+  } else if (state->arena.read + bytes >= CIG_STATE_MEM_ARENA_BYTES) {
+    return NULL;
+  }
+
+  if (from_start) {
+    state->arena.read = 0;
+  }
+
+  void *result = &state->arena.bytes[state->arena.read];
+  state->arena.read += bytes;
   return result;
 }
 

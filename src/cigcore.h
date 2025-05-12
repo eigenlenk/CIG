@@ -130,7 +130,7 @@ typedef struct {
 
 typedef struct {
   unsigned char bytes[CIG_STATE_MEM_ARENA_BYTES];
-  size_t mapped;
+  size_t mapped, read;
 } cig_state_memory_arena_t;
 
 typedef struct {
@@ -343,13 +343,20 @@ cig_r cig_convert_relative_rect(cig_r);
 /*  @return Pointer to the current layout element stack. Avoid accessing if possible. */
 cig_frame_ref_stack_t* cig_frame_stack();
 
-/*  ┌───────┐
-    │ STATE │
-    └───────┘ */
+/*  ┌─────────────────────────────┐
+    │ STATE & MEMORY ARENA ACCESS │
+    └─────────────────────────────┘ */
 
 CIG_OPTIONAL(cig_state_t*) cig_state();
 
+/*  Allocates N bytes in current element's memory arena.
+    @return Pointer to the new object or NULL if memory could not be allocated (no space) */
 CIG_OPTIONAL(void*) cig_state_allocate(size_t);
+
+/*  Similar to allocation, but for simply reading the arena.
+    @param from_start - Resets read position to 0 before reading
+    @return Pointer to the new object or NULL if memory could not be allocated (no space) */
+CIG_OPTIONAL(void*) cig_state_read(bool from_start, size_t);
 
 /*  ┌──────────────────────────────┐
     │ TEMPORARY BUFFERS (ADVANCED) │

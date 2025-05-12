@@ -126,9 +126,38 @@ TEST(core_state, memory_arena) {
   }
 }
 
+TEST(core_state, memory_arena_read) {
+  begin();
+
+  /*  Write some values */
+  {
+    cig_v *vec2 = (cig_v *)cig_state_allocate(sizeof(cig_v));
+    unsigned long *ul = (unsigned long *)cig_state_allocate(sizeof(unsigned long));
+    char *str = (char *)cig_state_allocate(sizeof(char[32]));
+
+    *vec2 = cig_v_make(13, 17);
+    *ul = cig_frame()->id;
+    strcpy(str, "Hello, World!");
+  }
+
+  /*  Read them a couple of times */
+  for (int i = 0; i < 2; ++i) {
+    cig_v *vec2 = (cig_v *)cig_state_read(true, sizeof(cig_v));
+    unsigned long *ul = (unsigned long *)cig_state_read(false, sizeof(unsigned long));
+    char *str = (char *)cig_state_read(false, sizeof(char[32]));
+
+    TEST_ASSERT_EQUAL_VEC2(cig_v_make(13, 17), *vec2);
+    TEST_ASSERT_EQUAL_UINT32(cig_frame()->id, *ul);
+    TEST_ASSERT_EQUAL_STRING("Hello, World!", str);
+  }
+
+  end();
+}
+
 TEST_GROUP_RUNNER(core_state) {
   RUN_TEST_CASE(core_state, activation_states);
   RUN_TEST_CASE(core_state, pool_limit);
   RUN_TEST_CASE(core_state, stale);
   RUN_TEST_CASE(core_state, memory_arena);
+  RUN_TEST_CASE(core_state, memory_arena_read);
 }

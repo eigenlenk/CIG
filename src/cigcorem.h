@@ -55,6 +55,7 @@
 #define CIG_BUILDER(F) .builder = F
 
 #define CIG_ALLOCATE(T) (T*)cig_state_allocate(sizeof(T))
+#define CIG_READ(S,T) (T*)cig_state_read(S, sizeof(T))
 
 #define _ RECT_AUTO
 #define _W(W) RECT_AUTO_W(W)
