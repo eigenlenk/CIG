@@ -528,7 +528,8 @@ static void process_windows() {
       switch (msg) {
         case WINDOW_CLOSE: {
           window_manager_close(&this->window_manager, wnd);
-          goto skip_increment;
+          end_window(wnd);
+          continue;
         };
         default: break;
       }
@@ -536,8 +537,6 @@ static void process_windows() {
     }
 
     ++i;
-    
-    skip_increment:;
   }
 }
 
