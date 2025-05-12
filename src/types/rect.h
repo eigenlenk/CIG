@@ -67,6 +67,14 @@ CIG_INLINED DECLNAME DECLNAME##_union(DECLNAME a, DECLNAME b) {                 
   } else {                                                                                   \
     return DECLNAME##_zero();                                                                \
   }                                                                                          \
+}                           \
+                                                                                             \
+CIG_INLINED DECLNAME DECLNAME##_clip(DECLNAME rect, DECLNAME clip_rect) {                  \
+  T x0 = CIG_MAX(rect.x, clip_rect.x); \
+  T y0 = CIG_MAX(rect.y, clip_rect.y); \
+  T x1 = CIG_MIN(rect.x+rect.w, clip_rect.w); \
+  T y1 = CIG_MIN(rect.y+rect.h, clip_rect.h); \
+  return (DECLNAME) { x0, y0, x1-x0, y1-y0 }; \
 }
 
 #endif

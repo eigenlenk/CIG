@@ -61,14 +61,14 @@
 #define _W(W) RECT_AUTO_W(W)
 #define _H(H) RECT_AUTO_H(H)
 
-#define CIG_HSTACK(RECT, ARGS...) for (struct { int pushed; cig_frame_args_t args; } __cig = { 0, (cig_frame_args_t) { .rect=RECT, ARGS } }; !(__cig.pushed++)&&cig_push_hstack(__cig.args.rect, __cig.args.insets, __cig.args.params); cig_pop_frame())
-#define CIG_VSTACK(RECT, ARGS...) for (struct { int pushed; cig_frame_args_t args; } __cig = { 0, (cig_frame_args_t) { .rect=RECT, ARGS } }; !(__cig.pushed++)&&cig_push_vstack(__cig.args.rect, __cig.args.insets, __cig.args.params); cig_pop_frame())
-#define CIG_GRID(RECT, ARGS...) for (struct { int pushed; cig_frame_args_t args; } __cig = { 0, (cig_frame_args_t) { .rect=RECT, ARGS } }; !(__cig.pushed++)&&cig_push_grid(__cig.args.rect, __cig.args.insets, __cig.args.params); cig_pop_frame())
-
 extern cig_frame_t *cig__macro_last_closed;
 
 /*  This calls the push_frame function once, performs the function body and pops the frame */
 #define CIG(RECT, ARGS...) cig__macro_last_closed=NULL; for (int __pushed=0; !(__pushed++)&&cig_push_frame_args((cig_frame_args_t) { .rect=RECT, ARGS }); cig__macro_last_closed=cig_pop_frame())
+
+#define CIG_HSTACK(RECT, ARGS...) cig__macro_last_closed=NULL; for (struct { int pushed; cig_frame_args_t args; } __cig = { 0, (cig_frame_args_t) { .rect=RECT, ARGS } }; !(__cig.pushed++)&&cig_push_hstack(__cig.args.rect, __cig.args.insets, __cig.args.params); cig__macro_last_closed=cig_pop_frame())
+#define CIG_VSTACK(RECT, ARGS...) cig__macro_last_closed=NULL; for (struct { int pushed; cig_frame_args_t args; } __cig = { 0, (cig_frame_args_t) { .rect=RECT, ARGS } }; !(__cig.pushed++)&&cig_push_vstack(__cig.args.rect, __cig.args.insets, __cig.args.params); cig__macro_last_closed=cig_pop_frame())
+#define CIG_GRID(RECT, ARGS...) cig__macro_last_closed=NULL; for (struct { int pushed; cig_frame_args_t args; } __cig = { 0, (cig_frame_args_t) { .rect=RECT, ARGS } }; !(__cig.pushed++)&&cig_push_grid(__cig.args.rect, __cig.args.insets, __cig.args.params); cig__macro_last_closed=cig_pop_frame())
 
 #define CIG_LAST() cig__macro_last_closed
 #define CIG_CAPTURE(VAR, BODY) cig_frame_t*VAR; BODY; VAR=CIG_LAST();

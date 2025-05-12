@@ -138,6 +138,9 @@ window_t* window_manager_find_primary_window(window_manager_t*, application_t*);
 bool standard_button(cig_r, const char *);
 bool icon_button(cig_r, image_id_t);
 bool checkbox(cig_r, bool *, const char *);
-bool large_file_icon(int, const char *, color_id_t, bool);
+
+bool begin_file_browser(cig_r, int, color_id_t, bool);
+bool file_item(image_id_t, const char*);
+void end_file_browser();
 
 #endif

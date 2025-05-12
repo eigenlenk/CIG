@@ -50,18 +50,15 @@ static void window_proc(window_t *this, window_message_t *msg, bool window_focus
 }
 
 static void my_computer_content(bool window_focused) {
-  if (!cig_push_grid(RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
-    .width = 75,
-    .height = 75
-  })) {
+  if (!begin_file_browser(RECT_AUTO, CIG_LAYOUT_DIRECTION_HORIZONTAL, COLOR_BLACK, window_focused)) {
     return;
   }
 
-  if (large_file_icon(IMAGE_DRIVE_A_32, "3½ Floppy (A:)", COLOR_BLACK, window_focused)) { }
-  if (large_file_icon(IMAGE_DRIVE_C_32, "(C:)", COLOR_BLACK, window_focused)) { }
-  if (large_file_icon(IMAGE_DRIVE_D_32, "(D:)", COLOR_BLACK, window_focused)) { }
+  if (file_item(IMAGE_DRIVE_A_32, "3½ Floppy (A:)")) { }
+  if (file_item(IMAGE_DRIVE_C_32, "(C:)")) { }
+  if (file_item(IMAGE_DRIVE_D_32, "(D:)")) { }
 
-  cig_pop_frame();
+  end_file_browser();
 }
 
 application_t explorer_app() {
