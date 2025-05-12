@@ -29,13 +29,13 @@ static void end() {
 TEST(core_input, hover_and_press) {
   for (int i = 0; i < 2; ++i) {
     begin(FRAME_TIME);
-    cig_set_input_state(cig_v_make(50, 50), i == 1 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
+    cig_set_input_state(cig_v_make(50, 50), i == 1 ? CIG_INPUT_PRIMARY_ACTION : 0);
     cig_push_frame(cig_r_make(0, 0, 100, 100));
     cig_enable_interaction(); /* This element now tracks mouse inputs */
 
     if (i == 1) {
       TEST_ASSERT_TRUE(cig_hovered());
-      TEST_ASSERT_TRUE(cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE));
+      TEST_ASSERT_TRUE(cig_pressed(CIG_INPUT_ACTION_ANY, CIG_PRESS_INSIDE));
     }
 
     cig_pop_frame();
@@ -46,13 +46,13 @@ TEST(core_input, hover_and_press) {
 TEST(core_input, overlapping_hover_and_press) {
   for (int i = 0; i < 2; ++i) {
     begin(FRAME_TIME);
-    cig_set_input_state(cig_v_make(75, 75), i == 1 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
+    cig_set_input_state(cig_v_make(75, 75), i == 1 ? CIG_INPUT_PRIMARY_ACTION : 0);
     cig_push_frame(cig_r_make(0, 0, 100, 100));
     cig_enable_interaction(); /* This element now tracks mouse inputs */
 
     if (i == 1) {
       TEST_ASSERT_FALSE(cig_hovered());
-      TEST_ASSERT_FALSE(cig_pressed(CIG_MOUSE_BUTTON_ANY, 0));
+      TEST_ASSERT_FALSE(cig_pressed(CIG_INPUT_ACTION_ANY, 0));
     }
 
     cig_pop_frame();
@@ -61,7 +61,7 @@ TEST(core_input, overlapping_hover_and_press) {
 
     if (i == 1) {
       TEST_ASSERT_TRUE(cig_hovered());
-      TEST_ASSERT_TRUE(cig_pressed(CIG_MOUSE_BUTTON_ANY, 0));
+      TEST_ASSERT_TRUE(cig_pressed(CIG_INPUT_ACTION_ANY, 0));
     }
 
     /*  Even if there's an additional element on top of the current one,
@@ -76,14 +76,14 @@ TEST(core_input, overlapping_hover_and_press) {
 TEST(core_input, click_on_release) {
   for (int i = 0; i < 3; ++i) {
     begin(FRAME_TIME);
-    cig_set_input_state(cig_v_make(75, 75), i == 1 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
+    cig_set_input_state(cig_v_make(75, 75), i == 1 ? CIG_INPUT_PRIMARY_ACTION : 0);
     cig_push_frame(cig_r_make(0, 0, 100, 100));
     cig_pop_frame();
     cig_push_frame(cig_r_make(50, 50, 100, 100));
     cig_enable_interaction();
 
     if (i == 2) {
-      TEST_ASSERT_TRUE(cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_STARTS_INSIDE));
+      TEST_ASSERT_TRUE(cig_clicked(CIG_INPUT_ACTION_ANY, CIG_CLICK_STARTS_INSIDE));
     }
 
     cig_pop_frame();
@@ -94,13 +94,13 @@ TEST(core_input, click_on_release) {
 TEST(core_input, click_on_button_down) {
   for (int i = 0; i < 2; ++i) {
     begin(FRAME_TIME);
-    cig_set_input_state(cig_v_make(75, 75), i == 1 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
+    cig_set_input_state(cig_v_make(75, 75), i == 1 ? CIG_INPUT_PRIMARY_ACTION : 0);
     cig_push_frame(cig_r_make(50, 50, 100, 100));
     cig_enable_interaction();
 
     if (i == 1) {
       /*  Click is detected as soon as mouse button is pressed */
-      TEST_ASSERT_TRUE(cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_ON_PRESS));
+      TEST_ASSERT_TRUE(cig_clicked(CIG_INPUT_ACTION_ANY, CIG_CLICK_ON_PRESS));
     }
 
     cig_pop_frame();
@@ -116,7 +116,7 @@ TEST(core_input, click_starts_outside) {
     if (i == 0) {
       cig_set_input_state(cig_v_make(25, 25), 0);
     } else if (i == 1) {
-      cig_set_input_state(cig_v_make(75, 75), CIG_INPUT_MOUSE_BUTTON_LEFT);
+      cig_set_input_state(cig_v_make(75, 75), CIG_INPUT_PRIMARY_ACTION);
     } else if (i == 2) {
       cig_set_input_state(cig_v_make(75, 75), 0);
     }
@@ -127,7 +127,7 @@ TEST(core_input, click_starts_outside) {
     if (i == 2) {
       /*  Mouse was clicked when outside of this element, so even when moving
           the cursor over when releasing the button, click is not tracked */
-      TEST_ASSERT_FALSE(cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_STARTS_INSIDE));
+      TEST_ASSERT_FALSE(cig_clicked(CIG_INPUT_ACTION_ANY, CIG_CLICK_STARTS_INSIDE));
     }
 
     cig_pop_frame();
@@ -138,12 +138,12 @@ TEST(core_input, click_starts_outside) {
 TEST(core_input, double_click) {
   for (int i = 0; i < 5; ++i) {
     begin(FRAME_TIME);
-    cig_set_input_state(cig_v_make(75, 75), i == 1 || i == 3 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
+    cig_set_input_state(cig_v_make(75, 75), i == 1 || i == 3 ? CIG_INPUT_PRIMARY_ACTION : 0);
     cig_push_frame(cig_r_make(50, 50, 100, 100));
     cig_enable_interaction();
 
     if (i == 4) {
-      TEST_ASSERT_TRUE(cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DOUBLE));
+      TEST_ASSERT_TRUE(cig_clicked(CIG_INPUT_ACTION_ANY, CIG_CLICK_DOUBLE));
     }
 
     cig_pop_frame();
@@ -155,12 +155,12 @@ TEST(core_input, double_click_too_slow) {
   /*  Default maximum time between clicks is 0.5 seconds */
   for (int i = 0; i < 5; ++i) {
     begin(FRAME_TIME * 10);
-    cig_set_input_state(cig_v_make(75, 75), i == 1 || i == 3 ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0);
+    cig_set_input_state(cig_v_make(75, 75), i == 1 || i == 3 ? CIG_INPUT_PRIMARY_ACTION : 0);
     cig_push_frame(cig_r_make(50, 50, 100, 100));
     cig_enable_interaction();
 
     if (i == 4) {
-      TEST_ASSERT_FALSE(cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DOUBLE));
+      TEST_ASSERT_FALSE(cig_clicked(CIG_INPUT_ACTION_ANY, CIG_CLICK_DOUBLE));
     }
 
     cig_pop_frame();
@@ -174,18 +174,18 @@ TEST(core_input, simple_drag) {
 
     /*  Simulate mouse change over time */
     if (i == 0) {
-      cig_set_input_state(cig_v_make(25, 25), CIG_INPUT_MOUSE_BUTTON_LEFT);
+      cig_set_input_state(cig_v_make(25, 25), CIG_INPUT_PRIMARY_ACTION);
 
-      /*  Taking exlusive ownership of the mouse. See `cig_mouse_state_t` for more info */
+      /*  Taking exlusive ownership of the mouse. See `cig_input_state_t` for more info */
       cig_input_state()->locked = true;
 
-      /*  Drag is activated on mouse button down */
+      /*  Drag is activated on mouse button (primary action) down */
       TEST_ASSERT_TRUE(cig_input_state()->drag.active);
-      TEST_ASSERT_TRUE(cig_input_state()->action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT);
+      TEST_ASSERT_TRUE(cig_input_state()->action_mask & CIG_INPUT_PRIMARY_ACTION);
       TEST_ASSERT_EQUAL_VEC2(cig_v_make(25, 25), cig_input_state()->drag.start_position);
       TEST_ASSERT_EQUAL_VEC2(cig_v_zero(), cig_input_state()->drag.change);
     } else if (i == 1) {
-      cig_set_input_state(cig_v_make(50, 50), CIG_INPUT_MOUSE_BUTTON_LEFT);
+      cig_set_input_state(cig_v_make(50, 50), CIG_INPUT_PRIMARY_ACTION);
 
       TEST_ASSERT_EQUAL_VEC2(cig_v_make(25, 25), cig_input_state()->drag.change);
     } else if (i == 2) {
@@ -210,35 +210,35 @@ TEST(core_input, simple_drag) {
 
 TEST(core_input, button_states) {
   /* (Time 0) */
-  cig_set_input_state(cig_v_zero(), CIG_INPUT_MOUSE_BUTTON_LEFT);
+  cig_set_input_state(cig_v_zero(), CIG_INPUT_PRIMARY_ACTION);
 
-  TEST_ASSERT_TRUE(cig_input_state()->action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT);
-  TEST_ASSERT_EQUAL(CIG_INPUT_MOUSE_BUTTON_LEFT, cig_input_state()->last_action_began);
+  TEST_ASSERT_TRUE(cig_input_state()->action_mask & CIG_INPUT_PRIMARY_ACTION);
+  TEST_ASSERT_EQUAL(CIG_INPUT_PRIMARY_ACTION, cig_input_state()->last_action_began);
   TEST_ASSERT_EQUAL(0, cig_input_state()->last_action_ended);
   TEST_ASSERT_EQUAL(BEGAN, cig_input_state()->click_state);
 
   /* (T1) */
-  cig_set_input_state(cig_v_zero(), CIG_INPUT_MOUSE_BUTTON_LEFT | CIG_INPUT_MOUSE_BUTTON_RIGHT);
+  cig_set_input_state(cig_v_zero(), CIG_INPUT_PRIMARY_ACTION | CIG_INPUT_SECONDARY_ACTION);
 
-  TEST_ASSERT_TRUE(cig_input_state()->action_mask & CIG_MOUSE_BUTTON_ANY);
-  TEST_ASSERT_EQUAL(CIG_INPUT_MOUSE_BUTTON_RIGHT, cig_input_state()->last_action_began);
+  TEST_ASSERT_TRUE(cig_input_state()->action_mask & CIG_INPUT_ACTION_ANY);
+  TEST_ASSERT_EQUAL(CIG_INPUT_SECONDARY_ACTION, cig_input_state()->last_action_began);
   TEST_ASSERT_EQUAL(0, cig_input_state()->last_action_ended);
   /* Maybe this should report a failed case or something because you're not
      pressing down both mouse buttons and expecting a click event normally? */
   TEST_ASSERT_EQUAL(NEITHER, cig_input_state()->click_state);
 
   /* (T2) */
-  cig_set_input_state(cig_v_zero(), CIG_INPUT_MOUSE_BUTTON_RIGHT);
+  cig_set_input_state(cig_v_zero(), CIG_INPUT_SECONDARY_ACTION);
   
-  TEST_ASSERT_TRUE(cig_input_state()->action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT);
-  TEST_ASSERT_EQUAL(CIG_INPUT_MOUSE_BUTTON_LEFT, cig_input_state()->last_action_ended);
+  TEST_ASSERT_TRUE(cig_input_state()->action_mask & CIG_INPUT_SECONDARY_ACTION);
+  TEST_ASSERT_EQUAL(CIG_INPUT_PRIMARY_ACTION, cig_input_state()->last_action_ended);
   TEST_ASSERT_EQUAL(NEITHER, cig_input_state()->click_state);
 
   /* (T3) */
   cig_set_input_state(cig_v_zero(), 0);
   
   TEST_ASSERT_EQUAL(0, cig_input_state()->action_mask);
-  TEST_ASSERT_EQUAL(CIG_INPUT_MOUSE_BUTTON_RIGHT, cig_input_state()->last_action_ended);
+  TEST_ASSERT_EQUAL(CIG_INPUT_SECONDARY_ACTION, cig_input_state()->last_action_ended);
   TEST_ASSERT_EQUAL(ENDED, cig_input_state()->click_state);
 }
 

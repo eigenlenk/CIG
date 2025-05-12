@@ -191,8 +191,8 @@ int main(int argc, const char *argv[]) {
     
     cig_set_input_state(
       cig_v_make(GetMouseX()/2, GetMouseY()/2),
-      IsMouseButtonDown(MOUSE_BUTTON_LEFT) ? CIG_INPUT_MOUSE_BUTTON_LEFT : 0 +
-      IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? CIG_INPUT_MOUSE_BUTTON_RIGHT : 0
+      IsMouseButtonDown(MOUSE_BUTTON_LEFT) ? CIG_INPUT_PRIMARY_ACTION : 0 +
+      IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? CIG_INPUT_SECONDARY_ACTION : 0
     );
     
     run_win95(&win_instance);

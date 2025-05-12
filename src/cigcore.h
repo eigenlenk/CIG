@@ -173,9 +173,9 @@ typedef struct {
 } cig_frame_t;
 
 typedef enum {
-  CIG_INPUT_MOUSE_BUTTON_LEFT = CIG_BIT(0),
-  CIG_INPUT_MOUSE_BUTTON_RIGHT = CIG_BIT(1),
-  CIG_MOUSE_BUTTON_ANY = CIG_INPUT_MOUSE_BUTTON_LEFT | CIG_INPUT_MOUSE_BUTTON_RIGHT
+  CIG_INPUT_PRIMARY_ACTION = CIG_BIT(0),
+  CIG_INPUT_SECONDARY_ACTION = CIG_BIT(1),
+  CIG_INPUT_ACTION_ANY = CIG_INPUT_PRIMARY_ACTION | CIG_INPUT_SECONDARY_ACTION
 } cig_input_action_type_t;
 
 typedef struct {
@@ -216,8 +216,8 @@ typedef struct {
 
 typedef enum {
   /*  `CIG_PRESS_INSIDE` option specifies whether the press has to start
-      within the bounds of this element. Otherwise it can start outside and the 
-      element reflects pressed state as soon as mouse moves onto it */
+      within the bounds of this element. Otherwise it can start outside,
+      and the element will reflect pressed state as soon as mouse moves onto it */
   CIG_PRESS_INSIDE = CIG_BIT(0),
   CIG_PRESS_DEFAULT_OPTIONS = CIG_PRESS_INSIDE
 } cig_press_flags_t;
@@ -376,20 +376,20 @@ void cig_push_buffer(cig_buffer_ref);
 void cig_pop_buffer();
 
 /*  ┌───────────────────────────┐
-    │ MOUSE INTERACTION & FOCUS │
+    │ INPUT INTERACTION & FOCUS │
     └───────────────────────────┘ */
 
-/*  Pass mouse coordinates and button press state[s] */
+/*  Pass input coordinates and state[s] */
 void cig_set_input_state(cig_v, cig_input_action_type_t);
 
-/*  @return Current mouse state as updated by last `cig_set_input_state` call */
+/*  @return Current input state as updated by last `cig_set_input_state` call */
 CIG_OPTIONAL(cig_input_state_t*) cig_input_state();
 
-/*  Enables mouse tracking for the current layout element.
+/*  Enables input tracking for the current layout element.
     Call this after a successful `cig_push_frame` call */
 void cig_enable_interaction();
 
-/*  Checks if the current layout element is the topmost element under the cursor */
+/*  Checks if the current layout element is the topmost element at current input position */
 bool cig_hovered();
 
 /*  Checks if the current element is hovered and the mouse button is pressed.

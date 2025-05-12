@@ -306,24 +306,24 @@ void cig_set_input_state(
     ? (current->elapsed_time - current->input_state._press_start_time) <= CIG_CLICK_EXPIRE_IN_SECONDS
       ? ENDED
       : EXPIRED
-    : (action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT && !(previous_action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT)) || (action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT && !(previous_action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT))
+    : (action_mask & CIG_INPUT_PRIMARY_ACTION && !(previous_action_mask & CIG_INPUT_PRIMARY_ACTION)) || (action_mask & CIG_INPUT_SECONDARY_ACTION && !(previous_action_mask & CIG_INPUT_SECONDARY_ACTION))
       ? current->input_state.click_state == BEGAN
         ? NEITHER
         : BEGAN
       : NEITHER;
 
-  if (current->input_state.action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT && !(previous_action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT)) {
-    current->input_state.last_action_began = CIG_INPUT_MOUSE_BUTTON_LEFT;
-  } else if (current->input_state.action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT && !(previous_action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT)) {
-    current->input_state.last_action_began = CIG_INPUT_MOUSE_BUTTON_RIGHT;
+  if (current->input_state.action_mask & CIG_INPUT_PRIMARY_ACTION && !(previous_action_mask & CIG_INPUT_PRIMARY_ACTION)) {
+    current->input_state.last_action_began = CIG_INPUT_PRIMARY_ACTION;
+  } else if (current->input_state.action_mask & CIG_INPUT_SECONDARY_ACTION && !(previous_action_mask & CIG_INPUT_SECONDARY_ACTION)) {
+    current->input_state.last_action_began = CIG_INPUT_SECONDARY_ACTION;
   } else {
     current->input_state.last_action_began = 0;
   }
 
-  if (previous_action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT && !(current->input_state.action_mask & CIG_INPUT_MOUSE_BUTTON_LEFT)) {
-    current->input_state.last_action_ended = CIG_INPUT_MOUSE_BUTTON_LEFT;
-  } else if (previous_action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT && !(current->input_state.action_mask & CIG_INPUT_MOUSE_BUTTON_RIGHT)) {
-    current->input_state.last_action_ended = CIG_INPUT_MOUSE_BUTTON_RIGHT;
+  if (previous_action_mask & CIG_INPUT_PRIMARY_ACTION && !(current->input_state.action_mask & CIG_INPUT_PRIMARY_ACTION)) {
+    current->input_state.last_action_ended = CIG_INPUT_PRIMARY_ACTION;
+  } else if (previous_action_mask & CIG_INPUT_SECONDARY_ACTION && !(current->input_state.action_mask & CIG_INPUT_SECONDARY_ACTION)) {
+    current->input_state.last_action_ended = CIG_INPUT_SECONDARY_ACTION;
   } else {
     current->input_state.last_action_ended = 0;
   }

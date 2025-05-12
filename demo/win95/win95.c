@@ -42,8 +42,8 @@ static bool taskbar_button(
   CIG(rect, CIG_INSETS(cig_i_make(4, 2, 4, 2))) {
     cig_enable_interaction();
     
-    const bool pressed = cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE);
-    clicked = cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DEFAULT_OPTIONS);
+    const bool pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE);
+    clicked = cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_DEFAULT_OPTIONS);
 
     cig_fill_panel(get_panel(PANEL_BUTTON), selected ? CIG_PANEL_SELECTED : (pressed ? CIG_PANEL_PRESSED : 0));
     
@@ -80,7 +80,7 @@ static bool start_button(cig_r rect) {
   CIG(rect, CIG_INSETS(cig_i_make(4, 2, 4, 2))) {
     cig_enable_interaction();
     
-    const bool pressed = cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE);
+    const bool pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE);
     
     cig_fill_panel(get_panel(PANEL_BUTTON), pressed ? CIG_PANEL_PRESSED : 0);
     
@@ -103,7 +103,7 @@ static bool start_button(cig_r rect) {
       }
     }
 
-    clicked = cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DEFAULT_OPTIONS);
+    clicked = cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_DEFAULT_OPTIONS);
   }
   
   return clicked;
@@ -301,7 +301,7 @@ bool standard_button(cig_r rect, const char *title) {
   CIG(rect) {
     cig_enable_interaction();
     
-    const bool pressed = cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE);
+    const bool pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE);
     
     cig_fill_panel(get_panel(PANEL_BUTTON), pressed ? CIG_PANEL_PRESSED : 0);
     
@@ -314,7 +314,7 @@ bool standard_button(cig_r rect, const char *title) {
       cig_pop_frame();
     }
     
-    clicked = cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DEFAULT_OPTIONS);
+    clicked = cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_DEFAULT_OPTIONS);
   }
   
   return clicked;
@@ -326,7 +326,7 @@ bool icon_button(cig_r rect, image_id_t image_id) {
   CIG(rect) {
     cig_enable_interaction();
     
-    const bool pressed = cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_INSIDE);
+    const bool pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE);
     
     cig_fill_panel(get_panel(PANEL_BUTTON), pressed ? CIG_PANEL_PRESSED : 0);
     
@@ -335,7 +335,7 @@ bool icon_button(cig_r rect, image_id_t image_id) {
       cig_pop_frame();
     }
     
-    clicked = cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DEFAULT_OPTIONS);
+    clicked = cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_DEFAULT_OPTIONS);
   }
   
   return clicked;
@@ -355,9 +355,9 @@ bool checkbox(cig_r rect, bool *value, const char *text) {
       value = CIG_ALLOCATE(bool);
     }
 
-    const bool pressed = cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_DEFAULT_OPTIONS);
+    const bool pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_DEFAULT_OPTIONS);
 
-    if (cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DEFAULT_OPTIONS)) {
+    if (cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_DEFAULT_OPTIONS)) {
       *value = !*value;
     }
 
@@ -421,7 +421,7 @@ bool begin_file_browser(cig_r rect, int direction, color_id_t text_color, bool p
   cig_enable_interaction();
 
   /*  Deselect everything */
-  if (cig_pressed(CIG_MOUSE_BUTTON_ANY, CIG_PRESS_DEFAULT_OPTIONS)) {
+  if (cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_DEFAULT_OPTIONS)) {
     memset(data->selected, 0, sizeof(bool[32]));
 
     if (!data->drag_selection.active && cig_input_state()->drag.active && cig_v_dist(cig_v_zero(), cig_input_state()->drag.change) > 2) {
@@ -588,7 +588,7 @@ static bool begin_window(window_t *wnd, window_message_t *msg, bool *focused) {
     cig_enable_interaction();
 
     /* TODO: This could probably be a little nicer to deal with */
-    if (!window_drag.active && cig_pressed(CIG_INPUT_MOUSE_BUTTON_LEFT, CIG_PRESS_INSIDE) && cig_input_state()->drag.active) {
+    if (!window_drag.active && cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE) && cig_input_state()->drag.active) {
       cig_input_state()->locked = true;
       window_drag.active = true;
       window_drag.original_rect = wnd->rect;
@@ -682,14 +682,14 @@ static cig_frame_t* large_file_icon(int icon, const char *title, color_id_t text
   })) {
     cig_enable_interaction();
 
-    if (selected && cig_pressed(CIG_INPUT_MOUSE_BUTTON_LEFT, CIG_PRESS_DEFAULT_OPTIONS)) {
+    if (selected && cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_DEFAULT_OPTIONS)) {
       *selected = true;
     }
 
     const bool shows_selection = selected ? *selected : false;
     
     if (double_clicked) {
-      *double_clicked = cig_clicked(CIG_MOUSE_BUTTON_ANY, CIG_CLICK_DEFAULT_OPTIONS | CIG_CLICK_DOUBLE);
+      *double_clicked = cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_DEFAULT_OPTIONS | CIG_CLICK_DOUBLE);
     }
 
     CIG(RECT_AUTO_H(32)) {
@@ -751,7 +751,7 @@ static void handle_window_resize(window_t *wnd, window_resize_edge_t edge) {
     { 0, 0, 0, 1 }, /* WINDOW_RESIZE_BOTTOM */
   };
 
-  if (!window_resize.active && cig_pressed(CIG_INPUT_MOUSE_BUTTON_LEFT, CIG_PRESS_INSIDE) && cig_input_state()->drag.active) {
+  if (!window_resize.active && cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE) && cig_input_state()->drag.active) {
     cig_input_state()->locked = true;
     window_resize.active = true;
     window_resize.original_rect = wnd->rect;
