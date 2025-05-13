@@ -177,9 +177,32 @@ cig_frame_t* cig_pop_frame() {
   if (popped_frame->_flags & CLIPPED) {
     popped_frame->_flags &= ~CLIPPED;
     pop_clip();
+  } else if (popped_frame->_flags & CLIPPED_BY_PARENT && popped_frame->_flags & JUMPED) {
+    popped_frame->_flags &= ~JUMPED;
+    pop_clip();
   }
 
   return popped_frame;
+}
+
+cig_frame_t* cig_jump(cig_frame_t *frame) {
+  if (!frame) {
+    return NULL;
+  }
+  cig_frame_t *top = cig_frame();
+  current->frame_stack.push(&current->frame_stack, frame);
+  if (frame->_flags & CLIPPED_BY_PARENT) {
+    cig_clip_rect_t_stack_t *clip_rects = &current->buffers.peek_ref(&current->buffers, 0)->clip_rects;
+    clip_rects->push(clip_rects, frame->_inherited_clip_rect);
+    if (set_clip) {
+      set_clip(cig_buffer(), frame->_inherited_clip_rect, false);
+    }
+  }
+  frame->_flags |= JUMPED;
+#ifdef DEBUG
+  cig_trigger_layout_breakpoint(top->absolute_rect, frame->absolute_rect);
+#endif
+  return frame;
 }
 
 void cig_set_default_insets(cig_i insets) {
@@ -797,7 +820,8 @@ static cig_frame_t* push_frame(
     .insets = insets,
     ._layout_function = layout_function,
     ._layout_params = params,
-    ._flags = 0,
+    ._inherited_clip_rect = current_clip_rect,
+    ._flags = (current_buffer->clip_rects.size > 1 ? CLIPPED_BY_PARENT : 0),
     ._scroll_state = NULL
   };
   cig_frame_t *new_frame = &current->frames.elements[current->frames.count];

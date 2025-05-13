@@ -168,10 +168,15 @@ typedef struct {
   cig_scroll_state_t *_scroll_state;
   cig_state_t *_state;
   cig_layout_params_t _layout_params;
+  cig_r _inherited_clip_rect;
   unsigned int _id_counter;
   enum CIG_PACKED {
     CLIPPED = CIG_BIT(0),
-    INTERACTIBLE = CIG_BIT(1)
+    INTERACTIBLE = CIG_BIT(1),
+    /*  This frame was clipped by some earlier element. When jumping back to this
+        one we need to recreate the situation. */
+    CLIPPED_BY_PARENT = CIG_BIT(2),
+    JUMPED = CIG_BIT(3) /* Set when calling `cig_jump` */
   } _flags;
 } cig_frame_t;
 
@@ -321,6 +326,10 @@ cig_frame_t* cig_push_layout_function(
   cig_i,
   cig_layout_params_t
 );
+
+/*  Advanced function allowing jumping back to a previous element and continuing
+    layout within that. Use with care! End with `cig_pop_frame` once done. */
+cig_frame_t* cig_jump(cig_frame_t*);
 
 /*  Pop and return the last element in the layout stack */
 cig_frame_t* cig_pop_frame();
