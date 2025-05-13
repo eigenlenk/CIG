@@ -169,7 +169,10 @@ typedef struct {
   cig_state_t *_state;
   cig_layout_params_t _layout_params;
   unsigned int _id_counter;
-  bool _clipped, _interaction_enabled;
+  enum CIG_PACKED {
+    CLIPPED = CIG_BIT(0),
+    INTERACTIBLE = CIG_BIT(1)
+  } _flags;
 } cig_frame_t;
 
 typedef enum CIG_PACKED {

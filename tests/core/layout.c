@@ -698,12 +698,12 @@ TEST(core_layout, vstack_scroll) {
 
   /*  Scrolling is not enabled by default */
   TEST_ASSERT_NULL(cig_frame()->_scroll_state);
-  TEST_ASSERT_FALSE(cig_frame()->_clipped);
+  TEST_ASSERT_FALSE(cig_frame()->_flags & CLIPPED);
 
   cig_enable_scroll(NULL);
 
   /* Scrolling also enables clipping */
-  TEST_ASSERT_TRUE(cig_frame()->_clipped);
+  TEST_ASSERT_TRUE(cig_frame()->_flags & CLIPPED);
 
   cig_scroll_state_t *scroll = cig_scroll_state();
 

@@ -174,8 +174,8 @@ cig_frame_t* cig_push_layout_function(
 cig_frame_t* cig_pop_frame() {
   cig_frame_t *popped_frame = stack_cig_frame_ref_pop(cig_frame_stack());
 
-  if (popped_frame->_clipped) {
-    popped_frame->_clipped = false;
+  if (popped_frame->_flags & CLIPPED) {
+    popped_frame->_flags &= ~CLIPPED;
     pop_clip();
   }
 
@@ -375,16 +375,16 @@ cig_input_state_t *cig_input_state() {
 
 void cig_enable_interaction() {
   cig_frame_t *frame = cig_frame();
-  if (frame->_interaction_enabled) {
+  if (frame->_flags & INTERACTIBLE) {
     return;
   }
-  frame->_interaction_enabled = true;
+  frame->_flags |= INTERACTIBLE;
   handle_frame_hover(frame);
 }
 
 bool cig_hovered() {
   /*  See `handle_frame_hover` */
-  return current->input_state.locked == false && cig_frame()->_interaction_enabled && cig_frame()->id == current->input_state._target_prev_tick;
+  return current->input_state.locked == false && (cig_frame()->_flags & INTERACTIBLE) && cig_frame()->id == current->input_state._target_prev_tick;
 }
 
 cig_input_action_type_t cig_pressed(
@@ -797,7 +797,7 @@ static cig_frame_t* push_frame(
     .insets = insets,
     ._layout_function = layout_function,
     ._layout_params = params,
-    ._clipped = false,
+    ._flags = 0,
     ._scroll_state = NULL
   };
   cig_frame_t *new_frame = &current->frames.elements[current->frames.count];
@@ -886,8 +886,8 @@ static CIG_OPTIONAL(cig_scroll_state_t*) find_scroll_state(const cig_id_t id) {
 }
 
 static void push_clip(cig_frame_t *frame) {
-  if (frame->_clipped == false) {
-    frame->_clipped = true;
+  if (!(frame->_flags & CLIPPED)) {
+    frame->_flags |= CLIPPED;
     cig_clip_rect_t_stack_t *clip_rects = &current->buffers.peek_ref(&current->buffers, 0)->clip_rects;
     cig_r clip_rect = cig_r_union(frame->absolute_rect, clip_rects->peek(clip_rects, 0));
     clip_rects->push(clip_rects, clip_rect);
