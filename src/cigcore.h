@@ -73,7 +73,7 @@ typedef void (*cig_set_clip_rect_callback_t)(cig_buffer_ref, cig_r, bool);
 /*  Structure containing parameters passed to layout function */
 typedef struct {
   /*  One or more axis which a builder uses to position children */
-  enum {
+  enum CIG_PACKED {
     CIG__NOAXIS = 0,
     CIG_LAYOUT_AXIS_HORIZONTAL = CIG_BIT(1),
     CIG_LAYOUT_AXIS_VERTICAL = CIG_BIT(2),
@@ -81,18 +81,18 @@ typedef struct {
   } axis;
 
   /*  Direction in which the layout flows. Used by default grid builder */
-  enum {
+  enum CIG_PACKED {
     CIG_LAYOUT_DIRECTION_HORIZONTAL = 0,
     CIG_LAYOUT_DIRECTION_VERTICAL
   } direction;
 
   struct {
-    enum {
+    enum CIG_PACKED {
       CIG_LAYOUT_ALIGNS_LEFT = 0,
       CIG_LAYOUT_ALIGNS_CENTER,
       CIG_LAYOUT_ALIGNS_RIGHT
     } horizontal;
-    enum {
+    enum CIG_PACKED {
       CIG_LAYOUT_ALIGNS_TOP = 0,
       CIG_LAYOUT_ALIGNS_MIDDLE,
       CIG_LAYOUT_ALIGNS_BOTTOM
@@ -114,7 +114,7 @@ typedef struct {
   } size_max, size_min;
 
   /*  Some basic layout flags */
-  enum {
+  enum CIG_PACKED {
     CIG_LAYOUT_DISABLE_CULLING = CIG_BIT(0)
   } flags;
 
@@ -134,7 +134,7 @@ typedef struct {
 } cig_state_memory_arena_t;
 
 typedef struct {
-  enum {
+  enum CIG_PACKED {
     INACTIVE = 0,
     ACTIVATED,
     ACTIVE
@@ -172,7 +172,7 @@ typedef struct {
   bool _clipped, _interaction_enabled;
 } cig_frame_t;
 
-typedef enum {
+typedef enum CIG_PACKED {
   CIG_INPUT_PRIMARY_ACTION = CIG_BIT(0),
   CIG_INPUT_SECONDARY_ACTION = CIG_BIT(1),
   CIG_INPUT_ACTION_ANY = CIG_INPUT_PRIMARY_ACTION | CIG_INPUT_SECONDARY_ACTION
@@ -184,7 +184,7 @@ typedef struct {
                           last_action_ended;
   cig_v position;
 
-  enum {
+  enum CIG_PACKED {
     NEITHER,  /* Button was neither pressed or released */
     BEGAN,    /* Button was pressed down (click started) */
     ENDED,    /* Button was released this (click ended) */
@@ -214,7 +214,7 @@ typedef struct {
             _focus_target;
 } cig_input_state_t;
 
-typedef enum {
+typedef enum CIG_PACKED {
   /*  `CIG_PRESS_INSIDE` option specifies whether the press has to start
       within the bounds of this element. Otherwise it can start outside,
       and the element will reflect pressed state as soon as mouse moves onto it */
@@ -222,7 +222,7 @@ typedef enum {
   CIG_PRESS_DEFAULT_OPTIONS = CIG_PRESS_INSIDE
 } cig_press_flags_t;
 
-typedef enum {
+typedef enum CIG_PACKED {
   CIG_CLICK_STARTS_INSIDE = CIG_BIT(0),
   CIG_CLICK_ON_PRESS = CIG_BIT(1),
   CIG_CLICK_EXPIRE = CIG_BIT(2),

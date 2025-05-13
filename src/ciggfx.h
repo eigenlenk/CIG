@@ -7,7 +7,7 @@ typedef void* cig_color_ref;
 typedef void* cig_panel_ref;
 typedef void* cig_image_ref;
 
-typedef enum {
+typedef enum CIG_PACKED {
   CIG_IMAGE_MODE_ASPECT_FIT = 0,
   CIG_IMAGE_MODE_ASPECT_FILL,
   CIG_IMAGE_MODE_SCALE_TO_FILL,
@@ -23,7 +23,7 @@ typedef enum {
 } cig_image_mode_t;
 
 /*  These can be application-specific and you can use custom flags as well */
-typedef enum {
+typedef enum CIG_PACKED {
   CIG_PANEL_HOVERED = CIG_BIT(0),
   CIG_PANEL_PRESSED = CIG_BIT(1),
   CIG_PANEL_SELECTED = CIG_BIT(2),

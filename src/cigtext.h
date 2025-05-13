@@ -16,26 +16,26 @@ typedef struct {
 
 #define CIG_TEXT_ALIGN_DEFAULT 0
 
-typedef enum {
+typedef enum CIG_PACKED {
   CIG_TEXT_ALIGN_LEFT = 1,
   CIG_TEXT_ALIGN_CENTER,
   CIG_TEXT_ALIGN_RIGHT
 } cig_text_horizontal_alignment_t;
 
-typedef enum {
+typedef enum CIG_PACKED {
   CIG_TEXT_ALIGN_TOP = 1,
   CIG_TEXT_ALIGN_MIDDLE,
   CIG_TEXT_ALIGN_BOTTOM
 } cig_text_vertical_alignment_t;
 
-typedef enum {
+typedef enum CIG_PACKED {
   CIG_TEXT_BOLD = CIG_BIT(0),
   CIG_TEXT_ITALIC = CIG_BIT(1),
   CIG_TEXT_UNDERLINE = CIG_BIT(2),
   CIG_TEXT_STRIKETHROUGH = CIG_BIT(3)
 } cig_text_style_t;
 
-typedef enum {
+typedef enum CIG_PACKED {
   CIG_TEXT_OVERFLOW = 0,  /* Text is allowed to flow out of bounds */
   CIG_TEXT_TRUNCATE,      /* The last non-fitting word is truncated */
   CIG_TEXT_SHOW_ELLIPSIS
@@ -51,7 +51,7 @@ typedef struct {
   int max_lines,
       line_spacing;
   cig_text_overflow_t overflow;
-  enum {
+  enum CIG_PACKED {
     CIG_TEXT_FORMATTED = CIG_BIT(0)
   } flags;
   cig_text_style_t style;
