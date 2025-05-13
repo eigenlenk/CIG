@@ -412,6 +412,9 @@ static void layout_breakpoint(cig_r container, cig_r rect) {
   /* Ends current render texture so we could draw things as they currently stand */
   EndTextureMode();
 
+  // TODO: Active clip rect needs to be sent here as well, and maybe visualised somehow
+  EndScissorMode();
+
   BeginDrawing();
   BeginTextureMode(debug_texture);
   ClearBackground((Color){ 0, 0, 0, 255 });
