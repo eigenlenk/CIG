@@ -114,6 +114,7 @@ void cig_begin_layout(
     .absolute_rect = rect,
     .insets = cig_i_zero(),
     ._layout_function = NULL,
+    ._parent = NULL,
     ._layout_params = (cig_layout_params_t) { 0 }
   };
   current->frame_stack.push(&current->frame_stack, &current->frames.elements[0]);
@@ -175,10 +176,9 @@ cig_frame_t* cig_pop_frame() {
   cig_frame_t *popped_frame = stack_cig_frame_ref_pop(cig_frame_stack());
 
   if (popped_frame->_flags & CLIPPED) {
-    popped_frame->_flags &= ~CLIPPED;
     pop_clip();
-  } else if (popped_frame->_flags & CLIPPED_BY_PARENT && popped_frame->_flags & JUMPED) {
-    popped_frame->_flags &= ~JUMPED;
+  } else if (popped_frame->_flags & RESTORES_EARLIER_CLIP) {
+    popped_frame->_flags &= ~RESTORES_EARLIER_CLIP;
     pop_clip();
   }
 
@@ -191,17 +191,29 @@ cig_frame_t* cig_jump(cig_frame_t *frame) {
   }
   cig_frame_t *top = cig_frame();
   current->frame_stack.push(&current->frame_stack, frame);
-  if (frame->_flags & CLIPPED_BY_PARENT) {
-    cig_clip_rect_t_stack_t *clip_rects = &current->buffers.peek_ref(&current->buffers, 0)->clip_rects;
-    clip_rects->push(clip_rects, frame->_inherited_clip_rect);
-    if (set_clip) {
-      set_clip(cig_buffer(), frame->_inherited_clip_rect, false);
+
+  /* See if any parent frame provided a clip region */
+  cig_frame_t *parent = frame->_parent;
+  cig_clip_rect_t_stack_t *clip_rects = &current->buffers.peek_ref(&current->buffers, 0)->clip_rects;
+
+  while (parent) {
+    if (parent->_flags & CLIPPED) {
+      frame->_flags |= RESTORES_EARLIER_CLIP;
+      cig_r clip_rect = cig_r_union(parent->absolute_rect, clip_rects->peek(clip_rects, 0));
+      clip_rects->push(clip_rects, clip_rect);
+      if (set_clip) {
+        set_clip(cig_buffer(), clip_rect, clip_rects->size == 1);
+      }
+      break;
+    } else {
+      parent = parent->_parent;
     }
   }
-  frame->_flags |= JUMPED;
+
 #ifdef DEBUG
   cig_trigger_layout_breakpoint(top->absolute_rect, frame->absolute_rect);
 #endif
+
   return frame;
 }
 
@@ -820,8 +832,8 @@ static cig_frame_t* push_frame(
     .insets = insets,
     ._layout_function = layout_function,
     ._layout_params = params,
-    ._inherited_clip_rect = current_clip_rect,
-    ._flags = (current_buffer->clip_rects.size > 1 ? CLIPPED_BY_PARENT : 0),
+    ._parent = top,
+    ._flags = 0,
     ._scroll_state = NULL
   };
   cig_frame_t *new_frame = &current->frames.elements[current->frames.count];

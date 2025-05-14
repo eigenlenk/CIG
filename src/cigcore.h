@@ -155,7 +155,7 @@ typedef struct {
 } cig_frame_args_t;
 
 /* */
-typedef struct {
+typedef struct cig_frame_t {
   cig_id_t id;
   cig_r rect,          /* Relative rect */
         clipped_rect,  /* Relative clipped rect */
@@ -167,16 +167,15 @@ typedef struct {
   bool (*_layout_function)(cig_r, cig_r, cig_layout_params_t*, cig_r*);
   cig_scroll_state_t *_scroll_state;
   cig_state_t *_state;
+  struct cig_frame_t *_parent;
   cig_layout_params_t _layout_params;
-  cig_r _inherited_clip_rect;
   unsigned int _id_counter;
   enum CIG_PACKED {
     CLIPPED = CIG_BIT(0),
     INTERACTIBLE = CIG_BIT(1),
     /*  This frame was clipped by some earlier element. When jumping back to this
         one we need to recreate the situation. */
-    CLIPPED_BY_PARENT = CIG_BIT(2),
-    JUMPED = CIG_BIT(3) /* Set when calling `cig_jump` */
+    RESTORES_EARLIER_CLIP = CIG_BIT(2)
   } _flags;
 } cig_frame_t;
 
