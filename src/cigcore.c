@@ -34,32 +34,6 @@ CIG_INLINED int limit(int v, const int minv_or_zero, const int maxv_or_zero) {
   return v;
 }
 
-/*  Is CIG__AUTO_BIT set? For negative numbers we invert the mask because two's complement */
-#define CIG__IS_AUTO(N) (((N < 0 ? N & ~CIG__AUTO_BIT : N) & CIG__AUTO_BIT))
-
-/*  Is CIG__REL_BIT set? For negative numbers we invert the mask because two's complement */
-#define CIG__IS_REL(N) ((N < 0 ? N & ~CIG__REL_BIT : N) & CIG__REL_BIT)
-
-/*  Clear option bits and get REL value if option set */
-CIG_INLINED int get_value_if_rel(int32_t n, int32_t base) {
-  if (CIG__IS_REL(n)) {
-    return ((n < 0 ? (n | CIG__AUTO_BIT | CIG__REL_BIT) : (n & ~(CIG__AUTO_BIT | CIG__REL_BIT))) * 0.00001) * base;
-  } else {
-    return n;
-  }
-}
-
-/*  Clear option bits and get REL or AUTO value if option set */
-CIG_INLINED int get_value(int32_t n, int32_t base) {
-  if (CIG__IS_REL(n)) {
-    return ((n < 0 ? (n | CIG__AUTO_BIT | CIG__REL_BIT) : ((n&~CIG__AUTO_BIT)&~CIG__REL_BIT)) * 0.00001) * base;
-  } else if (CIG__IS_AUTO(n)) {
-    return base;
-  } else {
-    return n;
-  }
-}
-
 /*  ┌─────────────┐
     │ CORE LAYOUT │
     └─────────────┘ */
@@ -598,19 +572,19 @@ bool cig_default_layout_builder(
   if (h_axis) {
     if (CIG__IS_AUTO(rect.w)) {
       if (prm->width > 0) {
-        w = get_value(rect.w, prm->width);
+        w = CIG_ANY_VALUE(rect.w, prm->width);
       } else if (prm->columns) {
-        w = get_value(rect.w, (container.w - ((prm->columns - 1) * prm->spacing)) / prm->columns);
+        w = CIG_ANY_VALUE(rect.w, (container.w - ((prm->columns - 1) * prm->spacing)) / prm->columns);
       } else if (is_grid && prm->_h_size && prm->direction == CIG_LAYOUT_DIRECTION_VERTICAL) {
-        w = get_value(rect.w, prm->_h_size);
+        w = CIG_ANY_VALUE(rect.w, prm->_h_size);
       } else {
-        w = get_value(rect.w, container.w - prm->_h_pos);
+        w = CIG_ANY_VALUE(rect.w, container.w - prm->_h_pos);
       }
     } else {
-      w = get_value_if_rel(rect.w, container.w - prm->_h_pos);
+      w = CIG_REL_VALUE(rect.w, container.w - prm->_h_pos);
     }
   } else {
-    w = get_value(rect.w, container.w - prm->_h_pos);
+    w = CIG_ANY_VALUE(rect.w, container.w - prm->_h_pos);
 
     /*  Reset any remaining horizontal positioning in case we modify axis mid-layout */
     prm->_h_pos = 0;
@@ -620,19 +594,19 @@ bool cig_default_layout_builder(
   if (v_axis) {
     if (CIG__IS_AUTO(rect.h)) {
       if (prm->height > 0) {
-        h = get_value(rect.h, prm->height);
+        h = CIG_ANY_VALUE(rect.h, prm->height);
       } else if (prm->rows) {
-        h = get_value(rect.h, (container.h - ((prm->rows - 1) * prm->spacing)) / prm->rows);
+        h = CIG_ANY_VALUE(rect.h, (container.h - ((prm->rows - 1) * prm->spacing)) / prm->rows);
       } else if (is_grid && prm->_v_size && prm->direction == CIG_LAYOUT_DIRECTION_HORIZONTAL) {
-        h = get_value(rect.h, prm->_v_size);
+        h = CIG_ANY_VALUE(rect.h, prm->_v_size);
       } else {
-        h = get_value(rect.h, container.h - prm->_v_pos);
+        h = CIG_ANY_VALUE(rect.h, container.h - prm->_v_pos);
       }
     } else {
-      h = get_value_if_rel(rect.h, container.h - prm->_v_pos);
+      h = CIG_REL_VALUE(rect.h, container.h - prm->_v_pos);
     }
   } else {
-    h = get_value(rect.h, container.h - prm->_v_pos);
+    h = CIG_ANY_VALUE(rect.h, container.h - prm->_v_pos);
 
     /*  Reset any remaining vertical positioning in case we modify axis mid-layout */
     prm->_v_pos = 0;
@@ -733,15 +707,15 @@ static cig_r calculate_rect_in_parent(const cig_r rect, const cig_frame_t *paren
   return align_rect_in_parent(cig_r_make(
     /*  When X or Y component have REL flag set, they are relative to W & H respectively.
         AUTO is not taken into consideration here */
-    get_value_if_rel(rect.x, content_rect.w),
-    get_value_if_rel(rect.y, content_rect.h),
+    CIG_REL_VALUE(rect.x, content_rect.w),
+    CIG_REL_VALUE(rect.y, content_rect.h),
     limit(
-      get_value(rect.w, content_rect.w),
+      CIG_ANY_VALUE(rect.w, content_rect.w),
       parent->_layout_params.size_min.width,
       parent->_layout_params.size_max.width
     ),
     limit(
-      get_value(rect.h, content_rect.h),
+      CIG_ANY_VALUE(rect.h, content_rect.h),
       parent->_layout_params.size_min.height,
       parent->_layout_params.size_max.height
     )

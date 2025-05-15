@@ -524,4 +524,22 @@ void cig_trigger_layout_breakpoint(cig_r container, cig_r rect);
 
 #endif
 
+/*  ┌────────────────────┐
+    │ AUTO & REL READERS │
+    └────────────────────┘ */
+
+/*  Is CIG__AUTO_BIT set? For negative numbers we invert the mask because two's complement */
+#define CIG__IS_AUTO(N) (((N < 0 ? N & ~CIG__AUTO_BIT : N) & CIG__AUTO_BIT))
+
+/*  Is CIG__REL_BIT set? For negative numbers we invert the mask because two's complement */
+#define CIG__IS_REL(N) ((N < 0 ? N & ~CIG__REL_BIT : N) & CIG__REL_BIT)
+
+/*  Clear option bits and get REL value if option set */
+#define CIG_REL_VALUE(N, BASE) \
+  (CIG__IS_REL(N) ? ((N < 0 ? (N | CIG__AUTO_BIT | CIG__REL_BIT) : (N & ~(CIG__AUTO_BIT | CIG__REL_BIT))) * 0.00001) * BASE : N)
+
+/*  Clear option bits and get REL or AUTO value if option set */
+#define CIG_ANY_VALUE(N, BASE) \
+  (CIG__IS_REL(N) ? ((N < 0 ? (N | CIG__AUTO_BIT | CIG__REL_BIT) : (N & ~(CIG__AUTO_BIT | CIG__REL_BIT))) * 0.00001) * BASE : CIG__IS_AUTO(N) ? BASE : N)
+
 #endif
