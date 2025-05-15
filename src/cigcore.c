@@ -570,7 +570,7 @@ bool cig_default_layout_builder(
       h;
 
   if (h_axis) {
-    if (CIG__IS_AUTO(rect.w)) {
+    if (CIG_IS_AUTO(rect.w)) {
       if (prm->width > 0) {
         w = CIG_ANY_VALUE(rect.w, prm->width);
       } else if (prm->columns) {
@@ -581,7 +581,7 @@ bool cig_default_layout_builder(
         w = CIG_ANY_VALUE(rect.w, container.w - prm->_h_pos);
       }
     } else {
-      w = CIG_REL_VALUE(rect.w, container.w - prm->_h_pos);
+      w = CIG_IS_REL(rect.w) ? CIG_REL_VALUE(rect.w, container.w - prm->_h_pos) : rect.w;
     }
   } else {
     w = CIG_ANY_VALUE(rect.w, container.w - prm->_h_pos);
@@ -592,7 +592,7 @@ bool cig_default_layout_builder(
   }
 
   if (v_axis) {
-    if (CIG__IS_AUTO(rect.h)) {
+    if (CIG_IS_AUTO(rect.h)) {
       if (prm->height > 0) {
         h = CIG_ANY_VALUE(rect.h, prm->height);
       } else if (prm->rows) {
@@ -603,7 +603,7 @@ bool cig_default_layout_builder(
         h = CIG_ANY_VALUE(rect.h, container.h - prm->_v_pos);
       }
     } else {
-      h = CIG_REL_VALUE(rect.h, container.h - prm->_v_pos);
+      h = CIG_IS_REL(rect.h) ? CIG_REL_VALUE(rect.h, container.h - prm->_v_pos) : rect.h;
     }
   } else {
     h = CIG_ANY_VALUE(rect.h, container.h - prm->_v_pos);
@@ -707,8 +707,8 @@ static cig_r calculate_rect_in_parent(const cig_r rect, const cig_frame_t *paren
   return align_rect_in_parent(cig_r_make(
     /*  When X or Y component have REL flag set, they are relative to W & H respectively.
         AUTO is not taken into consideration here */
-    CIG_REL_VALUE(rect.x, content_rect.w),
-    CIG_REL_VALUE(rect.y, content_rect.h),
+    CIG_IS_REL(rect.x) ? CIG_REL_VALUE(rect.x, content_rect.w) : rect.x,
+    CIG_IS_REL(rect.y) ? CIG_REL_VALUE(rect.y, content_rect.h) : rect.y,
     limit(
       CIG_ANY_VALUE(rect.w, content_rect.w),
       parent->_layout_params.size_min.width,
