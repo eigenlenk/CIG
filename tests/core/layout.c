@@ -832,9 +832,11 @@ TEST(core_layout, relative_values) {
   }
 
   /*  The same works for X and Y */
-  if (cig_push_frame(RECT(-CIG_REL(0.5), CIG_REL(0.5), 100, 100))) {
-    TEST_ASSERT_EQUAL_RECT(cig_r_make(-320, 240, 100, 100), cig_frame()->rect);
+  if (cig_push_frame(RECT(CIG_REL(-0.1), CIG_REL(0.5), 100, 100))) {
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(-64, 240, 100, 100), cig_frame()->rect);
     cig_pop_frame();
+  } else {
+    TEST_FAIL_MESSAGE("Frame not added");
   }
 
   /*  CIG_REL and CIG_AUTO can also work together. In standard frames
