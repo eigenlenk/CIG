@@ -61,7 +61,7 @@ cig_end_layout();
 
 The secondary goal with this library is to keep the core layout separate from visuals or rendering backends. You just pass in a reference to your render target/texture/screen/buffer/whatever as an opaque pointer, and you get it back when it comes to rendering. The frame element is void of any graphical info - no background color, border or corner radiuses to deal with. The reason to separate this is that widgets come in so many different shapes and forms that it doesn't make sense to try codify that into fundamental types. A solid background color fits some GUI styles, but what if you want a gradient, or textured background? Components like windows can look so many different ways that it's best to leave that to the application/implementation layer. Of course the library can provide hooks and building blocks to make life easier. In short...
 
-> **These layout calls together with graphics code composed into functions become your components.**
+> These layout calls together with graphics code composed into functions become your components.
 
 # Demo
 The demo serves as a work-in-progress testbed for the library. I like retro computing, so **obviously** I chose Windows 95 to ~~re~~demake. Rendering is done using Raylib as that was easy to get up and running with. But as mentioned earlier, nothing about CIG is tied to a particular renderer. Of course if you opt to use this library, you can integrate it more tightly with your graphics-ware and don't have to have another layer of abstraction like this.
@@ -133,6 +133,44 @@ if (cig_push_vstack(cig_r_make(0, 0, 300, 500), cig_i_zero(), (cig_layout_params
         if (cig_push_frame(RECT_AUTO)) {
             /* <Insert content> */
             cig_pop_frame();
+        }
+    }
+}
+```
+**All three examples also have a MACRO equivalent which you may find easier to work with.**
+
+Basic explicit element:
+```c
+CIG(RECT(10, 10, 100, 40)) {
+  /* <Insert content> */
+}
+```
+
+Rect builder:
+```c
+CIG(BUILD_RECT(
+  PIN(LEFT, LEFT_OF(root), OFFSET_BY(20)),
+  PIN(TOP, TOP_OF(root), OFFSET_BY(10)),
+  PIN(WIDTH, HEIGHT_OF(root)),
+  PIN(HEIGHT, 50)
+)) {
+  /* <Insert content> */
+}
+```
+
+Auto elements:
+```c
+CIG_VSTACK(
+  RECT(0, 0, 300, 500), 
+  CIG_INSETS(cig_i_zero()), 
+  CIG_PARAMS({
+    CIG_SPACING(10),
+    CIG_HEIGHT(50)
+  })
+) {
+    for (int i = 0; i < 3; ++i) {
+        CIG(RECT_AUTO) {
+          /* <Insert content> */
         }
     }
 }
