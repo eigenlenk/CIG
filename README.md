@@ -77,20 +77,6 @@ The library uses [nob.h](https://github.com/tsoding/nob.h) to bootstrap the buil
 1. Use `gcc -o build build.c -std=gnu99` to create the builder (or `CC`, depending on your compiler situation)
 2. Then run `build test` or `build demo`
 
-## Structure
-The project has 3 main modules for now.
-
-### 1. Core
-This is the main chunk of the whole thing. Has all the actual layout logic.
-
-### 2. Text
-Adds basic text element in form of a Label and deals with measuring and laying out text, as well as applying style through HTML-like tags.
-
-### 3. Graphics
-Adds an image element as well as line and rectangle drawing (passing calls to the backend essentially).
-
----
-
 # Using CIG
 
 🚧 UNDER CONSTRUCTION 🚧
@@ -177,6 +163,18 @@ CIG_VSTACK(
     }
 }
 ```
+---
+## Structure
+The project has 3 main modules for now.
+
+### 1. Core
+This is the main chunk of the whole thing. Has all the actual layout logic.
+
+### 2. Text
+Adds basic text element in form of a Label and deals with measuring and laying out text, as well as applying style through HTML-like tags.
+
+### 3. Graphics
+Adds an image element as well as line and rectangle drawing (passing calls to the backend essentially).
 
 # TODO
 * Validate and refine the API by working on the demo
