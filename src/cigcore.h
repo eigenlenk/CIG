@@ -38,7 +38,8 @@ DECLARE_RECT_T(int32_t, cig_r, cig_v, cig_i)
 
 /*  Allows setting a relative position or size. Always relative to parent size,
     or in case of stacks and grids, the size available to the next element. */
-#define CIG_REL(PERCENTAGE) (PERCENTAGE < 0 ? ((int)(PERCENTAGE * 100000) & ~CIG__REL_BIT) : (CIG__REL_BIT | (int)(PERCENTAGE * 100000)))
+#define CIG__REL_PRECISION 100000
+#define CIG_REL(PERCENTAGE) (PERCENTAGE < 0 ? ((int)(PERCENTAGE * CIG__REL_PRECISION) & ~CIG__REL_BIT) : (CIG__REL_BIT | (int)(PERCENTAGE * CIG__REL_PRECISION)))
 
 /*  Full AUTO rect */
 #define RECT_AUTO cig_r_make(0, 0, CIG_AUTO(), CIG_AUTO())
@@ -236,6 +237,29 @@ typedef enum CIG_PACKED {
   CIG_CLICK_DOUBLE = CIG_BIT(3),
   CIG_CLICK_DEFAULT_OPTIONS = CIG_CLICK_STARTS_INSIDE
 } cig_click_flags_t;
+
+typedef enum CIG_PACKED {
+  UNSPECIFIED = 0,
+  LEFT,
+  RIGHT,
+  TOP,
+  BOTTOM,
+  LEFT_INSET,
+  RIGHT_INSET,
+  TOP_INSET,
+  BOTTOM_INSET,
+  WIDTH,
+  HEIGHT,
+  CENTER_X,
+  CENTER_Y
+} cig_pin_attribute_t;
+
+typedef struct {
+  cig_pin_attribute_t attribute;
+  int32_t value;
+  cig_frame_t *relation;
+  cig_pin_attribute_t relation_attribute;
+} cig_pin_t;
 
 typedef cig_r cig_clip_rect_t;
 #define STACK_CAPACITY_cig_clip_rect_t CIG_BUFFER_CLIP_REGIONS_MAX
@@ -460,6 +484,8 @@ cig_v cig_offset();
     │ LAYOUT HELPERS │
     └────────────────┘ */
 
+cig_r cig_build_rect(size_t, cig_pin_t[]);
+
 /*  By default, when adding rects that are completely outside the bounds
     of the parent, `cig_push_frame` calls return NULL. You can disable that
     behavior with this */
@@ -538,7 +564,7 @@ void cig_trigger_layout_breakpoint(cig_r container, cig_r rect);
 
 /*  Clear option bits and get REL value */
 #define CIG_REL_VALUE(N, BASE) \
-  (((N < 0 ? (N | CIG__AUTO_BIT | CIG__REL_BIT) : (N & ~(CIG__AUTO_BIT | CIG__REL_BIT))) * 0.00001) * BASE)
+  round(((N < 0 ? (N | CIG__AUTO_BIT | CIG__REL_BIT) : (N & ~(CIG__AUTO_BIT | CIG__REL_BIT))) * (1.0/CIG__REL_PRECISION)) * BASE)
 
 /*  Clear option bits and get REL or AUTO value if option set */
 #define CIG_ANY_VALUE(N, BASE) \

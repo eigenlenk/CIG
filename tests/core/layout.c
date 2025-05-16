@@ -900,6 +900,240 @@ TEST(core_layout, jump) {
   TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 640, 480), clip_rect);
 }
 
+TEST(core_layout, pinning) {
+  /*  Pinning is an alternative way of constructing the layout rectangle
+      by referencing existing elements for positioning or dimensioning.
+      One may do all these calculations manually as well, but using
+      a builder function simplifies it a lot IMO.
+
+      (1) This should not be used to insert frames into stacks and grids
+      as those have their own layout logic and would override values provided.
+
+      (2) Elements being referenced must be an ancestor or a descendant in the
+      currently open element. */
+
+  cig_frame_t *root = cig_frame();
+
+  /*  The following element is 8px from left and 10px from top edge of 'root',
+      and has an explicit width of 70px and height of 50px. */
+  cig_frame_t *f0 = cig_push_frame(cig_build_rect(4, (cig_pin_t[]) {
+    { LEFT, 8, root, LEFT },
+    { TOP, 10, root, TOP },
+    { WIDTH, 70 },
+    { HEIGHT, 50 }
+  }));
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(8, 10, 70, 50), f0->rect);
+  cig_pop_frame();
+
+
+  /*  The second element is below and after 'f0' but 10px larger on both axis. */
+  cig_frame_t *f1 = cig_push_frame(cig_build_rect(4, (cig_pin_t[]) {
+    { LEFT, 0, f0, RIGHT },
+    { TOP, 0, f0, BOTTOM },
+    { WIDTH, 10, f0 },
+    { HEIGHT, 10, f0 }
+  }));
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(78, 60, 80, 60), f1->rect);
+  cig_pop_frame();
+
+
+  /* What we should have at this point:
+     ┌─────────────────────────────────┐
+     │┌f0──┐                           │
+     ││    │                           │
+     │└────+f1────┐                    │
+     │     │      │                    │
+     │     │      │                    │
+     │     └──────┘                    │
+     │                                 │
+     │                                 │
+     │                                 │
+     │                                 │
+     └─────────────────────────────────┘
+
+    Let's continue so that we would end up with something like this:
+     ┌─────────────────────────────────┐
+     │┌f0──┐      ╔[f2]════════════════╡
+     ││    │      ║                    │
+     │└────+f1────╢                    │
+     │     │      ║                    │
+     │     │      ║                    │
+     │     └──────╢                    │
+     │      ↓10px ╚════════════════════╡
+     │                                 │
+     │                                 │
+     │                                 │
+     └─────────────────────────────────┘ */
+
+  cig_frame_t *f2 = cig_push_frame(cig_build_rect(4, (cig_pin_t[]) {
+    { LEFT, 0, f1, RIGHT },
+    { RIGHT, 0, root, RIGHT },
+    { TOP, 0, f0, TOP },
+    { BOTTOM, 10, f1, BOTTOM },
+  }));
+
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(158, 10, 482, 120), f2->rect);
+
+
+  /*  Now we'll center something inside 'f2' like so:
+     ┌─────────────────────────────────┐
+     │┌f0──┐      ┌f2───────:──────────┤
+     ││    │      │         :          │
+     │└────+f1────┤      ╔[f3]══╗      │
+     │     │      │......║      ║......│
+     │     │      │      ╚══════╝      │
+     │     └──────┤         :          │
+     │            └─────────:──────────┤
+     │                                 │
+     │                                 │
+     │                                 │
+     └─────────────────────────────────┘ */
+
+  cig_frame_t *f3 = cig_push_frame(cig_build_rect(4, (cig_pin_t[]) {
+    { CENTER_X, 0, f2 },
+    { CENTER_Y, 0, f2 },
+    { WIDTH, 50 },
+    { HEIGHT, 50 },
+  }));
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(216, 35, 50, 50), f3->rect);
+  cig_pop_frame();
+
+  cig_pop_frame();
+
+
+  /*  Now even though 'f3' is inside f2, we can still reference it outside
+      when positioning our next element, like so:
+
+      ┌─────────────────────────────────┐
+      │┌f0──┐      ┌f2──────────────────┤
+      ││    │      │                    │
+      │└────+f1────┤      ┌f3────┐      │
+      │     │      │      │      │      │
+      │     │   :  │      └──────┘      │
+      │     └───:──┤             :      │
+      │         ╔[f4]════════════╦──────┤
+      │         ║                ║      │
+      │         ║                ║      │
+      │         ║                ║      │
+      └─────────╨────────────────╨──────┘
+
+      Left side will align with center X of 'f1', right will align with right side
+      of 'f3', top edge will be just below f2 and bottom edge will align with root. */
+  
+  cig_frame_t *f4 = cig_push_frame(cig_build_rect(4, (cig_pin_t[]) {
+    { LEFT, 0, f1, CENTER_X },
+    { RIGHT, 0, f3, RIGHT },
+    { TOP, 0, f2, BOTTOM },
+    { BOTTOM, 0, root, BOTTOM }
+  }));
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(118, 130, 306, 350), f4->rect);
+  cig_pop_frame();
+}
+
+TEST(core_layout, pinning_with_insets) {
+  cig_frame_t *root = cig_frame();
+
+  root->insets = cig_i_uniform(10);
+
+
+  cig_frame_t *f0 = cig_push_frame_insets(cig_build_rect(4, (cig_pin_t[]) {
+    { LEFT, 0, root, LEFT_INSET },
+    { TOP, 0, root, TOP_INSET },
+    { WIDTH, 100 },
+    { HEIGHT, 100 }
+  }), cig_i_uniform(10));
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(10, 10, 100, 100), f0->absolute_rect);
+  cig_pop_frame();
+
+
+  /* 
+      ┌─────────────────────────────────┐
+      │ .....10......                   │
+      │.┌f0─────────┐                   │
+      │.│  ┄┄┄10┄┄  │                   │
+      │1│1┆       ┆ │                   │
+      │0│0┆       ┆ │                   │
+      │.│  ┄┄┄┄┄┄┄  │                   │
+      │.└───────────┘                   │
+
+      Next we want to align another rectangle using the insets of 'f0', like so:
+  
+      ┌─────────────────────────────────┐
+      │                                 │
+      │ ┌f0─────────┐                   │
+      │ │  ┄┄┄┄┄┄┄  │                   │
+      │ │ ┆       ┆ │                   │
+      │ │ ┆       ┆ │                   │
+      │ │ ╔[f1]═════╗                   │
+      │ └─║         ║                   │
+      │   ║         ║                   │
+      │   ║         ║                   │
+      │   ╚═════════╝                   │
+      └─────────────────────────────────┘ */
+
+  cig_frame_t *f1 = cig_push_frame(cig_build_rect(4, (cig_pin_t[]) {
+    { LEFT, 0, f0, LEFT_INSET },
+    { TOP, 0, f0, BOTTOM_INSET },
+    { RIGHT, 0, f0, RIGHT },
+    { HEIGHT, 100 }
+  }));
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(20, 100, 100, 100), f1->absolute_rect);
+  cig_pop_frame();
+}
+
+TEST(core_layout, pinning_relative) {
+  cig_frame_t *root = cig_frame();
+
+
+  /*  Center and size using relative values */
+  cig_frame_t *first = cig_push_frame(cig_build_rect(4, (cig_pin_t[]) {
+    { CENTER_X, CIG_REL(-0.25), root },
+    { CENTER_Y, CIG_REL(0.25), root },
+    { WIDTH, CIG_REL(0.4), root },
+    { HEIGHT, CIG_REL(0.6), root }
+  }));
+
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(32, 216, 256, 288), first->absolute_rect);
+
+  cig_pop_frame();
+
+
+  /* Testing relative left, right, top and bottom also */
+  cig_frame_t *second = cig_push_frame(cig_build_rect(4, (cig_pin_t[]) {
+    { LEFT, CIG_REL(0.2), root },
+    { RIGHT, CIG_REL(-0.2), root },
+    { TOP, CIG_REL(0.1), root },
+    { BOTTOM, CIG_REL(-0.1), root }
+  }));
+
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(128, 48, 384, 384), second->absolute_rect);
+
+  cig_pop_frame();
+}
+
+TEST(core_layout, infer_edges) {
+  cig_frame_t *root = cig_frame();
+
+  /*  Left and top edges will be inferred by using center and right and bottom edges respectively */
+  cig_frame_t *f0 = cig_push_frame(cig_build_rect(4, (cig_pin_t[]) {
+    { CENTER_X, 0, root },
+    { RIGHT, -50, root },
+    { CENTER_Y, 0, root },
+    { BOTTOM, -50, root }
+  }));
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(50, 50, 540, 380), f0->absolute_rect);
+  cig_pop_frame();
+
+
+  /*  If all else fails, left and top will default to zero as long as width/height is there */
+  cig_frame_t *f1 = cig_push_frame(cig_build_rect(2, (cig_pin_t[]) {
+    { WIDTH, 100 },
+    { HEIGHT, 75 },
+  }));
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 100, 75), f1->absolute_rect);
+  cig_pop_frame();
+}
+
 TEST_GROUP_RUNNER(core_layout) {
   RUN_TEST_CASE(core_layout, basic_checks);
   RUN_TEST_CASE(core_layout, default_insets);
@@ -928,4 +1162,8 @@ TEST_GROUP_RUNNER(core_layout) {
   RUN_TEST_CASE(core_layout, main_screen_subregion);
   RUN_TEST_CASE(core_layout, relative_values);
   RUN_TEST_CASE(core_layout, jump)
+  RUN_TEST_CASE(core_layout, pinning)
+  RUN_TEST_CASE(core_layout, pinning_with_insets)
+  RUN_TEST_CASE(core_layout, pinning_relative)
+  RUN_TEST_CASE(core_layout, infer_edges)
 }

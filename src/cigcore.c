@@ -14,15 +14,18 @@ static bool requested_layout_step_mode = false;
 #endif
 
 /*  Forward delcarations */
-static CIG_OPTIONAL(cig_state_t*) find_state(cig_id_t);
-static CIG_OPTIONAL(cig_scroll_state_t*) find_scroll_state(cig_id_t);
-static void handle_frame_hover(const cig_frame_t*);
-static void push_clip(cig_frame_t*);
-static void pop_clip();
-static cig_r calculate_rect_in_parent(cig_r, const cig_frame_t*);
-static cig_r align_rect_in_parent(cig_r, cig_r, const cig_layout_params_t*);
-static bool next_layout_rect(cig_r, cig_frame_t*, cig_r*);
-static cig_frame_t* push_frame(cig_r, cig_i, cig_layout_params_t, bool (*)(cig_r, cig_r, cig_layout_params_t*, cig_r*));
+CIG_INLINED CIG_OPTIONAL(cig_state_t*) find_state(cig_id_t);
+CIG_INLINED CIG_OPTIONAL(cig_scroll_state_t*) find_scroll_state(cig_id_t);
+CIG_INLINED void handle_frame_hover(const cig_frame_t*);
+CIG_INLINED void push_clip(cig_frame_t*);
+CIG_INLINED void pop_clip();
+CIG_INLINED cig_r calculate_rect_in_parent(cig_r, const cig_frame_t*);
+CIG_INLINED cig_r align_rect_in_parent(cig_r, cig_r, const cig_layout_params_t*);
+CIG_INLINED bool next_layout_rect(cig_r, cig_frame_t*, cig_r*);
+CIG_INLINED cig_frame_t* push_frame(cig_r, cig_i, cig_layout_params_t, bool (*)(cig_r, cig_r, cig_layout_params_t*, cig_r*));
+CIG_INLINED void move_to_next_row(cig_layout_params_t*);
+CIG_INLINED void move_to_next_column(cig_layout_params_t*);
+CIG_INLINED int32_t get_attribute_value_of_relative_to(cig_pin_attribute_t, int32_t, cig_frame_t*, cig_frame_t*);
 
 CIG_INLINED int tinyhash(int a, int b) {
   return (a * 31) ^ (b * 17);
@@ -502,6 +505,114 @@ cig_v cig_offset() {
     │ LAYOUT HELPERS │
     └────────────────┘ */
 
+cig_r cig_build_rect(size_t n, cig_pin_t refs[]) {
+  int32_t x0, y0, x1, y1, w, h, cx, cy;
+  uint32_t attrs = 0;
+  cig_pin_t pin;
+
+  cig_frame_t *cur = cig_frame();
+
+  for (register size_t i = 0; i < n; ++i) {
+    pin = refs[i];
+
+    cig_pin_attribute_t attr = pin.attribute == UNSPECIFIED
+      ? pin.relation_attribute
+      : pin.attribute;
+
+    cig_pin_attribute_t rel_attr = pin.relation_attribute == UNSPECIFIED
+      ? pin.attribute
+      : pin.relation_attribute;
+
+    assert(rel_attr);
+
+    int32_t v = get_attribute_value_of_relative_to(rel_attr, pin.value, pin.relation, cur);
+    attrs |= CIG_BIT(attr);
+
+    switch (attr) {
+    case LEFT: x0 = v; break;
+    case RIGHT: x1 = v; break;
+    case TOP: y0 = v; break;
+    case BOTTOM: y1 = v; break;
+    case WIDTH: w = v; break;
+    case HEIGHT: h = v; break;
+    case CENTER_X: cx = v; break;
+    case CENTER_Y: cy = v; break;
+
+    case LEFT_INSET:
+    case RIGHT_INSET:
+    case TOP_INSET:
+    case BOTTOM_INSET:
+      /* These don't make sense here, they can only be used to reference an element */
+      break;
+
+    default:
+      break;
+    }
+  }
+
+  /* Calculate missing values based on what we have */
+
+  if (!(attrs & CIG_BIT(LEFT))) {
+    if (attrs & CIG_BIT(RIGHT) && attrs & CIG_BIT(WIDTH)) {
+      x0 = x1 - w;
+    } else if ((attrs & CIG_BIT(CENTER_X)) && (attrs & CIG_BIT(WIDTH))) {
+      x0 = cx - (w * 0.5);
+    } else if ((attrs & CIG_BIT(CENTER_X)) && (attrs & CIG_BIT(RIGHT))) {
+      x0 = cx - (x1 - cx);
+    } else if (CIG_BIT(WIDTH)) {
+      x0 = 0;
+    } else {
+      assert(false);
+    }
+    attrs |= CIG_BIT(LEFT);
+  } 
+
+  if (!(attrs & CIG_BIT(RIGHT))) {
+    if (attrs & CIG_BIT(LEFT) && attrs & CIG_BIT(WIDTH)) {
+      x1 = x0 + w;
+      attrs |= CIG_BIT(RIGHT);
+    } else if ((attrs & CIG_BIT(CENTER_X)) && (attrs & CIG_BIT(WIDTH))) {
+      x1 = cx + (w * 0.5);
+      attrs |= CIG_BIT(RIGHT);
+    } else if ((attrs & CIG_BIT(CENTER_X)) && (attrs & CIG_BIT(LEFT))) {
+      x1 = cx + (cx - x0);
+    } else {
+      assert(false);
+    }
+  }
+
+  if (!(attrs & CIG_BIT(TOP))) {
+    if (attrs & CIG_BIT(BOTTOM) && attrs & CIG_BIT(HEIGHT)) {
+      y0 = y1 - h;
+    } else if ((attrs & CIG_BIT(CENTER_Y)) && (attrs & CIG_BIT(HEIGHT))) {
+      y0 = cy - (h * 0.5);
+    } else if ((attrs & CIG_BIT(CENTER_Y)) && (attrs & CIG_BIT(BOTTOM))) {
+      y0 = cy - (y1 - cy);
+    } else if (CIG_BIT(HEIGHT)) {
+      y0 = 0;
+    } else {
+      assert(false);
+    }
+    attrs |= CIG_BIT(TOP);
+  } 
+
+  if (!(attrs & CIG_BIT(BOTTOM))) {
+    if (attrs & CIG_BIT(TOP) && attrs & CIG_BIT(HEIGHT)) {
+      y1 = y0 + h;
+      attrs |= CIG_BIT(BOTTOM);
+    } else if ((attrs & CIG_BIT(CENTER_Y)) && (attrs & CIG_BIT(HEIGHT))) {
+      y1 = cy + (h * 0.5);
+      attrs |= CIG_BIT(BOTTOM);
+    } else if ((attrs & CIG_BIT(CENTER_Y)) && (attrs & CIG_BIT(TOP))) {
+      y1 = cy + (cy - y0);
+    } else {
+      assert(false);
+    }
+  }
+
+  return cig_r_make(x0, y0, x1 - x0, y1 - y0);
+}
+
 void cig_disable_culling() {
   cig_frame()->_layout_params.flags |= CIG_LAYOUT_DISABLE_CULLING;
 }
@@ -536,22 +647,6 @@ void cig_empty() {
 void cig_spacer(const int size) {
   cig_push_frame(RECT_AUTO_H(size));
   cig_pop_frame();
-}
-
-CIG_INLINED void move_to_next_row(cig_layout_params_t *prm) {
-  prm->_h_pos = 0;
-  prm->_v_pos += (prm->_v_size + prm->spacing);
-  prm->_h_size = 0;
-  prm->_v_size = 0;
-  prm->_count.h_cur = 0;
-}
-
-CIG_INLINED void move_to_next_column(cig_layout_params_t *prm) {
-  prm->_v_pos = 0;
-  prm->_h_pos += (prm->_h_size + prm->spacing);
-  prm->_h_size = 0;
-  prm->_v_size = 0;
-  prm->_count.v_cur = 0;
 }
 
 bool cig_default_layout_builder(
@@ -916,6 +1011,112 @@ static void pop_clip() {
   if (set_clip) {
     set_clip(cig_buffer(), restored_clip_rect, clip_rects->size == 1);
   }
+}
+
+CIG_INLINED void move_to_next_row(cig_layout_params_t *prm) {
+  prm->_h_pos = 0;
+  prm->_v_pos += (prm->_v_size + prm->spacing);
+  prm->_h_size = 0;
+  prm->_v_size = 0;
+  prm->_count.h_cur = 0;
+}
+
+CIG_INLINED void move_to_next_column(cig_layout_params_t *prm) {
+  prm->_v_pos = 0;
+  prm->_h_pos += (prm->_h_size + prm->spacing);
+  prm->_h_size = 0;
+  prm->_v_size = 0;
+  prm->_count.v_cur = 0;
+}
+
+CIG_INLINED int32_t get_attribute_value_of_relative_to(
+  cig_pin_attribute_t attribute,
+  int32_t value,
+  cig_frame_t *of_frame, 
+  cig_frame_t *relative_to_frame
+) {
+  switch (attribute) {
+  case LEFT:
+    assert(of_frame);
+    return (CIG_IS_REL(value) ? CIG_REL_VALUE(value, of_frame->absolute_rect.w) : value)
+      + of_frame->absolute_rect.x - relative_to_frame->absolute_rect.x;
+
+  case RIGHT:
+    assert(of_frame);
+    return (CIG_IS_REL(value) ? CIG_REL_VALUE(value, of_frame->absolute_rect.w) : value)
+      + of_frame->absolute_rect.w + of_frame->absolute_rect.x - relative_to_frame->absolute_rect.x;
+
+  case TOP:
+    assert(of_frame);
+    return (CIG_IS_REL(value) ? CIG_REL_VALUE(value, of_frame->absolute_rect.h) : value)
+      + of_frame->absolute_rect.y - relative_to_frame->absolute_rect.y;
+
+  case BOTTOM:
+    assert(of_frame);
+    return (CIG_IS_REL(value) ? CIG_REL_VALUE(value, of_frame->absolute_rect.h) : value)
+      + of_frame->absolute_rect.h + of_frame->absolute_rect.y - relative_to_frame->absolute_rect.y;
+
+  case LEFT_INSET:
+    {
+      assert(of_frame);
+      const cig_r r0 = cig_r_inset(of_frame->absolute_rect, of_frame->insets);
+      const cig_r r1 = cig_r_inset(relative_to_frame->absolute_rect, relative_to_frame->insets);
+      return (CIG_IS_REL(value) ? CIG_REL_VALUE(value, r0.w) : value) + r0.x - r1.x;
+    }
+
+  case RIGHT_INSET:
+    {
+      assert(of_frame);
+      const cig_r r0 = cig_r_inset(of_frame->absolute_rect, of_frame->insets);
+      const cig_r r1 = cig_r_inset(relative_to_frame->absolute_rect, relative_to_frame->insets);
+      return (CIG_IS_REL(value) ? CIG_REL_VALUE(value, r0.w) : value) + r0.w + r0.x - r1.x;
+    }
+
+  case TOP_INSET:
+    {
+      assert(of_frame);
+      const cig_r r0 = cig_r_inset(of_frame->absolute_rect, of_frame->insets);
+      const cig_r r1 = cig_r_inset(relative_to_frame->absolute_rect, relative_to_frame->insets);
+      return (CIG_IS_REL(value) ? CIG_REL_VALUE(value, r0.h) : value) + r0.y - r1.y;
+    }
+
+  case BOTTOM_INSET:
+    {
+      assert(of_frame);
+      const cig_r r0 = cig_r_inset(of_frame->absolute_rect, of_frame->insets);
+      const cig_r r1 = cig_r_inset(relative_to_frame->absolute_rect, relative_to_frame->insets);
+      return (CIG_IS_REL(value) ? CIG_REL_VALUE(value, r0.h) : value) + r0.h + r0.y - r1.y;
+    }
+
+  case WIDTH:
+    if (CIG_IS_REL(value)) {
+      assert(of_frame);
+      return CIG_REL_VALUE(value, of_frame->rect.w);
+    } else {
+      return value + (of_frame ? of_frame->rect.w : 0);
+    }
+
+  case HEIGHT:
+    if (CIG_IS_REL(value)) {
+      assert(of_frame);
+      return CIG_REL_VALUE(value, of_frame->rect.h);
+    } else {
+      return value + (of_frame ? of_frame->rect.h : 0);
+    }
+
+  case CENTER_X:
+    assert(of_frame);
+    return (CIG_IS_REL(value) ? CIG_REL_VALUE(value, of_frame->absolute_rect.w) : value) + (of_frame->absolute_rect.w * 0.5) + of_frame->absolute_rect.x - relative_to_frame->absolute_rect.x;
+
+  case CENTER_Y:
+    assert(of_frame);
+    return (CIG_IS_REL(value) ? CIG_REL_VALUE(value, of_frame->absolute_rect.h) : value) + (of_frame->absolute_rect.h * 0.5) + of_frame->absolute_rect.y - relative_to_frame->absolute_rect.y;
+
+  default:
+    break;
+  }
+
+  return value;
 }
 
 #ifdef DEBUG

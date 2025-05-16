@@ -116,11 +116,38 @@ TEST(core_macros, allocator) {
   TEST_ASSERT_EQUAL_INT(5, *i);
 }
 
+TEST(core_macros, pinning) {
+  cig_frame_t *root = cig_frame();
+
+
+  /*  Pin right edge to right edge of 'root' offset by -5px (moves left) */
+  cig_pin_t left = PIN(RIGHT, OFFSET_BY(-5), RIGHT_OF(root));
+  TEST_ASSERT_EQUAL(RIGHT, left.attribute);
+  TEST_ASSERT_EQUAL_INT(-5, left.value);
+  TEST_ASSERT_EQUAL_PTR(root, left.relation);
+  TEST_ASSERT_EQUAL(RIGHT, left.relation_attribute);
+
+
+  /*  Pin width to width of 'root' but make it 50% */
+  cig_pin_t width = PIN(WIDTH_OF(root), OFFSET_BY(CIG_REL(0.5)));
+  TEST_ASSERT_EQUAL(UNSPECIFIED, width.attribute); /* Will default to WIDTH when building the rectangle */
+  TEST_ASSERT_EQUAL_INT(CIG_REL(0.5), width.value);
+  TEST_ASSERT_EQUAL_PTR(root, width.relation);
+  TEST_ASSERT_EQUAL(WIDTH, width.relation_attribute);
+
+
+  /* Y/TOP will be defaulted to 0 */
+  cig_r rect = BUILD_RECT(left, width, PIN(HEIGHT, 50));
+
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(315, 0, 320, 50), rect);
+}
+
 TEST_GROUP_RUNNER(core_macros) {
   RUN_TEST_CASE(core_macros, cig);
   RUN_TEST_CASE(core_macros, vstack);
   RUN_TEST_CASE(core_macros, hstack);
   RUN_TEST_CASE(core_macros, grid);
   RUN_TEST_CASE(core_macros, allocator);
+  RUN_TEST_CASE(core_macros, pinning);
   // TODO: check positional and rect macros
 }

@@ -71,4 +71,37 @@ extern cig_frame_t *cig__macro_last_closed;
 #define CIG_LAST() cig__macro_last_closed
 #define CIG_CAPTURE(VAR, BODY) BODY; VAR=CIG_LAST();
 
+/* Layout pinning */
+
+#define LEFT_OF(FRAME) .relation = FRAME, .relation_attribute = LEFT
+#define RIGHT_OF(FRAME) .relation = FRAME, .relation_attribute = RIGHT
+#define TOP_OF(FRAME) .relation = FRAME, .relation_attribute = TOP
+#define BOTTOM_OF(FRAME) .relation = FRAME, .relation_attribute = BOTTOM
+#define LEFT_INSET_OF(FRAME) .relation = FRAME, .relation_attribute = LEFT_INSET
+#define RIGHT_INSET_OF(FRAME) .relation = FRAME, .relation_attribute = RIGHT_INSET
+#define TOP_INSET_OF(FRAME) .relation = FRAME, .relation_attribute = TOP_INSET
+#define BOTTOM_INSET_OF(FRAME) .relation = FRAME, .relation_attribute = BOTTOM_INSET
+#define WIDTH_OF(FRAME) .relation = FRAME, .relation_attribute = WIDTH
+#define HEIGHT_OF(FRAME) .relation = FRAME, .relation_attribute = HEIGHT
+#define CENTER_X_OF(FRAME) .relation = FRAME, .relation_attribute = CENTER_X
+#define CENTER_Y_OF(FRAME) .relation = FRAME, .relation_attribute = CENTER_Y
+
+#define OFFSET_BY(VALUE) .value = VALUE
+
+#define PIN(VALUES...) (cig_pin_t) { VALUES }
+
+/*  Macro for building a rectangle based on rules how to set concrete
+    values for left, right, top and bottom edges, or what element to reference
+    for calculating them. In the end, all edges need to be explicitly calculable,
+    but LEFT + WIDTH, or CENTER_X + WIDTH, or even CENTER_X + RIGHT all suffice
+    to work out what left and right postions are.
+
+    BUILD_RECT(
+      PIN(LEFT, 10),
+      PIN(WIDTH_OF(some_frame)),
+      PIN(CENTER_Y(some_frame), OFFSET_BY(20)),
+      PIN(HEIGHT, WIDTH_OF(some_frame))
+    ) */
+#define BUILD_RECT(REFS...) cig_build_rect(CIG_NARG(REFS), (cig_pin_t[]) { REFS })
+
 #endif
