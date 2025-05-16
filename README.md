@@ -137,7 +137,7 @@ if (cig_push_vstack(cig_r_make(0, 0, 300, 500), cig_i_zero(), (cig_layout_params
     }
 }
 ```
-**All three examples also have a MACRO equivalent which you may find easier to work with.**
+👇 **All three examples also have a MACRO equivalent which you may find easier to work with.** 👇
 
 Basic explicit element:
 ```c
