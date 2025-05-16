@@ -25,7 +25,7 @@ CIG_INLINED bool next_layout_rect(cig_r, cig_frame_t*, cig_r*);
 CIG_INLINED cig_frame_t* push_frame(cig_r, cig_i, cig_layout_params_t, bool (*)(cig_r, cig_r, cig_layout_params_t*, cig_r*));
 CIG_INLINED void move_to_next_row(cig_layout_params_t*);
 CIG_INLINED void move_to_next_column(cig_layout_params_t*);
-CIG_INLINED int32_t get_attribute_value_of_relative_to(cig_pin_attribute_t, int32_t, cig_frame_t*, cig_frame_t*);
+CIG_INLINED double get_attribute_value_of_relative_to(cig_pin_attribute_t, double, cig_frame_t*, cig_frame_t*);
 
 CIG_INLINED int tinyhash(int a, int b) {
   return (a * 31) ^ (b * 17);
@@ -507,6 +507,7 @@ cig_v cig_offset() {
 
 cig_r cig_build_rect(size_t n, cig_pin_t refs[]) {
   int32_t x0, y0, x1, y1, w, h, cx, cy;
+  double a = 1;
   uint32_t attrs = 0;
   cig_pin_t pin;
 
@@ -525,7 +526,7 @@ cig_r cig_build_rect(size_t n, cig_pin_t refs[]) {
 
     assert(rel_attr);
 
-    int32_t v = get_attribute_value_of_relative_to(rel_attr, pin.value, pin.relation, cur);
+    double v = get_attribute_value_of_relative_to(rel_attr, pin.value, pin.relation, cur);
     attrs |= CIG_BIT(attr);
 
     switch (attr) {
@@ -537,6 +538,7 @@ cig_r cig_build_rect(size_t n, cig_pin_t refs[]) {
     case HEIGHT: h = v; break;
     case CENTER_X: cx = v; break;
     case CENTER_Y: cy = v; break;
+    case ASPECT: a = v; break;
 
     case LEFT_INSET:
     case RIGHT_INSET:
@@ -551,6 +553,20 @@ cig_r cig_build_rect(size_t n, cig_pin_t refs[]) {
   }
 
   /* Calculate missing values based on what we have */
+
+  if (!(attrs & CIG_BIT(WIDTH))) {
+    if (attrs & CIG_BIT(HEIGHT) && attrs & CIG_BIT(ASPECT)) {
+      w = round(h * a);
+      attrs |= CIG_BIT(WIDTH);
+    }
+  }
+
+  if (!(attrs & CIG_BIT(HEIGHT))) {
+    if (attrs & CIG_BIT(WIDTH) && attrs & CIG_BIT(ASPECT)) {
+      h = round(w / a);
+      attrs |= CIG_BIT(HEIGHT);
+    }
+  }
 
   if (!(attrs & CIG_BIT(LEFT))) {
     if (attrs & CIG_BIT(RIGHT) && attrs & CIG_BIT(WIDTH)) {
@@ -1029,12 +1045,13 @@ CIG_INLINED void move_to_next_column(cig_layout_params_t *prm) {
   prm->_count.v_cur = 0;
 }
 
-CIG_INLINED int32_t get_attribute_value_of_relative_to(
+CIG_INLINED double get_attribute_value_of_relative_to(
   cig_pin_attribute_t attribute,
-  int32_t value,
+  double _value,
   cig_frame_t *of_frame, 
   cig_frame_t *relative_to_frame
 ) {
+  int32_t value = _value;
   switch (attribute) {
   case LEFT:
     assert(of_frame);
@@ -1116,7 +1133,7 @@ CIG_INLINED int32_t get_attribute_value_of_relative_to(
     break;
   }
 
-  return value;
+  return _value;
 }
 
 #ifdef DEBUG

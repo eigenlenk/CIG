@@ -89,7 +89,7 @@ extern cig_frame_t *cig__macro_last_closed;
 
 #define OFFSET_BY(VALUE) .value = VALUE
 
-#define PIN(VALUES...) (cig_pin_t) { VALUES }
+#define PIN(VALUES...) ((cig_pin_t) { VALUES })
 
 /*  Macro for building a rectangle based on rules how to set concrete
     values for left, right, top and bottom edges, or what element to reference

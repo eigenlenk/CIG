@@ -240,23 +240,28 @@ typedef enum CIG_PACKED {
 
 typedef enum CIG_PACKED {
   UNSPECIFIED = 0,
+
+  /* These can only be used as the main attribute of the pin */
   LEFT,
   RIGHT,
   TOP,
   BOTTOM,
+  WIDTH,
+  HEIGHT,
+  CENTER_X,
+  CENTER_Y,
+
+  /* These can be used for relations as well */
   LEFT_INSET,
   RIGHT_INSET,
   TOP_INSET,
   BOTTOM_INSET,
-  WIDTH,
-  HEIGHT,
-  CENTER_X,
-  CENTER_Y
+  ASPECT
 } cig_pin_attribute_t;
 
 typedef struct {
   cig_pin_attribute_t attribute;
-  int32_t value;
+  double value;
   cig_frame_t *relation;
   cig_pin_attribute_t relation_attribute;
 } cig_pin_t;

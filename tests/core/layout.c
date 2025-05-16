@@ -1111,7 +1111,7 @@ TEST(core_layout, pinning_relative) {
   cig_pop_frame();
 }
 
-TEST(core_layout, infer_edges) {
+TEST(core_layout, pinning_infer_edges) {
   cig_frame_t *root = cig_frame();
 
   /*  Left and top edges will be inferred by using center and right and bottom edges respectively */
@@ -1132,6 +1132,29 @@ TEST(core_layout, infer_edges) {
   }));
   TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 100, 75), f1->absolute_rect);
   cig_pop_frame();
+}
+
+TEST(core_layout, pinning_aspect_ratio) {
+  cig_frame_t *root = cig_frame();
+
+  cig_r r0 = cig_build_rect(4, (cig_pin_t[]) {
+    { CENTER_X, 0, root },
+    { CENTER_Y, 0, root },
+    { WIDTH, 400 },
+    { ASPECT, 4/3.0 }
+  });
+
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(120, 90, 400, 300), r0);
+
+
+  cig_r r1 = cig_build_rect(4, (cig_pin_t[]) {
+    { CENTER_X, 0, root },
+    { CENTER_Y, 0, root },
+    { HEIGHT, 300 },
+    { ASPECT, 4/3.0 }
+  });
+
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(120, 90, 400, 300), r1);
 }
 
 TEST_GROUP_RUNNER(core_layout) {
@@ -1165,5 +1188,6 @@ TEST_GROUP_RUNNER(core_layout) {
   RUN_TEST_CASE(core_layout, pinning)
   RUN_TEST_CASE(core_layout, pinning_with_insets)
   RUN_TEST_CASE(core_layout, pinning_relative)
-  RUN_TEST_CASE(core_layout, infer_edges)
+  RUN_TEST_CASE(core_layout, pinning_infer_edges)
+  RUN_TEST_CASE(core_layout, pinning_aspect_ratio)
 }
