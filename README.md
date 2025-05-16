@@ -90,7 +90,7 @@ Adds an image element as well as line and rectangle drawing (pipings calls to th
 # TODO
 * Validate and refine the API by working on the demo
 * ~~Improve image element and pre-calculate more of the aspect ratio data before making a backend call~~
-* Explore a concept of "anchors" to simplify layout creation
+* ~~Explore a concept of "anchors" to simplify layout creation~~ (ended up with [pinning](https://github.com/eigenlenk/CIG/commit/7721981ac073b906fbad589e45388773928a1f6a))
 * Improve text support (for large pages of text with scrolling)
 * Consider bundling commonly used widgets or at least establish best practices
 * Improve and add missing tests (+there may be duplications)
