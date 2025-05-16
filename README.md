@@ -93,6 +93,8 @@ Adds an image element as well as line and rectangle drawing (passing calls to th
 
 # Using CIG
 
+🚧 UNDER CONSTRUCTION 🚧
+
 The layout API offers quite a few ways of creating your elements, but they all eventually come down to using `cig_push_frame` to open your element and `cig_pop_frame` to end it. Opening an element requires a rectangle, which can be set explicitly:
 ```c
 /* Creates an element at 10x10 with the size of 100x40 */
