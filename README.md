@@ -77,7 +77,7 @@ The library uses [nob.h](https://github.com/tsoding/nob.h) to bootstrap the buil
 1. Use `gcc -o build build.c -std=gnu99` to create the builder (or `CC`, depending on your compiler situation)
 2. Then run `build test` or `build demo`
 
-# Structure
+## Structure
 The project has 3 main modules for now.
 
 ### 1. Core
@@ -87,7 +87,56 @@ This is the main chunk of the whole thing. Has all the actual layout logic.
 Adds basic text element in form of a Label and deals with measuring and laying out text, as well as applying style through HTML-like tags.
 
 ### 3. Graphics
-Adds an image element as well as line and rectangle drawing (pipings calls to the backend essentially).
+Adds an image element as well as line and rectangle drawing (passing calls to the backend essentially).
+
+---
+
+# Using CIG
+
+The layout API offers quite a few ways of creating your elements, but they all eventually come down to using `cig_push_frame` to open your element and `cig_pop_frame` to end it. Opening an element requires a rectangle, which can be set explicitly:
+```c
+/* Creates an element at 10x10 with the size of 100x40 */
+if (cig_push_frame(cig_r_make(10, 10, 100, 40))) {
+    /* <Insert content> */
+    cig_pop_frame();
+}
+```
+…or using a rect builder and a more constraints-like API:
+```c
+/* Creates an element that's:
+    + 20 units from the LEFT edge of 'root',
+    + 10 units from the TOP edge of 'root',
+    + is as WIDE as 'root' is TALL,
+    + and has an HEIGHT of 50 units */
+if (cig_push_frame(cig_build_rect(4, (cig_pin_t[]) {
+    { LEFT, 20, root, LEFT },
+    { TOP, 10, root, TOP },
+    { WIDTH, 0, root, HEIGHT },
+    { HEIGHT, 50 }
+}))) {
+    /* <Insert content> */
+    cig_pop_frame();
+}
+```
+…or as a third option, using a `RECT_AUTO` macro which tells the layout engine to size the element automatically. In regular elements it just means to fill the parent, but if the open element has been configured to be a vertical/horizontal stack or a grid, `RECT_AUTO` queries the next appropriate size based on a few parameters:
+```c
+/* Create a vertical stack where each item will be 50 units high and with a 10 unit spacing */
+if (cig_push_vstack(cig_r_make(0, 0, 300, 500), cig_i_zero(), (cig_layout_params_t) {
+    .spacing = 10,
+    .height = 50
+})) {
+    /* This creates 3 rows in the stack */
+    for (int i = 0; i < 3; ++i) { 
+        /* First row (rectangle relative to parent): (0, 0, 300, 50),
+           Second: (0, 60, 300, 50)
+           Third: (0, 120, 300, 50) */
+        if (cig_push_frame(RECT_AUTO)) {
+            /* <Insert content> */
+            cig_pop_frame();
+        }
+    }
+}
+```
 
 # TODO
 * Validate and refine the API by working on the demo
@@ -97,10 +146,10 @@ Adds an image element as well as line and rectangle drawing (pipings calls to th
 * Consider bundling commonly used widgets or at least establish best practices
 * Improve and add missing tests (+there may be duplications)
 * More documentation, examples and tutorials
-  
-## Acknowledgements
-* Shoutout to Dear ImGui for introducing the concept of immediate-mode GUIs to wider audiences (including me) all these years ago
-* More recently I came across [Clay](https://github.com/nicbarker/clay) which reinforced some of the ideas and encouraged me to continue
 
 # What now?
 This is pretty much my first open-source library, so if you find this interesting or it gives you an idea how to make that thing of your own, that's awesome. If you want to try and use it, that's even better! Willing to contribute a fix or a new feature? OMG! We can chat on [Discord](https://discord.gg/X379hyV37f) 👋
+
+## Acknowledgements
+* Shoutout to Dear ImGui for introducing the concept of immediate-mode GUIs to wider audiences (including me) all these years ago
+* More recently I came across [Clay](https://github.com/nicbarker/clay) which reinforced some of the ideas and encouraged me to continue
