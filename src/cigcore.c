@@ -1129,6 +1129,9 @@ CIG_INLINED double get_attribute_value_of_relative_to(
     assert(of_frame);
     return (CIG_IS_REL(value) ? CIG_REL_VALUE(value, of_frame->absolute_rect.h) : value) + (of_frame->absolute_rect.h * 0.5) + of_frame->absolute_rect.y - relative_to_frame->absolute_rect.y;
 
+  case ASPECT:
+    return of_frame ? ((double)of_frame->absolute_rect.w / of_frame->absolute_rect.h) : _value;
+
   default:
     break;
   }

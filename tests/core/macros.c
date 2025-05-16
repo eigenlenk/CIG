@@ -140,6 +140,28 @@ TEST(core_macros, pinning) {
   cig_r rect = BUILD_RECT(left, width, PIN(HEIGHT, 50));
 
   TEST_ASSERT_EQUAL_RECT(cig_r_make(315, 0, 320, 50), rect);
+
+
+  /* Aspect ratio */
+  cig_r aspect_ratio_rect_0 = BUILD_RECT(
+    PIN(CENTER_X_OF(root)),
+    PIN(CENTER_Y_OF(root)),
+    PIN(WIDTH, 400),
+    PIN(ASPECT, 4/3.0)
+  );
+
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(120, 90, 400, 300), aspect_ratio_rect_0);
+
+
+  /* Aspect ratio of another element */
+  cig_r aspect_ratio_rect_1 = BUILD_RECT(
+    PIN(CENTER_X_OF(root)),
+    PIN(CENTER_Y_OF(root)),
+    PIN(WIDTH, 200),
+    PIN(ASPECT_OF(root))
+  );
+
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(220, 165, 200, 150), aspect_ratio_rect_1);
 }
 
 TEST_GROUP_RUNNER(core_macros) {

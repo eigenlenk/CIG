@@ -86,6 +86,7 @@ extern cig_frame_t *cig__macro_last_closed;
 #define HEIGHT_OF(FRAME) .relation = FRAME, .relation_attribute = HEIGHT
 #define CENTER_X_OF(FRAME) .relation = FRAME, .relation_attribute = CENTER_X
 #define CENTER_Y_OF(FRAME) .relation = FRAME, .relation_attribute = CENTER_Y
+#define ASPECT_OF(FRAME) .relation = FRAME, .relation_attribute = ASPECT
 
 #define OFFSET_BY(VALUE) .value = VALUE
 
