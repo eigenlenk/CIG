@@ -258,8 +258,8 @@ TEST(core_layout, overlay) {
 
 TEST(core_layout, culling) {
   /*
-  Frames that are wholly outside of visible area are not added.
-  `cig_push_frame_*` functions return a BOOL for that. If the frame
+  Frames that are wholly outside of the parent frame are not added. For that
+  `cig_push_frame_*` functions return a `cig_frame_t` reference or NULL. If the frame
   is added successfully you are expected to pop it at some point.
   */
   
@@ -291,6 +291,7 @@ TEST(core_layout, culling) {
   }
 }
 
+/* Each frame tracks a content rect that bounds all direct child elements */
 TEST(core_layout, content_bounds) {
   TEST_ASSERT_EQUAL_RECT(cig_r_zero(), cig_content_rect());
 
@@ -311,8 +312,7 @@ TEST(core_layout, vstack_layout) {
     TEST_FAIL_MESSAGE("Unable to add layout builder frame");
   }
   
-  /* Width is calculated, but height is fixed at 50pt */
-  cig_push_frame(RECT_AUTO_H(50));
+  cig_push_frame(RECT_AUTO_H(50)); /* RECT_AUTO_H: Width is calculated, but height is fixed at 50pt */
   TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 640, 50), cig_frame()->rect);
   cig_pop_frame();
   
@@ -336,8 +336,7 @@ TEST(core_layout, hstack_layout) {
     TEST_FAIL_MESSAGE("Unable to add layout builder frame");
   }
   
-  /* Width is calculated, but height is fixed at 50pt */
-  cig_push_frame(RECT_AUTO_W(200));
+  cig_push_frame(RECT_AUTO_W(200)); /* RECT_AUTO_W: Width is calculated, but height is fixed at 50pt */
   TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 200, 480-2*10), cig_frame()->rect);
   cig_pop_frame();
   
@@ -350,6 +349,11 @@ TEST(core_layout, hstack_layout) {
   cig_pop_frame(); /* Not really necessary in testing, but.. */
 }
 
+/*
+  In this example we are configuring a h-stack that divides content into 4 columns,
+  meaning the RECT_AUTO width would yield "width / 4", but you can still insert an
+  explictly sized element as well.
+*/
 TEST(core_layout, hstack_mix) {
   if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL,
@@ -381,6 +385,10 @@ TEST(core_layout, hstack_mix) {
   cig_pop_frame();
 }
 
+/*
+  V-stack supports bottom-to-top direction as well. Here we're inserting a couple of elements
+  with fixed 50pt height, then disable that and add a third item to fill the remaining space.
+*/
 TEST(core_layout, vstack_align_bottom) {
   if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
     .axis = CIG_LAYOUT_AXIS_VERTICAL,
@@ -405,6 +413,7 @@ TEST(core_layout, vstack_align_bottom) {
   TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 640, 380), cig_frame()->rect);
 }
 
+/* Similarly, h-stack supports right-to-left alignment */
 TEST(core_layout, hstack_align_right) {
   if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL,
@@ -673,9 +682,9 @@ TEST(core_layout, grid_with_flipped_alignment_and_direction) {
 
   /*  For visualisation:
       ┌────────────────────────────┐
-      │            ................│
+      │            ........xxxxxxxx│
       │            ┌      ┐┌──────┐│
-      │             (4)    │ 2    ││
+      │             (next) │ 2    ││
       │                    │      ││
       │                    │      ││
       │            └      ┘└──────┘│
