@@ -28,12 +28,12 @@ static cig_text_color_ref default_text_color = 0;
 static char printf_buf[CIG_LABEL_PRINTF_BUF_LENGTH];
 static struct { size_t count; cig_font_ref fonts[4]; } font_stack;
 static struct { size_t count; cig_text_color_ref colors[4]; } color_stack;
-static cig_text_style_t style;
+static cig_text_style style;
 
-static void prepare_label(cig_label_t *, const cig_text_properties_t *, const unsigned int, const char *);
-static cig_span_t* create_span(cig_label_t *, utf8_string, cig_font_ref, cig_text_color_ref, cig_text_style_t, cig_v);
-static void render_spans(cig_span_t *, size_t, cig_font_ref, cig_text_color_ref, cig_text_horizontal_alignment_t, cig_text_vertical_alignment_t, bounds_t, int);
-static void wrap_text(utf8_string *, size_t, cig_v *, cig_text_overflow_t, cig_font_ref, cig_font_ref, cig_text_color_ref, cig_text_style_t, size_t, cig_span_t *);
+static void prepare_label(cig_label_t *, const cig_text_properties *, const unsigned int, const char *);
+static cig_span* create_span(cig_label_t *, utf8_string, cig_font_ref, cig_text_color_ref, cig_text_style, cig_v);
+static void render_spans(cig_span *, size_t, cig_font_ref, cig_text_color_ref, cig_text_horizontal_alignment, cig_text_vertical_alignment, bounds_t, int);
+static void wrap_text(utf8_string *, size_t, cig_v *, cig_text_overflow, cig_font_ref, cig_font_ref, cig_text_color_ref, cig_text_style, size_t, cig_span *);
 static bool parse_tag(tag_parser_t*, utf8_char, uint32_t);
 static void apply_tag(tag_parser_t*);
 
@@ -65,7 +65,7 @@ void cig_set_default_text_color(cig_text_color_ref color) {
   default_text_color = color;
 }
 
-cig_label_t* cig_label(cig_text_properties_t props, const char *text, ...) {
+cig_label_t* cig_label(cig_text_properties props, const char *text, ...) {
   register const cig_r absolute_rect = cig_r_inset(cig_absolute_rect(), cig_frame()->insets);
 
   cig_label_t *label = CIG_ALLOCATE(cig_label_t);
@@ -99,7 +99,7 @@ cig_label_t* cig_label(cig_text_properties_t props, const char *text, ...) {
 cig_label_t* cig_prepare_label(
   cig_label_t *label,
   unsigned int max_width,
-  cig_text_properties_t props,
+  cig_text_properties props,
   const char *text,
   ...
 ) {
@@ -137,7 +137,7 @@ void cig_draw_label(cig_label_t *label) {
 
 static void prepare_label(
   cig_label_t *label,
-  const cig_text_properties_t *props,
+  const cig_text_properties *props,
   const unsigned int max_width,
   const char *str
 ) {
@@ -165,7 +165,7 @@ static void prepare_label(
     uint32_t cp;
     size_t i = 0, line_width = 0, line_count = 1;
 
-    cig_font_info_t base_font_info = font_query(label->font);
+    cig_font_info base_font_info = font_query(label->font);
 
     tag_parser_t tag_parser = { 0 };
     bool tag_stage_changed = false;
@@ -247,7 +247,7 @@ static void prepare_label(
 
             if (terminates_span) {
               // printf("\tForced end of span (1)!\n");
-              cig_span_t *new_span = create_span(label, slice, font_override, color_override, props->style | style, bounds);
+              cig_span *new_span = create_span(label, slice, font_override, color_override, props->style | style, bounds);
               line_count += new_span->newlines = newlines;
               span.last_fitting.str = NULL;
               span.reading = false;
@@ -257,7 +257,7 @@ static void prepare_label(
           } else {
             if (span.last_fitting.str && (!props->max_lines || line_count < props->max_lines)) {
               // printf("\tNo fit. Use last range [%i...%i]: |%.*s|\n", span.start, span.last_fitting.index, span.last_fitting.slice.byte_len, span.last_fitting.slice.str);
-              cig_span_t *new_span = create_span(label, span.last_fitting.slice, font_override, color_override, props->style | style, span.last_fitting.bounds);
+              cig_span *new_span = create_span(label, span.last_fitting.slice, font_override, color_override, props->style | style, span.last_fitting.bounds);
               line_count += new_span->newlines = 1;
               iter.str = span.last_fitting.str;
               i = span.last_fitting.index;
@@ -272,11 +272,11 @@ static void prepare_label(
                 continue;
               }
               // printf("\tForcing a span!\n");
-              cig_span_t additional_span = { 0 };
+              cig_span additional_span = { 0 };
               if (bounds.x > max_width && (!props->max_lines || props->max_lines == line_count)) {
                 wrap_text(&slice, length, &bounds, props->overflow, display_font, font_override, color_override, props->style | style, max_width, &additional_span);
               }
-              cig_span_t *new_span = create_span(label, slice, font_override, color_override, props->style | style, bounds);
+              cig_span *new_span = create_span(label, slice, font_override, color_override, props->style | style, bounds);
               if (additional_span.str) {
                 label->spans[label->span_count++] = additional_span;
               } else if (!end_of_string) {
@@ -313,13 +313,13 @@ static void wrap_text(
   utf8_string *slice,
   size_t text_length,
   cig_v *bounds,
-  cig_text_overflow_t overflow_mode,
+  cig_text_overflow overflow_mode,
   cig_font_ref display_font,
   cig_font_ref font_override,
   cig_text_color_ref color_override,
-  cig_text_style_t style,
+  cig_text_style style,
   size_t max_width,
-  cig_span_t *additional_span
+  cig_span *additional_span
 ) {
   switch (overflow_mode) {
     case CIG_TEXT_SHOW_ELLIPSIS: {
@@ -336,7 +336,7 @@ static void wrap_text(
         *slice = slice_utf8_string(*slice, 0, new_length);
         *bounds = measure_callback(slice->str, slice->byte_len, display_font, style);
       }
-      *additional_span = (cig_span_t) { 
+      *additional_span = (cig_span) { 
         .str = "...",
         .font_override = font_override,
         .color_override = color_override,
@@ -365,15 +365,15 @@ static void wrap_text(
   }
 }
 
-static cig_span_t* create_span(
+static cig_span* create_span(
   cig_label_t *label,
   utf8_string slice,
   cig_font_ref font_override,
   cig_text_color_ref color_override,
-  cig_text_style_t style,
+  cig_text_style style,
   cig_v bounds
 ) {
-  label->spans[label->span_count++] = (cig_span_t) { 
+  label->spans[label->span_count++] = (cig_span) { 
     .str = slice.str,
     .font_override = font_override,
     .color_override = color_override,
@@ -387,12 +387,12 @@ static cig_span_t* create_span(
 }
 
 static void render_spans(
-  cig_span_t *first,
+  cig_span *first,
   size_t count,
   cig_font_ref base_font,
   cig_text_color_ref base_color,
-  cig_text_horizontal_alignment_t horizontal_alignment,
-  cig_text_vertical_alignment_t vertical_alignment,
+  cig_text_horizontal_alignment horizontal_alignment,
+  cig_text_vertical_alignment vertical_alignment,
   bounds_t bounds,
   int line_spacing
 ) {
@@ -400,8 +400,8 @@ static void render_spans(
 
   register const cig_r absolute_rect = cig_r_inset(cig_absolute_rect(), cig_frame()->insets);
   register int w, dx, dy;
-  register cig_span_t *span, *line_start, *line_end, *last = first + (count-1);
-  register const cig_font_info_t font_info = font_query(base_font);
+  register cig_span *span, *line_start, *line_end, *last = first + (count-1);
+  register const cig_font_info font_info = font_query(base_font);
 
   static double alignment_constant[3] = { 0, 0.5, 1 };
 
@@ -417,7 +417,7 @@ static void render_spans(
       dx = absolute_rect.x + (int)((absolute_rect.w - w) * alignment_constant[horizontal_alignment-1]);
 
       for (span = line_start; span <= line_end; span++) {
-        cig_font_info_t span_font_info = span->font_override ? font_query(span->font_override) : font_info;
+        cig_font_info span_font_info = span->font_override ? font_query(span->font_override) : font_info;
         const cig_r span_rect = cig_r_make(
           dx,
           dy + (span->font_override ? ((font_info.height+font_info.baseline_offset)-(span_font_info.height+span_font_info.baseline_offset)) : 0),

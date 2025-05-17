@@ -31,15 +31,15 @@ static void render_text(
   cig_r,
   cig_font_ref,
   cig_text_color_ref,
-  cig_text_style_t
+  cig_text_style
 );
 static cig_v measure_text(
   const char *,
   size_t,
   cig_font_ref,
-  cig_text_style_t
+  cig_text_style
 );
-static cig_font_info_t font_query(cig_font_ref);
+static cig_font_info font_query(cig_font_ref);
 
 /* Gfx API */
 static void draw_image(cig_buffer_ref, cig_r, cig_r, cig_image_ref, cig_image_mode);
@@ -232,7 +232,7 @@ CIG_INLINED void render_text(
   cig_r rect,
   cig_font_ref font,
   cig_text_color_ref color,
-  cig_text_style_t style
+  cig_text_style style
 ) {
   static char buf[256];
   strncpy(buf, str, len);
@@ -250,7 +250,7 @@ CIG_INLINED cig_v measure_text(
   const char *str,
   size_t len,
   cig_font_ref font,
-  cig_text_style_t style
+  cig_text_style style
 ) {
   static char buf[256];
   strncpy(buf, str, len);
@@ -262,12 +262,12 @@ CIG_INLINED cig_v measure_text(
   return cig_v_make(bounds.x, bounds.y);
 }
 
-CIG_INLINED cig_font_info_t font_query(cig_font_ref font_ref) {
+CIG_INLINED cig_font_info font_query(cig_font_ref font_ref) {
   struct font_store *fs = (struct font_store*)font_ref;
   
   // printf("GLYPH PADDING %d\n", fs->font.glyphPadding);
   
-  return (cig_font_info_t) {
+  return (cig_font_info) {
     .height = fs->font.baseSize,
     .baseline_offset = fs->baseline_offset
   };

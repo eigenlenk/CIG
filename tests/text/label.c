@@ -21,7 +21,7 @@ CIG_INLINED void text_render(
   cig_r rect,
   cig_font_ref font,
   cig_text_color_ref color,
-  cig_text_style_t style
+  cig_text_style style
 ) {
   int i = spans.count++;
   spans.rects[i] = rect;
@@ -32,7 +32,7 @@ CIG_INLINED cig_v text_measure(
   const char *str,
   size_t len,
   cig_font_ref font,
-  cig_text_style_t style
+  cig_text_style style
 ) {
   utf8_string slice = (utf8_string) { str, len };
   text_measure_calls ++;
@@ -40,8 +40,8 @@ CIG_INLINED cig_v text_measure(
   return cig_v_make(utf8_char_count(slice), 1);
 }
 
-CIG_INLINED cig_font_info_t font_query(cig_font_ref font_ref) {
-  return (cig_font_info_t) {
+CIG_INLINED cig_font_info font_query(cig_font_ref font_ref) {
+  return (cig_font_info) {
     .height = 1,
     .baseline_offset = 0
   };
@@ -88,7 +88,7 @@ TEST(text_label, single) {
 
     /*  Label centers text both horizontally and vertically by default.
         This label will consist of a single span */
-    cig_label((cig_text_properties_t) { }, "Olá mundo!");
+    cig_label((cig_text_properties) { }, "Olá mundo!");
 
     /*  Span is an atomic text component, a piece of text that runs until
         the horizontal bounds of the label, or until some property of the
@@ -108,7 +108,7 @@ TEST(text_label, multiline) {
   for (int i = 0; i < 2; ++i) {
     begin();
 
-    cig_label((cig_text_properties_t) { }, "Olá mundo!\nHello world!");
+    cig_label((cig_text_properties) { }, "Olá mundo!\nHello world!");
 
     TEST_ASSERT_EQUAL(2, spans.count);
     TEST_ASSERT_EQUAL_RECT(cig_r_make(35, 11, 10, 1), spans.rects[0]);
@@ -124,7 +124,7 @@ TEST(text_label, horizontal_alignment_left) {
   begin();
 
   CIG(RECT_AUTO_H(1)) {
-    cig_label((cig_text_properties_t) {
+    cig_label((cig_text_properties) {
       .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
     }, "Label");
 
@@ -136,7 +136,7 @@ TEST(text_label, horizontal_alignment_center) {
   begin();
 
   CIG(RECT_AUTO_H(1)) {
-    cig_label((cig_text_properties_t) {
+    cig_label((cig_text_properties) {
       .alignment.horizontal = CIG_TEXT_ALIGN_CENTER
     }, "Label");
 
@@ -148,7 +148,7 @@ TEST(text_label, horizontal_alignment_right) {
   begin();
 
   CIG(RECT_AUTO_H(1)) {
-    cig_label((cig_text_properties_t) {
+    cig_label((cig_text_properties) {
       .alignment.horizontal = CIG_TEXT_ALIGN_RIGHT
     }, "Label");
 
@@ -160,7 +160,7 @@ TEST(text_label, vertical_alignment_top) {
   begin();
 
   CIG(RECT_AUTO_W(5)) {
-    cig_label((cig_text_properties_t) {
+    cig_label((cig_text_properties) {
       .alignment.vertical = CIG_TEXT_ALIGN_TOP
     }, "Label");
 
@@ -172,7 +172,7 @@ TEST(text_label, vertical_alignment_middle) {
   begin();
 
   CIG(RECT_AUTO_W(5)) {
-    cig_label((cig_text_properties_t) {
+    cig_label((cig_text_properties) {
       .alignment.vertical = CIG_TEXT_ALIGN_MIDDLE
     }, "Label");
 
@@ -184,7 +184,7 @@ TEST(text_label, vertical_alignment_bottom) {
   begin();
 
   CIG(RECT_AUTO_W(5)) {
-    cig_label((cig_text_properties_t) {
+    cig_label((cig_text_properties) {
       .alignment.vertical = CIG_TEXT_ALIGN_BOTTOM
     }, "Label");
 
@@ -198,7 +198,7 @@ TEST(text_label, forced_line_change) {
   CIG(cig_r_make(0, 0, 8, 2)) {
     /*  Left aligned text */
     CIG(_) {
-      cig_label((cig_text_properties_t) {
+      cig_label((cig_text_properties) {
         .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
         .alignment.vertical = CIG_TEXT_ALIGN_TOP
       }, "Olá mundo!");
@@ -213,7 +213,7 @@ TEST(text_label, forced_line_change) {
 
     /*  Centered text */
     CIG(_) {
-      cig_label((cig_text_properties_t) {
+      cig_label((cig_text_properties) {
         .alignment.vertical = CIG_TEXT_ALIGN_TOP
       }, "Hello world!");
 
@@ -227,7 +227,7 @@ TEST(text_label, forced_line_change) {
     
     /*  Right aligned text */
     CIG(_) {
-      cig_label((cig_text_properties_t) {
+      cig_label((cig_text_properties) {
         .alignment.horizontal = CIG_TEXT_ALIGN_RIGHT,
         .alignment.vertical = CIG_TEXT_ALIGN_TOP
       }, "Tere maailm!");
@@ -246,7 +246,7 @@ TEST(text_label, prepare_single_long_word) {
   begin();
 
   cig_label_t label;
-  cig_prepare_label(&label, 7, (cig_text_properties_t) {}, "Foobarbaz");
+  cig_prepare_label(&label, 7, (cig_text_properties) {}, "Foobarbaz");
 
   TEST_ASSERT_EQUAL_INT(9, label.bounds.w);
   TEST_ASSERT_EQUAL_INT(1, label.bounds.h);
@@ -262,7 +262,7 @@ TEST(text_label, prepare_multiple_long_words) {
   begin();
 
   cig_label_t label;
-  cig_prepare_label(&label, 7, (cig_text_properties_t) {}, "Foobarbaz barbazfoo bazfoobar");
+  cig_prepare_label(&label, 7, (cig_text_properties) {}, "Foobarbaz barbazfoo bazfoobar");
 
   TEST_ASSERT_EQUAL_INT(9, label.bounds.w);
   TEST_ASSERT_EQUAL_INT(3, label.bounds.h);
@@ -280,7 +280,7 @@ TEST(text_label, overflow_enabled) {
   begin();
   CIG(RECT(0, 0, 16, 1)) {
     /*  Text overflow is enabled by default */
-    cig_label((cig_text_properties_t) {
+    cig_label((cig_text_properties) {
       .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
       .max_lines = 1,
     }, "This text is going places");
@@ -294,7 +294,7 @@ TEST(text_label, overflow_enabled) {
 TEST(text_label, single_line_overflow_truncate) {
   begin();
   CIG(RECT(0, 0, 16, 1)) {
-    cig_label((cig_text_properties_t) {
+    cig_label((cig_text_properties) {
       .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
       .max_lines = 1,
       .overflow = CIG_TEXT_TRUNCATE
@@ -309,7 +309,7 @@ TEST(text_label, single_line_overflow_truncate) {
 TEST(text_label, single_line_overflow_ellipsis) {
   begin();
   CIG(RECT(0, 0, 16, 1)) {
-    cig_label((cig_text_properties_t) {
+    cig_label((cig_text_properties) {
       .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
       .max_lines = 1,
       .overflow = CIG_TEXT_SHOW_ELLIPSIS
@@ -325,7 +325,7 @@ TEST(text_label, single_line_overflow_ellipsis) {
 TEST(text_label, multiline_overflow_truncate) {
   begin();
   CIG(RECT(0, 0, 18, 1)) {
-    cig_label((cig_text_properties_t) {
+    cig_label((cig_text_properties) {
       .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
       .max_lines = 2,
       .overflow = CIG_TEXT_TRUNCATE
@@ -340,7 +340,7 @@ TEST(text_label, multiline_overflow_truncate) {
 TEST(text_label, multiline_overflow_ellipsis) {
   begin();
   CIG(RECT(0, 0, 18, 1)) {
-    cig_label((cig_text_properties_t) {
+    cig_label((cig_text_properties) {
       .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
       .max_lines = 2,
       .overflow = CIG_TEXT_SHOW_ELLIPSIS

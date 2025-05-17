@@ -61,7 +61,7 @@ static bool taskbar_button(
       }
       if (title) {
         CIG(_) {
-          cig_label((cig_text_properties_t) {
+          cig_label((cig_text_properties) {
             .font = get_font(selected ? FONT_BOLD : FONT_REGULAR),
             .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
             .overflow = CIG_TEXT_SHOW_ELLIPSIS
@@ -96,7 +96,7 @@ static bool start_button(cig_r rect) {
       }
 
       CIG(_) {
-        cig_label((cig_text_properties_t) {
+        cig_label((cig_text_properties) {
           .font = get_font(FONT_BOLD),
           .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
         }, "Start");
@@ -168,7 +168,7 @@ static void do_taskbar() {
     time_t t = time(NULL);
     struct tm *ct = localtime(&t);
 
-    cig_prepare_label(&clock_label, 0, (cig_text_properties_t) { .flags = CIG_TEXT_FORMATTED }, "%02d:%02d", ct->tm_hour, ct->tm_min);
+    cig_prepare_label(&clock_label, 0, (cig_text_properties) { .flags = CIG_TEXT_FORMATTED }, "%02d:%02d", ct->tm_hour, ct->tm_min);
 
     const int clock_w = (clock_label.bounds.w+11*2);
 
@@ -306,7 +306,7 @@ bool standard_button(cig_r rect, const char *title) {
     cig_fill_panel(get_panel(PANEL_BUTTON), pressed ? CIG_PANEL_PRESSED : 0);
     
     if (cig_push_frame_insets(RECT_AUTO,  pressed ? cig_i_make(2, 3, 1, 2) : cig_i_make(1, 1, 2, 2))) {
-      cig_label((cig_text_properties_t) {
+      cig_label((cig_text_properties) {
         .font = get_font(FONT_REGULAR),
         .max_lines = 1,
         .overflow = CIG_TEXT_SHOW_ELLIPSIS
@@ -376,7 +376,7 @@ bool checkbox(cig_r rect, bool *value, const char *text) {
       }
     }
     CIG(_) {
-      cig_label((cig_text_properties_t) {
+      cig_label((cig_text_properties) {
         .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
       }, text);
     }
@@ -619,7 +619,7 @@ static bool begin_window(window_t *wnd, window_message_t *msg, bool *focused) {
         }
       }
       CIG(_) {
-        cig_label((cig_text_properties_t) {
+        cig_label((cig_text_properties) {
           .font = get_font(FONT_BOLD),
           .color = *focused ? get_color(COLOR_WHITE) : get_color(COLOR_DIALOG_BACKGROUND),
           .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
@@ -703,7 +703,7 @@ static cig_frame_t* large_file_icon(int icon, const char *title, color_id_t text
 
     /* We need to prepare the label here to know how large of a rectangle
        to draw around it when the icon is selected */
-    cig_prepare_label(label, CIG_W, (cig_text_properties_t) {
+    cig_prepare_label(label, CIG_W, (cig_text_properties) {
         .color = shows_selection ? get_color(COLOR_WHITE) : get_color(text_color),
         .alignment.vertical = CIG_TEXT_ALIGN_TOP
       }, title);
