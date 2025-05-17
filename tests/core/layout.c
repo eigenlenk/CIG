@@ -864,7 +864,7 @@ TEST(core_layout, relative_values) {
 }
 
 static cig_r clip_rect;
-static void set_clip_rect(cig_buffer_ref buffer, cig_r rect, bool is_root) {
+static void set_clip_rect(cig_buffer_ref buffer, cig_r rect, bool reset) {
   clip_rect = rect;
 }
 

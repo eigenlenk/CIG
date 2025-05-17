@@ -218,13 +218,12 @@ int main(int argc, const char *argv[]) {
 
   return 0;
 }
-CIG_INLINED void set_clip_rect(cig_buffer_ref buffer, cig_r rect, bool is_root) {
-  if (is_root) {
+CIG_INLINED void set_clip_rect(cig_buffer_ref buffer, cig_r rect, bool reset) {
+  if (reset) {
     EndScissorMode();
   } else {
     BeginScissorMode(UNPACK_RECT(rect));
   }
-  // printf("set_clip_rect: %d, %d, %d, %d (%d)\n", rect.x, rect.y, rect.w, rect.h, is_root);
 }
 
 CIG_INLINED void render_text(

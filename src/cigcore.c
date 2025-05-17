@@ -97,13 +97,12 @@ void cig_begin_layout(
   current->frame_stack.push(&current->frame_stack, &current->frames.elements[0]);
   current->frames.count = 1;
 
+  cig_push_buffer(buffer);
+  current->next_id = 0;
+
 #ifdef DEBUG
   cig_trigger_layout_breakpoint(cig_r_zero(), cig_r_make(0, 0, rect.w, rect.h));
 #endif
-
-  cig_push_buffer(buffer);
-  // cig_enable_clipping();
-  current->next_id = 0;
 }
 
 void cig_end_layout() {
@@ -171,15 +170,19 @@ cig_frame_t* cig_jump(cig_frame_t *frame) {
 
   /* See if any parent frame provided a clip region */
   cig_frame_t *parent = frame->_parent;
-  cig_clip_rect_t_stack_t *clip_rects = &current->buffers.peek_ref(&current->buffers, 0)->clip_rects;
+  cig_buffer_element_t *buf_element = current->buffers.peek_ref(&current->buffers, 0);
+  cig_clip_rect_t_stack_t *clip_rects = &buf_element->clip_rects;
 
   while (parent) {
     if (parent->_flags & CLIPPED) {
       frame->_flags |= RESTORES_EARLIER_CLIP;
-      cig_r clip_rect = cig_r_union(parent->absolute_rect, clip_rects->peek(clip_rects, 0));
+      cig_r clip_rect = cig_r_union(parent->absolute_rect, !clip_rects->size
+        ? buf_element->absolute_rect
+        : clip_rects->peek(clip_rects, 0)
+      );
       clip_rects->push(clip_rects, clip_rect);
       if (set_clip) {
-        set_clip(cig_buffer(), clip_rect, clip_rects->size == 1);
+        set_clip(cig_buffer(), clip_rect, false);
       }
       break;
     } else {
@@ -270,16 +273,14 @@ CIG_OPTIONAL(void*) cig_state_read(bool from_start, size_t bytes) {
     └──────────────────────────────┘ */
 
 void cig_push_buffer(const cig_buffer_ref buffer) {
-  cig_buffer_element_t buffer_element = {
+  current->buffers.push(&current->buffers, (cig_buffer_element_t) {
     .buffer = buffer,
+    .absolute_rect = cig_frame()->absolute_rect,
     .origin = current->buffers.size == 0
       ? cig_v_zero()
       : cig_v_make(cig_frame()->absolute_rect.x, cig_frame()->absolute_rect.y),
      .clip_rects = INIT_STACK(cig_clip_rect_t)
-  };
-
-  buffer_element.clip_rects.push(&buffer_element.clip_rects, cig_frame()->absolute_rect);
-  current->buffers.push(&current->buffers, buffer_element);
+  });
 }
 
 void cig_pop_buffer() {
@@ -905,7 +906,9 @@ static cig_frame_t* push_frame(
   top->_layout_params._count.total ++;
 
   cig_r absolute_rect = cig_convert_relative_rect(next);
-  cig_r current_clip_rect = current_buffer->clip_rects.peek(&current_buffer->clip_rects, 0);
+  cig_r current_clip_rect = !current_buffer->clip_rects.size
+    ? current_buffer->absolute_rect
+    : current_buffer->clip_rects.peek(&current_buffer->clip_rects, 0);
 
   current->frames.elements[current->frames.count] = (cig_frame_t) {
     .id = current->next_id
@@ -1008,24 +1011,34 @@ static CIG_OPTIONAL(cig_scroll_state_t*) find_scroll_state(const cig_id_t id) {
 
 static void push_clip(cig_frame_t *frame) {
   if (!(frame->_flags & CLIPPED)) {
-    frame->_flags |= CLIPPED;
-    cig_clip_rect_t_stack_t *clip_rects = &current->buffers.peek_ref(&current->buffers, 0)->clip_rects;
-    cig_r clip_rect = cig_r_union(frame->absolute_rect, clip_rects->peek(clip_rects, 0));
+    cig_buffer_element_t *buffer_element = current->buffers.peek_ref(&current->buffers, 0);
+    cig_clip_rect_t_stack_t *clip_rects = &buffer_element->clip_rects;
+    /* Clip against current clip rect, or just use the absolute frame of current buffer */
+    cig_r clip_rect = cig_r_union(frame->absolute_rect, !clip_rects->size
+      ? buffer_element->absolute_rect
+      : clip_rects->peek(clip_rects, 0)
+    );
     clip_rects->push(clip_rects, clip_rect);
 
     if (set_clip) {
-      set_clip(cig_buffer(), clip_rect, clip_rects->size == 1);
+      set_clip(cig_buffer(), clip_rect, false);
     }
+
+    frame->_flags |= CLIPPED;
   }
 }
 
 static void pop_clip() {
-  cig_clip_rect_t_stack_t *clip_rects = &current->buffers.peek_ref(&current->buffers, 0)->clip_rects;
+  cig_buffer_element_t *buf_element = current->buffers.peek_ref(&current->buffers, 0);
+  cig_clip_rect_t_stack_t *clip_rects = &buf_element->clip_rects;
   CIG_UNUSED(clip_rects->pop_ref(clip_rects));
-  cig_r restored_clip_rect = clip_rects->peek(clip_rects, 0);
 
   if (set_clip) {
-    set_clip(cig_buffer(), restored_clip_rect, clip_rects->size == 1);
+    if (!clip_rects->size) {
+      set_clip(cig_buffer(), buf_element->absolute_rect, true);
+    } else {
+      set_clip(cig_buffer(), clip_rects->peek(clip_rects, 0), false);
+    }
   }
 }
 

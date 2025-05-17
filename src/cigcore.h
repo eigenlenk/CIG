@@ -272,6 +272,7 @@ DECLARE_ARRAY_STACK_T(cig_clip_rect_t);
 
 typedef struct {
   cig_buffer_ref buffer;
+  cig_r absolute_rect;
   cig_v origin;
   cig_clip_rect_t_stack_t clip_rects;
 } cig_buffer_element_t;
