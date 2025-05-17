@@ -64,12 +64,12 @@ DECLARE_RECT_T(int32_t, cig_r, cig_v, cig_i)
 
 /*  All layout element get a unique ID that tries to be unique across frames, but no promises.
     See `cig_next_id` how to definitely keep things consistent */
-typedef unsigned long cig_id_t;
+typedef unsigned long cig_id;
 
 /*  Opaque pointer to a buffer/screen/texture/etc to be renderered into */
 typedef void* cig_buffer_ref;
 
-typedef void (*cig_set_clip_rect_callback_t)(cig_buffer_ref, cig_r, bool);
+typedef void (*cig_set_clip_callback)(cig_buffer_ref, cig_r, bool);
 
 /*  Structure containing parameters passed to layout function */
 typedef struct {
@@ -157,7 +157,7 @@ typedef struct {
 
 /* */
 typedef struct cig_frame_t {
-  cig_id_t id;
+  cig_id id;
   cig_r rect,          /* Relative rect */
         clipped_rect,  /* Relative clipped rect */
         absolute_rect, /* Screen-space rect */
@@ -215,7 +215,7 @@ typedef struct {
   float _press_start_time,
         _click_end_time;
   unsigned int _click_count;
-  cig_id_t  _press_target_id,   /* Element that was focused when button press began */
+  cig_id  _press_target_id,   /* Element that was focused when button press began */
             _target_prev_tick,
             _target_this_tick,
             _focus_target_this,
@@ -292,17 +292,17 @@ typedef struct {
   cig_buffer_element_t_stack_t buffers;
   cig_input_state_t input_state;
   cig_i default_insets;
-  cig_id_t next_id;
+  cig_id next_id;
   float delta_time,
         elapsed_time;
   unsigned int tick;
   struct {
-    cig_id_t id;
+    cig_id id;
     unsigned int last_tick;
     cig_scroll_state_t value;
   } scroll_elements[CIG_SCROLLABLE_ELEMENTS_MAX];
   struct {
-    cig_id_t id;
+    cig_id id;
     cig_state_t value;
     unsigned int last_tick;
   } state_list[CIG_STATES_MAX];
@@ -454,10 +454,10 @@ bool cig_enable_focus();
 bool cig_focused();
 
 /* */
-cig_id_t cig_focused_id();
+cig_id cig_focused_id();
 
 /*  Explicitly set focus to given frame ID */
-void cig_set_focused_id(cig_id_t);
+void cig_set_focused_id(cig_id);
 
 /*  ┌───────────┐
     │ SCROLLING │
@@ -503,13 +503,13 @@ void cig_enable_clipping();
 /*  Normally element ID is auto-calculated and may vary from tick to tick.
     This sets an explicit Id for the next `cig_push_frame` call.
     See `cig_hash` for generating an ID from a string */
-void cig_set_next_id(cig_id_t);
+void cig_set_next_id(cig_id);
 
 /*  Depth of the current layout stack */
 unsigned int cig_depth();
 
 /*  Generates an ID from a string */
-cig_id_t cig_hash(const char *str);
+cig_id cig_hash(const char *str);
 
 /*  Pushes and pops an empty frame to trigger a layout function to allocate space.
     Useful when you have a stack or grid and want to trigger a new line or column */
@@ -531,7 +531,7 @@ cig_frame_t* cig_push_grid(cig_r, cig_i, cig_layout_params_t);
     │ BACKEND CALLBACKS │
     └───────────────────┘ */
 
-void cig_set_clip_rect_callback(cig_set_clip_rect_callback_t);
+void cig_assign_set_clip(cig_set_clip_callback);
 
 #ifdef DEBUG
 

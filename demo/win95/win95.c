@@ -269,7 +269,7 @@ void window_manager_close(window_manager_t *manager, window_t *wnd) {
   manager->count--;
 }
 
-void window_manager_bring_to_front(window_manager_t *manager, cig_id_t wnd_id) {
+void window_manager_bring_to_front(window_manager_t *manager, cig_id wnd_id) {
   for (register size_t i = 0; i < manager->count; ++i) {
     if (manager->order[i]->id == wnd_id) {
       window_t *wnd = manager->order[i];
@@ -666,7 +666,7 @@ static void end_window(window_t *wnd) {
     }
 
     CIG(RECT(CIG_W_INSET-16, CIG_H_INSET-16, 16, 16)) {
-      cig_image(get_image(IMAGE_RESIZE_HANDLE), CIG_IMAGE_MODE_TOP_LEFT);
+      cig_image(get_image(IMAGE_RESIZE_HANDLE), cig_image_modeOP_LEFT);
       cig_enable_interaction();
       handle_window_resize(wnd, WINDOW_RESIZE_BOTTOM_RIGHT);
     }
@@ -695,7 +695,7 @@ static cig_frame_t* large_file_icon(int icon, const char *title, color_id_t text
 
     CIG(RECT_AUTO_H(32)) {
       if (shows_selection) { enable_blue_selection_dithering(true); }
-      cig_image(get_image(icon), CIG_IMAGE_MODE_TOP);
+      cig_image(get_image(icon), cig_image_modeOP);
       if (shows_selection) { enable_blue_selection_dithering(false); }
     }
 

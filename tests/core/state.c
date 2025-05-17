@@ -27,7 +27,7 @@ static void end() {
     └────────────┘ */
 
 TEST(core_state, activation_states) {
-  cig_id_t persistent_id = 0;
+  cig_id persistent_id = 0;
 
   for (int i = 0; i < 2; ++i) {
     begin();

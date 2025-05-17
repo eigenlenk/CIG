@@ -60,9 +60,9 @@ CIG_INLINED cig_font_info_t font_query(cig_font_ref font_ref) {
 TEST_SETUP(text_style) {
   cig_init_context(&ctx);
   
-  cig_set_text_render_callback(&text_render);
-  cig_set_text_measure_callback(&text_measure);
-  cig_set_font_query_callback(&font_query);
+  cig_assign_draw_text(&text_render);
+  cig_assign_measure_text(&text_measure);
+  cig_assign_query_font(&font_query);
   cig_set_default_font(&fonts[0]);
   
   spans.count = 0;

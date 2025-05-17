@@ -6,7 +6,7 @@
 cig_frame_t *cig__macro_last_closed;
 
 static cig_context_t *current = NULL;
-static cig_set_clip_rect_callback_t set_clip = NULL;
+static cig_set_clip_callback set_clip = NULL;
 
 #ifdef DEBUG
 static cig_layout_breakpoint_callback_t layout_breakpoint_callback = NULL;
@@ -14,8 +14,8 @@ static bool requested_layout_step_mode = false;
 #endif
 
 /*  Forward delcarations */
-CIG_INLINED CIG_OPTIONAL(cig_state_t*) find_state(cig_id_t);
-CIG_INLINED CIG_OPTIONAL(cig_scroll_state_t*) find_scroll_state(cig_id_t);
+CIG_INLINED CIG_OPTIONAL(cig_state_t*) find_state(cig_id);
+CIG_INLINED CIG_OPTIONAL(cig_scroll_state_t*) find_scroll_state(cig_id);
 CIG_INLINED void handle_frame_hover(const cig_frame_t*);
 CIG_INLINED void push_clip(cig_frame_t*);
 CIG_INLINED void pop_clip();
@@ -464,11 +464,11 @@ bool cig_focused() {
   return cig_focused_id() == cig_frame()->id;
 }
 
-cig_id_t cig_focused_id() {
+cig_id cig_focused_id() {
   return current->input_state._focus_target;
 }
 
-void cig_set_focused_id(cig_id_t id) {
+void cig_set_focused_id(cig_id id) {
   current->input_state._focus_target = id;
 }
 
@@ -638,7 +638,7 @@ void cig_enable_clipping() {
   push_clip(cig_frame());
 }
 
-void cig_set_next_id(cig_id_t id) {
+void cig_set_next_id(cig_id id) {
   current->next_id = id;
 }
 
@@ -646,9 +646,9 @@ unsigned int cig_depth() {
   return cig_frame_stack()->size;
 }
 
-cig_id_t cig_hash(const char *str) {
+cig_id cig_hash(const char *str) {
   /*  http://www.cse.yorku.ca/~oz/hash.html */
-  register cig_id_t hash = 5381;
+  register cig_id hash = 5381;
   register int c;
   while ((c = *str++)) {
     hash = ((hash << 5) + hash) + c; /* === hash * 33 + c */
@@ -805,7 +805,7 @@ cig_frame_t* cig_push_grid(cig_r rect, cig_i insets, cig_layout_params_t params)
     │ BACKEND CALLBACKS │
     └───────────────────┘ */
 
-void cig_set_clip_rect_callback(cig_set_clip_rect_callback_t fp) {
+void cig_assign_set_clip(cig_set_clip_callback fp) {
   set_clip = fp;
 }
 
@@ -944,7 +944,7 @@ static void handle_frame_hover(const cig_frame_t *frame) {
   }
 }
 
-static CIG_OPTIONAL(cig_state_t*) find_state(const cig_id_t id) {
+static CIG_OPTIONAL(cig_state_t*) find_state(const cig_id id) {
   register int open = -1, stale = -1;
 
   /*  Find a state with a matching ID, with no ID yet, or a stale state */
@@ -978,7 +978,7 @@ static CIG_OPTIONAL(cig_state_t*) find_state(const cig_id_t id) {
   return NULL;
 }
 
-static CIG_OPTIONAL(cig_scroll_state_t*) find_scroll_state(const cig_id_t id) {
+static CIG_OPTIONAL(cig_scroll_state_t*) find_scroll_state(const cig_id id) {
   register int first_unused = -1, first_stale = -1;
 
   for (register int i = 0; i < CIG_SCROLLABLE_ELEMENTS_MAX; ++i) {

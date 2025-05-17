@@ -14,51 +14,53 @@ typedef enum CIG_PACKED {
   CIG_IMAGE_MODE_CENTER,
   CIG_IMAGE_MODE_LEFT,
   CIG_IMAGE_MODE_RIGHT,
-  CIG_IMAGE_MODE_TOP,
+  cig_image_modeOP,
   CIG_IMAGE_MODE_BOTTOM,
-  CIG_IMAGE_MODE_TOP_LEFT,
-  CIG_IMAGE_MODE_TOP_RIGHT,
+  cig_image_modeOP_LEFT,
+  cig_image_modeOP_RIGHT,
   CIG_IMAGE_MODE_BOTTOM_LEFT,
   CIG_IMAGE_MODE_BOTTOM_RIGHT
-} cig_image_mode_t;
+} cig_image_mode;
 
-/*  These can be application-specific and you can use custom flags as well */
+/* These can be application-specific and you can use custom flags as well */
 typedef enum CIG_PACKED {
   CIG_PANEL_HOVERED = CIG_BIT(0),
   CIG_PANEL_PRESSED = CIG_BIT(1),
   CIG_PANEL_SELECTED = CIG_BIT(2),
   CIG_PANEL_FOCUSED = CIG_BIT(3),
-} cig_panel_modifiers_t;
+} cig_panel_modifiers;
+/* TODO: Should probably be renamed to something more generic and
+   maybe be passed to image and fill_solid as well? */
 
-typedef cig_v (*cig_measure_image_callback_t)(cig_image_ref);
-typedef void (*cig_draw_image_callback_t)(cig_buffer_ref, cig_r, cig_r, cig_image_ref, cig_image_mode_t);
-typedef void (*cig_panel_render_callback_t)(cig_panel_ref, cig_r, cig_panel_modifiers_t);
-typedef void (*cig_draw_rectangle_callback_t)(cig_color_ref, cig_color_ref, cig_r, unsigned int);
-typedef void (*cig_draw_line_callback_t)(cig_color_ref, cig_v, cig_v, float);
+typedef cig_v (*cig_measure_image_callback)(cig_image_ref);
+typedef void (*cig_draw_image_callback)(cig_buffer_ref, cig_r, cig_r, cig_image_ref, cig_image_mode);
+typedef void (*cig_draw_panel_callback)(cig_panel_ref, cig_r, cig_panel_modifiers);
+typedef void (*cig_draw_rectangle_callback)(cig_color_ref, cig_color_ref, cig_r, unsigned int);
+typedef void (*cig_draw_line_callback)(cig_color_ref, cig_v, cig_v, float);
 
 /*  ┌───────────────────┐
     │ BACKEND CALLBACKS │
     └───────────────────┘ */
 
-void cig_set_measure_image_callback(cig_measure_image_callback_t);
+void cig_assign_measure_image(cig_measure_image_callback);
 
-void cig_set_draw_image_callback(cig_draw_image_callback_t);
+void cig_assign_draw_image(cig_draw_image_callback);
 
-void cig_set_panel_render_callback(cig_panel_render_callback_t);
+void cig_assign_draw_panel(cig_draw_panel_callback);
 
-void cig_set_draw_rectangle_callback(cig_draw_rectangle_callback_t);
+void cig_assign_draw_rectangle(cig_draw_rectangle_callback);
 
-void cig_set_draw_line_callback(cig_draw_line_callback_t);
+void cig_assign_draw_line(cig_draw_line_callback);
 
 /*  ┌───────────────────────────┐
     │ IMAGE & 2D DRAW FUNCTIONS │
     └───────────────────────────┘ */
 
 /*  Draws an image */
-void cig_image(cig_image_ref, cig_image_mode_t);
+void cig_image(cig_image_ref, cig_image_mode);
 
 /*  Fills current frame with the given panel style */
-void cig_fill_panel(cig_panel_ref, cig_panel_modifiers_t);
+void cig_fill_panel(cig_panel_ref, cig_panel_modifiers);
 
 /*  Fills current frame with color */
 void cig_fill_solid(cig_color_ref);

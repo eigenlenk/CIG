@@ -76,7 +76,7 @@ typedef struct {
     cig_text_horizontal_alignment_t horizontal;
     cig_text_vertical_alignment_t vertical;
   } alignment;
-  cig_id_t hash;
+  cig_id hash;
   cig_font_ref font;
   cig_text_color_ref color;
   struct { unsigned short w, h; } bounds;
@@ -85,19 +85,19 @@ typedef struct {
   char line_spacing;
 } cig_label_t;
 
-typedef void (*cig_text_render_callback_t)(const char*, size_t, cig_r, cig_font_ref, cig_text_color_ref, cig_text_style_t);
-typedef cig_v (*cig_text_measure_callback_t)(const char*, size_t, cig_font_ref, cig_text_style_t);
-typedef cig_font_info_t (*cig_font_query_callback_t)(cig_font_ref);
+typedef void (*cig_draw_text_callback)(const char*, size_t, cig_r, cig_font_ref, cig_text_color_ref, cig_text_style_t);
+typedef cig_v (*cig_measure_text_callback)(const char*, size_t, cig_font_ref, cig_text_style_t);
+typedef cig_font_info_t (*cig_query_font_callback)(cig_font_ref);
 
 /*  ┌───────────────────┐
     │ BACKEND CALLBACKS │
     └───────────────────┘ */
 
-void cig_set_text_render_callback(cig_text_render_callback_t);
+void cig_assign_draw_text(cig_draw_text_callback);
 
-void cig_set_text_measure_callback(cig_text_measure_callback_t);
+void cig_assign_measure_text(cig_measure_text_callback);
 
-void cig_set_font_query_callback(cig_font_query_callback_t);
+void cig_assign_query_font(cig_query_font_callback);
 
 /*  ┌──────────────┐
     │ TEXT DISPLAY │

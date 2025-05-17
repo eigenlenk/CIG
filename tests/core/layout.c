@@ -69,10 +69,10 @@ TEST(core_layout, push_pop) {
 
 static struct {
   int n;
-  cig_id_t recorded[2048];
+  cig_id recorded[2048];
 } ids = { 0 };
 
-static bool assert_unique(const cig_id_t id, int line) {
+static bool assert_unique(const cig_id id, int line) {
   register int i;
   for (i = 0; i < ids.n; ++i) {
     if (ids.recorded[i] == id) {
@@ -869,7 +869,7 @@ static void set_clip_rect(cig_buffer_ref buffer, cig_r rect, bool reset) {
 }
 
 TEST(core_layout, jump) {
-  cig_set_clip_rect_callback(&set_clip_rect);
+  cig_assign_set_clip(&set_clip_rect);
 
   /*  Jumping is a mechanism to go back to a previously closed element. You can
       continue adding new elements into it. This can be useful in cases where the

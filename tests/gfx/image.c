@@ -17,7 +17,7 @@ static void draw_image(
   cig_r container,
   cig_r rect,
   cig_image_ref image,
-  cig_image_mode_t mode
+  cig_image_mode mode
 ) {
   image_rect = rect;
 }
@@ -28,8 +28,8 @@ static cig_v measure_image(cig_image_ref image) {
 
 TEST_SETUP(gfx_image) {
   cig_init_context(&ctx);
-  cig_set_draw_image_callback(&draw_image);
-  cig_set_measure_image_callback(&measure_image);
+  cig_assign_draw_image(&draw_image);
+  cig_assign_measure_image(&measure_image);
   cig_begin_layout(&ctx, NULL, cig_r_make(0, 0, 640, 480), 0.1f);
 }
 
@@ -70,13 +70,13 @@ TEST(gfx_image, scale_to_fill) {
 
 TEST(gfx_image, positional_modes) {
   CIG(RECT_SIZED(100, 100)) {
-    cig_image(&test_image, CIG_IMAGE_MODE_TOP_LEFT);
+    cig_image(&test_image, cig_image_modeOP_LEFT);
     TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 80, 60), image_rect);
 
-    cig_image(&test_image, CIG_IMAGE_MODE_TOP);
+    cig_image(&test_image, cig_image_modeOP);
     TEST_ASSERT_EQUAL_RECT(cig_r_make(10, 0, 80, 60), image_rect);
 
-    cig_image(&test_image, CIG_IMAGE_MODE_TOP_RIGHT);
+    cig_image(&test_image, cig_image_modeOP_RIGHT);
     TEST_ASSERT_EQUAL_RECT(cig_r_make(20, 0, 80, 60), image_rect);
 
     cig_image(&test_image, CIG_IMAGE_MODE_LEFT);

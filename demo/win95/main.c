@@ -42,9 +42,9 @@ static cig_v measure_text(
 static cig_font_info_t font_query(cig_font_ref);
 
 /* Gfx API */
-static void draw_image(cig_buffer_ref, cig_r, cig_r, cig_image_ref, cig_image_mode_t);
+static void draw_image(cig_buffer_ref, cig_r, cig_r, cig_image_ref, cig_image_mode);
 static cig_v measure_image(cig_image_ref);
-static void render_panel(cig_panel_ref, cig_r, cig_panel_modifiers_t);
+static void render_panel(cig_panel_ref, cig_r, cig_panel_modifiers);
 static void draw_rectangle(cig_color_ref, cig_color_ref, cig_r, unsigned int);
 static void draw_line(cig_color_ref, cig_v, cig_v, float);
 
@@ -140,20 +140,20 @@ int main(int argc, const char *argv[]) {
 
   cig_init_context(&ctx);
 
-  cig_set_clip_rect_callback(&set_clip_rect);
+  cig_assign_set_clip(&set_clip_rect);
   
-  cig_set_text_render_callback(&render_text);
-  cig_set_text_measure_callback(&measure_text);
-  cig_set_font_query_callback(&font_query);
+  cig_assign_draw_text(&render_text);
+  cig_assign_measure_text(&measure_text);
+  cig_assign_query_font(&font_query);
 
   cig_set_default_font(&fonts[FONT_REGULAR]);
   cig_set_default_text_color(&colors[COLOR_BLACK]);
 
-  cig_set_draw_image_callback(&draw_image);
-  cig_set_measure_image_callback(&measure_image);
-  cig_set_panel_render_callback(&render_panel);
-  cig_set_draw_rectangle_callback(&draw_rectangle);
-  cig_set_draw_line_callback(&draw_line);
+  cig_assign_draw_image(&draw_image);
+  cig_assign_measure_image(&measure_image);
+  cig_assign_draw_panel(&render_panel);
+  cig_assign_draw_rectangle(&draw_rectangle);
+  cig_assign_draw_line(&draw_line);
 
 #ifdef DEBUG
   cig_set_layout_breakpoint_callback(&layout_breakpoint);
@@ -273,7 +273,7 @@ CIG_INLINED cig_font_info_t font_query(cig_font_ref font_ref) {
   };
 }
 
-CIG_INLINED void render_panel(cig_panel_ref panel, cig_r rect, cig_panel_modifiers_t modifiers) {
+CIG_INLINED void render_panel(cig_panel_ref panel, cig_r rect, cig_panel_modifiers modifiers) {
   const int panel_style = *(int*)panel;
   
   switch (panel_style) {
@@ -383,7 +383,7 @@ CIG_INLINED void draw_image(
   cig_r container,
   cig_r rect,
   cig_image_ref image,
-  cig_image_mode_t mode
+  cig_image_mode mode
 ) {
   Texture2D *tex = (Texture2D *)image;
 

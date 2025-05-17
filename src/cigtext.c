@@ -20,9 +20,9 @@ typedef struct {
 
 typedef struct { unsigned short w, h; } bounds_t;
 
-static cig_text_render_callback_t render_callback = NULL;
-static cig_text_measure_callback_t measure_callback = NULL;
-static cig_font_query_callback_t font_query = NULL;
+static cig_draw_text_callback render_callback = NULL;
+static cig_measure_text_callback measure_callback = NULL;
+static cig_query_font_callback font_query = NULL;
 static cig_font_ref default_font = 0;
 static cig_text_color_ref default_text_color = 0;
 static char printf_buf[CIG_LABEL_PRINTF_BUF_LENGTH];
@@ -41,15 +41,15 @@ static void apply_tag(tag_parser_t*);
     │ BACKEND CALLBACKS │
     └───────────────────┘ */
 
-void cig_set_text_render_callback(cig_text_render_callback_t callback) {
+void cig_assign_draw_text(cig_draw_text_callback callback) {
   render_callback = callback;
 }
 
-void cig_set_text_measure_callback(cig_text_measure_callback_t callback) {
+void cig_assign_measure_text(cig_measure_text_callback callback) {
   measure_callback = callback;
 }
 
-void cig_set_font_query_callback(cig_font_query_callback_t callback) {
+void cig_assign_query_font(cig_query_font_callback callback) {
   font_query = callback;
 }
 
@@ -141,7 +141,7 @@ static void prepare_label(
   const unsigned int max_width,
   const char *str
 ) {
-  cig_id_t hash = cig_hash(str) + (cig_id_t)props->font;
+  cig_id hash = cig_hash(str) + (cig_id)props->font;
 
   label->color = props->color ? props->color : default_text_color;
   label->alignment.horizontal = props->alignment.horizontal == CIG_TEXT_ALIGN_DEFAULT

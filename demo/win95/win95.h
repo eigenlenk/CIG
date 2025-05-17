@@ -77,7 +77,7 @@ typedef application_proc_result_t (*application_proc_t)(struct application_t *);
 
 typedef struct window_t {
   struct application_t *owner;
-  cig_id_t id;
+  cig_id id;
   win_proc_t proc;
   void *data;
   cig_r rect;
@@ -131,7 +131,7 @@ application_t *win95_find_open_app(const char *);
 
 window_t* window_manager_create(window_manager_t*, application_t*, window_t);
 void window_manager_close(window_manager_t*, window_t*);
-void window_manager_bring_to_front(window_manager_t*, cig_id_t);
+void window_manager_bring_to_front(window_manager_t*, cig_id);
 window_t* window_manager_find_primary_window(window_manager_t*, application_t*);
 
 /*  ┌───────────────────┐

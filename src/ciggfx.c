@@ -1,32 +1,32 @@
 #include "ciggfx.h"
 
-static cig_measure_image_callback_t measure_image = NULL;
-static cig_panel_render_callback_t panel_callback = NULL;
-static cig_draw_rectangle_callback_t draw_rectangle = NULL;
-static cig_draw_line_callback_t draw_line = NULL;
-static cig_draw_image_callback_t draw_image = NULL;
+static cig_measure_image_callback measure_image = NULL;
+static cig_draw_panel_callback panel_callback = NULL;
+static cig_draw_rectangle_callback draw_rectangle = NULL;
+static cig_draw_line_callback draw_line = NULL;
+static cig_draw_image_callback draw_image = NULL;
 
 /*  ┌───────────────────┐
     │ BACKEND CALLBACKS │
     └───────────────────┘ */
 
-void cig_set_measure_image_callback(cig_measure_image_callback_t fp) {
+void cig_assign_measure_image(cig_measure_image_callback fp) {
   measure_image = fp;
 }
 
-void cig_set_draw_image_callback(cig_draw_image_callback_t fp) {
+void cig_assign_draw_image(cig_draw_image_callback fp) {
   draw_image = fp;
 }
 
-void cig_set_panel_render_callback(cig_panel_render_callback_t fp) {
+void cig_assign_draw_panel(cig_draw_panel_callback fp) {
   panel_callback = fp;
 }
 
-void cig_set_draw_rectangle_callback(cig_draw_rectangle_callback_t fp) {
+void cig_assign_draw_rectangle(cig_draw_rectangle_callback fp) {
   draw_rectangle = fp;
 }
 
-void cig_set_draw_line_callback(cig_draw_line_callback_t fp) {
+void cig_assign_draw_line(cig_draw_line_callback fp) {
   draw_line = fp;
 }
 
@@ -34,7 +34,7 @@ void cig_set_draw_line_callback(cig_draw_line_callback_t fp) {
     │ IMAGE & 2D DRAW FUNCTIONS │
     └───────────────────────────┘ */
 
-void cig_image(cig_image_ref image, cig_image_mode_t mode) {
+void cig_image(cig_image_ref image, cig_image_mode mode) {
   if (!draw_image || !measure_image) { /* Log an error? */ return; }
 
   const cig_r container = cig_r_inset(cig_absolute_rect(), cig_frame()->insets);
@@ -72,10 +72,10 @@ void cig_image(cig_image_ref image, cig_image_mode_t mode) {
         { 0.5, 0.5 }, /* CIG_IMAGE_MODE_CENTER */
         { 0.0, 0.5 }, /* CIG_IMAGE_MODE_LEFT */
         { 1.0, 0.5 }, /* CIG_IMAGE_MODE_RIGHT */
-        { 0.5, 0.0 }, /* CIG_IMAGE_MODE_TOP */
+        { 0.5, 0.0 }, /* cig_image_modeOP */
         { 0.5, 1.0 }, /* CIG_IMAGE_MODE_BOTTOM */
-        { 0.0, 0.0 }, /* CIG_IMAGE_MODE_TOP_LEFT */
-        { 1.0, 0.0 }, /* CIG_IMAGE_MODE_TOP_RIGHT */
+        { 0.0, 0.0 }, /* cig_image_modeOP_LEFT */
+        { 1.0, 0.0 }, /* cig_image_modeOP_RIGHT */
         { 0.0, 1.0 }, /* CIG_IMAGE_MODE_BOTTOM_LEFT */
         { 1.0, 1.0 }, /* CIG_IMAGE_MODE_BOTTOM_RIGHT */
       };
@@ -96,7 +96,7 @@ void cig_image(cig_image_ref image, cig_image_mode_t mode) {
 #endif
 }
 
-void cig_fill_panel(cig_panel_ref panel, cig_panel_modifiers_t modifiers) {
+void cig_fill_panel(cig_panel_ref panel, cig_panel_modifiers modifiers) {
   if (!panel_callback) { /* Log an error? */ return; }
   panel_callback(panel, cig_absolute_rect(), modifiers);
 }
