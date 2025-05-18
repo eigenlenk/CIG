@@ -111,6 +111,6 @@ extern cig_frame_t *cig__macro_last_closed;
       PIN(CENTER_Y(some_frame), OFFSET_BY(20)),
       PIN(HEIGHT, WIDTH_OF(some_frame))
     ) */
-#define BUILD_RECT(...) cig_build_rect(CIG_NARG(REFS), (cig_pin[]) { __VA_ARGS__ })
+#define BUILD_RECT(...) cig_build_rect(CIG_NARG(__VA_ARGS__), (cig_pin[]) { __VA_ARGS__ })
 
 #endif
