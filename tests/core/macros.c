@@ -114,6 +114,9 @@ TEST(core_macros, allocator) {
   int *i = CIG_ALLOCATE(int);
   *i = 5;
   TEST_ASSERT_EQUAL_INT(5, *i);
+
+  int *j = CIG_READ(true, int);
+  TEST_ASSERT_EQUAL_INT(5, *j);
 }
 
 TEST(core_macros, pinning) {

@@ -53,8 +53,15 @@
 #define CIG_PARAMS(P...) .params = (cig_params) P
 #define CIG_BUILDER(F) .builder = F
 
-#define CIG_ALLOCATE(T) (T*)cig_state_allocate(sizeof(T))
-#define CIG_READ(S,T) (T*)cig_state_read(S, sizeof(T))
+#define CIG__ALLOCATE_1(T) cig_arena_allocate(NULL, sizeof(T))
+#define CIG__ALLOCATE_2(A, T) (T*)cig_arena_allocate(A, sizeof(T))
+#define GET__ALLOCATE_X(_1,_2,NAME,...) NAME
+#define CIG_ALLOCATE(...) GET__ALLOCATE_X(__VA_ARGS__, CIG__ALLOCATE_2, CIG__ALLOCATE_1)(__VA_ARGS__)
+
+#define CIG__READ_2(S, T) cig_arena_read(NULL, S, sizeof(T))
+#define CIG__READ_3(A, S, T) (T*)cig_arena_read(A, S, sizeof(T))
+#define GET__READ_X(_1,_2,_3,NAME,...) NAME
+#define CIG_READ(...) GET__READ_X(__VA_ARGS__, CIG__READ_3, CIG__READ_2)(__VA_ARGS__)
 
 #define _ RECT_AUTO
 #define _W(W) RECT_AUTO_W(W)

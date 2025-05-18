@@ -405,7 +405,7 @@ bool begin_file_browser(cig_r rect, int direction, color_id_t text_color, bool p
     return false;
   }
 
-  cig_state_t *state = cig_state();
+  cig_state *state = cig_enable_state();
 
   file_browser_data_t *data = CIG_ALLOCATE(file_browser_data_t);
   data->text_color = text_color;

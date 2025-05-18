@@ -83,7 +83,7 @@ typedef struct {
 
   /*  Direction in which the layout flows. Used by default grid builder */
   enum CIG_PACKED {
-    CIG_LAYOUT_DIRECTION_HORIZONTAL = 0,
+    CIG_LAYOUT_DIRECTION_HORIZONTAL,
     CIG_LAYOUT_DIRECTION_VERTICAL
   } direction;
 
@@ -132,7 +132,7 @@ typedef struct {
 typedef struct {
   unsigned char bytes[CIG_STATE_MEM_ARENA_BYTES];
   size_t mapped, read;
-} cig_state_memory_arena;
+} cig_arena;
 
 typedef struct {
   enum CIG_PACKED {
@@ -140,8 +140,8 @@ typedef struct {
     ACTIVATED,
     ACTIVE
   } activation_state;
-  cig_state_memory_arena arena;
-} cig_state_t;
+  cig_arena arena;
+} cig_state;
 
 /* */
 typedef struct {
@@ -167,7 +167,7 @@ typedef struct cig_frame_t {
   /*__PRIVATE__*/      
   bool (*_layout_function)(cig_r, cig_r, cig_params*, cig_r*);
   cig_scroll_state_t *_scroll_state;
-  cig_state_t *_state;
+  cig_state *_state;
   struct cig_frame_t *_parent;
   cig_params _layout_params;
   unsigned int _id_counter;
@@ -303,7 +303,7 @@ typedef struct {
   } scroll_elements[CIG_SCROLLABLE_ELEMENTS_MAX];
   struct {
     cig_id id;
-    cig_state_t value;
+    cig_state value;
     unsigned int last_tick;
   } state_list[CIG_STATES_MAX];
   struct {
@@ -391,16 +391,22 @@ cig_frame_ref_stack_t* cig_frame_stack();
     │ STATE & MEMORY ARENA ACCESS │
     └─────────────────────────────┘ */
 
-CIG_OPTIONAL(cig_state_t*) cig_state();
+CIG_OPTIONAL(cig_state *) cig_enable_state();
 
-/*  Allocates N bytes in current element's memory arena.
-    @return Pointer to the new object or NULL if memory could not be allocated (no space) */
-CIG_OPTIONAL(void*) cig_state_allocate(size_t);
+/*
+ * Allocates N bytes in current element's memory arena.
+ * @param arena - Memory arena to use, pass NULL to use current state arena
+ * @return Pointer to the new object or NULL if memory could not be allocated (no space)
+ */
+CIG_OPTIONAL(void *) cig_arena_allocate(cig_arena *arena, size_t);
 
-/*  Similar to allocation, but for simply reading the arena.
-    @param from_start - Resets read position to 0 before reading
-    @return Pointer to the new object or NULL if memory could not be allocated (no space) */
-CIG_OPTIONAL(void*) cig_state_read(bool from_start, size_t);
+/*
+ * Similar to allocation, but for simply reading the arena.
+ * @param arena       - Memory arena to use, pass NULL to use current state arena
+ * @param from_start  - Resets read position to 0 before reading
+ * @return Pointer to the new object or NULL if memory could not be allocated (no space)
+ */
+CIG_OPTIONAL(void *) cig_arena_read(cig_arena *arena, bool from_start, size_t);
 
 /*  ┌──────────────────────────────┐
     │ TEMPORARY BUFFERS (ADVANCED) │

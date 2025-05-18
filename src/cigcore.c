@@ -14,7 +14,7 @@ static bool requested_layout_step_mode = false;
 #endif
 
 /*  Forward delcarations */
-CIG_INLINED CIG_OPTIONAL(cig_state_t*) find_state(cig_id);
+CIG_INLINED CIG_OPTIONAL(cig_state*) find_state(cig_id);
 CIG_INLINED CIG_OPTIONAL(cig_scroll_state_t*) find_scroll_state(cig_id);
 CIG_INLINED void handle_frame_hover(const cig_frame_t*);
 CIG_INLINED void push_clip(cig_frame_t*);
@@ -224,7 +224,7 @@ cig_frame_ref_stack_t* cig_frame_stack() {
     │ STATE │
     └───────┘ */
 
-CIG_OPTIONAL(cig_state_t*) cig_state() {
+CIG_OPTIONAL(cig_state *) cig_enable_state() {
   cig_frame_t *frame = cig_frame();
   if (frame->_state) {
     return frame->_state;
@@ -236,35 +236,47 @@ CIG_OPTIONAL(cig_state_t*) cig_state() {
   return frame->_state;
 }
 
-CIG_OPTIONAL(void*) cig_state_allocate(size_t bytes) {
-  cig_state_t *state = cig_state();
-  
-  if (!state) {
-    return NULL;
-  } else if (state->arena.mapped + bytes >= CIG_STATE_MEM_ARENA_BYTES) {
+CIG_OPTIONAL(void *) cig_arena_allocate(cig_arena *arena, size_t bytes) {
+  cig_arena *_arena = arena;
+
+  if (!_arena) {
+    cig_state *state = cig_enable_state();
+    if (!state) {
+      return NULL;
+    }
+    _arena = &state->arena;
+  }
+
+  if (_arena->mapped + bytes >= CIG_STATE_MEM_ARENA_BYTES) {
     return NULL;
   }
 
-  void *result = &state->arena.bytes[state->arena.mapped];
-  state->arena.mapped += bytes;
+  void *result = &_arena->bytes[_arena->mapped];
+  _arena->mapped += bytes;
   return result;
 }
 
-CIG_OPTIONAL(void*) cig_state_read(bool from_start, size_t bytes) {
-  cig_state_t *state = cig_state();
+CIG_OPTIONAL(void *) cig_arena_read(cig_arena *arena, bool from_start, size_t bytes) {
+  cig_arena *_arena = arena;
 
-  if (!state) {
-    return NULL;
-  } else if (state->arena.read + bytes >= CIG_STATE_MEM_ARENA_BYTES) {
+  if (!_arena) {
+    cig_state *state = cig_enable_state();
+    if (!state) {
+      return NULL;
+    }
+    _arena = &state->arena;
+  }
+
+  if (_arena->read + bytes >= CIG_STATE_MEM_ARENA_BYTES) {
     return NULL;
   }
 
   if (from_start) {
-    state->arena.read = 0;
+    _arena->read = 0;
   }
 
-  void *result = &state->arena.bytes[state->arena.read];
-  state->arena.read += bytes;
+  void *result = &_arena->bytes[_arena->read];
+  _arena->read += bytes;
   return result;
 }
 
@@ -944,7 +956,7 @@ static void handle_frame_hover(const cig_frame_t *frame) {
   }
 }
 
-static CIG_OPTIONAL(cig_state_t*) find_state(const cig_id id) {
+static CIG_OPTIONAL(cig_state*) find_state(const cig_id id) {
   register int open = -1, stale = -1;
 
   /*  Find a state with a matching ID, with no ID yet, or a stale state */
