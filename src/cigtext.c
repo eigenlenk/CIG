@@ -30,8 +30,8 @@ static struct { size_t count; cig_font_ref fonts[4]; } font_stack;
 static struct { size_t count; cig_text_color_ref colors[4]; } color_stack;
 static cig_text_style style;
 
-static void prepare_label(cig_label_t *, const cig_text_properties *, const unsigned int, const char *);
-static cig_span* create_span(cig_label_t *, utf8_string, cig_font_ref, cig_text_color_ref, cig_text_style, cig_v);
+static void prepare_label(cig_label *, const cig_text_properties *, const unsigned int, const char *);
+static cig_span* create_span(cig_label *, utf8_string, cig_font_ref, cig_text_color_ref, cig_text_style, cig_v);
 static void render_spans(cig_span *, size_t, cig_font_ref, cig_text_color_ref, cig_text_horizontal_alignment, cig_text_vertical_alignment, bounds_t, int);
 static void wrap_text(utf8_string *, size_t, cig_v *, cig_text_overflow, cig_font_ref, cig_font_ref, cig_text_color_ref, cig_text_style, size_t, cig_span *);
 static bool parse_tag(tag_parser_t*, utf8_char, uint32_t);
@@ -65,10 +65,10 @@ void cig_set_default_text_color(cig_text_color_ref color) {
   default_text_color = color;
 }
 
-cig_label_t* cig_label(cig_text_properties props, const char *text, ...) {
+CIG_DISCARDABLE(cig_label *) cig_draw_label(cig_text_properties props, const char *text, ...) {
   register const cig_r absolute_rect = cig_r_inset(cig_absolute_rect(), cig_frame()->insets);
 
-  cig_label_t *label = CIG_ALLOCATE(cig_label_t);
+  cig_label *label = CIG_ALLOCATE(cig_label);
 
   if (props.flags & CIG_TEXT_FORMATTED) {
     va_list args;
@@ -96,8 +96,8 @@ cig_label_t* cig_label(cig_text_properties props, const char *text, ...) {
   return label;
 }
 
-cig_label_t* cig_prepare_label(
-  cig_label_t *label,
+cig_label* cig_label_prepare(
+  cig_label *label,
   unsigned int max_width,
   cig_text_properties props,
   const char *text,
@@ -116,7 +116,7 @@ cig_label_t* cig_prepare_label(
   return label;
 }
 
-void cig_draw_label(cig_label_t *label) {
+void cig_label_draw(cig_label *label) {
   if (render_callback) {
     render_spans(
       &label->spans[0],
@@ -136,7 +136,7 @@ void cig_draw_label(cig_label_t *label) {
     └────────────────────┘ */
 
 static void prepare_label(
-  cig_label_t *label,
+  cig_label *label,
   const cig_text_properties *props,
   const unsigned int max_width,
   const char *str
@@ -366,7 +366,7 @@ static void wrap_text(
 }
 
 static cig_span* create_span(
-  cig_label_t *label,
+  cig_label *label,
   utf8_string slice,
   cig_font_ref font_override,
   cig_text_color_ref color_override,

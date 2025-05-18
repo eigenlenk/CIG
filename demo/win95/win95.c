@@ -56,12 +56,12 @@ static bool taskbar_button(
     ) {
       if (icon >= 0) {
         CIG(RECT_AUTO_W(16)) {
-          cig_image(get_image(icon), CIG_IMAGE_MODE_CENTER);
+          cig_draw_image(get_image(icon), CIG_IMAGE_MODE_CENTER);
         }
       }
       if (title) {
         CIG(_) {
-          cig_label((cig_text_properties) {
+          cig_draw_label((cig_text_properties) {
             .font = get_font(selected ? FONT_BOLD : FONT_REGULAR),
             .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
             .overflow = CIG_TEXT_SHOW_ELLIPSIS
@@ -92,11 +92,11 @@ static bool start_button(cig_r rect) {
       })
     ) {
       CIG(RECT_AUTO_W(16)) {
-        cig_image(get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_CENTER);
+        cig_draw_image(get_image(IMAGE_START_ICON), CIG_IMAGE_MODE_CENTER);
       }
 
       CIG(_) {
-        cig_label((cig_text_properties) {
+        cig_draw_label((cig_text_properties) {
           .font = get_font(FONT_BOLD),
           .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
         }, "Start");
@@ -149,7 +149,7 @@ static void do_desktop() {
 }
 
 static void do_taskbar() {
-  static cig_label_t clock_label;
+  static cig_label clock_label;
 
   const int start_button_width = 54;
   const int spacing = 4;
@@ -168,7 +168,7 @@ static void do_taskbar() {
     time_t t = time(NULL);
     struct tm *ct = localtime(&t);
 
-    cig_prepare_label(&clock_label, 0, (cig_text_properties) { .flags = CIG_TEXT_FORMATTED }, "%02d:%02d", ct->tm_hour, ct->tm_min);
+    cig_label_prepare(&clock_label, 0, (cig_text_properties) { .flags = CIG_TEXT_FORMATTED }, "%02d:%02d", ct->tm_hour, ct->tm_min);
 
     const int clock_w = (clock_label.bounds.w+11*2);
 
@@ -177,7 +177,7 @@ static void do_taskbar() {
       CIG_INSETS(cig_i_uniform(1))
     ) {
       cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
-      cig_draw_label(&clock_label);
+      cig_label_draw(&clock_label);
     }
 
     /* Center: Fill remaining middle space with task buttons */
@@ -306,7 +306,7 @@ bool standard_button(cig_r rect, const char *title) {
     cig_fill_panel(get_panel(PANEL_BUTTON), pressed ? CIG_PANEL_PRESSED : 0);
     
     if (cig_push_frame_insets(RECT_AUTO,  pressed ? cig_i_make(2, 3, 1, 2) : cig_i_make(1, 1, 2, 2))) {
-      cig_label((cig_text_properties) {
+      cig_draw_label((cig_text_properties) {
         .font = get_font(FONT_REGULAR),
         .max_lines = 1,
         .overflow = CIG_TEXT_SHOW_ELLIPSIS
@@ -331,7 +331,7 @@ bool icon_button(cig_r rect, image_id_t image_id) {
     cig_fill_panel(get_panel(PANEL_BUTTON), pressed ? CIG_PANEL_PRESSED : 0);
     
     if (cig_push_frame_insets(RECT_AUTO, pressed ? cig_i_make(3, 3, 1, 1) : cig_i_make(2, 2, 2, 2))) {
-      cig_image(get_image(image_id), CIG_IMAGE_MODE_CENTER);
+      cig_draw_image(get_image(image_id), CIG_IMAGE_MODE_CENTER);
       cig_pop_frame();
     }
     
@@ -371,12 +371,12 @@ bool checkbox(cig_r rect, bool *value, const char *text) {
         cig_draw_line(cig_v_make(CIG_SX+12, CIG_SY+11), cig_v_make(CIG_SX+12, CIG_SY+1), get_color(COLOR_DIALOG_BACKGROUND), 1);
 
         if (*value) {
-          cig_image(get_image(IMAGE_CHECKMARK), CIG_IMAGE_MODE_CENTER);
+          cig_draw_image(get_image(IMAGE_CHECKMARK), CIG_IMAGE_MODE_CENTER);
         }
       }
     }
     CIG(_) {
-      cig_label((cig_text_properties) {
+      cig_draw_label((cig_text_properties) {
         .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
       }, text);
     }
@@ -615,11 +615,11 @@ static bool begin_window(window_t *wnd, window_message_t *msg, bool *focused) {
     })) {
       if (wnd->icon >= 0) {
         CIG(RECT_AUTO_W(16)) {
-          cig_image(get_image(wnd->icon), CIG_IMAGE_MODE_CENTER);
+          cig_draw_image(get_image(wnd->icon), CIG_IMAGE_MODE_CENTER);
         }
       }
       CIG(_) {
-        cig_label((cig_text_properties) {
+        cig_draw_label((cig_text_properties) {
           .font = get_font(FONT_BOLD),
           .color = *focused ? get_color(COLOR_WHITE) : get_color(COLOR_DIALOG_BACKGROUND),
           .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
@@ -666,7 +666,7 @@ static void end_window(window_t *wnd) {
     }
 
     CIG(RECT(CIG_W_INSET-16, CIG_H_INSET-16, 16, 16)) {
-      cig_image(get_image(IMAGE_RESIZE_HANDLE), cig_image_modeOP_LEFT);
+      cig_draw_image(get_image(IMAGE_RESIZE_HANDLE), cig_image_modeOP_LEFT);
       cig_enable_interaction();
       handle_window_resize(wnd, WINDOW_RESIZE_BOTTOM_RIGHT);
     }
@@ -695,15 +695,15 @@ static cig_frame_t* large_file_icon(int icon, const char *title, color_id_t text
 
     CIG(RECT_AUTO_H(32)) {
       if (shows_selection) { enable_blue_selection_dithering(true); }
-      cig_image(get_image(icon), cig_image_modeOP);
+      cig_draw_image(get_image(icon), cig_image_modeOP);
       if (shows_selection) { enable_blue_selection_dithering(false); }
     }
 
-    cig_label_t *label = CIG_ALLOCATE(cig_label_t);
+    cig_label *label = CIG_ALLOCATE(cig_label);
 
     /* We need to prepare the label here to know how large of a rectangle
        to draw around it when the icon is selected */
-    cig_prepare_label(label, CIG_W, (cig_text_properties) {
+    cig_label_prepare(label, CIG_W, (cig_text_properties) {
         .color = shows_selection ? get_color(COLOR_WHITE) : get_color(text_color),
         .alignment.vertical = CIG_TEXT_ALIGN_TOP
       }, title);
@@ -718,7 +718,7 @@ static cig_frame_t* large_file_icon(int icon, const char *title, color_id_t text
           1
         );
       }
-      cig_draw_label(label);
+      cig_label_draw(label);
     }
   })
 

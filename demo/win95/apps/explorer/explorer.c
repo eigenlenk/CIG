@@ -54,7 +54,7 @@ static void window_proc(window_t *this, window_message_t *msg, bool window_focus
               visibility conditional and have the window content always fill whatever
               space is remaining without having to calculate it manually. */
           if (cig_jump(primary_status)) {
-            cig_label((cig_text_properties) {
+            cig_draw_label((cig_text_properties) {
               .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
             }, "5 object(s)");
             cig_pop_frame();

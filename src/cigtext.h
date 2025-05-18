@@ -57,9 +57,11 @@ typedef struct {
   cig_text_style style;
 } cig_text_properties;
 
-/*  Span is an atomic text component, a piece of text that runs until
-    the horizontal bounds of the label, or until some property of the
-    text changes (font, color, link etc.) */
+/*
+ * Span is an atomic text component, a piece of text that runs until
+ * the horizontal bounds of the label, or until some property of the
+ * text changes (font, color, link etc.)
+ */
 typedef struct {
   const char *str;
   CIG_OPTIONAL(cig_font_ref) font_override;
@@ -83,15 +85,17 @@ typedef struct {
   unsigned char span_count;
   unsigned char line_count;
   char line_spacing;
-} cig_label_t;
+} cig_label;
 
-typedef void (*cig_draw_text_callback)(const char*, size_t, cig_r, cig_font_ref, cig_text_color_ref, cig_text_style);
-typedef cig_v (*cig_measure_text_callback)(const char*, size_t, cig_font_ref, cig_text_style);
+typedef void (*cig_draw_text_callback)(const char *, size_t, cig_r, cig_font_ref, cig_text_color_ref, cig_text_style);
+typedef cig_v (*cig_measure_text_callback)(const char *, size_t, cig_font_ref, cig_text_style);
 typedef cig_font_info (*cig_query_font_callback)(cig_font_ref);
 
-/*  ┌───────────────────┐
-    │ BACKEND CALLBACKS │
-    └───────────────────┘ */
+/*
+ * ┌───────────────────┐
+ * │ BACKEND CALLBACKS │
+ * └───────────────────┘
+ */
 
 void cig_assign_draw_text(cig_draw_text_callback);
 
@@ -99,24 +103,33 @@ void cig_assign_measure_text(cig_measure_text_callback);
 
 void cig_assign_query_font(cig_query_font_callback);
 
-/*  ┌──────────────┐
-    │ TEXT DISPLAY │
-    └──────────────┘ */
+/*
+ * ┌──────────────┐
+ * │ TEXT DISPLAY │
+ * └──────────────┘
+ */
 
 void cig_set_default_font(cig_font_ref);
 
 void cig_set_default_text_color(cig_text_color_ref);
 
-/* */
-cig_label_t* cig_label(cig_text_properties, const char*, ...);
+/*
+ * Allocates a label type in the current element's state, prepares it and
+ * draws it. Label is cached based on the input string hash.
+ *
+ * TODO: Rebuild lines when layout width is changed
+ */
+CIG_DISCARDABLE(cig_label *) cig_draw_label(cig_text_properties, const char *, ...);
 
-/*  For more advanced text display you can prepare a piece of text.
-    This enables accessing the text bounds before rendering it to
-    pass as a size for the next layout frame for example. It also exposes
-    the underlying spans (smallest text components) */
-cig_label_t* cig_prepare_label(cig_label_t *, unsigned int, cig_text_properties, const char *, ...);
+/*
+ * For more advanced text display you can prepare a piece of text.
+ * This enables accessing the text bounds before rendering it to
+ * pass as a size for the next layout frame for example. It also exposes
+ * the underlying spans (smallest text components)
+ */
+cig_label * cig_label_prepare(cig_label *, unsigned int, cig_text_properties, const char *, ...);
 
-/*  Renders a prepared label */
-void cig_draw_label(cig_label_t *);
+/* Renders a prepared label */
+void cig_label_draw(cig_label *);
 
 #endif

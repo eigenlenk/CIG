@@ -9,6 +9,7 @@
 #define CIG_BIT(B) (1<<B)
 #define CIG_UNUSED(x) (void)(x)
 #define CIG_OPTIONAL(X) X
+#define CIG_DISCARDABLE(X) X
 
 // https://stackoverflow.com/questions/2124339/c-preprocessor-va-args-number-of-arguments
 #define CIG_NARG(...) CIG__NARG_(_,##__VA_ARGS__,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0)

@@ -83,7 +83,7 @@ static void begin() {
 TEST(text_style, font_override) {  
   begin();
   
-  cig_label((cig_text_properties) {
+  cig_draw_label((cig_text_properties) {
     .flags = CIG_TEXT_FORMATTED
   }, "Overriding font for <font=%x>IMPACT</font>", &fonts[1]);
   
@@ -94,7 +94,7 @@ TEST(text_style, font_override) {
 TEST(text_style, color_override) {  
   begin();
   
-  cig_label((cig_text_properties) {
+  cig_draw_label((cig_text_properties) {
     .flags = CIG_TEXT_FORMATTED
   }, "Roll out the <color=%x>red</color> carpet", &red_color);
   
@@ -106,7 +106,7 @@ TEST(text_style, color_override) {
 TEST(text_style, bold) {  
   begin();
   
-  cig_label((cig_text_properties) {
+  cig_draw_label((cig_text_properties) {
     .flags = CIG_TEXT_FORMATTED
   }, "I <b>know</b>");
   
@@ -116,7 +116,7 @@ TEST(text_style, bold) {
 TEST(text_style, italic) {  
   begin();
   
-  cig_label((cig_text_properties) {
+  cig_draw_label((cig_text_properties) {
     .flags = CIG_TEXT_FORMATTED
   }, "I <i>think</i>");
   
@@ -126,7 +126,7 @@ TEST(text_style, italic) {
 TEST(text_style, underline) {  
   begin();
   
-  cig_label((cig_text_properties) {
+  cig_draw_label((cig_text_properties) {
     .flags = CIG_TEXT_FORMATTED
   }, "Click <u>here</u>");
   
@@ -136,7 +136,7 @@ TEST(text_style, underline) {
 TEST(text_style, strikethrough) {  
   begin();
   
-  cig_label((cig_text_properties) {
+  cig_draw_label((cig_text_properties) {
     .flags = CIG_TEXT_FORMATTED
   }, "<s>Fixed</s>");
   
@@ -146,7 +146,7 @@ TEST(text_style, strikethrough) {
 TEST(text_style, override_base_style) {  
   begin();
   
-  cig_label((cig_text_properties) {
+  cig_draw_label((cig_text_properties) {
     .flags = CIG_TEXT_FORMATTED,
     .style = CIG_TEXT_BOLD
   }, "<i>Italic</i>");
@@ -157,7 +157,7 @@ TEST(text_style, override_base_style) {
 TEST(text_style, unclosed_tag) {  
   begin();
   
-  cig_label((cig_text_properties) {
+  cig_draw_label((cig_text_properties) {
     .flags = CIG_TEXT_FORMATTED
   }, "Roll out the <color=%x>red carpet", &red_color);
   
@@ -168,7 +168,7 @@ TEST(text_style, unclosed_tag) {
 TEST(text_style, unknown_tag) {  
   begin();
   
-  cig_label((cig_text_properties) {
+  cig_draw_label((cig_text_properties) {
     .flags = CIG_TEXT_FORMATTED
   }, "<rainbow>Rain+sun</rainbow>");
   

@@ -41,60 +41,60 @@ TEST_TEAR_DOWN(gfx_image) {}
 
 TEST(gfx_image, aspect_fit) {
   CIG(RECT_SIZED(60, 100)) { /* Portrait container */
-    cig_image(&test_image, CIG_IMAGE_MODE_ASPECT_FIT);
+    cig_draw_image(&test_image, CIG_IMAGE_MODE_ASPECT_FIT);
     TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 27, 60, 45), image_rect);
   }
 
   CIG(RECT_SIZED(100, 50)) { /* Landscape container */
-    cig_image(&test_image, CIG_IMAGE_MODE_ASPECT_FIT);
+    cig_draw_image(&test_image, CIG_IMAGE_MODE_ASPECT_FIT);
     TEST_ASSERT_EQUAL_RECT(cig_r_make(16, 0, 67, 50), image_rect);
   }
 }
 
 TEST(gfx_image, aspect_fill) {
   CIG(RECT_SIZED(60, 100)) { /* Portrait container */
-    cig_image(&test_image, CIG_IMAGE_MODE_ASPECT_FILL);
+    cig_draw_image(&test_image, CIG_IMAGE_MODE_ASPECT_FILL);
     TEST_ASSERT_EQUAL_RECT(cig_r_make(-36, 0, 133, 100), image_rect);
   }
 
   CIG(RECT_SIZED(100, 50)) { /* Landscape container */
-    cig_image(&test_image, CIG_IMAGE_MODE_ASPECT_FILL);
+    cig_draw_image(&test_image, CIG_IMAGE_MODE_ASPECT_FILL);
     TEST_ASSERT_EQUAL_RECT(cig_r_make(0, -12, 100, 75), image_rect);
   }
 }
 
 TEST(gfx_image, scale_to_fill) {
-  cig_image(&test_image, CIG_IMAGE_MODE_SCALE_TO_FILL);
+  cig_draw_image(&test_image, CIG_IMAGE_MODE_SCALE_TO_FILL);
   TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 640, 480), image_rect);
 }
 
 TEST(gfx_image, positional_modes) {
   CIG(RECT_SIZED(100, 100)) {
-    cig_image(&test_image, cig_image_modeOP_LEFT);
+    cig_draw_image(&test_image, cig_image_modeOP_LEFT);
     TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 80, 60), image_rect);
 
-    cig_image(&test_image, cig_image_modeOP);
+    cig_draw_image(&test_image, cig_image_modeOP);
     TEST_ASSERT_EQUAL_RECT(cig_r_make(10, 0, 80, 60), image_rect);
 
-    cig_image(&test_image, cig_image_modeOP_RIGHT);
+    cig_draw_image(&test_image, cig_image_modeOP_RIGHT);
     TEST_ASSERT_EQUAL_RECT(cig_r_make(20, 0, 80, 60), image_rect);
 
-    cig_image(&test_image, CIG_IMAGE_MODE_LEFT);
+    cig_draw_image(&test_image, CIG_IMAGE_MODE_LEFT);
     TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 20, 80, 60), image_rect);
 
-    cig_image(&test_image, CIG_IMAGE_MODE_CENTER);
+    cig_draw_image(&test_image, CIG_IMAGE_MODE_CENTER);
     TEST_ASSERT_EQUAL_RECT(cig_r_make(10, 20, 80, 60), image_rect);
 
-    cig_image(&test_image, CIG_IMAGE_MODE_RIGHT);
+    cig_draw_image(&test_image, CIG_IMAGE_MODE_RIGHT);
     TEST_ASSERT_EQUAL_RECT(cig_r_make(20, 20, 80, 60), image_rect);
     
-    cig_image(&test_image, CIG_IMAGE_MODE_BOTTOM_LEFT);
+    cig_draw_image(&test_image, CIG_IMAGE_MODE_BOTTOM_LEFT);
     TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 40, 80, 60), image_rect);
 
-    cig_image(&test_image, CIG_IMAGE_MODE_BOTTOM);
+    cig_draw_image(&test_image, CIG_IMAGE_MODE_BOTTOM);
     TEST_ASSERT_EQUAL_RECT(cig_r_make(10, 40, 80, 60), image_rect);
 
-    cig_image(&test_image, CIG_IMAGE_MODE_BOTTOM_RIGHT);
+    cig_draw_image(&test_image, CIG_IMAGE_MODE_BOTTOM_RIGHT);
     TEST_ASSERT_EQUAL_RECT(cig_r_make(20, 40, 80, 60), image_rect);
   }
 }

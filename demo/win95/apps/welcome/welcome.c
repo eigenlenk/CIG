@@ -22,7 +22,7 @@ static void process_main_window(window_t *this, window_message_t *msg, bool wind
   })) {
     /* Title text */
     CIG(RECT_AUTO_H(20)) {
-      cig_label(
+      cig_draw_label(
         (cig_text_properties) {
           .font = get_font(FONT_TIMES_NEW_ROMAN_32_BOLD),
           .color = get_color(COLOR_BLACK),
@@ -46,19 +46,19 @@ static void process_main_window(window_t *this, window_message_t *msg, bool wind
         CIG_SPACING(14)
       })) {
         CIG(RECT_SIZED(32, 32)) {
-          cig_image(get_image(IMAGE_TIP_OF_THE_DAY), CIG_IMAGE_MODE_CENTER);
+          cig_draw_image(get_image(IMAGE_TIP_OF_THE_DAY), CIG_IMAGE_MODE_CENTER);
         }
         CIG_VSTACK(_, NO_INSETS, CIG_PARAMS({
           CIG_SPACING(8)
         })) {
           CIG(RECT_AUTO_H(32)) {
-            cig_label((cig_text_properties) {
+            cig_draw_label((cig_text_properties) {
               .font = get_font(FONT_BOLD),
               .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
             }, "Did you know...");
           }
           CIG(_) {
-            cig_label((cig_text_properties) {
+            cig_draw_label((cig_text_properties) {
               .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
               .alignment.vertical = CIG_TEXT_ALIGN_TOP
             }, tips[window_data->tip_index]);

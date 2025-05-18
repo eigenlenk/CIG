@@ -30,7 +30,7 @@ typedef enum CIG_PACKED {
   CIG_PANEL_FOCUSED = CIG_BIT(3),
 } cig_panel_modifiers;
 /* TODO: Should probably be renamed to something more generic and
-   maybe be passed to image and fill_solid as well? */
+   maybe be passed to draw_image and fill_solid as well? */
 
 typedef cig_v (*cig_measure_image_callback)(cig_image_ref);
 typedef void (*cig_draw_image_callback)(cig_buffer_ref, cig_r, cig_r, cig_image_ref, cig_image_mode);
@@ -57,7 +57,7 @@ void cig_assign_draw_line(cig_draw_line_callback);
     └───────────────────────────┘ */
 
 /*  Draws an image */
-void cig_image(cig_image_ref, cig_image_mode);
+void cig_draw_image(cig_image_ref, cig_image_mode);
 
 /*  Fills current frame with the given panel style */
 void cig_fill_panel(cig_panel_ref, cig_panel_modifiers);
