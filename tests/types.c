@@ -5,7 +5,7 @@
 
 /* Declare a stack type */
 #define STACK_CAPACITY_int 8
-DECLARE_ARRAY_STACK_T(int);
+DECLARE_ARRAY_STACK_T(int)
 
 TEST_GROUP(types);
 

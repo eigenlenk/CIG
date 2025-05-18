@@ -268,7 +268,7 @@ typedef struct {
 
 typedef cig_r cig_clip_rect_t;
 #define STACK_CAPACITY_cig_clip_rect_t CIG_BUFFER_CLIP_REGIONS_MAX
-DECLARE_ARRAY_STACK_T(cig_clip_rect_t);
+DECLARE_ARRAY_STACK_T(cig_clip_rect_t)
 
 typedef struct {
   cig_buffer_ref buffer;
@@ -279,10 +279,10 @@ typedef struct {
 
 typedef cig_frame_t* cig_frame_ref;
 #define STACK_CAPACITY_cig_frame_ref CIG_NESTED_ELEMENTS_MAX
-DECLARE_ARRAY_STACK_T(cig_frame_ref);
+DECLARE_ARRAY_STACK_T(cig_frame_ref)
 
 #define STACK_CAPACITY_cig_buffer_element_t CIG_BUFFERS_MAX
-DECLARE_ARRAY_STACK_T(cig_buffer_element_t);
+DECLARE_ARRAY_STACK_T(cig_buffer_element_t)
 
 /*  A single instance of CIG. Use one for each game state?
     Should be considered an opaque type! */

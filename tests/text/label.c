@@ -88,7 +88,7 @@ TEST(text_label, single) {
 
     /*  Label centers text both horizontally and vertically by default.
         This label will consist of a single span */
-    cig_draw_label((cig_text_properties) { }, "Olá mundo!");
+    cig_draw_label((cig_text_properties) { 0 }, "Olá mundo!");
 
     /*  Span is an atomic text component, a piece of text that runs until
         the horizontal bounds of the label, or until some property of the
@@ -108,7 +108,7 @@ TEST(text_label, multiline) {
   for (int i = 0; i < 2; ++i) {
     begin();
 
-    cig_draw_label((cig_text_properties) { }, "Olá mundo!\nHello world!");
+    cig_draw_label((cig_text_properties) { 0 }, "Olá mundo!\nHello world!");
 
     TEST_ASSERT_EQUAL(2, spans.count);
     TEST_ASSERT_EQUAL_RECT(cig_r_make(35, 11, 10, 1), spans.rects[0]);
@@ -246,7 +246,7 @@ TEST(text_label, prepare_single_long_word) {
   begin();
 
   cig_label label;
-  cig_label_prepare(&label, 7, (cig_text_properties) {}, "Foobarbaz");
+  cig_label_prepare(&label, 7, (cig_text_properties) { 0 }, "Foobarbaz");
 
   TEST_ASSERT_EQUAL_INT(9, label.bounds.w);
   TEST_ASSERT_EQUAL_INT(1, label.bounds.h);
@@ -262,7 +262,7 @@ TEST(text_label, prepare_multiple_long_words) {
   begin();
 
   cig_label label;
-  cig_label_prepare(&label, 7, (cig_text_properties) {}, "Foobarbaz barbazfoo bazfoobar");
+  cig_label_prepare(&label, 7, (cig_text_properties) { 0 }, "Foobarbaz barbazfoo bazfoobar");
 
   TEST_ASSERT_EQUAL_INT(9, label.bounds.w);
   TEST_ASSERT_EQUAL_INT(3, label.bounds.h);

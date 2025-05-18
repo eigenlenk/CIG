@@ -50,7 +50,7 @@
 /*  `cig_args` fields */
 #define CIG_RECT(R) .rect = R
 #define CIG_INSETS(I) .insets = I
-#define CIG_PARAMS(P...) .params = (cig_params) P
+#define CIG_PARAMS(...) .params = (cig_params) __VA_ARGS__
 #define CIG_BUILDER(F) .builder = F
 
 #define CIG__ALLOCATE_1(T) cig_arena_allocate(NULL, sizeof(T))
@@ -70,11 +70,11 @@
 extern cig_frame_t *cig__macro_last_closed;
 
 /*  This calls the push_frame function once, performs the function body and pops the frame */
-#define CIG(RECT, ARGS...) cig__macro_last_closed=NULL; for (int __pushed=0; !(__pushed++)&&cig_push_frame_args((cig_args) { RECT, ARGS }); cig__macro_last_closed=cig_pop_frame())
+#define CIG(RECT, ...) cig__macro_last_closed=NULL; for (int __pushed=0; !(__pushed++)&&cig_push_frame_args((cig_args) { RECT, __VA_ARGS__ }); cig__macro_last_closed=cig_pop_frame())
 
-#define CIG_HSTACK(RECT, ARGS...) cig__macro_last_closed=NULL; for (struct { int pushed; cig_args args; } __cig = { 0, (cig_args) { RECT, ARGS } }; !(__cig.pushed++)&&cig_push_hstack(__cig.args.rect, __cig.args.insets, __cig.args.params); cig__macro_last_closed=cig_pop_frame())
-#define CIG_VSTACK(RECT, ARGS...) cig__macro_last_closed=NULL; for (struct { int pushed; cig_args args; } __cig = { 0, (cig_args) { RECT, ARGS } }; !(__cig.pushed++)&&cig_push_vstack(__cig.args.rect, __cig.args.insets, __cig.args.params); cig__macro_last_closed=cig_pop_frame())
-#define CIG_GRID(RECT, ARGS...) cig__macro_last_closed=NULL; for (struct { int pushed; cig_args args; } __cig = { 0, (cig_args) { RECT, ARGS } }; !(__cig.pushed++)&&cig_push_grid(__cig.args.rect, __cig.args.insets, __cig.args.params); cig__macro_last_closed=cig_pop_frame())
+#define CIG_HSTACK(RECT, ...) cig__macro_last_closed=NULL; for (struct { int pushed; cig_args args; } __cig = { 0, (cig_args) { RECT, __VA_ARGS__ } }; !(__cig.pushed++)&&cig_push_hstack(__cig.args.rect, __cig.args.insets, __cig.args.params); cig__macro_last_closed=cig_pop_frame())
+#define CIG_VSTACK(RECT, ...) cig__macro_last_closed=NULL; for (struct { int pushed; cig_args args; } __cig = { 0, (cig_args) { RECT, __VA_ARGS__ } }; !(__cig.pushed++)&&cig_push_vstack(__cig.args.rect, __cig.args.insets, __cig.args.params); cig__macro_last_closed=cig_pop_frame())
+#define CIG_GRID(RECT, ...) cig__macro_last_closed=NULL; for (struct { int pushed; cig_args args; } __cig = { 0, (cig_args) { RECT, __VA_ARGS__ } }; !(__cig.pushed++)&&cig_push_grid(__cig.args.rect, __cig.args.insets, __cig.args.params); cig__macro_last_closed=cig_pop_frame())
 
 #define CIG_LAST() cig__macro_last_closed
 #define CIG_CAPTURE(VAR, BODY) BODY; VAR=CIG_LAST();
@@ -97,7 +97,7 @@ extern cig_frame_t *cig__macro_last_closed;
 
 #define OFFSET_BY(VALUE) .value = VALUE
 
-#define PIN(VALUES...) ((cig_pin) { VALUES })
+#define PIN(...) ((cig_pin) { __VA_ARGS__ })
 
 /*  Macro for building a rectangle based on rules how to set concrete
     values for left, right, top and bottom edges, or what element to reference
@@ -111,6 +111,6 @@ extern cig_frame_t *cig__macro_last_closed;
       PIN(CENTER_Y(some_frame), OFFSET_BY(20)),
       PIN(HEIGHT, WIDTH_OF(some_frame))
     ) */
-#define BUILD_RECT(REFS...) cig_build_rect(CIG_NARG(REFS), (cig_pin[]) { REFS })
+#define BUILD_RECT(...) cig_build_rect(CIG_NARG(REFS), (cig_pin[]) { __VA_ARGS__ })
 
 #endif
