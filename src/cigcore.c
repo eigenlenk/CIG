@@ -5,7 +5,7 @@
 
 cig_frame_t *cig__macro_last_closed;
 
-static cig_context_t *current = NULL;
+static cig_context *current = NULL;
 static cig_set_clip_callback set_clip = NULL;
 
 #ifdef DEBUG
@@ -20,12 +20,12 @@ CIG_INLINED void handle_frame_hover(const cig_frame_t*);
 CIG_INLINED void push_clip(cig_frame_t*);
 CIG_INLINED void pop_clip();
 CIG_INLINED cig_r calculate_rect_in_parent(cig_r, const cig_frame_t*);
-CIG_INLINED cig_r align_rect_in_parent(cig_r, cig_r, const cig_layout_params_t*);
+CIG_INLINED cig_r align_rect_in_parent(cig_r, cig_r, const cig_params*);
 CIG_INLINED bool next_layout_rect(cig_r, cig_frame_t*, cig_r*);
-CIG_INLINED cig_frame_t* push_frame(cig_r, cig_i, cig_layout_params_t, bool (*)(cig_r, cig_r, cig_layout_params_t*, cig_r*));
-CIG_INLINED void move_to_next_row(cig_layout_params_t*);
-CIG_INLINED void move_to_next_column(cig_layout_params_t*);
-CIG_INLINED double get_attribute_value_of_relative_to(cig_pin_attribute_t, double, cig_frame_t*, cig_frame_t*);
+CIG_INLINED cig_frame_t* push_frame(cig_r, cig_i, cig_params, bool (*)(cig_r, cig_r, cig_params*, cig_r*));
+CIG_INLINED void move_to_next_row(cig_params*);
+CIG_INLINED void move_to_next_column(cig_params*);
+CIG_INLINED double get_attribute_value_of_relative_to(cig_pin_attribute, double, cig_frame_t*, cig_frame_t*);
 
 CIG_INLINED int tinyhash(int a, int b) {
   return (a * 31) ^ (b * 17);
@@ -41,7 +41,7 @@ CIG_INLINED int limit(int v, const int minv_or_zero, const int maxv_or_zero) {
     │ CORE LAYOUT │
     └─────────────┘ */
 
-void cig_init_context(cig_context_t *context) {
+void cig_init_context(cig_context *context) {
   context->frame_stack = INIT_STACK(cig_frame_ref);
   context->buffers = INIT_STACK(cig_buffer_element_t);
   context->input_state = (cig_input_state_t) { 0 };
@@ -62,7 +62,7 @@ void cig_init_context(cig_context_t *context) {
 }
 
 void cig_begin_layout(
-  cig_context_t *context,
+  cig_context *context,
   const cig_buffer_ref buffer,
   const cig_r rect,
   const float delta_time
@@ -92,7 +92,7 @@ void cig_begin_layout(
     .insets = cig_i_zero(),
     ._layout_function = NULL,
     ._parent = NULL,
-    ._layout_params = (cig_layout_params_t) { 0 }
+    ._layout_params = (cig_params) { 0 }
   };
   current->frame_stack.push(&current->frame_stack, &current->frames.elements[0]);
   current->frames.count = 1;
@@ -123,27 +123,27 @@ cig_buffer_ref cig_buffer() {
   return current->buffers.peek_ref(&current->buffers, 0)->buffer;
 }
 
-cig_frame_t* cig_push_frame_args(cig_frame_args_t args) {
+cig_frame_t* cig_push_frame_args(cig_args args) {
   return push_frame(args.rect, args.insets, args.params, args.builder);
 }
 
 cig_frame_t* cig_push_frame(const cig_r rect) {
-  return push_frame(rect, current->default_insets, (cig_layout_params_t){ 0 }, NULL);
+  return push_frame(rect, current->default_insets, (cig_params){ 0 }, NULL);
 }
 
 cig_frame_t* cig_push_frame_insets(const cig_r rect, const cig_i insets) {
-  return push_frame(rect, insets, (cig_layout_params_t){ 0 }, NULL);
+  return push_frame(rect, insets, (cig_params){ 0 }, NULL);
 }
 
-cig_frame_t* cig_push_frame_insets_params(const cig_r rect, const cig_i insets, const cig_layout_params_t params) {
+cig_frame_t* cig_push_frame_insets_params(const cig_r rect, const cig_i insets, const cig_params params) {
   return push_frame(rect, insets, params, NULL);
 }
 
 cig_frame_t* cig_push_layout_function(
-  bool (*layout_function)(const cig_r, const cig_r, cig_layout_params_t *, cig_r *),
+  bool (*layout_function)(const cig_r, const cig_r, cig_params *, cig_r *),
   const cig_r rect,
   const cig_i insets,
-  cig_layout_params_t params
+  cig_params params
 ) {
   return push_frame(rect, insets, params, layout_function);
 }
@@ -293,7 +293,7 @@ void cig_pop_buffer() {
 
 void cig_set_input_state(
   const cig_v position,
-  cig_input_action_type_t action_mask
+  cig_input_action_type action_mask
 ) {
   // TODO: Make sense and clean up the mess that is this function...
 
@@ -310,7 +310,7 @@ void cig_set_input_state(
     current->input_state._focus_target_this = 0;
   }
 
-  const cig_input_action_type_t previous_action_mask = current->input_state.action_mask;
+  const cig_input_action_type previous_action_mask = current->input_state.action_mask;
 
   current->input_state.position = position;
   current->input_state.action_mask = action_mask;
@@ -400,15 +400,15 @@ bool cig_hovered() {
   return current->input_state.locked == false && (cig_frame()->_flags & INTERACTIBLE) && cig_frame()->id == current->input_state._target_prev_tick;
 }
 
-cig_input_action_type_t cig_pressed(
-  const cig_input_action_type_t actions,
-  const cig_press_flags_t options
+cig_input_action_type cig_pressed(
+  const cig_input_action_type actions,
+  const cig_press_flags options
 ) {
   if (!cig_hovered()) {
     return 0;
   }
 
-  const cig_input_action_type_t action_mask = actions & current->input_state.action_mask;
+  const cig_input_action_type action_mask = actions & current->input_state.action_mask;
 
   if (action_mask && ((options & CIG_PRESS_INSIDE) == false || (options & CIG_PRESS_INSIDE && current->input_state._press_target_id == cig_frame()->id))) {
     return action_mask;
@@ -417,15 +417,15 @@ cig_input_action_type_t cig_pressed(
   }
 }
 
-cig_input_action_type_t cig_clicked(
-  const cig_input_action_type_t actions,
-  const cig_click_flags_t options
+cig_input_action_type cig_clicked(
+  const cig_input_action_type actions,
+  const cig_click_flags options
 ) {
   if (!cig_hovered()) {
     return 0;
   }
 
-  cig_input_action_type_t result;
+  cig_input_action_type result;
 
   if (options & CIG_CLICK_ON_PRESS) {
     if (current->input_state.click_state == BEGAN && (result = actions & current->input_state.action_mask)) {
@@ -506,22 +506,22 @@ cig_v cig_offset() {
     │ LAYOUT HELPERS │
     └────────────────┘ */
 
-cig_r cig_build_rect(size_t n, cig_pin_t refs[]) {
+cig_r cig_build_rect(size_t n, cig_pin refs[]) {
   int32_t x0, y0, x1, y1, w, h, cx, cy;
   double a = 1;
   uint32_t attrs = 0;
-  cig_pin_t pin;
+  cig_pin pin;
 
   cig_frame_t *cur = cig_frame();
 
   for (register size_t i = 0; i < n; ++i) {
     pin = refs[i];
 
-    cig_pin_attribute_t attr = pin.attribute == UNSPECIFIED
+    cig_pin_attribute attr = pin.attribute == UNSPECIFIED
       ? pin.relation_attribute
       : pin.attribute;
 
-    cig_pin_attribute_t rel_attr = pin.relation_attribute == UNSPECIFIED
+    cig_pin_attribute rel_attr = pin.relation_attribute == UNSPECIFIED
       ? pin.attribute
       : pin.relation_attribute;
 
@@ -669,7 +669,7 @@ void cig_spacer(const int size) {
 bool cig_default_layout_builder(
   const cig_r container, /* Rect into which sub-frames are laid out */
   const cig_r rect,      /* Proposed rect, generally from CIG_FILL */
-  cig_layout_params_t *prm,
+  cig_params *prm,
   cig_r *result
 ) {
   const bool h_axis = prm->axis & CIG_LAYOUT_AXIS_HORIZONTAL;
@@ -786,17 +786,17 @@ bool cig_default_layout_builder(
   return true;
 }
 
-cig_frame_t* cig_push_hstack(cig_r rect, cig_i insets, cig_layout_params_t params) {
+cig_frame_t* cig_push_hstack(cig_r rect, cig_i insets, cig_params params) {
   params.axis = CIG_LAYOUT_AXIS_HORIZONTAL;
   return cig_push_layout_function(&cig_default_layout_builder, rect, insets, params);
 }
 
-cig_frame_t* cig_push_vstack(cig_r rect, cig_i insets , cig_layout_params_t params) {
+cig_frame_t* cig_push_vstack(cig_r rect, cig_i insets , cig_params params) {
   params.axis = CIG_LAYOUT_AXIS_VERTICAL;
   return cig_push_layout_function(&cig_default_layout_builder, rect, insets, params);
 }
 
-cig_frame_t* cig_push_grid(cig_r rect, cig_i insets, cig_layout_params_t params) {
+cig_frame_t* cig_push_grid(cig_r rect, cig_i insets, cig_params params) {
   params.axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL;
   return cig_push_layout_function(&cig_default_layout_builder, rect, insets, params);
 }
@@ -834,7 +834,7 @@ static cig_r calculate_rect_in_parent(const cig_r rect, const cig_frame_t *paren
   ), content_rect, &parent->_layout_params);
 }
 
-static cig_r align_rect_in_parent(cig_r rect, cig_r parent_rect, const cig_layout_params_t *prm) {
+static cig_r align_rect_in_parent(cig_r rect, cig_r parent_rect, const cig_params *prm) {
   switch (prm->alignment.horizontal) {
   case CIG_LAYOUT_ALIGNS_CENTER: {
     rect.x = (parent_rect.w - rect.w) * 0.5;
@@ -875,8 +875,8 @@ static bool next_layout_rect(const cig_r proposed, cig_frame_t *parent, cig_r *r
 static cig_frame_t* push_frame(
   const cig_r rect,
   const cig_i insets,
-  cig_layout_params_t params,
-  bool (*layout_function)(cig_r, cig_r, cig_layout_params_t*, cig_r*)
+  cig_params params,
+  bool (*layout_function)(cig_r, cig_r, cig_params*, cig_r*)
 ) {
   cig_buffer_element_t *current_buffer = current->buffers.peek_ref(&current->buffers, 0);
   cig_frame_t *top = cig_frame();
@@ -1042,7 +1042,7 @@ static void pop_clip() {
   }
 }
 
-CIG_INLINED void move_to_next_row(cig_layout_params_t *prm) {
+CIG_INLINED void move_to_next_row(cig_params *prm) {
   prm->_h_pos = 0;
   prm->_v_pos += (prm->_v_size + prm->spacing);
   prm->_h_size = 0;
@@ -1050,7 +1050,7 @@ CIG_INLINED void move_to_next_row(cig_layout_params_t *prm) {
   prm->_count.h_cur = 0;
 }
 
-CIG_INLINED void move_to_next_column(cig_layout_params_t *prm) {
+CIG_INLINED void move_to_next_column(cig_params *prm) {
   prm->_v_pos = 0;
   prm->_h_pos += (prm->_h_size + prm->spacing);
   prm->_h_size = 0;
@@ -1059,7 +1059,7 @@ CIG_INLINED void move_to_next_column(cig_layout_params_t *prm) {
 }
 
 CIG_INLINED double get_attribute_value_of_relative_to(
-  cig_pin_attribute_t attribute,
+  cig_pin_attribute attribute,
   double _value,
   cig_frame_t *of_frame, 
   cig_frame_t *relative_to_frame

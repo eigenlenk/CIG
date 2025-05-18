@@ -10,13 +10,13 @@ In the process of making this a standalone library the architecture changed a li
 
 ```c
 /* Begin laying out a UI */
-cig_begin_layout(&context, <render target ref>, cig_rect_make(0, 0, 1024, 768), delta_time);
+cig_begin_layout(&context, <render target ref>, cig_r_make(0, 0, 1024, 768), delta_time);
 
 /* Pass input state */
 cig_set_input_state(mouse_coords, mouse_buttons);
 
 /* A 100x100 frame at the top-right corner. A minimap perhaps? */
-if (cig_push_frame(cig_rect_make(CIG_W - 100, 0, 100, 100))) {
+if (cig_push_frame(cig_r_make(CIG_W - 100, 0, 100, 100))) {
   /* Call game code to render the map */
   cig_pop_frame(); /* We are now back at the root frame */
 }
@@ -26,7 +26,7 @@ if (cig_push_frame(RECT_CENTERED(800, 600))) {
   /* Inside the "modal window", we push a new frame with a custom layout function.
      This one helps us lay things out in a vertical stack. Stacks can also be
      horizontal, or have both axis enabled, in which case they become grids */
-  cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_insets_zero(), (cig_layout_params_t) {
+  cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_params) {
     .axis = CIG_LAYOUT_AXIS_VERTICAL,
     .spacing = 10,
     .height = 100
@@ -35,15 +35,16 @@ if (cig_push_frame(RECT_CENTERED(800, 600))) {
   /* Inserts 4 rows, each 100 units high and with 10 units between them */
   for (int i = 0; i < 4; ++i) {
     if (cig_push_frame(RECT_AUTO)) {
-      /* Why is this an if-statement? In short, TRUE means the child frame is at least
-         partially visible within the parent, FALSE means it's out of bounds. Relevant
-         when we'd up the row count to, let's say 10, in which case the frames after the
-         sixth one would not be visible, because row 6 is the last one partially in view */
+      /* Why is this an if-statement? In short, a non-null value means the child frame is at least
+         partially visible within the parent and the new element is returned, NULL means it's
+         out of bounds or exceeds other limits. Relevant when we'd up the row count to, let's say 10,
+         in which case  the frames after the sixth one would not be visible, because row 6 is the last one
+         partially in view */
 
       /* We want to be able to interact with this element */
       cig_enable_interaction();
   
-      if (cig_clicked(CIG_INPUT_MOUSE_BUTTON_LEFT, CIG_CLICK_DEFAULT_OPTIONS)) {
+      if (cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_DEFAULT_OPTIONS)) {
         /* This row was clicked! */
         do_something();
       }
@@ -96,7 +97,7 @@ if (cig_push_frame(cig_r_make(10, 10, 100, 40))) {
     + 10 units from the TOP edge of 'root',
     + is as WIDE as 'root' is TALL,
     + and has an HEIGHT of 50 units */
-if (cig_push_frame(cig_build_rect(4, (cig_pin_t[]) {
+if (cig_push_frame(cig_build_rect(4, (cig_pin[]) {
     { LEFT, 20, root, LEFT },
     { TOP, 10, root, TOP },
     { WIDTH, 0, root, HEIGHT },
@@ -109,7 +110,7 @@ if (cig_push_frame(cig_build_rect(4, (cig_pin_t[]) {
 …or as a third option, using a `RECT_AUTO` macro which tells the layout engine to size the element automatically. In regular elements it just means to fill the parent, but if the open element has been configured to be a vertical/horizontal stack or a grid, `RECT_AUTO` queries the next appropriate size based on a few parameters:
 ```c
 /* Create a vertical stack where each item will be 50 units high and with a 10 unit spacing */
-if (cig_push_vstack(cig_r_make(0, 0, 300, 500), cig_i_zero(), (cig_layout_params_t) {
+if (cig_push_vstack(cig_r_make(0, 0, 300, 500), cig_i_zero(), (cig_params) {
     .spacing = 10,
     .height = 50
 })) {

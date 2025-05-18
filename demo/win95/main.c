@@ -8,7 +8,7 @@
 #define RAYLIB_RECT(R) (Rectangle ) { R.x, R.y, R.w, R.h } 
 #define RAYLIB_VEC2(V) (Vector2) { V.x, V.y } 
 
-static cig_context_t ctx = { 0 };
+static cig_context ctx = { 0 };
 
 static struct font_store {
   Font font;

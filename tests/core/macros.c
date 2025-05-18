@@ -6,7 +6,7 @@
 
 TEST_GROUP(core_macros);
 
-static cig_context_t ctx = { 0 };
+static cig_context ctx = { 0 };
 
 TEST_SETUP(core_macros) {
   cig_init_context(&ctx);
@@ -121,7 +121,7 @@ TEST(core_macros, pinning) {
 
 
   /*  Pin right edge to right edge of 'root' offset by -5px (moves left) */
-  cig_pin_t left = PIN(RIGHT, OFFSET_BY(-5), RIGHT_OF(root));
+  cig_pin left = PIN(RIGHT, OFFSET_BY(-5), RIGHT_OF(root));
   TEST_ASSERT_EQUAL(RIGHT, left.attribute);
   TEST_ASSERT_EQUAL_INT(-5, left.value);
   TEST_ASSERT_EQUAL_PTR(root, left.relation);
@@ -129,7 +129,7 @@ TEST(core_macros, pinning) {
 
 
   /*  Pin width to width of 'root' but make it 50% */
-  cig_pin_t width = PIN(WIDTH_OF(root), OFFSET_BY(CIG_REL(0.5)));
+  cig_pin width = PIN(WIDTH_OF(root), OFFSET_BY(CIG_REL(0.5)));
   TEST_ASSERT_EQUAL(UNSPECIFIED, width.attribute); /* Will default to WIDTH when building the rectangle */
   TEST_ASSERT_EQUAL_INT(CIG_REL(0.5), width.value);
   TEST_ASSERT_EQUAL_PTR(root, width.relation);

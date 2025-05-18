@@ -7,7 +7,7 @@
 
 TEST_GROUP(core_input);
 
-static cig_context_t ctx = { 0 };
+static cig_context ctx = { 0 };
 
 TEST_SETUP(core_input) {
   cig_init_context(&ctx);

@@ -6,7 +6,7 @@
 
 TEST_GROUP(core_state);
 
-static cig_context_t ctx = { 0 };
+static cig_context ctx = { 0 };
 
 TEST_SETUP(core_state) {
   cig_init_context(&ctx);

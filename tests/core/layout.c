@@ -5,7 +5,7 @@
 
 TEST_GROUP(core_layout);
 
-static cig_context_t ctx = { 0 };
+static cig_context ctx = { 0 };
 static int main_buffer = 1;
 
 TEST_SETUP(core_layout) {
@@ -134,7 +134,7 @@ TEST(core_layout, identifiers) {
 TEST(core_layout, limits) {
   /*  We can insert a total of 2 elements into this one.
       Further push_frame calls will return FALSE */
-  cig_push_frame_insets_params(RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
+  cig_push_frame_insets_params(RECT_AUTO, cig_i_zero(), (cig_params) {
     .limit.total = 2
   });
 
@@ -148,7 +148,7 @@ TEST(core_layout, limits) {
 
 TEST(core_layout, min_max_size) {
   /* Any child of this frame cannot exceed these bounds */
-  cig_push_frame_insets_params(RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
+  cig_push_frame_insets_params(RECT_AUTO, cig_i_zero(), (cig_params) {
     .size_max.width = 200,
     .size_max.height = 150,
     .size_min.width = 50,
@@ -304,7 +304,7 @@ TEST(core_layout, content_bounds) {
 
 TEST(core_layout, vstack_layout) {
   /* Pushing a stack that lays out frames vertically with a 10pt spacing */
-  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
+  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_params) {
     .axis = CIG_LAYOUT_AXIS_VERTICAL,
     .spacing = 10,
     .limit.vertical = 2
@@ -329,7 +329,7 @@ TEST(core_layout, vstack_layout) {
 
 TEST(core_layout, hstack_layout) {
   /* Pushing a stack that lays out frames horizontally with no spacing, but everything is inset by 10pt */
-  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_uniform(10), (cig_layout_params_t) {
+  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_uniform(10), (cig_params) {
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL,
     .spacing = 0
   })) {
@@ -355,7 +355,7 @@ TEST(core_layout, hstack_layout) {
   explictly sized element as well.
 */
 TEST(core_layout, hstack_mix) {
-  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
+  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_params) {
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL,
     .columns = 4
   })) {
@@ -390,7 +390,7 @@ TEST(core_layout, hstack_mix) {
   with fixed 50pt height, then disable that and add a third item to fill the remaining space.
 */
 TEST(core_layout, vstack_align_bottom) {
-  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
+  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_params) {
     .axis = CIG_LAYOUT_AXIS_VERTICAL,
     .alignment.vertical = CIG_LAYOUT_ALIGNS_BOTTOM,
     .height = 50,
@@ -415,7 +415,7 @@ TEST(core_layout, vstack_align_bottom) {
 
 /* Similarly, h-stack supports right-to-left alignment */
 TEST(core_layout, hstack_align_right) {
-  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
+  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_params) {
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL,
     .alignment.horizontal = CIG_LAYOUT_ALIGNS_RIGHT,
     .width = 50,
@@ -434,7 +434,7 @@ TEST(core_layout, hstack_align_right) {
 
 TEST(core_layout, standard_frame_alignment) {
   /*  Alignment options can be used for standard frames as well */
-  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
+  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_params) {
     .alignment.horizontal = CIG_LAYOUT_ALIGNS_RIGHT,
     .alignment.vertical = CIG_LAYOUT_ALIGNS_BOTTOM
   })) {
@@ -456,7 +456,7 @@ TEST(core_layout, grid_with_fixed_rows_and_columns) {
      how large each child needs to be by default (we *can* override).
      Here it's a 5x5 grid, meaning on our 640x480 screen,
      each cell would be 128x96 */
-  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
+  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_params) {
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL,
     .spacing = 0,
     .columns = 5,
@@ -497,7 +497,7 @@ TEST(core_layout, grid_with_fixed_cell_size) {
      │└────────┘└────────┘└────────┘...│
      │.................................│
      └─────────────────────────────────┘ */
-  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
+  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_params) {
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL,
     .width = 200,
     .height = 200
@@ -530,7 +530,7 @@ TEST(core_layout, grid_with_varying_cell_size) {
      Then, again depending on the remaining space, cell will be inserted into the
      current row or pushed to the next. In addition, you can still specify the number
      of rows and columns, and these will now be used to limit number of cells on each axis */
-  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
+  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_params) {
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL,
     .limit.horizontal = 3
   })) {
@@ -597,7 +597,7 @@ TEST(core_layout, grid_with_down_direction) {
   /*  Grids support horizontal (default) and vertical layout direction. In vertical mode,
       instead of filling and adding rows, columns are filled and added instead. Otherwise
       they behave the same */
-  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
+  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_params) {
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL,
     .direction = CIG_LAYOUT_DIRECTION_VERTICAL
   })) {
@@ -651,7 +651,7 @@ TEST(core_layout, grid_with_down_direction) {
 
 TEST(core_layout, grid_with_flipped_alignment_and_direction) {
   /*  Grid that aligns to bottom-right corner starts adding elmenents into columns */
-  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
+  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_params) {
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL,
     .direction = CIG_LAYOUT_DIRECTION_VERTICAL,
     .alignment.horizontal = CIG_LAYOUT_ALIGNS_RIGHT,
@@ -698,7 +698,7 @@ TEST(core_layout, grid_with_flipped_alignment_and_direction) {
 
 TEST(core_layout, vstack_scroll) {
   /* Any element can be made scrollable, but it makes most sense for stacks/grids */
-  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
+  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_params) {
     .axis = CIG_LAYOUT_AXIS_VERTICAL,
     .height = 100
   })) {
@@ -851,7 +851,7 @@ TEST(core_layout, relative_values) {
   /*  CIG_REL and CIG_AUTO can also work together. In standard frames
       CIG_AUTO(CIG_REL(0.5)) is equivalent to CIG_REL(0.5),
       but in stacks for example it can yield different values */
-  if (cig_push_vstack(RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
+  if (cig_push_vstack(RECT_AUTO, cig_i_zero(), (cig_params) {
     .height = 70
   })) {
     /*  This stack has 70px rows by default but we can specify we want DOUBLE that.
@@ -925,7 +925,7 @@ TEST(core_layout, pinning) {
 
   /*  The following element is 8px from left and 10px from top edge of 'root',
       and has an explicit width of 70px and height of 50px. */
-  cig_frame_t *f0 = cig_push_frame(cig_build_rect(4, (cig_pin_t[]) {
+  cig_frame_t *f0 = cig_push_frame(cig_build_rect(4, (cig_pin[]) {
     { LEFT, 8, root, LEFT },
     { TOP, 10, root, TOP },
     { WIDTH, 70 },
@@ -936,7 +936,7 @@ TEST(core_layout, pinning) {
 
 
   /*  The second element is below and after 'f0' but 10px larger on both axis. */
-  cig_frame_t *f1 = cig_push_frame(cig_build_rect(4, (cig_pin_t[]) {
+  cig_frame_t *f1 = cig_push_frame(cig_build_rect(4, (cig_pin[]) {
     { LEFT, 0, f0, RIGHT },
     { TOP, 0, f0, BOTTOM },
     { WIDTH, 10, f0 },
@@ -974,7 +974,7 @@ TEST(core_layout, pinning) {
      │                                 │
      └─────────────────────────────────┘ */
 
-  cig_frame_t *f2 = cig_push_frame(cig_build_rect(4, (cig_pin_t[]) {
+  cig_frame_t *f2 = cig_push_frame(cig_build_rect(4, (cig_pin[]) {
     { LEFT, 0, f1, RIGHT },
     { RIGHT, 0, root, RIGHT },
     { TOP, 0, f0, TOP },
@@ -998,7 +998,7 @@ TEST(core_layout, pinning) {
      │                                 │
      └─────────────────────────────────┘ */
 
-  cig_frame_t *f3 = cig_push_frame(cig_build_rect(4, (cig_pin_t[]) {
+  cig_frame_t *f3 = cig_push_frame(cig_build_rect(4, (cig_pin[]) {
     { CENTER_X, 0, f2 },
     { CENTER_Y, 0, f2 },
     { WIDTH, 50 },
@@ -1029,7 +1029,7 @@ TEST(core_layout, pinning) {
       Left side will align with center X of 'f1', right will align with right side
       of 'f3', top edge will be just below f2 and bottom edge will align with root. */
   
-  cig_frame_t *f4 = cig_push_frame(cig_build_rect(4, (cig_pin_t[]) {
+  cig_frame_t *f4 = cig_push_frame(cig_build_rect(4, (cig_pin[]) {
     { LEFT, 0, f1, CENTER_X },
     { RIGHT, 0, f3, RIGHT },
     { TOP, 0, f2, BOTTOM },
@@ -1045,7 +1045,7 @@ TEST(core_layout, pinning_with_insets) {
   root->insets = cig_i_uniform(10);
 
 
-  cig_frame_t *f0 = cig_push_frame_insets(cig_build_rect(4, (cig_pin_t[]) {
+  cig_frame_t *f0 = cig_push_frame_insets(cig_build_rect(4, (cig_pin[]) {
     { LEFT, 0, root, LEFT_INSET },
     { TOP, 0, root, TOP_INSET },
     { WIDTH, 100 },
@@ -1080,7 +1080,7 @@ TEST(core_layout, pinning_with_insets) {
       │   ╚═════════╝                   │
       └─────────────────────────────────┘ */
 
-  cig_frame_t *f1 = cig_push_frame(cig_build_rect(4, (cig_pin_t[]) {
+  cig_frame_t *f1 = cig_push_frame(cig_build_rect(4, (cig_pin[]) {
     { LEFT, 0, f0, LEFT_INSET },
     { TOP, 0, f0, BOTTOM_INSET },
     { RIGHT, 0, f0, RIGHT },
@@ -1095,7 +1095,7 @@ TEST(core_layout, pinning_relative) {
 
 
   /*  Center and size using relative values */
-  cig_frame_t *first = cig_push_frame(cig_build_rect(4, (cig_pin_t[]) {
+  cig_frame_t *first = cig_push_frame(cig_build_rect(4, (cig_pin[]) {
     { CENTER_X, CIG_REL(-0.25), root },
     { CENTER_Y, CIG_REL(0.25), root },
     { WIDTH, CIG_REL(0.4), root },
@@ -1108,7 +1108,7 @@ TEST(core_layout, pinning_relative) {
 
 
   /* Testing relative left, right, top and bottom also */
-  cig_frame_t *second = cig_push_frame(cig_build_rect(4, (cig_pin_t[]) {
+  cig_frame_t *second = cig_push_frame(cig_build_rect(4, (cig_pin[]) {
     { LEFT, CIG_REL(0.2), root },
     { RIGHT, CIG_REL(-0.2), root },
     { TOP, CIG_REL(0.1), root },
@@ -1124,7 +1124,7 @@ TEST(core_layout, pinning_infer_edges) {
   cig_frame_t *root = cig_frame();
 
   /*  Left and top edges will be inferred by using center and right and bottom edges respectively */
-  cig_frame_t *f0 = cig_push_frame(cig_build_rect(4, (cig_pin_t[]) {
+  cig_frame_t *f0 = cig_push_frame(cig_build_rect(4, (cig_pin[]) {
     { CENTER_X, 0, root },
     { RIGHT, -50, root },
     { CENTER_Y, 0, root },
@@ -1135,7 +1135,7 @@ TEST(core_layout, pinning_infer_edges) {
 
 
   /*  If all else fails, left and top will default to zero as long as width/height is there */
-  cig_frame_t *f1 = cig_push_frame(cig_build_rect(2, (cig_pin_t[]) {
+  cig_frame_t *f1 = cig_push_frame(cig_build_rect(2, (cig_pin[]) {
     { WIDTH, 100 },
     { HEIGHT, 75 },
   }));
@@ -1146,7 +1146,7 @@ TEST(core_layout, pinning_infer_edges) {
 TEST(core_layout, pinning_aspect_ratio) {
   cig_frame_t *root = cig_frame();
 
-  cig_r r0 = cig_build_rect(4, (cig_pin_t[]) {
+  cig_r r0 = cig_build_rect(4, (cig_pin[]) {
     { CENTER_X, 0, root },
     { CENTER_Y, 0, root },
     { WIDTH, 400 },
@@ -1156,7 +1156,7 @@ TEST(core_layout, pinning_aspect_ratio) {
   TEST_ASSERT_EQUAL_RECT(cig_r_make(120, 90, 400, 300), r0);
 
 
-  cig_r r1 = cig_build_rect(4, (cig_pin_t[]) {
+  cig_r r1 = cig_build_rect(4, (cig_pin[]) {
     { CENTER_X, 0, root },
     { CENTER_Y, 0, root },
     { HEIGHT, 300 },

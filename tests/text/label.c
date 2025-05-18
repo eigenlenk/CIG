@@ -7,7 +7,7 @@
 
 TEST_GROUP(text_label);
 
-static cig_context_t ctx;
+static cig_context ctx;
 static int text_measure_calls;
 static struct {
   cig_r rects[16];

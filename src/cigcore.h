@@ -127,12 +127,12 @@ typedef struct {
   struct {
     int16_t h_cur, v_cur, total;
   } _count; /* h_ and v_cur are only counted in stacks/grids */
-} cig_layout_params_t;
+} cig_params;
 
 typedef struct {
   unsigned char bytes[CIG_STATE_MEM_ARENA_BYTES];
   size_t mapped, read;
-} cig_state_memory_arena_t;
+} cig_state_memory_arena;
 
 typedef struct {
   enum CIG_PACKED {
@@ -140,7 +140,7 @@ typedef struct {
     ACTIVATED,
     ACTIVE
   } activation_state;
-  cig_state_memory_arena_t arena;
+  cig_state_memory_arena arena;
 } cig_state_t;
 
 /* */
@@ -151,9 +151,9 @@ typedef struct {
 typedef struct {
   cig_r rect;
   cig_i insets;
-  cig_layout_params_t params;
-  bool (*builder)(cig_r, cig_r, cig_layout_params_t*, cig_r*);
-} cig_frame_args_t;
+  cig_params params;
+  bool (*builder)(cig_r, cig_r, cig_params*, cig_r*);
+} cig_args;
 
 /* */
 typedef struct cig_frame_t {
@@ -165,11 +165,11 @@ typedef struct cig_frame_t {
   cig_i insets;        /* Insets affect child elements within this element */
 
   /*__PRIVATE__*/      
-  bool (*_layout_function)(cig_r, cig_r, cig_layout_params_t*, cig_r*);
+  bool (*_layout_function)(cig_r, cig_r, cig_params*, cig_r*);
   cig_scroll_state_t *_scroll_state;
   cig_state_t *_state;
   struct cig_frame_t *_parent;
-  cig_layout_params_t _layout_params;
+  cig_params _layout_params;
   unsigned int _id_counter;
   enum CIG_PACKED {
     CLIPPED = CIG_BIT(0),
@@ -184,12 +184,12 @@ typedef enum CIG_PACKED {
   CIG_INPUT_PRIMARY_ACTION = CIG_BIT(0),
   CIG_INPUT_SECONDARY_ACTION = CIG_BIT(1),
   CIG_INPUT_ACTION_ANY = CIG_INPUT_PRIMARY_ACTION | CIG_INPUT_SECONDARY_ACTION
-} cig_input_action_type_t;
+} cig_input_action_type;
 
 typedef struct {
-  cig_input_action_type_t action_mask,
-                          last_action_began,
-                          last_action_ended;
+  cig_input_action_type action_mask,
+                        last_action_began,
+                        last_action_ended;
   cig_v position;
 
   enum CIG_PACKED {
@@ -228,7 +228,7 @@ typedef enum CIG_PACKED {
       and the element will reflect pressed state as soon as mouse moves onto it */
   CIG_PRESS_INSIDE = CIG_BIT(0),
   CIG_PRESS_DEFAULT_OPTIONS = CIG_PRESS_INSIDE
-} cig_press_flags_t;
+} cig_press_flags;
 
 typedef enum CIG_PACKED {
   CIG_CLICK_STARTS_INSIDE = CIG_BIT(0),
@@ -236,7 +236,7 @@ typedef enum CIG_PACKED {
   CIG_CLICK_EXPIRE = CIG_BIT(2),
   CIG_CLICK_DOUBLE = CIG_BIT(3),
   CIG_CLICK_DEFAULT_OPTIONS = CIG_CLICK_STARTS_INSIDE
-} cig_click_flags_t;
+} cig_click_flags;
 
 typedef enum CIG_PACKED {
   UNSPECIFIED = 0,
@@ -257,14 +257,14 @@ typedef enum CIG_PACKED {
   TOP_INSET,
   BOTTOM_INSET,
   ASPECT
-} cig_pin_attribute_t;
+} cig_pin_attribute;
 
 typedef struct {
-  cig_pin_attribute_t attribute;
+  cig_pin_attribute attribute;
   double value;
   cig_frame_t *relation;
-  cig_pin_attribute_t relation_attribute;
-} cig_pin_t;
+  cig_pin_attribute relation_attribute;
+} cig_pin;
 
 typedef cig_r cig_clip_rect_t;
 #define STACK_CAPACITY_cig_clip_rect_t CIG_BUFFER_CLIP_REGIONS_MAX
@@ -313,17 +313,17 @@ typedef struct {
 #ifdef DEBUG
   bool step_mode;
 #endif
-} cig_context_t;
+} cig_context;
 
 /*  ┌─────────────┐
     │ CORE LAYOUT │
     └─────────────┘ */
 
 /*  Call this once to initalize (or reset) the context */
-void cig_init_context(cig_context_t*);
+void cig_init_context(cig_context*);
 
 /* */
-void cig_begin_layout(cig_context_t*, CIG_OPTIONAL(cig_buffer_ref), cig_r, float);
+void cig_begin_layout(cig_context*, CIG_OPTIONAL(cig_buffer_ref), cig_r, float);
 
 /* */
 void cig_end_layout();
@@ -333,7 +333,7 @@ cig_buffer_ref cig_buffer();
 
 /*  Pushes a new frame with args struct containing all relevant data.
     @return Reference to new element if rect is visible within current container, NULL otherwise */
-cig_frame_t* cig_push_frame_args(cig_frame_args_t);
+cig_frame_t* cig_push_frame_args(cig_args);
 
 /*  Pushes a new frame with default insets (see `cig_set_default_insets`) to layout stack.
     @return Reference to new element if rect is visible within current container, NULL otherwise */
@@ -345,15 +345,15 @@ cig_frame_t* cig_push_frame_insets(cig_r, cig_i);
 
 /*  Push a new frame with custom insets and params to layout stack.
     @return Reference to new element if rect is visible within current container, NULL otherwise */
-cig_frame_t* cig_push_frame_insets_params(cig_r, cig_i, cig_layout_params_t);
+cig_frame_t* cig_push_frame_insets_params(cig_r, cig_i, cig_params);
 
 /*  Push layout builder function to layout stack.
     @return Reference to new element if rect is visible within current container, NULL otherwise */
 cig_frame_t* cig_push_layout_function(
-  bool (*)(cig_r, cig_r, cig_layout_params_t*, cig_r*),
+  bool (*)(cig_r, cig_r, cig_params*, cig_r*),
   cig_r,
   cig_i,
-  cig_layout_params_t
+  cig_params
 );
 
 /*  Advanced function allowing jumping back to a previous element and continuing
@@ -424,7 +424,7 @@ void cig_pop_buffer();
     └───────────────────────────┘ */
 
 /*  Pass input coordinates and state[s] */
-void cig_set_input_state(cig_v, cig_input_action_type_t);
+void cig_set_input_state(cig_v, cig_input_action_type);
 
 /*  @return Current input state as updated by last `cig_set_input_state` call */
 CIG_OPTIONAL(cig_input_state_t*) cig_input_state();
@@ -437,12 +437,12 @@ void cig_enable_interaction();
 bool cig_hovered();
 
 /*  Checks if the current element is hovered and the mouse button is pressed.
-    See `cig_press_flags_t` declaration for more info */
-cig_input_action_type_t cig_pressed(cig_input_action_type_t, cig_press_flags_t);
+    See `cig_press_flags` declaration for more info */
+cig_input_action_type cig_pressed(cig_input_action_type, cig_press_flags);
 
 /*  Checks if the current element is hovered and mouse button was clicked or released
-    depending on the options. See `cig_click_flags_t` declaration for more info */
-cig_input_action_type_t cig_clicked(cig_input_action_type_t, cig_click_flags_t);
+    depending on the options. See `cig_click_flags` declaration for more info */
+cig_input_action_type cig_clicked(cig_input_action_type, cig_click_flags);
 
 /*  Makes this frame focusable. Focus is gained by pressing mouse button in this frame
     regardless of interaction being enabled or not. Returns whether the same element
@@ -490,7 +490,7 @@ cig_v cig_offset();
     │ LAYOUT HELPERS │
     └────────────────┘ */
 
-cig_r cig_build_rect(size_t, cig_pin_t[]);
+cig_r cig_build_rect(size_t, cig_pin[]);
 
 /*  By default, when adding rects that are completely outside the bounds
     of the parent, `cig_push_frame` calls return NULL. You can disable that
@@ -519,13 +519,13 @@ void cig_empty();
 void cig_spacer(int size);
 
 /*  Default layout function for stack and grid type */
-bool cig_default_layout_builder(cig_r, cig_r, cig_layout_params_t*, cig_r*);
+bool cig_default_layout_builder(cig_r, cig_r, cig_params*, cig_r*);
 
-cig_frame_t* cig_push_hstack(cig_r, cig_i, cig_layout_params_t);
+cig_frame_t* cig_push_hstack(cig_r, cig_i, cig_params);
 
-cig_frame_t* cig_push_vstack(cig_r, cig_i, cig_layout_params_t);
+cig_frame_t* cig_push_vstack(cig_r, cig_i, cig_params);
 
-cig_frame_t* cig_push_grid(cig_r, cig_i, cig_layout_params_t);
+cig_frame_t* cig_push_grid(cig_r, cig_i, cig_params);
 
 /*  ┌───────────────────┐
     │ BACKEND CALLBACKS │

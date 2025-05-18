@@ -397,7 +397,7 @@ typedef struct {
 } file_browser_data_t;
 
 bool begin_file_browser(cig_r rect, int direction, color_id_t text_color, bool parent_focused) {
-  if (!cig_push_grid(RECT_AUTO, cig_i_zero(), (cig_layout_params_t) {
+  if (!cig_push_grid(RECT_AUTO, cig_i_zero(), (cig_params) {
     .width = 75,
     .height = 75,
     .direction = direction

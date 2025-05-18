@@ -8,7 +8,7 @@
 /* Unit testing image display. Software development just makes sense. */
 TEST_GROUP(gfx_image);
 
-static cig_context_t ctx;
+static cig_context ctx;
 static int test_image = 1;
 static cig_r image_rect;
 

@@ -8,7 +8,7 @@
 
 TEST_GROUP(text_style);
 
-static cig_context_t ctx;
+static cig_context ctx;
 static int fonts[2];
 static int red_color;
 
