@@ -10,7 +10,7 @@ typedef struct {
 
 static void window_proc(window_t *this, window_message_t *msg, bool window_focused) {
   window_data_t *window_data = (window_data_t*)this->data;
-  cig_frame_t *primary_status = 0;
+  cig_frame *primary_status = 0;
 
   CIG_VSTACK(_, CIG_PARAMS({
     CIG_SPACING(2)

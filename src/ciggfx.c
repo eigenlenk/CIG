@@ -37,7 +37,7 @@ void cig_assign_draw_line(cig_draw_line_callback fp) {
 void cig_draw_image(cig_image_ref image, cig_image_mode mode) {
   if (!draw_image || !measure_image) { /* Log an error? */ return; }
 
-  const cig_r container = cig_r_inset(cig_absolute_rect(), cig_frame()->insets);
+  const cig_r container = cig_r_inset(cig_absolute_rect(), cig_current()->insets);
   const cig_v size = measure_image(image);
 
   cig_r rect = container; /* Output image rect */

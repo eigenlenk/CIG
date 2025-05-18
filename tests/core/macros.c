@@ -22,7 +22,7 @@ TEST_TEAR_DOWN(core_macros) {
     └────────────┘ */
 
 TEST(core_macros, cig) {
-  cig_frame_t *out_of_bounds, *main_frame; 
+  cig_frame *out_of_bounds, *main_frame; 
 
   CIG(_) {}
 
@@ -30,13 +30,13 @@ TEST(core_macros, cig) {
 
       While `cig_push_frame` returns a pointer to the newly added frame (or NULL), we
       can't read it when using the CIG macro because it's essentially a for-loop with
-      no return value. So we need to use another macro to declare a cig_frame_t
+      no return value. So we need to use another macro to declare a cig_frame
       pointer of some name, run the CIG macro and assigns the frame pointer returned
       through a global.
 
       You may also do:
 
-        cig_frame_t *my_frame;
+        cig_frame *my_frame;
         CIG(...) { }
         my_frame = CIG_LAST();
       */
@@ -120,7 +120,7 @@ TEST(core_macros, allocator) {
 }
 
 TEST(core_macros, pinning) {
-  cig_frame_t *root = cig_frame();
+  cig_frame *root = cig_current();
 
 
   /*  Pin right edge to right edge of 'root' offset by -5px (moves left) */

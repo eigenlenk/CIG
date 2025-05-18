@@ -14,16 +14,16 @@
 #define CIG_Y cig_rect().y
 #define CIG_W cig_rect().w
 #define CIG_H cig_rect().h
-#define CIG_X_INSET (cig_rect().x + cig_frame()->insets.left)
-#define CIG_Y_INSET (cig_rect().y + cig_frame()->insets.top)
-#define CIG_W_INSET (CIG_W - cig_frame()->insets.left - cig_frame()->insets.right)
-#define CIG_H_INSET (CIG_H - cig_frame()->insets.top - cig_frame()->insets.bottom)
+#define CIG_X_INSET (cig_rect().x + cig_current()->insets.left)
+#define CIG_Y_INSET (cig_rect().y + cig_current()->insets.top)
+#define CIG_W_INSET (CIG_W - cig_current()->insets.left - cig_current()->insets.right)
+#define CIG_H_INSET (CIG_H - cig_current()->insets.top - cig_current()->insets.bottom)
 #define CIG_SX cig_absolute_rect().x
 #define CIG_SY cig_absolute_rect().y
 #define CIG_CENTER cig_v_make((CIG_W * 0.5), (CIG_H * 0.5))
 #define CIG_R (CIG_X + CIG_W)
 #define CIG_B (CIG_Y + CIG_H)
-#define CIG_SPACE cig_frame()->_layout_params.spacing
+#define CIG_SPACE cig_current()->_layout_params.spacing
 
 #define RECT_CENTERED(W, H) cig_r_make((CIG_W * 0.5) - (W * 0.5), (CIG_H * 0.5) - (H * 0.5), W, H)
 #define RECT_CENTERED_VERTICALLY(R) cig_r_make(R.x, (CIG_H * 0.5) - (R.h * 0.5), R.w, R.h)
@@ -67,7 +67,7 @@
 #define _W(W) RECT_AUTO_W(W)
 #define _H(H) RECT_AUTO_H(H)
 
-extern cig_frame_t *cig__macro_last_closed;
+extern cig_frame *cig__macro_last_closed;
 
 /*  This calls the push_frame function once, performs the function body and pops the frame */
 #define CIG(RECT, ...) cig__macro_last_closed=NULL; for (int __pushed=0; !(__pushed++)&&cig_push_frame_args((cig_args) { RECT, __VA_ARGS__ }); cig__macro_last_closed=cig_pop_frame())

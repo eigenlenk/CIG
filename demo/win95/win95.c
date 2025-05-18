@@ -26,7 +26,7 @@ static void process_windows();
 static void close_application(application_t *);
 static bool begin_window(window_t*, window_message_t*, bool*);
 static void end_window(window_t*);
-static cig_frame_t* large_file_icon(int, const char*, color_id_t, bool*, bool*);
+static cig_frame* large_file_icon(int, const char*, color_id_t, bool*, bool*);
 static void open_explorer_at(const char*);
 static void handle_window_resize(window_t*, window_resize_edge_t);
 static cig_r rect_of(cig_v, cig_v);
@@ -438,7 +438,7 @@ bool begin_file_browser(cig_r rect, int direction, color_id_t text_color, bool p
           data->drag_selection.start,
           cig_v_add(data->drag_selection.start, cig_input_state()->drag.change)
         ),
-        cig_frame()->rect
+        cig_current()->rect
       );
     }
   } else {
@@ -450,7 +450,7 @@ bool begin_file_browser(cig_r rect, int direction, color_id_t text_color, bool p
 
 bool file_item(image_id_t image, const char *title) {
   file_browser_data_t *data = CIG_READ(true, file_browser_data_t);
-  cig_frame_t *file_frame;
+  cig_frame *file_frame;
   size_t index = data->count++;
   bool double_clicked = false;
   bool selected = data->selected[index];
@@ -639,7 +639,7 @@ static void end_window(window_t *wnd) {
   /*  Add resizable edge regions and the bottom corner thumb gfx.
       Resetting insets makes adding the resize regions easier to calculate */
   
-  cig_frame()->insets = cig_i_zero();
+  cig_current()->insets = cig_i_zero();
 
   if (wnd->flags & IS_RESIZABLE) {
     struct {
@@ -675,8 +675,8 @@ static void end_window(window_t *wnd) {
   cig_pop_frame(); /* Window panel */
 }
 
-static cig_frame_t* large_file_icon(int icon, const char *title, color_id_t text_color, bool *double_clicked, bool *selected) {
-  cig_frame_t *file_element;
+static cig_frame* large_file_icon(int icon, const char *title, color_id_t text_color, bool *double_clicked, bool *selected) {
+  cig_frame *file_element;
   
   CIG_CAPTURE(file_element, CIG_VSTACK(RECT_AUTO, CIG_INSETS(cig_i_make(2, 2, 2, 0)), CIG_PARAMS({
     CIG_SPACING(6)

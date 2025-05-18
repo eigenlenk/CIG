@@ -33,8 +33,8 @@ TEST(core_state, activation_states) {
     begin();
     cig_push_frame(RECT_AUTO);
 
-    if (!persistent_id) { persistent_id = cig_frame()->id; }
-    else { TEST_ASSERT_EQUAL_UINT32(persistent_id, cig_frame()->id); }
+    if (!persistent_id) { persistent_id = cig_current()->id; }
+    else { TEST_ASSERT_EQUAL_UINT32(persistent_id, cig_current()->id); }
 
     cig_state *state = cig_enable_state();
 
@@ -114,11 +114,11 @@ TEST(core_state, memory_arena) {
 
     if (i == 0) { /* Store data */
       *vec2 = cig_v_make(13, 17);
-      *ul = cig_frame()->id;
+      *ul = cig_current()->id;
       strcpy(str, "Hello, World!");
     } else { /* Read data */
       TEST_ASSERT_EQUAL_VEC2(cig_v_make(13, 17), *vec2);
-      TEST_ASSERT_EQUAL_UINT32(cig_frame()->id, *ul);
+      TEST_ASSERT_EQUAL_UINT32(cig_current()->id, *ul);
       TEST_ASSERT_EQUAL_STRING("Hello, World!", str);
     }
 
@@ -136,7 +136,7 @@ TEST(core_state, memory_arena_read) {
     char *str = (char *)cig_arena_allocate(NULL, sizeof(char[32]));
 
     *vec2 = cig_v_make(13, 17);
-    *ul = cig_frame()->id;
+    *ul = cig_current()->id;
     strcpy(str, "Hello, World!");
   }
 
@@ -147,7 +147,7 @@ TEST(core_state, memory_arena_read) {
     char *str = (char *)cig_arena_read(NULL, false, sizeof(char[32]));
 
     TEST_ASSERT_EQUAL_VEC2(cig_v_make(13, 17), *vec2);
-    TEST_ASSERT_EQUAL_UINT32(cig_frame()->id, *ul);
+    TEST_ASSERT_EQUAL_UINT32(cig_current()->id, *ul);
     TEST_ASSERT_EQUAL_STRING("Hello, World!", str);
   }
 

@@ -156,7 +156,7 @@ typedef struct {
 } cig_args;
 
 /* */
-typedef struct cig_frame_t {
+typedef struct cig_frame {
   cig_id id;
   cig_r rect,          /* Relative rect */
         clipped_rect,  /* Relative clipped rect */
@@ -168,7 +168,7 @@ typedef struct cig_frame_t {
   bool (*_layout_function)(cig_r, cig_r, cig_params*, cig_r*);
   cig_scroll_state_t *_scroll_state;
   cig_state *_state;
-  struct cig_frame_t *_parent;
+  struct cig_frame *_parent;
   cig_params _layout_params;
   unsigned int _id_counter;
   enum CIG_PACKED {
@@ -178,7 +178,7 @@ typedef struct cig_frame_t {
         one we need to recreate the situation. */
     RESTORES_EARLIER_CLIP = CIG_BIT(2)
   } _flags;
-} cig_frame_t;
+} cig_frame;
 
 typedef enum CIG_PACKED {
   CIG_INPUT_PRIMARY_ACTION = CIG_BIT(0),
@@ -262,7 +262,7 @@ typedef enum CIG_PACKED {
 typedef struct {
   cig_pin_attribute attribute;
   double value;
-  cig_frame_t *relation;
+  cig_frame *relation;
   cig_pin_attribute relation_attribute;
 } cig_pin;
 
@@ -277,7 +277,7 @@ typedef struct {
   cig_clip_rect_t_stack_t clip_rects;
 } cig_buffer_element_t;
 
-typedef cig_frame_t* cig_frame_ref;
+typedef cig_frame* cig_frame_ref;
 #define STACK_CAPACITY_cig_frame_ref CIG_NESTED_ELEMENTS_MAX
 DECLARE_ARRAY_STACK_T(cig_frame_ref)
 
@@ -307,7 +307,7 @@ typedef struct {
     unsigned int last_tick;
   } state_list[CIG_STATES_MAX];
   struct {
-    cig_frame_t elements[CIG_ELEMENTS_MAX];
+    cig_frame elements[CIG_ELEMENTS_MAX];
     size_t count;
   } frames;
 #ifdef DEBUG
@@ -333,23 +333,23 @@ cig_buffer_ref cig_buffer();
 
 /*  Pushes a new frame with args struct containing all relevant data.
     @return Reference to new element if rect is visible within current container, NULL otherwise */
-cig_frame_t* cig_push_frame_args(cig_args);
+cig_frame* cig_push_frame_args(cig_args);
 
 /*  Pushes a new frame with default insets (see `cig_set_default_insets`) to layout stack.
     @return Reference to new element if rect is visible within current container, NULL otherwise */
-cig_frame_t* cig_push_frame(cig_r);
+cig_frame* cig_push_frame(cig_r);
 
 /*  Push a new frame with custom insets to layout stack.
     @return Reference to new element if rect is visible within current container, NULL otherwise */
-cig_frame_t* cig_push_frame_insets(cig_r, cig_i);
+cig_frame* cig_push_frame_insets(cig_r, cig_i);
 
 /*  Push a new frame with custom insets and params to layout stack.
     @return Reference to new element if rect is visible within current container, NULL otherwise */
-cig_frame_t* cig_push_frame_insets_params(cig_r, cig_i, cig_params);
+cig_frame* cig_push_frame_insets_params(cig_r, cig_i, cig_params);
 
 /*  Push layout builder function to layout stack.
     @return Reference to new element if rect is visible within current container, NULL otherwise */
-cig_frame_t* cig_push_layout_function(
+cig_frame* cig_push_layout_function(
   bool (*)(cig_r, cig_r, cig_params*, cig_r*),
   cig_r,
   cig_i,
@@ -358,28 +358,28 @@ cig_frame_t* cig_push_layout_function(
 
 /*  Advanced function allowing jumping back to a previous element and continuing
     layout within that. Use with care! End with `cig_pop_frame` once done. */
-cig_frame_t* cig_jump(cig_frame_t*);
+cig_frame* cig_jump(cig_frame*);
 
 /*  Pop and return the last element in the layout stack */
-cig_frame_t* cig_pop_frame();
+cig_frame* cig_pop_frame();
 
 /*  Sets insets used by all consecutive `cig_push_frame` calls */
 void cig_set_default_insets(cig_i);
 
 /*  @return Current layout element */
-cig_frame_t* cig_frame();
+cig_frame* cig_current();
 
 /*  @return Current local rect relative to its parent */
-CIG_INLINED cig_r cig_rect() { return cig_frame()->rect; }
+CIG_INLINED cig_r cig_rect() { return cig_current()->rect; }
 
 /*  @return Current local rect that's been clipped */
-CIG_INLINED cig_r cig_clipped_rect() { return cig_frame()->clipped_rect; }
+CIG_INLINED cig_r cig_clipped_rect() { return cig_current()->clipped_rect; }
 
 /*  @return Current screen-space rect */
-CIG_INLINED cig_r cig_absolute_rect() { return cig_frame()->absolute_rect; }
+CIG_INLINED cig_r cig_absolute_rect() { return cig_current()->absolute_rect; }
 
 /*  @return Relative bounding rect for current content */
-CIG_INLINED cig_r cig_content_rect() { return cig_frame()->content_rect; }
+CIG_INLINED cig_r cig_content_rect() { return cig_current()->content_rect; }
 
 /*  Converts a relative rect to a screen-space rect */
 cig_r cig_convert_relative_rect(cig_r);
@@ -527,11 +527,11 @@ void cig_spacer(int size);
 /*  Default layout function for stack and grid type */
 bool cig_default_layout_builder(cig_r, cig_r, cig_params*, cig_r*);
 
-cig_frame_t* cig_push_hstack(cig_r, cig_i, cig_params);
+cig_frame* cig_push_hstack(cig_r, cig_i, cig_params);
 
-cig_frame_t* cig_push_vstack(cig_r, cig_i, cig_params);
+cig_frame* cig_push_vstack(cig_r, cig_i, cig_params);
 
-cig_frame_t* cig_push_grid(cig_r, cig_i, cig_params);
+cig_frame* cig_push_grid(cig_r, cig_i, cig_params);
 
 /*  ┌───────────────────┐
     │ BACKEND CALLBACKS │

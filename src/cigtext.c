@@ -66,7 +66,7 @@ void cig_set_default_text_color(cig_text_color_ref color) {
 }
 
 CIG_DISCARDABLE(cig_label *) cig_draw_label(cig_text_properties props, const char *text, ...) {
-  register const cig_r absolute_rect = cig_r_inset(cig_absolute_rect(), cig_frame()->insets);
+  register const cig_r absolute_rect = cig_r_inset(cig_absolute_rect(), cig_current()->insets);
 
   cig_label *label = CIG_ALLOCATE(cig_label);
 
@@ -398,7 +398,7 @@ static void render_spans(
 ) {
   if (!count) { return; }
 
-  register const cig_r absolute_rect = cig_r_inset(cig_absolute_rect(), cig_frame()->insets);
+  register const cig_r absolute_rect = cig_r_inset(cig_absolute_rect(), cig_current()->insets);
   register int w, dx, dy;
   register cig_span *span, *line_start, *line_end, *last = first + (count-1);
   register const cig_font_info font_info = font_query(base_font);
