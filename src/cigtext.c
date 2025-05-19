@@ -100,23 +100,11 @@ CIG_DISCARDABLE(cig_label *) cig_draw_label(cig_text_properties props, const cha
 
 cig_label* cig_label_prepare(
   cig_label *label,
-  cig_span *spans,
-  size_t spans_allocated,
   cig_v max_bounds,
   cig_text_properties props,
   const char *text,
   ...
 ) {
-  label->available_spans = spans_allocated;
-
-  if (!spans) {
-    label->spans = CIG_ALLOCATE(cig_span[spans_allocated]);
-    if (!label->spans) {
-      /* Failed to allocate */
-      label->available_spans = 0;
-    }
-  }
-
   if (props.flags & CIG_TEXT_FORMATTED) {
     va_list args;
     va_start(args, text);

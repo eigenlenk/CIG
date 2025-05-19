@@ -126,7 +126,7 @@ CIG_DISCARDABLE(cig_label *) cig_draw_label(cig_text_properties, const char *, .
  * pass as a size for the next layout frame for example. It also exposes
  * the underlying spans (smallest text components)
  */
-cig_label * cig_label_prepare(cig_label *, CIG_OPTIONAL(cig_span *), size_t, cig_v, cig_text_properties, const char *, ...);
+cig_label * cig_label_prepare(cig_label *, cig_v, cig_text_properties, const char *, ...);
 
 /* Renders a prepared label */
 void cig_label_draw(cig_label *);
