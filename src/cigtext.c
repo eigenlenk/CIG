@@ -30,7 +30,7 @@ static struct { size_t count; cig_font_ref fonts[4]; } font_stack;
 static struct { size_t count; cig_text_color_ref colors[4]; } color_stack;
 static cig_text_style style;
 
-static void prepare_label(cig_label *, const cig_text_properties *, const unsigned int, const char *);
+static void prepare_label(cig_label *, cig_text_properties *, cig_v, const char *);
 static cig_span* create_span(cig_label *, utf8_string, cig_font_ref, cig_text_color_ref, cig_text_style, cig_v);
 static void render_spans(cig_span *, size_t, cig_font_ref, cig_text_color_ref, cig_text_horizontal_alignment, cig_text_vertical_alignment, bounds_t, int);
 static void wrap_text(utf8_string *, size_t, cig_v *, cig_text_overflow, cig_font_ref, cig_font_ref, cig_text_color_ref, cig_text_style, size_t, cig_span *);
@@ -75,9 +75,9 @@ CIG_DISCARDABLE(cig_label *) cig_draw_label(cig_text_properties props, const cha
     va_start(args, text);
     vsprintf(printf_buf, text, args);
     va_end(args);
-    prepare_label(label, &props, absolute_rect.w, printf_buf);
+    prepare_label(label, &props, cig_r_size(absolute_rect), printf_buf);
   } else {
-    prepare_label(label, &props, absolute_rect.w, text);
+    prepare_label(label, &props, cig_r_size(absolute_rect), text);
   }
 
   if (render_callback) {
@@ -98,7 +98,7 @@ CIG_DISCARDABLE(cig_label *) cig_draw_label(cig_text_properties props, const cha
 
 cig_label* cig_label_prepare(
   cig_label *label,
-  unsigned int max_width,
+  cig_v max_bounds,
   cig_text_properties props,
   const char *text,
   ...
@@ -108,9 +108,9 @@ cig_label* cig_label_prepare(
     va_start(args, text);
     vsprintf(printf_buf, text, args);
     va_end(args);
-    prepare_label(label, &props, max_width, printf_buf);
+    prepare_label(label, &props, max_bounds, printf_buf);
   } else {
-    prepare_label(label, &props, max_width, text);
+    prepare_label(label, &props, max_bounds, text);
   }
 
   return label;
@@ -137,11 +137,11 @@ void cig_label_draw(cig_label *label) {
 
 static void prepare_label(
   cig_label *label,
-  const cig_text_properties *props,
-  const unsigned int max_width,
+  cig_text_properties *props,
+  cig_v max_bounds,
   const char *str
 ) {
-  cig_id hash = cig_hash(str) + (cig_id)props->font;
+  cig_id hash = cig_hash(str) + (cig_id)props->font + CIG_TINYHASH(max_bounds.x, max_bounds.y);
 
   label->color = props->color ? props->color : default_text_color;
   label->alignment.horizontal = props->alignment.horizontal == CIG_TEXT_ALIGN_DEFAULT
@@ -211,7 +211,7 @@ static void prepare_label(
       const bool end_of_string = (i + ch.byte_len == utext.byte_len);
       const bool terminates_span = (i > span.start && (is_newline || tag_stage_changed)) || (end_of_string && (i = utext.byte_len));
 
-      if ((max_width && is_space) || terminates_span) {
+      if ((max_bounds.x > 0 && is_space) || terminates_span) {
         size_t length = i - span.start;
         utf8_string slice = slice_utf8_string(utext, span.start, length);
         cig_text_color_ref color_override = color_stack.count > 0 ? color_stack.colors[color_stack.count-1] : 0;
@@ -238,8 +238,8 @@ static void prepare_label(
 
         // printf("Checking [%i...%i] (w = %i/%i, bx = %i): |%.*s|\n", span.start, i, line_width, max_width, bounds.x, (int)length, &str[span.start]);
 
-        if (max_width) {
-          if (line_width + bounds.x <= max_width) {
+        if (max_bounds.x > 0) {
+          if (line_width + bounds.x <= max_bounds.x) {
             span.last_fitting.str = (char*)iter.str;
             span.last_fitting.index = i;
             span.last_fitting.slice = slice;
@@ -266,6 +266,7 @@ static void prepare_label(
               span.last_fitting.str = NULL;
               span.reading = false;
             } else {
+              bool ends_text = false;
               if (!end_of_string && props->max_lines == line_count && props->overflow == CIG_TEXT_OVERFLOW) {
                 /*  All text will be place on one line, no matter it going out of bounds */
                 i += ch.byte_len;
@@ -273,8 +274,9 @@ static void prepare_label(
               }
               // printf("\tForcing a span!\n");
               cig_span additional_span = { 0 };
-              if (bounds.x > max_width && (!props->max_lines || props->max_lines == line_count)) {
-                wrap_text(&slice, length, &bounds, props->overflow, display_font, font_override, color_override, props->style | style, max_width, &additional_span);
+              if (bounds.x > max_bounds.x && (!props->max_lines || props->max_lines == line_count)) {
+                wrap_text(&slice, length, &bounds, props->overflow, display_font, font_override, color_override, props->style | style, max_bounds.x, &additional_span);
+                ends_text = true;
               }
               cig_span *new_span = create_span(label, slice, font_override, color_override, props->style | style, bounds);
               if (additional_span.str) {
@@ -286,6 +288,9 @@ static void prepare_label(
               span.reading = false;
               line_width = 0;
               label->bounds.w = CIG_MAX(label->bounds.w, bounds.x);
+              if (ends_text) {
+                break;
+              }
             }
           }
         } else {

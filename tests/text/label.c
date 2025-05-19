@@ -246,7 +246,7 @@ TEST(text_label, prepare_single_long_word) {
   begin();
 
   cig_label label;
-  cig_label_prepare(&label, 7, (cig_text_properties) { 0 }, "Foobarbaz");
+  cig_label_prepare(&label, cig_v_make(7, 1), (cig_text_properties) { 0 }, "Foobarbaz");
 
   TEST_ASSERT_EQUAL_INT(9, label.bounds.w);
   TEST_ASSERT_EQUAL_INT(1, label.bounds.h);
@@ -262,7 +262,7 @@ TEST(text_label, prepare_multiple_long_words) {
   begin();
 
   cig_label label;
-  cig_label_prepare(&label, 7, (cig_text_properties) { 0 }, "Foobarbaz barbazfoo bazfoobar");
+  cig_label_prepare(&label, cig_v_make(7, 1), (cig_text_properties) { 0 }, "Foobarbaz barbazfoo bazfoobar");
 
   TEST_ASSERT_EQUAL_INT(9, label.bounds.w);
   TEST_ASSERT_EQUAL_INT(3, label.bounds.h);

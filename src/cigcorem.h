@@ -24,6 +24,8 @@
 #define CIG_R (CIG_X + CIG_W)
 #define CIG_B (CIG_Y + CIG_H)
 #define CIG_SPACE cig_current()->_layout_params.spacing
+#define CIG_SIZE cig_v_make(CIG_W, CIG_H)
+#define CIG_SIZE_INSET cig_v_make(CIG_W_INSET, CIG_H_INSET)
 
 #define RECT_CENTERED(W, H) cig_r_make((CIG_W * 0.5) - (W * 0.5), (CIG_H * 0.5) - (H * 0.5), W, H)
 #define RECT_CENTERED_VERTICALLY(R) cig_r_make(R.x, (CIG_H * 0.5) - (R.h * 0.5), R.w, R.h)

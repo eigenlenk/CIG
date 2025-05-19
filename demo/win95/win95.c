@@ -64,6 +64,7 @@ static bool taskbar_button(
           cig_draw_label((cig_text_properties) {
             .font = get_font(selected ? FONT_BOLD : FONT_REGULAR),
             .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
+            .max_lines = 1,
             .overflow = CIG_TEXT_SHOW_ELLIPSIS
           }, title);
         }
@@ -168,7 +169,7 @@ static void do_taskbar() {
     time_t t = time(NULL);
     struct tm *ct = localtime(&t);
 
-    cig_label_prepare(&clock_label, 0, (cig_text_properties) { .flags = CIG_TEXT_FORMATTED }, "%02d:%02d", ct->tm_hour, ct->tm_min);
+    cig_label_prepare(&clock_label, cig_v_zero(), (cig_text_properties) { .flags = CIG_TEXT_FORMATTED }, "%02d:%02d", ct->tm_hour, ct->tm_min);
 
     const int clock_w = (clock_label.bounds.w+11*2);
 
@@ -622,7 +623,9 @@ static bool begin_window(window_t *wnd, window_message_t *msg, bool *focused) {
         cig_draw_label((cig_text_properties) {
           .font = get_font(FONT_BOLD),
           .color = *focused ? get_color(COLOR_WHITE) : get_color(COLOR_DIALOG_BACKGROUND),
-          .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
+          .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
+          .max_lines = 1,
+          .overflow = CIG_TEXT_SHOW_ELLIPSIS 
         }, wnd->title);
       }
     }
@@ -703,7 +706,7 @@ static cig_frame* large_file_icon(int icon, const char *title, color_id_t text_c
 
     /* We need to prepare the label here to know how large of a rectangle
        to draw around it when the icon is selected */
-    cig_label_prepare(label, CIG_W, (cig_text_properties) {
+    cig_label_prepare(label, CIG_SIZE_INSET, (cig_text_properties) {
         .color = shows_selection ? get_color(COLOR_WHITE) : get_color(text_color),
         .alignment.vertical = CIG_TEXT_ALIGN_TOP
       }, title);

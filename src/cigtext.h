@@ -116,8 +116,6 @@ void cig_set_default_text_color(cig_text_color_ref);
 /*
  * Allocates a label type in the current element's state, prepares it and
  * draws it. Label is cached based on the input string hash.
- *
- * TODO: Rebuild lines when layout width is changed
  */
 CIG_DISCARDABLE(cig_label *) cig_draw_label(cig_text_properties, const char *, ...);
 
@@ -127,7 +125,7 @@ CIG_DISCARDABLE(cig_label *) cig_draw_label(cig_text_properties, const char *, .
  * pass as a size for the next layout frame for example. It also exposes
  * the underlying spans (smallest text components)
  */
-cig_label * cig_label_prepare(cig_label *, unsigned int, cig_text_properties, const char *, ...);
+cig_label * cig_label_prepare(cig_label *, cig_v, cig_text_properties, const char *, ...);
 
 /* Renders a prepared label */
 void cig_label_draw(cig_label *);

@@ -53,6 +53,10 @@ CIG_INLINED VEC2 DECLNAME##_center(DECLNAME f) {                                
   return VEC2##_make(f.x + f.w * 0.5, f.y + f.h * 0.5);                                      \
 }                                                                                            \
                                                                                              \
+CIG_INLINED VEC2 DECLNAME##_size(DECLNAME f) {                                     \
+  return VEC2##_make(f.w, f.h);                                      \
+}                                                                                            \
+                                                                                             \
 CIG_INLINED DECLNAME DECLNAME##_containing(DECLNAME a, DECLNAME b) {             \
   T x = CIG_MIN(a.x, b.x), y = CIG_MIN(a.y, b.y);                                            \
   T w = CIG_MAX(a.x + a.w, b.x + b.w), h = CIG_MAX(a.y + a.h, b.y + b.h);                    \
