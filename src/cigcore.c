@@ -3,7 +3,7 @@
 #include <string.h>
 #include <assert.h>
 
-cig_frame *cig__macro_last_closed;
+cig__macro_ctx_st cig__macro_ctx;
 
 static cig_context *current = NULL;
 static cig_set_clip_callback set_clip = NULL;
@@ -38,6 +38,8 @@ CIG_INLINED int limit(int v, const int minv_or_zero, const int maxv_or_zero) {
     └─────────────┘ */
 
 void cig_init_context(cig_context *context) {
+  register int i;
+
   context->frame_stack = INIT_STACK(cig_frame_ref);
   context->buffers = INIT_STACK(cig_buffer_element_t);
   context->input_state = (cig_input_state_t) { 0 };
@@ -45,13 +47,13 @@ void cig_init_context(cig_context *context) {
   context->tick = 1;
   context->delta_time = 0.f;
   context->elapsed_time = 0.f;
-  
-  for (int i = 0; i < CIG_STATES_MAX; ++i) {
+
+  for (i = 0; i < CIG_STATES_MAX; ++i) {
     context->state_list[i].id = 0;
     context->state_list[i].last_tick = context->tick;
   }
   
-  for (int i = 0; i < CIG_SCROLLABLE_ELEMENTS_MAX; ++i) {
+  for (i = 0; i < CIG_SCROLLABLE_ELEMENTS_MAX; ++i) {
     context->scroll_elements[i].id = 0;
     context->scroll_elements[i].last_tick = context->tick;
   }
@@ -102,7 +104,8 @@ void cig_begin_layout(
 }
 
 void cig_end_layout() {
-  for (register int i = 0; i < CIG_STATES_MAX; ++i) {
+  register int i;
+  for (i = 0; i < CIG_STATES_MAX; ++i) {
     if (current->state_list[i].last_tick == current->tick) {
       if (current->state_list[i].value.status == CIG_STATE_ACTIVATED) {
         current->state_list[i].value.status = CIG_STATE_ACTIVE;
@@ -532,6 +535,7 @@ cig_v cig_offset() {
     └────────────────┘ */
 #include <stdio.h>
 cig_r cig_build_rect(size_t n, cig_pin refs[]) {
+  register size_t i;
   int32_t x0, y0, x1, y1, w, h, cx, cy;
   double a = 1;
   uint32_t attrs = 0;
@@ -539,7 +543,7 @@ cig_r cig_build_rect(size_t n, cig_pin refs[]) {
 
   cig_frame *cur = cig_current();
 
-  for (register size_t i = 0; i < n; ++i) {
+  for (i = 0; i < n; ++i) {
     pin = refs[i];
 
     cig_pin_attribute attr = pin.attribute == UNSPECIFIED
@@ -969,10 +973,10 @@ static void handle_frame_hover(const cig_frame *frame) {
 }
 
 static CIG_OPTIONAL(cig_state*) find_state(const cig_id id) {
-  register int open = -1, stale = -1;
+  register int i, open = -1, stale = -1;
 
   /*  Find a state with a matching ID, with no ID yet, or a stale state */
-  for (register int i = 0; i < CIG_STATES_MAX; ++i) {
+  for (i = 0; i < CIG_STATES_MAX; ++i) {
     if (current->state_list[i].id == id) {
       if (current->state_list[i].value.status == CIG_STATE_INACTIVE) {
         current->state_list[i].value.status = CIG_STATE_ACTIVATED;
@@ -1003,9 +1007,9 @@ static CIG_OPTIONAL(cig_state*) find_state(const cig_id id) {
 }
 
 static CIG_OPTIONAL(cig_scroll_state_t*) find_scroll_state(const cig_id id) {
-  register int first_unused = -1, first_stale = -1;
+  register int i, first_unused = -1, first_stale = -1;
 
-  for (register int i = 0; i < CIG_SCROLLABLE_ELEMENTS_MAX; ++i) {
+  for (i = 0; i < CIG_SCROLLABLE_ELEMENTS_MAX; ++i) {
     if (current->scroll_elements[i].id == id) {
       current->scroll_elements[i].last_tick = current->tick;
       return &current->scroll_elements[i].value;

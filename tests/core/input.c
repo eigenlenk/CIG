@@ -27,7 +27,8 @@ static void end() {
     └────────────┘ */
 
 TEST(core_input, hover_and_press) {
-  for (int i = 0; i < 2; ++i) {
+  register int i;
+  for (i = 0; i < 2; ++i) {
     begin(FRAME_TIME);
     cig_set_input_state(cig_v_make(50, 50), i == 1 ? CIG_INPUT_PRIMARY_ACTION : 0);
     cig_push_frame(cig_r_make(0, 0, 100, 100));
@@ -44,7 +45,8 @@ TEST(core_input, hover_and_press) {
 }
 
 TEST(core_input, overlapping_hover_and_press) {
-  for (int i = 0; i < 2; ++i) {
+  register int i;
+  for (i = 0; i < 2; ++i) {
     begin(FRAME_TIME);
     cig_set_input_state(cig_v_make(75, 75), i == 1 ? CIG_INPUT_PRIMARY_ACTION : 0);
     cig_push_frame(cig_r_make(0, 0, 100, 100));
@@ -74,7 +76,8 @@ TEST(core_input, overlapping_hover_and_press) {
 }
 
 TEST(core_input, click_on_release) {
-  for (int i = 0; i < 3; ++i) {
+  register int i;
+  for (i = 0; i < 3; ++i) {
     begin(FRAME_TIME);
     cig_set_input_state(cig_v_make(75, 75), i == 1 ? CIG_INPUT_PRIMARY_ACTION : 0);
     cig_push_frame(cig_r_make(0, 0, 100, 100));
@@ -92,7 +95,8 @@ TEST(core_input, click_on_release) {
 }
 
 TEST(core_input, click_on_button_down) {
-  for (int i = 0; i < 2; ++i) {
+  register int i;
+  for (i = 0; i < 2; ++i) {
     begin(FRAME_TIME);
     cig_set_input_state(cig_v_make(75, 75), i == 1 ? CIG_INPUT_PRIMARY_ACTION : 0);
     cig_push_frame(cig_r_make(50, 50, 100, 100));
@@ -109,7 +113,8 @@ TEST(core_input, click_on_button_down) {
 }
 
 TEST(core_input, click_starts_outside) {
-  for (int i = 0; i < 3; ++i) {
+  register int i;
+  for (i = 0; i < 3; ++i) {
     begin(FRAME_TIME);
 
     /*  Simulate mouse change over time */
@@ -136,7 +141,8 @@ TEST(core_input, click_starts_outside) {
 }
 
 TEST(core_input, double_click) {
-  for (int i = 0; i < 5; ++i) {
+  register int i;
+  for (i = 0; i < 5; ++i) {
     begin(FRAME_TIME);
     cig_set_input_state(cig_v_make(75, 75), i == 1 || i == 3 ? CIG_INPUT_PRIMARY_ACTION : 0);
     cig_push_frame(cig_r_make(50, 50, 100, 100));
@@ -152,8 +158,9 @@ TEST(core_input, double_click) {
 }
 
 TEST(core_input, double_click_too_slow) {
+  register int i;
   /*  Default maximum time between clicks is 0.5 seconds */
-  for (int i = 0; i < 5; ++i) {
+  for (i = 0; i < 5; ++i) {
     begin(FRAME_TIME * 10);
     cig_set_input_state(cig_v_make(75, 75), i == 1 || i == 3 ? CIG_INPUT_PRIMARY_ACTION : 0);
     cig_push_frame(cig_r_make(50, 50, 100, 100));
@@ -169,7 +176,8 @@ TEST(core_input, double_click_too_slow) {
 }
 
 TEST(core_input, simple_drag) {
-  for (int i = 0; i < 3; ++i) {
+  register int i;
+  for (i = 0; i < 3; ++i) {
     begin(FRAME_TIME);
 
     /*  Simulate mouse change over time */

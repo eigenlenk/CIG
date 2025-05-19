@@ -27,9 +27,10 @@ static void end() {
     └────────────┘ */
 
 TEST(core_state, status) {
+  register int i;
   cig_id persistent_id = 0;
 
-  for (int i = 0; i < 2; ++i) {
+  for (i = 0; i < 2; ++i) {
     begin();
     cig_push_frame(RECT_AUTO);
 
@@ -49,9 +50,10 @@ TEST(core_state, status) {
 }
 
 TEST(core_state, pool_limit) {
+  register int i;
   begin();
   
-  for (int i = 0; i < CIG_STATES_MAX + 1; ++i) {
+  for (i = 0; i < CIG_STATES_MAX + 1; ++i) {
     cig_push_frame(RECT_AUTO);
     
     if (i < CIG_STATES_MAX) {
@@ -67,9 +69,10 @@ TEST(core_state, pool_limit) {
 }
 
 TEST(core_state, stale) {
+  register int i;
   begin();
   /*  Tick 1: Mark all states as used */
-  for (int i = 0; i < CIG_STATES_MAX + 1; ++i) {
+  for (i = 0; i < CIG_STATES_MAX + 1; ++i) {
     cig_push_frame(RECT_AUTO);
     CIG_UNUSED(cig_enable_state());
     cig_pop_frame();
@@ -95,7 +98,8 @@ TEST(core_state, stale) {
 }
 
 TEST(core_state, memory_arena) {
-  for (int i = 0; i < 2; ++i) {
+  register int i;
+  for (i = 0; i < 2; ++i) {
     begin();
 
     TEST_ASSERT_EQUAL_UINT(0, cig_enable_state()->arena.mapped);
@@ -127,6 +131,7 @@ TEST(core_state, memory_arena) {
 }
 
 TEST(core_state, memory_arena_read) {
+  register int i;
   begin();
 
   /*  Write some values */
@@ -141,7 +146,7 @@ TEST(core_state, memory_arena_read) {
   }
 
   /*  Read them a couple of times */
-  for (int i = 0; i < 2; ++i) {
+  for (i = 0; i < 2; ++i) {
     cig_v *vec2 = (cig_v *)cig_arena_read(NULL, true, sizeof(cig_v));
     unsigned long *ul = (unsigned long *)cig_arena_read(NULL, false, sizeof(unsigned long));
     char *str = (char *)cig_arena_read(NULL, false, sizeof(char[32]));

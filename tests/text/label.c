@@ -81,9 +81,10 @@ TEST(text_label, fits_arena) {
 }
 
 TEST(text_label, single) {  
+  register int i;
   /*  Runing to iterations to test that text is measured only once
       and cached data is used on consecutive layout passes */
-  for (int i = 0; i < 2; ++i) {
+  for (i = 0; i < 2; ++i) {
     begin();
 
     /*  Label centers text both horizontally and vertically by default.
@@ -105,7 +106,8 @@ TEST(text_label, single) {
 }
 
 TEST(text_label, multiline) {
-  for (int i = 0; i < 2; ++i) {
+  register int i;
+  for (i = 0; i < 2; ++i) {
     begin();
 
     cig_draw_label((cig_text_properties) { 0 }, "Olá mundo!\nHello world!");

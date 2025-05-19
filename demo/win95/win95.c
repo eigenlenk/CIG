@@ -154,6 +154,7 @@ static void do_taskbar() {
 
   const int start_button_width = 54;
   const int spacing = 4;
+  register size_t i;
 
   CIG(
     cig_r_make(0, CIG_H - TASKBAR_H, CIG_W, TASKBAR_H),
@@ -190,7 +191,7 @@ static void do_taskbar() {
         CIG_MAX_WIDTH(150)
       })
     ) {
-      for (register size_t i = 0; i < WIN95_OPEN_WINDOWS_MAX; ++i) {
+      for (i = 0; i < WIN95_OPEN_WINDOWS_MAX; ++i) {
         window_t *wnd = &this->window_manager.windows[i];
         if (wnd->id && taskbar_button(RECT_AUTO, wnd->title, wnd->icon, wnd->id == cig_focused_id())) {
           cig_set_focused_id(wnd->id);
@@ -241,7 +242,8 @@ application_t *win95_find_open_app(const char *id) {
     └────────────────┘ */
 
 window_t* window_manager_create(window_manager_t *manager, application_t *app, window_t wnd) {
-  for (register size_t i = 0; i < WIN95_OPEN_WINDOWS_MAX; ++i) {
+  register size_t i;
+  for (i = 0; i < WIN95_OPEN_WINDOWS_MAX; ++i) {
     if (manager->windows[i].id) { continue; }
     wnd.owner = app;
     if (!wnd.id) { wnd.id = rand(); }
@@ -271,7 +273,8 @@ void window_manager_close(window_manager_t *manager, window_t *wnd) {
 }
 
 void window_manager_bring_to_front(window_manager_t *manager, cig_id wnd_id) {
-  for (register size_t i = 0; i < manager->count; ++i) {
+  register size_t i;
+  for (i = 0; i < manager->count; ++i) {
     if (manager->order[i]->id == wnd_id) {
       window_t *wnd = manager->order[i];
       manager->order[i] = manager->order[manager->count-1];
@@ -283,7 +286,8 @@ void window_manager_bring_to_front(window_manager_t *manager, cig_id wnd_id) {
 }
 
 window_t* window_manager_find_primary_window(window_manager_t *manager, application_t *app) {
-  for (register size_t i = 0; i < manager->count; ++i) {
+  register size_t i;
+  for (i = 0; i < manager->count; ++i) {
     if (manager->order[i]->owner == app && manager->order[i]->flags & IS_PRIMARY_WINDOW) {
       return manager->order[i];
     }
@@ -513,10 +517,11 @@ static void process_windows() {
     window_manager_bring_to_front(&this->window_manager, cig_focused_id());
   }
 
+  register size_t i;
   window_message_t msg;
   bool focused;
 
-  for (register size_t i = 0; i < this->window_manager.count;) {
+  for (i = 0; i < this->window_manager.count;) {
     window_t *wnd = this->window_manager.order[i];
 
     if (wnd->proc) {
@@ -661,7 +666,8 @@ static void end_window(window_t *wnd) {
       { cig_r_make(20, CIG_H-4, CIG_W-(20+16), 4), WINDOW_RESIZE_BOTTOM },
     };
 
-    for (int i = 0; i < 10; ++i) {
+    int i;
+    for (i = 0; i < 10; ++i) {
       CIG(resize_regions[i].rect) {
         cig_enable_interaction();
         handle_window_resize(wnd, resize_regions[i].edge);

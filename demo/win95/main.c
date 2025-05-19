@@ -136,7 +136,8 @@ int main(int argc, const char *argv[]) {
   colors[COLOR_WINDOW_ACTIVE_TITLEBAR] = (Color) { 0, 0, 127, 255 };
   colors[COLOR_WINDOW_INACTIVE_TITLEBAR] = (Color) { 127, 127, 127, 255 };
   
-  for (register int i = 0; i < __PANEL_COUNT; ++i) { panel_styles[i] = i; }
+  register int i;
+  for (i = 0; i < __PANEL_COUNT; ++i) { panel_styles[i] = i; }
 
   cig_init_context(&ctx);
 

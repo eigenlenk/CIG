@@ -28,7 +28,8 @@ int main(int argc, char **argv)
     printf("\tall\tBuilds both test and demo targets\n");
     return 0;
   } else {
-    for (int i = 1; i < argc; ++i) {
+    int i;
+    for (i = 1; i < argc; ++i) {
       if (!strcmp(argv[i], "all")) {
         targets_included = TARGET_TEST | TARGET_RAYLIB_DEMO;
       } else if (!strcmp(argv[i], "test")) {

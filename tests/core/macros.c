@@ -22,6 +22,7 @@ TEST_TEAR_DOWN(core_macros) {
     └────────────┘ */
 
 TEST(core_macros, cig) {
+  register int i;
   cig_frame *out_of_bounds, *main_frame; 
 
   CIG(_) {}
@@ -45,7 +46,7 @@ TEST(core_macros, cig) {
   /*  This creates a 500x400 frame with 4 unit inset and centers it in the root frame */
   CIG_CAPTURE(main_frame, CIG(RECT_CENTERED(500, 400), CIG_INSETS(cig_i_uniform(4))) {
     /*  Regular control flow works in here */
-    for (int i = 0; i < 2; ++i) { }
+    for (i = 0; i < 2; ++i) { }
 
     CIG(_) { /* _ stands for RECT_AUTO */
       TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 492, 392), cig_rect());
@@ -59,6 +60,7 @@ TEST(core_macros, cig) {
 }
 
 TEST(core_macros, vstack) {
+  register int i;
   CIG_VSTACK(
     RECT_AUTO,
     CIG_PARAMS({
@@ -67,7 +69,7 @@ TEST(core_macros, vstack) {
       CIG_LIMIT_VERTICAL(2)
     })
   ) {
-    for (int i = 0; i < 2; ++i) {
+    for (i = 0; i < 2; ++i) {
       CIG(_) {
         TEST_ASSERT_EQUAL_RECT(cig_r_make(0, i*(200+10), 640, 200), cig_rect());
       }
@@ -76,6 +78,7 @@ TEST(core_macros, vstack) {
 }
 
 TEST(core_macros, hstack) {
+  register int i;
   CIG_HSTACK(
     RECT_AUTO,
     CIG_PARAMS({
@@ -84,7 +87,7 @@ TEST(core_macros, hstack) {
       CIG_LIMIT_HORIZONTAL(2)
     })
   ) {
-    for (int i = 0; i < 2; ++i) {
+    for (i = 0; i < 2; ++i) {
       CIG(_) {
         TEST_ASSERT_EQUAL_RECT(cig_r_make(i*(200+10), 0, 200, 480), cig_rect());
       }
@@ -93,6 +96,7 @@ TEST(core_macros, hstack) {
 }
 
 TEST(core_macros, grid) {
+  register int i;
   CIG_GRID(
     RECT_AUTO,
     CIG_PARAMS({
@@ -100,7 +104,7 @@ TEST(core_macros, grid) {
       CIG_ROWS(5)
     })
   ) {
-    for (int i = 0; i < 25; ++i) {
+    for (i = 0; i < 25; ++i) {
       int row = (i / 5);
       int column = i - (row * 5);
       CIG(_) {

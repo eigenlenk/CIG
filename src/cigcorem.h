@@ -69,16 +69,22 @@
 #define _W(W) RECT_AUTO_W(W)
 #define _H(H) RECT_AUTO_H(H)
 
-extern cig_frame *cig__macro_last_closed;
+typedef struct {
+  int pushed;
+  cig_args args;
+  cig_frame *last_closed;
+} cig__macro_ctx_st;
+
+extern cig__macro_ctx_st cig__macro_ctx;
 
 /*  This calls the push_frame function once, performs the function body and pops the frame */
-#define CIG(RECT, ...) cig__macro_last_closed=NULL; for (int __pushed=0; !(__pushed++)&&cig_push_frame_args((cig_args) { RECT, __VA_ARGS__ }); cig__macro_last_closed=cig_pop_frame())
+#define CIG(RECT, ...) for (cig__macro_ctx = (cig__macro_ctx_st) { 0 }; !(cig__macro_ctx.pushed++)&&cig_push_frame_args((cig_args) { RECT, __VA_ARGS__ }); cig__macro_ctx.last_closed=cig_pop_frame())
 
-#define CIG_HSTACK(RECT, ...) cig__macro_last_closed=NULL; for (struct { int pushed; cig_args args; } __cig = { 0, (cig_args) { RECT, __VA_ARGS__ } }; !(__cig.pushed++)&&cig_push_hstack(__cig.args.rect, __cig.args.insets, __cig.args.params); cig__macro_last_closed=cig_pop_frame())
-#define CIG_VSTACK(RECT, ...) cig__macro_last_closed=NULL; for (struct { int pushed; cig_args args; } __cig = { 0, (cig_args) { RECT, __VA_ARGS__ } }; !(__cig.pushed++)&&cig_push_vstack(__cig.args.rect, __cig.args.insets, __cig.args.params); cig__macro_last_closed=cig_pop_frame())
-#define CIG_GRID(RECT, ...) cig__macro_last_closed=NULL; for (struct { int pushed; cig_args args; } __cig = { 0, (cig_args) { RECT, __VA_ARGS__ } }; !(__cig.pushed++)&&cig_push_grid(__cig.args.rect, __cig.args.insets, __cig.args.params); cig__macro_last_closed=cig_pop_frame())
+#define CIG_HSTACK(RECT, ...) for (cig__macro_ctx = (cig__macro_ctx_st) { 0, (cig_args) { RECT, __VA_ARGS__ } }; !(cig__macro_ctx.pushed++)&&cig_push_hstack(cig__macro_ctx.args.rect, cig__macro_ctx.args.insets, cig__macro_ctx.args.params); cig__macro_ctx.last_closed=cig_pop_frame())
+#define CIG_VSTACK(RECT, ...) for (cig__macro_ctx = (cig__macro_ctx_st) { 0, (cig_args) { RECT, __VA_ARGS__ } }; !(cig__macro_ctx.pushed++)&&cig_push_vstack(cig__macro_ctx.args.rect, cig__macro_ctx.args.insets, cig__macro_ctx.args.params); cig__macro_ctx.last_closed=cig_pop_frame())
+#define CIG_GRID(RECT, ...) for (cig__macro_ctx = (cig__macro_ctx_st) { 0, (cig_args) { RECT, __VA_ARGS__ } }; !(cig__macro_ctx.pushed++)&&cig_push_grid(cig__macro_ctx.args.rect, cig__macro_ctx.args.insets, cig__macro_ctx.args.params); cig__macro_ctx.last_closed=cig_pop_frame())
 
-#define CIG_LAST() cig__macro_last_closed
+#define CIG_LAST() cig__macro_ctx.last_closed
 #define CIG_CAPTURE(VAR, BODY) BODY; VAR=CIG_LAST();
 
 /* Layout pinning */

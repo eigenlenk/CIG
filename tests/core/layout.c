@@ -390,6 +390,7 @@ TEST(core_layout, hstack_mix) {
   with fixed 50pt height, then disable that and add a third item to fill the remaining space.
 */
 TEST(core_layout, vstack_align_bottom) {
+  register int i;
   if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_params) {
     .axis = CIG_LAYOUT_AXIS_VERTICAL,
     .alignment.vertical = CIG_LAYOUT_ALIGNS_BOTTOM,
@@ -399,7 +400,7 @@ TEST(core_layout, vstack_align_bottom) {
     TEST_FAIL_MESSAGE("Unable to add layout builder frame");
   }
 
-  for (int i = 0; i < 2; ++i) {
+  for (i = 0; i < 2; ++i) {
     if (cig_push_frame(RECT_AUTO)) {
       TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 480-50-(i*50), 640, 50), cig_current()->rect);
       cig_pop_frame();
@@ -415,6 +416,7 @@ TEST(core_layout, vstack_align_bottom) {
 
 /* Similarly, h-stack supports right-to-left alignment */
 TEST(core_layout, hstack_align_right) {
+  register int i;
   if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_params) {
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL,
     .alignment.horizontal = CIG_LAYOUT_ALIGNS_RIGHT,
@@ -424,7 +426,7 @@ TEST(core_layout, hstack_align_right) {
     TEST_FAIL_MESSAGE("Unable to add layout builder frame");
   }
 
-  for (int i = 0; i < 8; ++i) {
+  for (i = 0; i < 8; ++i) {
     if (cig_push_frame(RECT_AUTO)) {
       TEST_ASSERT_EQUAL_RECT(cig_r_make(640-50-(i*50), 0, 50, 480), cig_current()->rect);
       cig_pop_frame();
@@ -697,6 +699,7 @@ TEST(core_layout, grid_with_flipped_alignment_and_direction) {
 }
 
 TEST(core_layout, vstack_scroll) {
+  register int i;
   /* Any element can be made scrollable, but it makes most sense for stacks/grids */
   if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_params) {
     .axis = CIG_LAYOUT_AXIS_VERTICAL,
@@ -722,7 +725,7 @@ TEST(core_layout, vstack_scroll) {
   scroll->offset.y = 220;
 
   /*  Let's add some content to the stack */
-  for (int i = 0; i < 10; ++i) {
+  for (i = 0; i < 10; ++i) {
     if (cig_push_frame(RECT_AUTO)) {
       /* Elements should be offset by scroll amount on the Y axis */
       TEST_ASSERT_EQUAL_INT(i*100-220, cig_current()->rect.y);
