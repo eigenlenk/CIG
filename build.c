@@ -10,9 +10,7 @@
 
 int main(int argc, char **argv)
 {
-  /*  Having trouble running this consistently, so I'm disabling it for now.
-      Just re-run the init/bootstrap process if you make any changes here */
-  // NOB_GO_REBUILD_URSELF(argc, argv);
+  NOB_GO_REBUILD_URSELF(argc, argv);
   
   enum targets {
     TARGET_TEST = 1,
