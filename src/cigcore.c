@@ -27,10 +27,6 @@ CIG_INLINED void move_to_next_row(cig_params*);
 CIG_INLINED void move_to_next_column(cig_params*);
 CIG_INLINED double get_attribute_value_of_relative_to(cig_pin_attribute, double, cig_frame*, cig_frame*);
 
-CIG_INLINED int tinyhash(int a, int b) {
-  return (a * 31) ^ (b * 17);
-}
-
 CIG_INLINED int limit(int v, const int minv_or_zero, const int maxv_or_zero) {
   if (maxv_or_zero > 0) { v = CIG_MIN(maxv_or_zero, v); }
   if (minv_or_zero > 0) { v = CIG_MAX(minv_or_zero, v); }
@@ -941,7 +937,7 @@ static cig_frame* push_frame(
   current->frames.elements[current->frames.count] = (cig_frame) {
     .id = current->next_id
       ? current->next_id
-      : (top->id + tinyhash(top->id+top->_id_counter++, cig_depth())),
+      : (top->id + CIG_TINYHASH(top->id+top->_id_counter++, cig_depth())),
     .rect = next,
     .clipped_rect = cig_r_offset(cig_r_union(absolute_rect, current_clip_rect), -absolute_rect.x + next.x, -absolute_rect.y + next.y),
     .absolute_rect = absolute_rect,

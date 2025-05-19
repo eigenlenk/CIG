@@ -113,4 +113,6 @@ extern cig_frame *cig__macro_last_closed;
     ) */
 #define BUILD_RECT(...) cig_build_rect(CIG_NARG(__VA_ARGS__), (cig_pin[]) { __VA_ARGS__ })
 
+#define CIG_TINYHASH(A, B) ((A*31)^(B*17))
+
 #endif
