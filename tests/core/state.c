@@ -26,7 +26,7 @@ static void end() {
     │ TEST CASES │
     └────────────┘ */
 
-TEST(core_state, activation_states) {
+TEST(core_state, status) {
   cig_id persistent_id = 0;
 
   for (int i = 0; i < 2; ++i) {
@@ -40,8 +40,8 @@ TEST(core_state, activation_states) {
 
     TEST_ASSERT_NOT_NULL(state);
 
-    if (i == 0) { TEST_ASSERT_EQUAL(ACTIVATED, state->activation_state); }
-    else if (i == 1) { TEST_ASSERT_EQUAL(ACTIVE, state->activation_state); }
+    if (i == 0) { TEST_ASSERT_EQUAL(CIG_STATE_ACTIVATED, state->status); }
+    else if (i == 1) { TEST_ASSERT_EQUAL(CIG_STATE_ACTIVE, state->status); }
 
     cig_pop_frame();
     end();
@@ -155,7 +155,7 @@ TEST(core_state, memory_arena_read) {
 }
 
 TEST_GROUP_RUNNER(core_state) {
-  RUN_TEST_CASE(core_state, activation_states);
+  RUN_TEST_CASE(core_state, status);
   RUN_TEST_CASE(core_state, pool_limit);
   RUN_TEST_CASE(core_state, stale);
   RUN_TEST_CASE(core_state, memory_arena);

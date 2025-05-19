@@ -108,11 +108,11 @@ void cig_begin_layout(
 void cig_end_layout() {
   for (register int i = 0; i < CIG_STATES_MAX; ++i) {
     if (current->state_list[i].last_tick == current->tick) {
-      if (current->state_list[i].value.activation_state == ACTIVATED) {
-        current->state_list[i].value.activation_state = ACTIVE;
+      if (current->state_list[i].value.status == CIG_STATE_ACTIVATED) {
+        current->state_list[i].value.status = CIG_STATE_ACTIVE;
       }
     } else {
-      current->state_list[i].value.activation_state = INACTIVE;
+      current->state_list[i].value.status = CIG_STATE_INACTIVE;
     }
   }
 
@@ -234,6 +234,23 @@ CIG_OPTIONAL(cig_state *) cig_enable_state() {
     frame->_state->arena.read = 0;
   }
   return frame->_state;
+}
+
+CIG_OPTIONAL(cig_arena *) cig_get_arena() {
+  cig_frame *frame = cig_current();
+  if (frame) {
+    return &frame->_state->arena;
+  } else {
+    return NULL;
+  }
+}
+
+cig_state_status cig_state_get_status(cig_state *state) {
+  if (state) {
+    return state->status;
+  } else {
+    return 0;
+  }
 }
 
 CIG_OPTIONAL(void *) cig_arena_allocate(cig_arena *arena, size_t bytes) {
@@ -961,8 +978,8 @@ static CIG_OPTIONAL(cig_state*) find_state(const cig_id id) {
   /*  Find a state with a matching ID, with no ID yet, or a stale state */
   for (register int i = 0; i < CIG_STATES_MAX; ++i) {
     if (current->state_list[i].id == id) {
-      if (current->state_list[i].value.activation_state == INACTIVE) {
-        current->state_list[i].value.activation_state = ACTIVATED;
+      if (current->state_list[i].value.status == CIG_STATE_INACTIVE) {
+        current->state_list[i].value.status = CIG_STATE_ACTIVATED;
       }
       current->state_list[i].last_tick = current->tick;
       return &current->state_list[i].value;
@@ -980,7 +997,7 @@ static CIG_OPTIONAL(cig_state*) find_state(const cig_id id) {
   if (result >= 0) {
     current->state_list[result].id = id;
     current->state_list[result].last_tick = current->tick;
-    current->state_list[result].value.activation_state = ACTIVATED;
+    current->state_list[result].value.status = CIG_STATE_ACTIVATED;
     memset(&current->state_list[result].value.arena.bytes, 0, CIG_STATE_MEM_ARENA_BYTES);
     current->state_list[result].value.arena.mapped = 0;
     return &current->state_list[result].value;

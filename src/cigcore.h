@@ -134,12 +134,14 @@ typedef struct {
   size_t mapped, read;
 } cig_arena;
 
+typedef enum CIG_PACKED {
+  CIG_STATE_INACTIVE = 0,
+  CIG_STATE_ACTIVATED,
+  CIG_STATE_ACTIVE
+} cig_state_status;
+
 typedef struct {
-  enum CIG_PACKED {
-    INACTIVE = 0,
-    ACTIVATED,
-    ACTIVE
-  } activation_state;
+  cig_state_status status;
   cig_arena arena;
 } cig_state;
 
@@ -320,10 +322,10 @@ typedef struct {
     └─────────────┘ */
 
 /*  Call this once to initalize (or reset) the context */
-void cig_init_context(cig_context*);
+void cig_init_context(cig_context *);
 
 /* */
-void cig_begin_layout(cig_context*, CIG_OPTIONAL(cig_buffer_ref), cig_r, float);
+void cig_begin_layout(cig_context *, CIG_OPTIONAL(cig_buffer_ref), cig_r, float);
 
 /* */
 void cig_end_layout();
@@ -333,23 +335,23 @@ cig_buffer_ref cig_buffer();
 
 /*  Pushes a new frame with args struct containing all relevant data.
     @return Reference to new element if rect is visible within current container, NULL otherwise */
-cig_frame* cig_push_frame_args(cig_args);
+cig_frame * cig_push_frame_args(cig_args);
 
 /*  Pushes a new frame with default insets (see `cig_set_default_insets`) to layout stack.
     @return Reference to new element if rect is visible within current container, NULL otherwise */
-cig_frame* cig_push_frame(cig_r);
+cig_frame * cig_push_frame(cig_r);
 
 /*  Push a new frame with custom insets to layout stack.
     @return Reference to new element if rect is visible within current container, NULL otherwise */
-cig_frame* cig_push_frame_insets(cig_r, cig_i);
+cig_frame * cig_push_frame_insets(cig_r, cig_i);
 
 /*  Push a new frame with custom insets and params to layout stack.
     @return Reference to new element if rect is visible within current container, NULL otherwise */
-cig_frame* cig_push_frame_insets_params(cig_r, cig_i, cig_params);
+cig_frame * cig_push_frame_insets_params(cig_r, cig_i, cig_params);
 
 /*  Push layout builder function to layout stack.
     @return Reference to new element if rect is visible within current container, NULL otherwise */
-cig_frame* cig_push_layout_function(
+cig_frame * cig_push_layout_function(
   bool (*)(cig_r, cig_r, cig_params*, cig_r*),
   cig_r,
   cig_i,
@@ -391,18 +393,25 @@ cig_frame_ref_stack_t* cig_frame_stack();
     │ STATE & MEMORY ARENA ACCESS │
     └─────────────────────────────┘ */
 
+/* */
 CIG_OPTIONAL(cig_state *) cig_enable_state();
+
+/* If state has been enabled, returns current memory arena, NULL otherwise */
+CIG_OPTIONAL(cig_arena *) cig_get_arena();
+
+/* */
+cig_state_status cig_state_get_status(cig_state *);
 
 /*
  * Allocates N bytes in current element's memory arena.
- * @param arena - Memory arena to use, pass NULL to use current state arena
+ * @param arena - Memory arena to use, pass NULL to use current state arena (will enable state)
  * @return Pointer to the new object or NULL if memory could not be allocated (no space)
  */
 CIG_OPTIONAL(void *) cig_arena_allocate(cig_arena *arena, size_t);
 
 /*
  * Similar to allocation, but for simply reading the arena.
- * @param arena       - Memory arena to use, pass NULL to use current state arena
+ * @param arena       - Memory arena to use, pass NULL to use current state arena (will enable state)
  * @param from_start  - Resets read position to 0 before reading
  * @return Pointer to the new object or NULL if memory could not be allocated (no space)
  */
