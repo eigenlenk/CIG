@@ -95,6 +95,7 @@ int main(int argc, const char *argv[]) {
   load_texture(&images[IMAGE_CROSS], "res/images/cross.png");
   load_texture(&images[IMAGE_WELCOME_APP_ICON], "res/images/welcome.png");
   load_texture(&images[IMAGE_BIN_EMPTY], "res/images/bin_empty.png");
+  load_texture(&images[IMAGE_BIN_EMPTY_16], "res/images/bin_16.png");
   load_texture(&images[IMAGE_DRIVE_A_16], "res/images/drive_a_16.png");
   load_texture(&images[IMAGE_DRIVE_A_32], "res/images/drive_a_32.png");
   load_texture(&images[IMAGE_DRIVE_C_16], "res/images/drive_c_16.png");

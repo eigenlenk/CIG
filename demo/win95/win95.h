@@ -37,6 +37,7 @@ typedef enum {
   IMAGE_CROSS,
   IMAGE_WELCOME_APP_ICON,
   IMAGE_BIN_EMPTY,
+  IMAGE_BIN_EMPTY_16,
   IMAGE_DRIVE_A_16,
   IMAGE_DRIVE_A_32,
   IMAGE_DRIVE_C_16,
@@ -141,8 +142,11 @@ bool standard_button(cig_r, const char *);
 bool icon_button(cig_r, image_id_t);
 bool checkbox(cig_r, bool *, const char *);
 
-bool begin_file_browser(cig_r, int, color_id_t, bool);
+bool begin_file_browser(cig_r, int, color_id_t, bool, int *);
 bool file_item(image_id_t, const char*);
 void end_file_browser();
+
+void begin_menubar();
+void end_menubar();
 
 #endif
