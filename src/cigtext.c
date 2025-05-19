@@ -69,6 +69,8 @@ CIG_DISCARDABLE(cig_label *) cig_draw_label(cig_text_properties props, const cha
   register const cig_r absolute_rect = cig_r_inset(cig_absolute_rect(), cig_current()->insets);
 
   cig_label *label = CIG_ALLOCATE(cig_label);
+  label->spans = CIG_ALLOCATE(cig_span[CIG_LABEL_SPANS_MAX]);
+  label->available_spans = CIG_LABEL_SPANS_MAX;
 
   if (props.flags & CIG_TEXT_FORMATTED) {
     va_list args;
@@ -82,7 +84,7 @@ CIG_DISCARDABLE(cig_label *) cig_draw_label(cig_text_properties props, const cha
 
   if (render_callback) {
     render_spans(
-      &label->spans[0],
+      label->spans,
       label->span_count,
       label->font,
       label->color,
@@ -98,11 +100,23 @@ CIG_DISCARDABLE(cig_label *) cig_draw_label(cig_text_properties props, const cha
 
 cig_label* cig_label_prepare(
   cig_label *label,
+  cig_span *spans,
+  size_t spans_allocated,
   cig_v max_bounds,
   cig_text_properties props,
   const char *text,
   ...
 ) {
+  label->available_spans = spans_allocated;
+
+  if (!spans) {
+    label->spans = CIG_ALLOCATE(cig_span[spans_allocated]);
+    if (!label->spans) {
+      /* Failed to allocate */
+      label->available_spans = 0;
+    }
+  }
+
   if (props.flags & CIG_TEXT_FORMATTED) {
     va_list args;
     va_start(args, text);
@@ -119,7 +133,7 @@ cig_label* cig_label_prepare(
 void cig_label_draw(cig_label *label) {
   if (render_callback) {
     render_spans(
-      &label->spans[0],
+      label->spans,
       label->span_count,
       label->font,
       label->color,

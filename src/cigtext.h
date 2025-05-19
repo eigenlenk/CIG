@@ -73,7 +73,7 @@ typedef struct {
 } cig_span;
 
 typedef struct {
-  cig_span spans[CIG_LABEL_SPANS_MAX];
+  cig_span *spans;
   struct {
     cig_text_horizontal_alignment horizontal;
     cig_text_vertical_alignment vertical;
@@ -82,6 +82,7 @@ typedef struct {
   cig_font_ref font;
   cig_text_color_ref color;
   struct { unsigned short w, h; } bounds;
+  size_t available_spans;
   unsigned char span_count;
   unsigned char line_count;
   char line_spacing;
@@ -125,7 +126,7 @@ CIG_DISCARDABLE(cig_label *) cig_draw_label(cig_text_properties, const char *, .
  * pass as a size for the next layout frame for example. It also exposes
  * the underlying spans (smallest text components)
  */
-cig_label * cig_label_prepare(cig_label *, cig_v, cig_text_properties, const char *, ...);
+cig_label * cig_label_prepare(cig_label *, CIG_OPTIONAL(cig_span *), size_t, cig_v, cig_text_properties, const char *, ...);
 
 /* Renders a prepared label */
 void cig_label_draw(cig_label *);

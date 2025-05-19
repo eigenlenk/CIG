@@ -170,7 +170,7 @@ static void do_taskbar() {
     time_t t = time(NULL);
     struct tm *ct = localtime(&t);
 
-    cig_label_prepare(&clock_label, cig_v_zero(), (cig_text_properties) { .flags = CIG_TEXT_FORMATTED }, "%02d:%02d", ct->tm_hour, ct->tm_min);
+    cig_label_prepare(&clock_label, NULL, 1, cig_v_zero(), (cig_text_properties) { .flags = CIG_TEXT_FORMATTED }, "%02d:%02d", ct->tm_hour, ct->tm_min);
 
     const int clock_w = (clock_label.bounds.w+11*2);
 
@@ -742,7 +742,7 @@ static cig_frame * large_file_icon(int icon,
 
     /* We need to prepare the label here to know how large of a rectangle
        to draw around it when the icon is selected */
-    cig_label_prepare(label, CIG_SIZE_INSET, (cig_text_properties) {
+    cig_label_prepare(label, NULL, 16, CIG_SIZE_INSET, (cig_text_properties) {
         .color = is_selected ? get_color(COLOR_WHITE) : get_color(text_color),
         .alignment.vertical = CIG_TEXT_ALIGN_TOP
       }, title);
