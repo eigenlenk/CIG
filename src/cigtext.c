@@ -274,7 +274,7 @@ static void prepare_label(
               }
               // printf("\tForcing a span!\n");
               cig_span additional_span = { 0 };
-              if (bounds.x > max_bounds.x && (!props->max_lines || props->max_lines == line_count)) {
+              if (props->overflow && bounds.x > max_bounds.x && (!props->max_lines || props->max_lines == line_count)) {
                 wrap_text(&slice, length, &bounds, props->overflow, display_font, font_override, color_override, props->style | style, max_bounds.x, &additional_span);
                 ends_text = true;
               }
