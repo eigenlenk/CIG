@@ -601,7 +601,9 @@ static bool begin_window(window_t *wnd, window_message_t *msg, bool *focused) {
 
   cig_set_next_id(wnd->id);
   
-  if (!cig_push_frame_insets(wnd->rect, cig_i_uniform(wnd->flags & IS_RESIZABLE ? 4 : 3))) {
+  const cig_i wnd_insets = cig_i_uniform(wnd->flags & IS_RESIZABLE ? 4 : 3);
+
+  if (!cig_push_frame_insets(wnd->rect, wnd_insets)) {
     return false;
   }
 
@@ -665,17 +667,10 @@ static bool begin_window(window_t *wnd, window_message_t *msg, bool *focused) {
     }
   }
 
-  cig_push_frame(cig_r_make(0, 20, CIG_AUTO(), CIG_H_INSET - 20));
-    
-  return true;
-}
-
-static void end_window(window_t *wnd) {
-  cig_pop_frame(); /* Content frame */
-
-  /*  Add resizable edge regions and the bottom corner thumb gfx.
-      Resetting insets makes adding the resize regions easier to calculate */
-  
+  /*
+   * Add resizable edge and corner regions.
+   * Resetting insets temporarily makes adding the resize regions easier to calculate.
+   */
   cig_current()->insets = cig_i_zero();
 
   if (wnd->flags & IS_RESIZABLE) {
@@ -704,9 +699,27 @@ static void end_window(window_t *wnd) {
     }
 
     CIG(RECT(CIG_W_INSET-16, CIG_H_INSET-16, 16, 16)) {
-      cig_draw_image(get_image(IMAGE_RESIZE_HANDLE), CIG_IMAGE_MODE_TOP_LEFT);
       cig_enable_interaction();
       handle_window_resize(wnd, WINDOW_RESIZE_BOTTOM_RIGHT);
+    }
+  }
+
+  cig_current()->insets = wnd_insets;
+
+  cig_push_frame(cig_r_make(0, 20, CIG_AUTO(), CIG_H_INSET - 20));
+    
+  return true;
+}
+
+static void end_window(window_t *wnd) {
+  cig_pop_frame(); /* Content frame */
+
+  /* Add resize thumb */
+  cig_current()->insets = cig_i_zero();
+
+  if (wnd->flags & IS_RESIZABLE) {
+    CIG(RECT(CIG_W_INSET-16, CIG_H_INSET-16, 16, 16)) {
+      cig_draw_image(get_image(IMAGE_RESIZE_HANDLE), CIG_IMAGE_MODE_TOP_LEFT);
     }
   }
 
