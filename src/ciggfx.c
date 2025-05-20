@@ -72,10 +72,10 @@ void cig_draw_image(cig_image_ref image, cig_image_mode mode) {
         { 0.5, 0.5 }, /* CIG_IMAGE_MODE_CENTER */
         { 0.0, 0.5 }, /* CIG_IMAGE_MODE_LEFT */
         { 1.0, 0.5 }, /* CIG_IMAGE_MODE_RIGHT */
-        { 0.5, 0.0 }, /* cig_image_modeOP */
+        { 0.5, 0.0 }, /* CIG_IMAGE_MODE_TOP */
         { 0.5, 1.0 }, /* CIG_IMAGE_MODE_BOTTOM */
-        { 0.0, 0.0 }, /* cig_image_modeOP_LEFT */
-        { 1.0, 0.0 }, /* cig_image_modeOP_RIGHT */
+        { 0.0, 0.0 }, /* CIG_IMAGE_MODE_TOP_LEFT */
+        { 1.0, 0.0 }, /* CIG_IMAGE_MODE_TOP_RIGHT */
         { 0.0, 1.0 }, /* CIG_IMAGE_MODE_BOTTOM_LEFT */
         { 1.0, 1.0 }, /* CIG_IMAGE_MODE_BOTTOM_RIGHT */
       };

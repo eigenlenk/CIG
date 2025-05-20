@@ -70,13 +70,13 @@ TEST(gfx_image, scale_to_fill) {
 
 TEST(gfx_image, positional_modes) {
   CIG(RECT_SIZED(100, 100)) {
-    cig_draw_image(&test_image, cig_image_modeOP_LEFT);
+    cig_draw_image(&test_image, CIG_IMAGE_MODE_TOP_LEFT);
     TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 80, 60), image_rect);
 
-    cig_draw_image(&test_image, cig_image_modeOP);
+    cig_draw_image(&test_image, CIG_IMAGE_MODE_TOP);
     TEST_ASSERT_EQUAL_RECT(cig_r_make(10, 0, 80, 60), image_rect);
 
-    cig_draw_image(&test_image, cig_image_modeOP_RIGHT);
+    cig_draw_image(&test_image, CIG_IMAGE_MODE_TOP_RIGHT);
     TEST_ASSERT_EQUAL_RECT(cig_r_make(20, 0, 80, 60), image_rect);
 
     cig_draw_image(&test_image, CIG_IMAGE_MODE_LEFT);
