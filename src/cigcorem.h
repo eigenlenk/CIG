@@ -20,10 +20,14 @@
 #define CIG_H_INSET (CIG_H - cig_current()->insets.top - cig_current()->insets.bottom)
 #define CIG_SX cig_absolute_rect().x
 #define CIG_SY cig_absolute_rect().y
+#define CIG_SX_INSET (cig_absolute_rect().x + cig_current()->insets.left)
+#define CIG_SY_INSET (cig_absolute_rect().y + cig_current()->insets.top)
 #define CIG_CENTER cig_v_make((CIG_W * 0.5), (CIG_H * 0.5))
 #define CIG_R (CIG_X + CIG_W)
 #define CIG_B (CIG_Y + CIG_H)
 #define CIG_SPACE cig_current()->_layout_params.spacing
+#define CIG_POSITION cig_v_make(CIG_X, CIG_Y)
+#define CIG_POSITION_INSET cig_v_make(CIG_X_INSET, CIG_Y_INSET)
 #define CIG_SIZE cig_v_make(CIG_W, CIG_H)
 #define CIG_SIZE_INSET cig_v_make(CIG_W_INSET, CIG_H_INSET)
 

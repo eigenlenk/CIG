@@ -16,7 +16,7 @@ static bool requested_layout_step_mode = false;
 /*  Forward delcarations */
 CIG_INLINED CIG_OPTIONAL(cig_state*) find_state(cig_id);
 CIG_INLINED CIG_OPTIONAL(cig_scroll_state_t*) find_scroll_state(cig_id);
-CIG_INLINED void handle_frame_hover(const cig_frame*);
+CIG_INLINED void handle_frame_hover(cig_frame*);
 CIG_INLINED void push_clip(cig_frame*);
 CIG_INLINED void pop_clip();
 CIG_INLINED cig_r calculate_rect_in_parent(cig_r, const cig_frame*);
@@ -420,7 +420,9 @@ void cig_enable_interaction() {
     return;
   }
   frame->_flags |= INTERACTIBLE;
-  handle_frame_hover(frame);
+  if (frame->_flags & SUBTREE_INCLUSIVE_HOVER) {
+    current->input_state._target_this_tick = frame->id;
+  }
 }
 
 bool cig_hovered() {
@@ -479,12 +481,8 @@ cig_input_action_type cig_clicked(
 }
 
 bool cig_enable_focus() {
-  const cig_frame *frame = cig_current();
-
-  if (current->input_state.click_state == BEGAN && cig_r_contains(frame->absolute_rect, current->input_state.position)) {
-    current->input_state._focus_target_this = frame->id;
-  }
-
+  cig_frame *frame = cig_current();
+  frame->_flags |= FOCUSABLE;
   return cig_focused();
 }
 
@@ -959,6 +957,8 @@ static cig_frame* push_frame(
 
   current->next_id = 0;
 
+  handle_frame_hover(new_frame);
+
 #ifdef DEBUG
   cig_trigger_layout_breakpoint(top->absolute_rect, absolute_rect);
 #endif
@@ -966,9 +966,19 @@ static cig_frame* push_frame(
   return new_frame;
 }
 
-static void handle_frame_hover(const cig_frame *frame) {
+static void handle_frame_hover(cig_frame *frame) {
   if (cig_r_contains(frame->absolute_rect, current->input_state.position)) {
-    current->input_state._target_this_tick = frame->id;
+    frame->_flags |= SUBTREE_INCLUSIVE_HOVER;
+    cig_frame *parent = frame->_parent;
+    while (parent) {
+      parent->_flags |= SUBTREE_INCLUSIVE_HOVER;
+      if (parent->_flags & FOCUSABLE) {
+        if (current->input_state.click_state == BEGAN) {
+          current->input_state._focus_target_this = parent->id;
+        }
+      }
+      parent = parent->_parent;
+    }
   }
 }
 

@@ -174,11 +174,19 @@ typedef struct cig_frame {
   cig_params _layout_params;
   unsigned int _id_counter;
   enum CIG_PACKED {
-    CLIPPED = CIG_BIT(0),
-    INTERACTIBLE = CIG_BIT(1),
-    /*  This frame was clipped by some earlier element. When jumping back to this
-        one we need to recreate the situation. */
-    RESTORES_EARLIER_CLIP = CIG_BIT(2)
+    /* This element or one if its descendants has hover */
+    SUBTREE_INCLUSIVE_HOVER = CIG_BIT(0),
+    /* Clipping is enabled for this element */
+    CLIPPED = CIG_BIT(1),
+    /**/
+    INTERACTIBLE = CIG_BIT(2),
+    /**/
+    FOCUSABLE = CIG_BIT(3),
+    /*
+     * This frame was clipped by some earlier element. When jumping back to this
+     * one we need to recreate the situation.
+     */
+    RESTORES_EARLIER_CLIP = CIG_BIT(4)
   } _flags;
 } cig_frame;
 

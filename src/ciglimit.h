@@ -17,8 +17,8 @@
     Internal pool is just for convenience */
 #define CIG_STATES_MAX 1024
 
-/*  Size of the memory arena for each state (1KB) */
-#define CIG_STATE_MEM_ARENA_BYTES 1024
+/*  Size of the memory arena for each state (4KB) */
+#define CIG_STATE_MEM_ARENA_BYTES 4096
 
 /*  How large is the buffer stack. Generally not too deeply nested? */
 #define CIG_BUFFERS_MAX 4
