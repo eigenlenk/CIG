@@ -53,6 +53,10 @@ CIG_INLINED VEC2 DECLNAME##_center(DECLNAME f) {                                
   return VEC2##_make(f.x + f.w * 0.5, f.y + f.h * 0.5);                                      \
 }                                                                                            \
                                                                                              \
+CIG_INLINED VEC2 DECLNAME##_position(DECLNAME f) {                                     \
+  return VEC2##_make(f.x, f.y);                                      \
+}                                                                                            \
+                                                                                             \
 CIG_INLINED VEC2 DECLNAME##_size(DECLNAME f) {                                     \
   return VEC2##_make(f.w, f.h);                                      \
 }                                                                                            \

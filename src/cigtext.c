@@ -133,6 +133,66 @@ void cig_label_draw(cig_label *label) {
   }
 }
 
+cig_v cig_measure_raw_text(
+  cig_font_ref font,
+  cig_text_style style,
+  const char *text
+) {
+  utf8_string utf8_str = make_utf8_string(text);
+  cig_font_ref _font = font ? font : default_font;
+  return measure_callback(utf8_str.str, utf8_str.byte_len, _font, style);
+}
+
+cig_v cig_measure_raw_text_formatted(
+  cig_font_ref font,
+  cig_text_style style,
+  const char *text,
+  ...
+) {
+  va_list args;
+  va_start(args, text);
+  vsprintf(printf_buf, text, args);
+  va_end(args);
+  utf8_string utf8_str = make_utf8_string(printf_buf);
+  cig_font_ref _font = font ? font : default_font;
+  return measure_callback(utf8_str.str, utf8_str.byte_len, _font, style);
+}
+
+void cig_draw_raw_text(
+  cig_v position,
+  cig_v bounds,
+  cig_font_ref font,
+  cig_text_style style,
+  cig_text_color_ref color,
+  const char *text
+) {
+  utf8_string utf8_str = make_utf8_string(text);
+  cig_font_ref _font = font ? font : default_font;
+  cig_text_color_ref _color = color ? color : default_text_color;
+  cig_v _bounds = (bounds.x || bounds.y) ? bounds : measure_callback(utf8_str.str, utf8_str.byte_len, _font, style);
+  render_callback(utf8_str.str, utf8_str.byte_len, cig_r_make(position.x, position.y, _bounds.x, _bounds.y), _font, _color, style);
+}
+
+void cig_draw_raw_text_formatted(
+  cig_v position,
+  cig_v bounds,
+  cig_font_ref font,
+  cig_text_style style,
+  cig_text_color_ref color,
+  const char *text,
+  ...
+) {
+  va_list args;
+  va_start(args, text);
+  vsprintf(printf_buf, text, args);
+  va_end(args);
+  utf8_string utf8_str = make_utf8_string(printf_buf);
+  cig_font_ref _font = font ? font : default_font;
+  cig_text_color_ref _color = color ? color : default_text_color;
+  cig_v _bounds = (bounds.x || bounds.y) ? bounds : measure_callback(utf8_str.str, utf8_str.byte_len, _font, style);
+  render_callback(utf8_str.str, utf8_str.byte_len, cig_r_make(position.x, position.y, _bounds.x, _bounds.y), _font, _color, style);
+}
+
 /*  ┌────────────────────┐
     │ INTERNAL FUNCTIONS │
     └────────────────────┘ */

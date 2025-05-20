@@ -6,6 +6,8 @@
 #define CIG_LABEL_SPANS_MAX 48
 #define CIG_LABEL_PRINTF_BUF_LENGTH 512
 
+#define CIG_RAW_TEXT_AUTOMATIC_SIZE cig_v_zero()
+
 typedef void* cig_font_ref;
 typedef void* cig_text_color_ref;
 
@@ -130,5 +132,16 @@ cig_label * cig_label_prepare(cig_label *, cig_v, cig_text_properties, const cha
 
 /* Renders a prepared label */
 void cig_label_draw(cig_label *);
+
+/*
+ * Raw text API allows drawing simple pieces of text without storing
+ * anything internally.
+ */
+
+cig_v cig_measure_raw_text(cig_font_ref, cig_text_style, const char *);
+cig_v cig_measure_raw_text_formatted(cig_font_ref, cig_text_style, const char *, ...);
+
+void cig_draw_raw_text(cig_v, cig_v, cig_font_ref, cig_text_style, cig_text_color_ref, const char *);
+void cig_draw_raw_text_formatted(cig_v, cig_v, cig_font_ref, cig_text_style, cig_text_color_ref, const char *, ...);
 
 #endif

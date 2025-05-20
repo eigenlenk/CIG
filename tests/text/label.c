@@ -357,6 +357,33 @@ TEST(text_label, multiline_overflow_ellipsis) {
   end();
 }
 
+/* Raw text is for measuring and drawing smaller strings directly without caching anything internally */
+TEST(text_label, raw_text) {
+  begin();
+
+  cig_v bounds = cig_measure_raw_text(NULL, 0, "Olá mundo!");
+  TEST_ASSERT_EQUAL_VEC2(cig_v_make(10, 1), bounds);
+
+  /* We have already calculated the text size, so we can just pass it in */
+  cig_draw_raw_text(cig_v_make(5, 5), bounds, NULL, 0, NULL, "Olá mundo!");
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(5, 5, 10, 1), spans.rects[0]);
+
+  /* But size can also be calculated automatically */
+  cig_draw_raw_text(cig_v_make(6, 6), CIG_RAW_TEXT_AUTOMATIC_SIZE, NULL, 0, NULL, "Olá mundo!");
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(6, 6, 10, 1), spans.rects[1]);
+}
+
+TEST(text_label, raw_text_formatted) {
+  begin();
+
+  cig_v bounds = cig_measure_raw_text_formatted(NULL, 0, "Price of eggs: %.2f$", 130.45000);
+  TEST_ASSERT_EQUAL_VEC2(cig_v_make(22, 1), bounds);
+
+  cig_draw_raw_text_formatted(cig_v_make(5, 5), bounds, NULL, 0, NULL, "Price of eggs: %.2f$", 130.45000);
+  TEST_ASSERT_EQUAL_STRING("Price of eggs: 130.45$", spans.strings[0]);
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(5, 5, 22, 1), spans.rects[0]);
+}
+
 TEST_GROUP_RUNNER(text_label) {
   RUN_TEST_CASE(text_label, fits_arena);
   RUN_TEST_CASE(text_label, single);
@@ -375,4 +402,6 @@ TEST_GROUP_RUNNER(text_label) {
   RUN_TEST_CASE(text_label, single_line_overflow_ellipsis);
   RUN_TEST_CASE(text_label, multiline_overflow_truncate);
   RUN_TEST_CASE(text_label, multiline_overflow_ellipsis);
+  RUN_TEST_CASE(text_label, raw_text);
+  RUN_TEST_CASE(text_label, raw_text_formatted);
 }
