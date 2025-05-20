@@ -796,7 +796,7 @@ static void handle_window_resize(window_t *wnd, window_resize_edge_t edge) {
     { 0, 0, 0, 1 }, /* WINDOW_RESIZE_BOTTOM */
   };
 
-  if (!window_resize.active && cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE) && cig_input_state()->drag.active) {
+  if (!window_resize.active && cig_focused_id() == wnd->id && cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE) && cig_input_state()->drag.active) {
     cig_input_state()->locked = true;
     window_resize.active = true;
     window_resize.original_rect = wnd->rect;
