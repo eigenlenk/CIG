@@ -150,7 +150,10 @@ static void do_desktop() {
 }
 
 static void do_taskbar() {
-  static cig_label clock_label;
+  static struct {
+    cig_label label;
+    cig_span spans[1];
+  } clock_st = { .label.spans = clock_st.spans };
 
   const int start_button_width = 54;
   const int spacing = 4;
@@ -170,16 +173,16 @@ static void do_taskbar() {
     time_t t = time(NULL);
     struct tm *ct = localtime(&t);
 
-    cig_label_prepare(&clock_label, NULL, 1, cig_v_zero(), (cig_text_properties) { .flags = CIG_TEXT_FORMATTED }, "%02d:%02d", ct->tm_hour, ct->tm_min);
+    cig_label_prepare(&clock_st.label, cig_v_zero(), (cig_text_properties) { .flags = CIG_TEXT_FORMATTED }, "%02d:%02d", ct->tm_hour, ct->tm_min);
 
-    const int clock_w = (clock_label.bounds.w+11*2);
+    const int clock_w = (clock_st.label.bounds.w+11*2);
 
     CIG(
       cig_r_make(CIG_W_INSET-clock_w, 0, clock_w, CIG_AUTO()),
       CIG_INSETS(cig_i_uniform(1))
     ) {
       cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
-      cig_label_draw(&clock_label);
+      cig_label_draw(&clock_st.label);
     }
 
     /* Center: Fill remaining middle space with task buttons */
@@ -662,7 +665,7 @@ static bool begin_window(window_t *wnd, window_message_t *msg, bool *focused) {
     }
   }
 
-  cig_push_frame(cig_r_make(0, 19, CIG_AUTO(), CIG_H_INSET - 19));
+  cig_push_frame(cig_r_make(0, 20, CIG_AUTO(), CIG_H_INSET - 20));
     
   return true;
 }
@@ -739,10 +742,12 @@ static cig_frame * large_file_icon(int icon,
     }
 
     cig_label *label = CIG_ALLOCATE(cig_label);
+    label->spans = CIG_ALLOCATE(cig_span[16]);
+    label->available_spans = 16;
 
     /* We need to prepare the label here to know how large of a rectangle
        to draw around it when the icon is selected */
-    cig_label_prepare(label, NULL, 16, CIG_SIZE_INSET, (cig_text_properties) {
+    cig_label_prepare(label, CIG_SIZE_INSET, (cig_text_properties) {
         .color = is_selected ? get_color(COLOR_WHITE) : get_color(text_color),
         .alignment.vertical = CIG_TEXT_ALIGN_TOP
       }, title);
