@@ -194,9 +194,9 @@ static void do_taskbar() {
         CIG_MAX_WIDTH(150)
       })
     ) {
-      for (i = 0; i < this->window_manager.count; ++i) {
+      for (i = 0; i < WIN95_OPEN_WINDOWS_MAX; ++i) {
         window_t *wnd = &this->window_manager.windows[i];
-        if (taskbar_button(RECT_AUTO, wnd->title, wnd->icon, wnd->id == cig_focused_id())) {
+        if (wnd->id && taskbar_button(RECT_AUTO, wnd->title, wnd->icon, wnd->id == cig_focused_id())) {
           cig_set_focused_id(wnd->id);
         }
       }
