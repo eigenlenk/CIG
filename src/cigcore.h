@@ -395,12 +395,6 @@ cig_frame_ref_stack_t* cig_frame_stack();
     │ STATE & MEMORY ARENA ACCESS │
     └─────────────────────────────┘ */
 
-/* */
-CIG_OPTIONAL(cig_state *) cig_enable_state();
-
-/* If state has been enabled, returns current memory arena, NULL otherwise */
-CIG_OPTIONAL(cig_arena *) cig_get_arena();
-
 /*
  * Allocates N bytes in current element's memory arena.
  * @param arena - Memory arena to use, pass NULL to use current state arena (will enable state)
@@ -415,6 +409,11 @@ CIG_OPTIONAL(void *) cig_arena_allocate(cig_arena *arena, size_t);
  * @return Pointer to the new object or NULL if memory could not be allocated (no space)
  */
 CIG_OPTIONAL(void *) cig_arena_read(cig_arena *arena, bool from_start, size_t);
+
+CIG_INLINED void cig_arena_reset(cig_arena *arena) {
+  arena->mapped = 0;
+  arena->read = 0;
+}
 
 /*  ┌──────────────────────────────┐
     │ TEMPORARY BUFFERS (ADVANCED) │

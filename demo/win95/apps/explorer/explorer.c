@@ -18,7 +18,6 @@ typedef struct {
 static void window_proc(window_t *this, window_message_t *msg, bool window_focused) {
   window_data_t *window_data = (window_data_t*)this->data;
   const bool menubar_visible = window_data->menubar_builder != NULL;
-  cig_frame *primary_status = 0;
   char status_text[STATUS_TEXT_LEN] = "";
 
   CIG_VSTACK(_, CIG_PARAMS({

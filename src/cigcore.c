@@ -15,18 +15,19 @@ static bool requested_layout_step_mode = false;
 #endif
 
 /*  Forward delcarations */
-CIG_INLINED CIG_OPTIONAL(cig_state*) find_state(cig_id);
-CIG_INLINED CIG_OPTIONAL(cig_scroll_state_t*) find_scroll_state(cig_id);
-CIG_INLINED void handle_frame_hover(cig_frame*);
-CIG_INLINED void push_clip(cig_frame*);
-CIG_INLINED void pop_clip();
-CIG_INLINED cig_r calculate_rect_in_parent(cig_r, const cig_frame*);
-CIG_INLINED cig_r align_rect_in_parent(cig_r, cig_r, const cig_params*);
-CIG_INLINED bool next_layout_rect(cig_r, cig_frame*, cig_r*);
-CIG_INLINED cig_frame* push_frame(cig_r, cig_i, cig_params, bool (*)(cig_r, cig_r, cig_params*, cig_r*));
-CIG_INLINED void move_to_next_row(cig_params*);
-CIG_INLINED void move_to_next_column(cig_params*);
-CIG_INLINED double get_attribute_value_of_relative_to(cig_pin_attribute, double, cig_frame*, cig_frame*);
+static CIG_OPTIONAL(cig_state*) find_state(cig_id);
+static CIG_OPTIONAL(cig_scroll_state_t*) find_scroll_state(cig_id);
+static CIG_OPTIONAL(cig_state *) enable_state();
+static void handle_frame_hover(cig_frame*);
+static void push_clip(cig_frame*);
+static void pop_clip();
+static cig_r calculate_rect_in_parent(cig_r, const cig_frame*);
+static cig_r align_rect_in_parent(cig_r, cig_r, const cig_params*);
+static bool next_layout_rect(cig_r, cig_frame*, cig_r*);
+static cig_frame* push_frame(cig_r, cig_i, cig_params, bool (*)(cig_r, cig_r, cig_params*, cig_r*));
+static void move_to_next_row(cig_params*);
+static void move_to_next_column(cig_params*);
+static double get_attribute_value_of_relative_to(cig_pin_attribute, double, cig_frame*, cig_frame*);
 
 CIG_INLINED int limit(int v, const int minv_or_zero, const int maxv_or_zero) {
   if (maxv_or_zero > 0) { v = CIG_MIN(maxv_or_zero, v); }
@@ -194,32 +195,11 @@ cig_frame_ref_stack_t* cig_frame_stack() {
     │ STATE │
     └───────┘ */
 
-CIG_OPTIONAL(cig_state *) cig_enable_state() {
-  cig_frame *frame = cig_current();
-  if (frame->_state) {
-    return frame->_state;
-  }
-  if ((frame->_state = find_state(frame->id))) {
-    frame->_state->arena.mapped = 0;
-    frame->_state->arena.read = 0;
-  }
-  return frame->_state;
-}
-
-CIG_OPTIONAL(cig_arena *) cig_get_arena() {
-  cig_frame *frame = cig_current();
-  if (frame) {
-    return &frame->_state->arena;
-  } else {
-    return NULL;
-  }
-}
-
 CIG_OPTIONAL(void *) cig_arena_allocate(cig_arena *arena, size_t bytes) {
   cig_arena *_arena = arena;
 
   if (!_arena) {
-    cig_state *state = cig_enable_state();
+    cig_state *state = enable_state();
     if (!state) {
       return NULL;
     }
@@ -239,7 +219,7 @@ CIG_OPTIONAL(void *) cig_arena_read(cig_arena *arena, bool from_start, size_t by
   cig_arena *_arena = arena;
 
   if (!_arena) {
-    cig_state *state = cig_enable_state();
+    cig_state *state = enable_state();
     if (!state) {
       return NULL;
     }
@@ -801,7 +781,7 @@ void cig_assign_set_clip(cig_set_clip_callback fp) {
     │ INTERNAL FUNCTIONS │
     └────────────────────┘ */
 
-static cig_r calculate_rect_in_parent(const cig_r rect, const cig_frame *parent) {
+CIG_INLINED cig_r calculate_rect_in_parent(const cig_r rect, const cig_frame *parent) {
   const cig_r content_rect = cig_r_inset(parent->rect, parent->insets);
 
   return align_rect_in_parent(cig_r_make(
@@ -822,7 +802,7 @@ static cig_r calculate_rect_in_parent(const cig_r rect, const cig_frame *parent)
   ), content_rect, &parent->_layout_params);
 }
 
-static cig_r align_rect_in_parent(cig_r rect, cig_r parent_rect, const cig_params *prm) {
+CIG_INLINED cig_r align_rect_in_parent(cig_r rect, cig_r parent_rect, const cig_params *prm) {
   switch (prm->alignment.horizontal) {
   case CIG_LAYOUT_ALIGNS_CENTER: {
     rect.x = (parent_rect.w - rect.w) * 0.5;
@@ -846,7 +826,7 @@ static cig_r align_rect_in_parent(cig_r rect, cig_r parent_rect, const cig_param
   return rect;
 }
 
-static bool next_layout_rect(const cig_r proposed, cig_frame *parent, cig_r *result) {
+CIG_INLINED bool next_layout_rect(const cig_r proposed, cig_frame *parent, cig_r *result) {
   if (parent->_layout_function) {
     return (*parent->_layout_function)(
       cig_r_inset(parent->rect, parent->insets),
@@ -948,7 +928,7 @@ static cig_frame* push_frame(
   return new_frame;
 }
 
-static void handle_frame_hover(cig_frame *frame) {
+CIG_INLINED void handle_frame_hover(cig_frame *frame) {
   if (cig_r_contains(frame->absolute_rect, current->input_state.position)) {
     frame->_flags |= SUBTREE_INCLUSIVE_HOVER;
     cig_frame *parent = frame->_parent;
@@ -1025,6 +1005,18 @@ static CIG_OPTIONAL(cig_scroll_state_t*) find_scroll_state(const cig_id id) {
 
     return &current->scroll_elements[i].value;
   }
+}
+
+CIG_INLINED CIG_OPTIONAL(cig_state *) enable_state() {
+  cig_frame *frame = cig_current();
+  if (frame->_state) {
+    return frame->_state;
+  }
+  if ((frame->_state = find_state(frame->id))) {
+    frame->_state->arena.mapped = 0;
+    frame->_state->arena.read = 0;
+  }
+  return frame->_state;
 }
 
 static void push_clip(cig_frame *frame) {

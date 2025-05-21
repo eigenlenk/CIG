@@ -26,7 +26,7 @@ static void end() {
     │ TEST CASES │
     └────────────┘ */
 
-TEST(core_state, state_and_visibility) {
+TEST(core_state, visibility) {
   register int i;
   cig_id persistent_id = 0;
 
@@ -44,10 +44,7 @@ TEST(core_state, state_and_visibility) {
     else { TEST_ASSERT_EQUAL_UINT32(persistent_id, cig_current()->id); }
 
     if (i == 0 || i == 3) {
-      cig_state *state = cig_enable_state();
-      TEST_ASSERT_NOT_NULL(state);
       TEST_ASSERT_EQUAL(CIG_FRAME_APPEARED, cig_visibility());
-      TEST_ASSERT_TRUE(state->active);
     }
     else if (i == 1 || i == 4) {
       TEST_ASSERT_EQUAL(CIG_FRAME_VISIBLE, cig_visibility());
@@ -66,9 +63,9 @@ TEST(core_state, pool_limit) {
     cig_push_frame(RECT_AUTO);
     
     if (i < CIG_STATES_MAX) {
-      TEST_ASSERT_NOT_NULL(cig_enable_state());
+      TEST_ASSERT_NOT_NULL(cig_arena_allocate(NULL, sizeof(int)));
     } else {
-      TEST_ASSERT_NULL(cig_enable_state());
+      TEST_ASSERT_NULL(cig_arena_allocate(NULL, sizeof(int)));
     }
     
     cig_pop_frame();
@@ -83,7 +80,7 @@ TEST(core_state, stale) {
   /*  Tick 1: Mark all states as used */
   for (i = 0; i < CIG_STATES_MAX + 1; ++i) {
     cig_push_frame(RECT_AUTO);
-    CIG_UNUSED(cig_enable_state());
+    CIG_UNUSED(cig_arena_read(NULL, true, sizeof(int)));
     cig_pop_frame();
   }
   end();
@@ -93,7 +90,7 @@ TEST(core_state, stale) {
   begin();
   cig_set_next_id(12345);
   cig_push_frame(RECT_AUTO);
-  TEST_ASSERT_NULL(cig_enable_state());
+  TEST_ASSERT_NULL(cig_arena_allocate(NULL, sizeof(int)));
   cig_pop_frame();
   end();
 
@@ -101,28 +98,31 @@ TEST(core_state, stale) {
   begin();
   cig_set_next_id(12345);
   cig_push_frame(RECT_AUTO);
-  TEST_ASSERT_NOT_NULL(cig_enable_state());
+  TEST_ASSERT_NOT_NULL(cig_arena_allocate(NULL, sizeof(int)));
   cig_pop_frame();
   end();
 }
 
 TEST(core_state, memory_arena) {
   register int i;
+  cig_arena arena;
   for (i = 0; i < 2; ++i) {
     begin();
 
-    TEST_ASSERT_EQUAL_UINT(0, cig_enable_state()->arena.mapped);
+    cig_arena_reset(&arena);
 
-    cig_v *vec2 = (cig_v *)cig_arena_allocate(NULL, sizeof(cig_v));
-    unsigned long *ul = (unsigned long *)cig_arena_allocate(NULL, sizeof(unsigned long));
-    char *str = (char *)cig_arena_allocate(NULL, sizeof(char[32]));
-    void *hundred_whole_kilobytes = cig_arena_allocate(NULL, sizeof(char[1024*100]));
+    TEST_ASSERT_EQUAL_UINT(0, arena.mapped);
+
+    cig_v *vec2 = (cig_v *)cig_arena_allocate(&arena, sizeof(cig_v));
+    unsigned long *ul = (unsigned long *)cig_arena_allocate(&arena, sizeof(unsigned long));
+    char *str = (char *)cig_arena_allocate(&arena, sizeof(char[32]));
+    void *hundred_whole_kilobytes = cig_arena_allocate(&arena, sizeof(char[1024*100]));
 
     TEST_ASSERT_NULL(hundred_whole_kilobytes); /* Doesn't fit */
 
     TEST_ASSERT_EQUAL_UINT(
       sizeof(cig_v) + sizeof(unsigned long) + sizeof(char[32]),
-      cig_enable_state()->arena.mapped
+      arena.mapped
     );
 
     if (i == 0) { /* Store data */
@@ -169,7 +169,7 @@ TEST(core_state, memory_arena_read) {
 }
 
 TEST_GROUP_RUNNER(core_state) {
-  RUN_TEST_CASE(core_state, state_and_visibility);
+  RUN_TEST_CASE(core_state, visibility);
   RUN_TEST_CASE(core_state, pool_limit);
   RUN_TEST_CASE(core_state, stale);
   RUN_TEST_CASE(core_state, memory_arena);
