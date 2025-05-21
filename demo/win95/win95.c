@@ -190,13 +190,13 @@ static void do_taskbar() {
       cig_r_make(start_button_width+spacing, 0, CIG_W_INSET-start_button_width-clock_w-spacing*2, CIG_AUTO()),
       CIG_PARAMS({
         CIG_SPACING(spacing),
-        CIG_COLUMNS(this->running_apps),
+        CIG_COLUMNS(this->window_manager.count),
         CIG_MAX_WIDTH(150)
       })
     ) {
-      for (i = 0; i < WIN95_OPEN_WINDOWS_MAX; ++i) {
+      for (i = 0; i < this->window_manager.count; ++i) {
         window_t *wnd = &this->window_manager.windows[i];
-        if (wnd->id && taskbar_button(RECT_AUTO, wnd->title, wnd->icon, wnd->id == cig_focused_id())) {
+        if (taskbar_button(RECT_AUTO, wnd->title, wnd->icon, wnd->id == cig_focused_id())) {
           cig_set_focused_id(wnd->id);
         }
       }
