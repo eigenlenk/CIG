@@ -866,52 +866,6 @@ TEST(core_layout, relative_values) {
   }
 }
 
-static cig_r clip_rect;
-static void set_clip_rect(cig_buffer_ref buffer, cig_r rect, bool reset) {
-  clip_rect = rect;
-}
-
-TEST(core_layout, jump) {
-  cig_assign_set_clip(&set_clip_rect);
-
-  /*  Jumping is a mechanism to go back to a previously closed element. You can
-      continue adding new elements into it. This can be useful in cases where the
-      order of laying things out and order in which something is computed differs.
-
-      For example in our Windows 95 demo, the directory explorer window shows a status
-      text at the very bottom which comes from calling the content functor. The space
-      for that text is allocated before the main content, but the actual text in there
-      is added after the fact by jumping back to it. */
-
-  cig_push_frame(cig_r_make(20, 20, 200, 200));
-  cig_enable_clipping();
-  
-  TEST_ASSERT_EQUAL_RECT(cig_r_make(20, 20, 200, 200), clip_rect);
-  
-  cig_frame *my_frame = cig_push_frame(RECT_AUTO);
-  /* ... */
-  cig_pop_frame();
-  
-  cig_pop_frame(); /* This pops the clip rect */
-
-  /* We should be back to clipping the whole screen */
-  TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 640, 480), clip_rect);
-
-  /*  Now let's jump back to 'my_frame' and add something in there. Jumping
-      also restores whatever clip rect was active at that time. */
-  cig_jump(my_frame);
-  TEST_ASSERT_EQUAL_RECT(cig_r_make(20, 20, 200, 200), clip_rect);
-  
-  cig_push_frame(RECT_AUTO);
-  TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 200, 200), cig_current()->rect);
-  cig_pop_frame();
-  
-  cig_pop_frame(); /* We pop this like usual */
-
-  /* Again, we should be back to clipping the whole screen */
-  TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 640, 480), clip_rect);
-}
-
 TEST(core_layout, pinning) {
   /*  Pinning is an alternative way of constructing the layout rectangle
       by referencing existing elements for positioning or dimensioning.
@@ -1196,7 +1150,6 @@ TEST_GROUP_RUNNER(core_layout) {
   RUN_TEST_CASE(core_layout, additional_buffers);
   RUN_TEST_CASE(core_layout, main_screen_subregion);
   RUN_TEST_CASE(core_layout, relative_values);
-  RUN_TEST_CASE(core_layout, jump)
   RUN_TEST_CASE(core_layout, pinning)
   RUN_TEST_CASE(core_layout, pinning_with_insets)
   RUN_TEST_CASE(core_layout, pinning_relative)

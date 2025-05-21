@@ -161,51 +161,10 @@ cig_frame* cig_push_layout_function(
 
 cig_frame* cig_pop_frame() {
   cig_frame *popped_frame = stack_cig_frame_ref_pop(cig_frame_stack());
-
   if (popped_frame->_flags & CLIPPED) {
     pop_clip();
-  } else if (popped_frame->_flags & RESTORES_EARLIER_CLIP) {
-    popped_frame->_flags &= ~RESTORES_EARLIER_CLIP;
-    pop_clip();
   }
-
   return popped_frame;
-}
-
-cig_frame* cig_jump(cig_frame *frame) {
-  if (!frame) {
-    return NULL;
-  }
-  cig_frame *top = cig_current();
-  current->frame_stack.push(&current->frame_stack, frame);
-
-  /* See if any parent frame provided a clip region */
-  cig_frame *parent = frame->_parent;
-  cig_buffer_element_t *buf_element = current->buffers.peek_ref(&current->buffers, 0);
-  cig_clip_rect_t_stack_t *clip_rects = &buf_element->clip_rects;
-
-  while (parent) {
-    if (parent->_flags & CLIPPED) {
-      frame->_flags |= RESTORES_EARLIER_CLIP;
-      cig_r clip_rect = cig_r_union(parent->absolute_rect, !clip_rects->size
-        ? buf_element->absolute_rect
-        : clip_rects->peek(clip_rects, 0)
-      );
-      clip_rects->push(clip_rects, clip_rect);
-      if (set_clip) {
-        set_clip(cig_buffer(), clip_rect, false);
-      }
-      break;
-    } else {
-      parent = parent->_parent;
-    }
-  }
-
-#ifdef DEBUG
-  cig_trigger_layout_breakpoint(top->absolute_rect, frame->absolute_rect);
-#endif
-
-  return frame;
 }
 
 void cig_set_default_insets(cig_i insets) {

@@ -181,12 +181,7 @@ typedef struct cig_frame {
     /**/
     INTERACTIBLE = CIG_BIT(2),
     /**/
-    FOCUSABLE = CIG_BIT(3),
-    /*
-     * This frame was clipped by some earlier element. When jumping back to this
-     * one we need to recreate the situation.
-     */
-    RESTORES_EARLIER_CLIP = CIG_BIT(4)
+    FOCUSABLE = CIG_BIT(3)
   } _flags;
 } cig_frame;
 
@@ -365,10 +360,6 @@ cig_frame * cig_push_layout_function(
   cig_i,
   cig_params
 );
-
-/*  Advanced function allowing jumping back to a previous element and continuing
-    layout within that. Use with care! End with `cig_pop_frame` once done. */
-cig_frame* cig_jump(cig_frame*);
 
 /*  Pop and return the last element in the layout stack */
 cig_frame* cig_pop_frame();

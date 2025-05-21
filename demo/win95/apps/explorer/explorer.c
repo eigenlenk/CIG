@@ -12,64 +12,53 @@ const char *explorer_path_recycle_bin = "recyclebin";
 typedef struct {
   void (*menubar_builder)(window_t *, bool);
   void (*content_builder)(bool, char *);
+  bool status_bar_visible;
 } window_data_t;
 
 static void window_proc(window_t *this, window_message_t *msg, bool window_focused) {
   window_data_t *window_data = (window_data_t*)this->data;
+  const bool menubar_visible = window_data->menubar_builder != NULL;
   cig_frame *primary_status = 0;
-  char status_text[STATUS_TEXT_LEN];
+  char status_text[STATUS_TEXT_LEN] = "";
 
   CIG_VSTACK(_, CIG_PARAMS({
     CIG_SPACING(2)
   })) {
-    if (window_data->menubar_builder) {
+    if (menubar_visible) {
       CIG(_H(16)) {
         window_data->menubar_builder(this, window_focused);
       }
     }
 
-    CIG_VSTACK(_, CIG_PARAMS({
-      CIG_SPACING(2),
-      CIG_ALIGNMENT_VERTICAL(CIG_LAYOUT_ALIGNS_BOTTOM)
-    })) {
-      CIG(_H(17)) {
+    CIG(_H(CIG_H - (menubar_visible?(16+2):0) - (window_data->status_bar_visible?(18+2):0)), CIG_INSETS(cig_i_uniform(2))) {
+      cig_fill_solid(get_color(COLOR_WHITE));
+      cig_fill_panel(get_panel(PANEL_FILES_CONTENT_BEVEL), 0);
+
+      if (window_data->content_builder) {
+        window_data->content_builder(window_focused, &status_text[0]);
+      }
+    }
+
+    if (window_data->status_bar_visible) {
+      CIG(_H(18)) {
         cig_enable_clipping();
 
-        /* TODO: Status bar */
-        CIG_CAPTURE(primary_status, CIG(_W(CIG_MIN(144, CIG_W)), cig_i_uniform(3)) {
+        CIG(_W(CIG_MIN(144, CIG_W)), cig_i_make(3, 2, 3, 2)) {
           cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
-        })
+          cig_draw_label((cig_text_properties) {
+            .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
+          }, status_text);
+        }
+
         if (CIG_W > (144+2)) {
           int remaining_space = CIG_W - (144+2);
           CIG(RECT(CIG_W-remaining_space, 0, remaining_space, CIG_AUTO())) {
             cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
           }
         }
-      }
 
-      CIG(_, CIG_INSETS(cig_i_uniform(2))) {
-        cig_fill_solid(get_color(COLOR_WHITE));
-        cig_fill_panel(get_panel(PANEL_FILES_CONTENT_BEVEL), 0);
-
-        if (window_data->content_builder) {
-          window_data->content_builder(window_focused, &status_text[0]);
-
-          if (strlen(status_text) > 0) {
-            /*  Jumping allows us to go back into an already added frame. Here we have
-                called the window content functor and know what status text to show.
-
-                This particular situation has other solutions as well, main one being
-                calculating the body size first, adding that frame and *then* inserting
-                the status bar element. But using a jump means we can make the status bar
-                visibility conditional and have the window content always fill whatever
-                space is remaining without having to calculate it manually. */
-            if (cig_jump(primary_status)) {
-              cig_draw_label((cig_text_properties) {
-                .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
-              }, status_text);
-              cig_pop_frame();
-            }
-          }
+        CIG(RECT(CIG_W_INSET-12, CIG_H_INSET-12, 12, 12)) {
+          cig_draw_image(get_image(IMAGE_RESIZE_HANDLE), CIG_IMAGE_MODE_TOP_LEFT);
         }
       }
     }
@@ -117,6 +106,7 @@ application_t explorer_app() {
 
 window_t explorer_create_window(application_t *app, const char *path) {
   window_data_t *data = malloc(sizeof(window_data_t));
+  data->status_bar_visible = true;
 
   if (path == explorer_path_my_computer) {
     data->menubar_builder = &standard_menubar_builder;
