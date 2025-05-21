@@ -134,14 +134,8 @@ typedef struct {
   size_t mapped, read;
 } cig_arena;
 
-typedef enum CIG_PACKED {
-  CIG_STATE_INACTIVE = 0,
-  CIG_STATE_ACTIVATED,
-  CIG_STATE_ACTIVE
-} cig_state_status;
-
 typedef struct {
-  cig_state_status status;
+  bool active;
   cig_arena arena;
 } cig_state;
 
@@ -157,6 +151,11 @@ typedef struct {
   bool (*builder)(cig_r, cig_r, cig_params*, cig_r*);
 } cig_args;
 
+typedef enum CIG_PACKED {
+  CIG_FRAME_APPEARED = 1,
+  CIG_FRAME_VISIBLE
+} cig_frame_visibility;
+
 /* */
 typedef struct cig_frame {
   cig_id id;
@@ -165,6 +164,7 @@ typedef struct cig_frame {
         absolute_rect, /* Screen-space rect */
         content_rect;  /* Relative rect bounding the content */
   cig_i insets;        /* Insets affect child elements within this element */
+  cig_frame_visibility visibility;
 
   /*__PRIVATE__*/      
   bool (*_layout_function)(cig_r, cig_r, cig_params*, cig_r*);
@@ -172,7 +172,7 @@ typedef struct cig_frame {
   cig_state *_state;
   struct cig_frame *_parent;
   cig_params _layout_params;
-  unsigned int _id_counter;
+  unsigned int _id_counter, _last_tick;
   enum CIG_PACKED {
     /* This element or one if its descendants has hover */
     SUBTREE_INCLUSIVE_HOVER = CIG_BIT(0),
@@ -318,7 +318,7 @@ typedef struct {
   } state_list[CIG_STATES_MAX];
   struct {
     cig_frame elements[CIG_ELEMENTS_MAX];
-    size_t count;
+    size_t count, high;
   } frames;
 #ifdef DEBUG
   bool step_mode;
@@ -391,6 +391,9 @@ CIG_INLINED cig_r cig_absolute_rect() { return cig_current()->absolute_rect; }
 /*  @return Relative bounding rect for current content */
 CIG_INLINED cig_r cig_content_rect() { return cig_current()->content_rect; }
 
+/* @return Current frame visibility status (appeared, visible, not visible) */
+CIG_INLINED cig_frame_visibility cig_visibility() { return cig_current()->visibility; }
+
 /*  Converts a relative rect to a screen-space rect */
 cig_r cig_convert_relative_rect(cig_r);
 
@@ -406,9 +409,6 @@ CIG_OPTIONAL(cig_state *) cig_enable_state();
 
 /* If state has been enabled, returns current memory arena, NULL otherwise */
 CIG_OPTIONAL(cig_arena *) cig_get_arena();
-
-/* */
-cig_state_status cig_state_get_status(cig_state *);
 
 /*
  * Allocates N bytes in current element's memory arena.

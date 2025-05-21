@@ -1,7 +1,7 @@
 #ifndef CIG_LIMITS_INCLUDED
 #define CIG_LIMITS_INCLUDED
 
-/*  Maximum number of layout elements */
+/*  Maximum number of unique layout elements */
 #define CIG_ELEMENTS_MAX 4096
 
 /*  Maximum number of nested layout elements during the layout pass */

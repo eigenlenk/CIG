@@ -418,15 +418,13 @@ bool begin_file_browser(cig_r rect, int direction, color_id_t text_color, bool p
     *number_selected = 0;
   }
 
-  cig_state *state = cig_enable_state();
-
   file_browser_data_t *data = CIG_ALLOCATE(file_browser_data_t);
   data->text_color = text_color;
   data->has_focus = parent_focused;
   data->number_selected = number_selected;
   data->count = 0;
 
-  if (state && cig_state_get_status(state) == CIG_STATE_ACTIVATED) {
+  if (cig_visibility() == CIG_FRAME_APPEARED) {
     /* Clear file selection when file browser becomes visible */
     memset(data->selected, 0, sizeof(bool[32]));
   }

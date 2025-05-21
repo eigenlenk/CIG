@@ -2,6 +2,7 @@
 #include "cigcorem.h"
 #include <string.h>
 #include <assert.h>
+#include <stdio.h>
 
 cig__macro_ctx_st cig__macro_ctx;
 
@@ -47,6 +48,7 @@ void cig_init_context(cig_context *context) {
   context->tick = 1;
   context->delta_time = 0.f;
   context->elapsed_time = 0.f;
+  context->frames.high = 0;
 
   for (i = 0; i < CIG_STATES_MAX; ++i) {
     context->state_list[i].id = 0;
@@ -90,10 +92,12 @@ void cig_begin_layout(
     .insets = cig_i_zero(),
     ._layout_function = NULL,
     ._parent = NULL,
-    ._layout_params = (cig_params) { 0 }
+    ._layout_params = (cig_params) { 0 },
+    ._last_tick = current->tick
   };
   current->frame_stack.push(&current->frame_stack, &current->frames.elements[0]);
   current->frames.count = 1;
+  current->frames.high = CIG_MAX(current->frames.high, current->frames.count);
 
   cig_push_buffer(buffer);
   current->next_id = 0;
@@ -104,16 +108,24 @@ void cig_begin_layout(
 }
 
 void cig_end_layout() {
-  register int i;
+  register int i, j;
   for (i = 0; i < CIG_STATES_MAX; ++i) {
-    if (current->state_list[i].last_tick == current->tick) {
-      if (current->state_list[i].value.status == CIG_STATE_ACTIVATED) {
-        current->state_list[i].value.status = CIG_STATE_ACTIVE;
-      }
-    } else {
-      current->state_list[i].value.status = CIG_STATE_INACTIVE;
+    if (current->state_list[i].last_tick != current->tick) {
+      current->state_list[i].value.active = false;
     }
   }
+
+  for (i = 1, j = 1; i < current->frames.high; ++i) {
+    if (current->frames.elements[i]._last_tick == current->tick) {
+      current->frames.elements[j++] = current->frames.elements[i];
+    }
+  }
+
+  for (i = j; i < current->frames.high; ++i) {
+    current->frames.elements[i].visibility = 0;
+  }
+
+  current->frames.high = j;
 
   ++current->tick;
 }
@@ -241,14 +253,6 @@ CIG_OPTIONAL(cig_arena *) cig_get_arena() {
     return &frame->_state->arena;
   } else {
     return NULL;
-  }
-}
-
-cig_state_status cig_state_get_status(cig_state *state) {
-  if (state) {
-    return state->status;
-  } else {
-    return 0;
   }
 }
 
@@ -531,7 +535,7 @@ cig_v cig_offset() {
 /*  ┌────────────────┐
     │ LAYOUT HELPERS │
     └────────────────┘ */
-#include <stdio.h>
+
 cig_r cig_build_rect(size_t n, cig_pin refs[]) {
   register size_t i;
   int32_t x0, y0, x1, y1, w, h, cx, cy;
@@ -647,7 +651,6 @@ cig_r cig_build_rect(size_t n, cig_pin refs[]) {
     } else if ((attrs & CIG_BIT(CENTER_Y)) && (attrs & CIG_BIT(TOP))) {
       y1 = cy + (cy - y0);
     } else {
-      printf("%d, %d, %d, %d | %d, %d\n", x0, y0, x1, y1, w, h);
       assert(false);
     }
     attrs |= CIG_BIT(BOTTOM);
@@ -904,6 +907,8 @@ static cig_frame* push_frame(
   cig_params params,
   bool (*layout_function)(cig_r, cig_r, cig_params*, cig_r*)
 ) {
+  register size_t i;
+
   cig_buffer_element_t *current_buffer = current->buffers.peek_ref(&current->buffers, 0);
   cig_frame *top = cig_current();
 
@@ -929,6 +934,25 @@ static cig_frame* push_frame(
     return NULL;
   }
 
+  const cig_id next_id = current->next_id
+    ? current->next_id
+    : (top->id + CIG_TINYHASH((top->id+top->_id_counter++), cig_depth()));
+
+  size_t new_index = current->frames.high;
+
+  for (i = 0; i < current->frames.high; ++i) {
+    if (current->frames.elements[i].id == next_id) {
+      new_index = i;
+      break;
+    }
+  }
+
+  if (new_index == CIG_ELEMENTS_MAX) {
+    return NULL;
+  }
+
+  const cig_frame_visibility previous_visibility = current->frames.elements[new_index].visibility;
+
   top->_layout_params._count.total ++;
 
   cig_r absolute_rect = cig_convert_relative_rect(next);
@@ -936,24 +960,23 @@ static cig_frame* push_frame(
     ? current_buffer->absolute_rect
     : current_buffer->clip_rects.peek(&current_buffer->clip_rects, 0);
 
-  current->frames.elements[current->frames.count] = (cig_frame) {
-    .id = current->next_id
-      ? current->next_id
-      : (top->id + CIG_TINYHASH((top->id+top->_id_counter++), cig_depth())),
+  current->frames.elements[new_index] = (cig_frame) {
+    .id = next_id,
     .rect = next,
     .clipped_rect = cig_r_offset(cig_r_union(absolute_rect, current_clip_rect), -absolute_rect.x + next.x, -absolute_rect.y + next.y),
     .absolute_rect = absolute_rect,
     .insets = insets,
+    .visibility = CIG_MIN(CIG_FRAME_VISIBLE, previous_visibility + 1),
     ._layout_function = layout_function,
     ._layout_params = params,
     ._parent = top,
-    ._flags = 0,
-    ._scroll_state = NULL
+    ._last_tick = current->tick
   };
-  cig_frame *new_frame = &current->frames.elements[current->frames.count];
+  cig_frame *new_frame = &current->frames.elements[new_index];
 
   current->frame_stack.push(&current->frame_stack, new_frame);
-  current->frames.count ++;
+  current->frames.count++;
+  current->frames.high = CIG_MAX(current->frames.high, new_index + 1);
 
   current->next_id = 0;
 
@@ -988,16 +1011,14 @@ static CIG_OPTIONAL(cig_state*) find_state(const cig_id id) {
   /*  Find a state with a matching ID, with no ID yet, or a stale state */
   for (i = 0; i < CIG_STATES_MAX; ++i) {
     if (current->state_list[i].id == id) {
-      if (current->state_list[i].value.status == CIG_STATE_INACTIVE) {
-        current->state_list[i].value.status = CIG_STATE_ACTIVATED;
-      }
+      current->state_list[i].value.active = true;
       current->state_list[i].last_tick = current->tick;
       return &current->state_list[i].value;
     }
     else if (open < 0 && !current->state_list[i].id) {
       open = i;
     }
-    else if (stale < 0 && current->state_list[i].last_tick < current->tick-1) {
+    else if (stale < 0 && !current->state_list[i].value.active) {
       stale = i;
     }
   }
@@ -1007,9 +1028,9 @@ static CIG_OPTIONAL(cig_state*) find_state(const cig_id id) {
   if (result >= 0) {
     current->state_list[result].id = id;
     current->state_list[result].last_tick = current->tick;
-    current->state_list[result].value.status = CIG_STATE_ACTIVATED;
     memset(&current->state_list[result].value.arena.bytes, 0, CIG_STATE_MEM_ARENA_BYTES);
     current->state_list[result].value.arena.mapped = 0;
+    current->state_list[result].value.active = true;
     return &current->state_list[result].value;
   }
 

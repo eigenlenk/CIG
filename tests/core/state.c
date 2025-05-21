@@ -26,23 +26,32 @@ static void end() {
     │ TEST CASES │
     └────────────┘ */
 
-TEST(core_state, status) {
+TEST(core_state, state_and_visibility) {
   register int i;
   cig_id persistent_id = 0;
 
-  for (i = 0; i < 2; ++i) {
+  for (i = 0; i < 5; ++i) {
     begin();
+
+    if (i == 2) {
+      end();
+      continue;
+    }
+
     cig_push_frame(RECT_AUTO);
 
     if (!persistent_id) { persistent_id = cig_current()->id; }
     else { TEST_ASSERT_EQUAL_UINT32(persistent_id, cig_current()->id); }
 
-    cig_state *state = cig_enable_state();
-
-    TEST_ASSERT_NOT_NULL(state);
-
-    if (i == 0) { TEST_ASSERT_EQUAL(CIG_STATE_ACTIVATED, state->status); }
-    else if (i == 1) { TEST_ASSERT_EQUAL(CIG_STATE_ACTIVE, state->status); }
+    if (i == 0 || i == 3) {
+      cig_state *state = cig_enable_state();
+      TEST_ASSERT_NOT_NULL(state);
+      TEST_ASSERT_EQUAL(CIG_FRAME_APPEARED, cig_visibility());
+      TEST_ASSERT_TRUE(state->active);
+    }
+    else if (i == 1 || i == 4) {
+      TEST_ASSERT_EQUAL(CIG_FRAME_VISIBLE, cig_visibility());
+    }
 
     cig_pop_frame();
     end();
@@ -160,7 +169,7 @@ TEST(core_state, memory_arena_read) {
 }
 
 TEST_GROUP_RUNNER(core_state) {
-  RUN_TEST_CASE(core_state, status);
+  RUN_TEST_CASE(core_state, state_and_visibility);
   RUN_TEST_CASE(core_state, pool_limit);
   RUN_TEST_CASE(core_state, stale);
   RUN_TEST_CASE(core_state, memory_arena);
