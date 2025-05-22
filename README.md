@@ -36,10 +36,10 @@ if (cig_push_frame(RECT_CENTERED(800, 600))) {
   for (int i = 0; i < 4; ++i) {
     if (cig_push_frame(RECT_AUTO)) {
       /* Why is this an if-statement? In short, a non-null value means the child frame is at least
-         partially visible within the parent and the new element is returned, NULL means it's
-         out of bounds or exceeds other limits. Relevant when we'd up the row count to, let's say 10,
-         in which case  the frames after the sixth one would not be visible, because row 6 is the last one
-         partially in view */
+         partially visible within the parent and the new element is returned, NULL means it's out
+         of bounds or exceeds other limits. Relevant when we'd up the row count to, let's say 10,
+         in which case  the frames after the sixth one would not be visible, because row 6 is
+         the last one partially in view */
 
       /* We want to be able to interact with this element */
       cig_enable_interaction();
