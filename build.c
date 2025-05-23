@@ -100,7 +100,7 @@ int main(int argc, char **argv)
       "-Wfatal-errors",
       
       "-I"SRC_FOLDER,
-      "-I"DEMO_FOLDER,
+      "-I"DEMO_FOLDER"win95/",
       "-I"DEPS_FOLDER"utf8/",
       "-I"DEPS_FOLDER"raylib-5.5_win32_mingw-w64/include",
       
@@ -114,6 +114,7 @@ int main(int argc, char **argv)
       SRC_FOLDER"ciggfx.c",
       DEMO_FOLDER"win95/main.c",
       DEMO_FOLDER"win95/win95.c",
+      DEMO_FOLDER"win95/components/menu.c",
       DEMO_FOLDER"win95/apps/explorer/explorer.c",
       DEMO_FOLDER"win95/apps/welcome/welcome.c",
       

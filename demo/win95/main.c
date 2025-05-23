@@ -1,6 +1,6 @@
 #include "raylib.h"
 #include "cig.h"
-#include "win95/win95.h"
+#include "win95.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -105,6 +105,12 @@ int main(int argc, const char *argv[]) {
   load_texture(&images[IMAGE_CONTROLS_FOLDER_16], "res/images/controls_folder_16.png");
   load_texture(&images[IMAGE_CONTROLS_FOLDER_32], "res/images/controls_folder_32.png");
   load_texture(&images[IMAGE_RESIZE_HANDLE], "res/images/resize_handle.png");
+  load_texture(&images[IMAGE_MENU_CHECK], "res/images/menu_check.png");
+  load_texture(&images[IMAGE_MENU_CHECK_INVERTED], "res/images/menu_check_inverted.png");
+  load_texture(&images[IMAGE_MENU_RADIO], "res/images/menu_radio.png");
+  load_texture(&images[IMAGE_MENU_RADIO_INVERTED], "res/images/menu_radio_inverted.png");
+  load_texture(&images[IMAGE_MENU_ARROW], "res/images/menu_arrow.png");
+  load_texture(&images[IMAGE_MENU_ARROW_INVERTED], "res/images/menu_arrow_inverted.png");
 
   blue_dither_shader = LoadShader(0, "res/shaders/blue_dither.fs");
 
@@ -129,6 +135,7 @@ int main(int argc, const char *argv[]) {
   SetTextureFilter(fonts[FONT_ARIAL_BLACK_32].font.texture, TEXTURE_FILTER_POINT);
   SetTextureFilter(fonts[FONT_FRANKLIN_GOTHIC_BOOK_32].font.texture, TEXTURE_FILTER_POINT);
   
+  colors[COLOR_DEBUG] = (Color) { 255, 0, 255, 255 };
   colors[COLOR_BLACK] = (Color) { 0, 0, 0, 255 };
   colors[COLOR_WHITE] = (Color) { 255, 255, 255, 255 };
   colors[COLOR_YELLOW] = (Color) { 255, 255, 0, 255 };

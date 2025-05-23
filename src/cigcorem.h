@@ -111,6 +111,10 @@ extern cig__macro_ctx_st cig__macro_ctx;
 /* Assigns CIG() macro result to a variable without retaining it */
 #define CIG_ASSIGN(VAR, BODY) cig__macro_ctx.retain=0; cig__macro_ctx.open=&VAR; BODY;
 
+/*
+ * Returns last successfully closed element. If pushing (opening) a frame fails,
+ * this will yield NULL.
+ */
 #define CIG_LAST() cig__macro_ctx.last_closed
 
 /* Layout pinning */

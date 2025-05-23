@@ -5,6 +5,8 @@
 
 #define WIN95_APPS_MAX 16
 #define WIN95_OPEN_WINDOWS_MAX 16
+#define WIN95_MAX_MENU_GROUPS 4
+#define WIN95_MAX_MENU_GROUP_ITEMS 16
 
 typedef enum {
   FONT_REGULAR = 0,
@@ -23,6 +25,7 @@ typedef enum {
   COLOR_DIALOG_BACKGROUND,
   COLOR_WINDOW_ACTIVE_TITLEBAR,
   COLOR_WINDOW_INACTIVE_TITLEBAR,
+  COLOR_DEBUG,
   __COLOR_COUNT
 } color_id_t;
 
@@ -47,6 +50,12 @@ typedef enum {
   IMAGE_CONTROLS_FOLDER_16,
   IMAGE_CONTROLS_FOLDER_32,
   IMAGE_RESIZE_HANDLE,
+  IMAGE_MENU_CHECK,
+  IMAGE_MENU_CHECK_INVERTED,
+  IMAGE_MENU_RADIO,
+  IMAGE_MENU_RADIO_INVERTED,
+  IMAGE_MENU_ARROW,
+  IMAGE_MENU_ARROW_INVERTED,
   __IMAGE_COUNT
 } image_id_t;
 
@@ -146,7 +155,59 @@ bool begin_file_browser(cig_r, int, color_id_t, bool, int *);
 bool file_item(image_id_t, const char*);
 void end_file_browser();
 
-void begin_menubar();
-void end_menubar();
+typedef struct menu_item {
+  cig_id id;
+  const char *title;
+  enum CIG_PACKED {
+    NONE,
+    TOGGLE,
+    RADIO_ON,
+    DISABLED,
+    CHILD_MENU
+  } type;
+  void *data;
+  void (*handler)(struct menu_item *);
+} menu_item;
+
+typedef struct menu_group {
+  cig_id id;
+  struct {
+    size_t count;
+    menu_item list[WIN95_MAX_MENU_GROUP_ITEMS];
+  } items;
+  void (*handler)(struct menu_group *, struct menu_item *);
+} menu_group;
+
+typedef enum {
+  DROPDOWN,
+  START /* Taller rows */,
+  START_SUBMENU
+} menu_style;
+
+typedef struct win95_menu {
+  const char *title;
+  struct {
+    size_t count;
+    menu_group list[WIN95_MAX_MENU_GROUPS];
+  } groups;
+  menu_style style;
+  int16_t base_width;
+  void (*handler)(struct win95_menu *, struct menu_group *, struct menu_item *);
+} win95_menu;
+
+typedef struct {
+  cig_v position;
+} menu_presentation;
+
+void menubar(size_t, win95_menu*[]);
+CIG_DISCARDABLE(win95_menu *) menu_setup(
+  win95_menu *,
+  const char *,
+  menu_style,
+  void (*)(struct win95_menu *, struct menu_group *, struct menu_item *),
+  size_t,
+  menu_group[]
+);
+void menu_draw(win95_menu *, menu_presentation);
 
 #endif

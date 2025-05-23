@@ -246,6 +246,7 @@ application_t *win95_find_open_app(const char *id) {
 
 window_t* window_manager_create(window_manager_t *manager, application_t *app, window_t wnd) {
   register size_t i;
+  if (!manager) { manager = &this->window_manager; }
   for (i = 0; i < WIN95_OPEN_WINDOWS_MAX; ++i) {
     if (manager->windows[i].id) { continue; }
     wnd.owner = app;
@@ -260,6 +261,7 @@ window_t* window_manager_create(window_manager_t *manager, application_t *app, w
 
 void window_manager_close(window_manager_t *manager, window_t *wnd) {
   register size_t i, j;
+  if (!manager) { manager = &this->window_manager; }
   if (wnd->owner && wnd->flags & IS_PRIMARY_WINDOW && wnd->owner->flags & KILL_WHEN_PRIMARY_WINDOW_CLOSED) {
     close_application(wnd->owner);
   }
@@ -277,6 +279,7 @@ void window_manager_close(window_manager_t *manager, window_t *wnd) {
 
 void window_manager_bring_to_front(window_manager_t *manager, cig_id wnd_id) {
   register size_t i;
+  if (!manager) { manager = &this->window_manager; }
   for (i = 0; i < manager->count; ++i) {
     if (manager->order[i]->id == wnd_id) {
       window_t *wnd = manager->order[i];
@@ -290,6 +293,7 @@ void window_manager_bring_to_front(window_manager_t *manager, cig_id wnd_id) {
 
 window_t* window_manager_find_primary_window(window_manager_t *manager, application_t *app) {
   register size_t i;
+  if (!manager) { manager = &this->window_manager; }
   for (i = 0; i < manager->count; ++i) {
     if (manager->order[i]->owner == app && manager->order[i]->flags & IS_PRIMARY_WINDOW) {
       return manager->order[i];
@@ -406,13 +410,15 @@ typedef struct {
 } file_browser_data_t;
 
 bool begin_file_browser(cig_r rect, int direction, color_id_t text_color, bool parent_focused, int *number_selected) {
-  if (!cig_retain(cig_push_grid(RECT_AUTO, cig_i_zero(), (cig_params) {
+  if (!cig_push_grid(RECT_AUTO, cig_i_zero(), (cig_params) {
     .width = 75,
     .height = 75,
     .direction = direction
-  }))) {
+  })) {
     return false;
   }
+
+  cig_retain(cig_current());
 
   if (number_selected) {
     *number_selected = 0;
@@ -432,7 +438,8 @@ bool begin_file_browser(cig_r rect, int direction, color_id_t text_color, bool p
   cig_disable_culling();
   cig_enable_interaction();
 
-  /*  Deselect everything */
+  /* Deselect everything */
+  /* TODO: See if this could be ignored when focusing the window */
   if (cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_DEFAULT_OPTIONS)) {
     memset(data->selected, 0, sizeof(bool[32]));
 
@@ -509,14 +516,6 @@ void end_file_browser() {
   }
 
   cig_pop_frame();
-}
-
-void begin_menubar() {
-
-}
-
-void end_menubar() {
-
 }
 
 /*  ┌──────────┐
@@ -711,16 +710,6 @@ static bool begin_window(window_t *wnd, window_message_t *msg, bool *focused) {
 
 static void end_window(window_t *wnd) {
   cig_pop_frame(); /* Content frame */
-
-  /* Add resize thumb */
-  cig_current()->insets = cig_i_zero();
-
-  if (wnd->flags & IS_RESIZABLE) {
-    CIG(RECT(CIG_W_INSET-16, CIG_H_INSET-16, 16, 16)) {
-      cig_draw_image(get_image(IMAGE_RESIZE_HANDLE), CIG_IMAGE_MODE_TOP_LEFT);
-    }
-  }
-
   cig_pop_frame(); /* Window panel */
 }
 
