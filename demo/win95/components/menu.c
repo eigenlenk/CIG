@@ -9,7 +9,7 @@ void menubar(size_t n, win95_menu* menus[]) {
   register size_t i;
 
   struct menubar_st {
-    enum { NONE, BY_CLICK, BY_PRESS } tracking;
+    enum CIG_PACKED { NONE, BY_CLICK, BY_PRESS } tracking;
     uint16_t active_menu_idx;
   };
 
@@ -89,7 +89,8 @@ void menubar(size_t n, win95_menu* menus[]) {
   /* Draw open menu */
   if (this->tracking) {
     menu_draw(menus[this->active_menu_idx], (menu_presentation) {
-      .position = menu_position
+      .position = menu_position,
+      .origin = ORIGIN_TOP_LEFT
     });
   }
 
@@ -154,7 +155,8 @@ void menu_draw(win95_menu *this, menu_presentation presentation) {
   win95_menu *child_menu;
   char *item_title;
   struct {
-    cig_i insets;
+    cig_i insets,
+          stack_insets;
     int16_t height,
             icon_width,
             icon_title_spacing,
@@ -170,23 +172,42 @@ void menu_draw(win95_menu *this, menu_presentation presentation) {
     size_info.icon_width = 8;
     size_info.icon_title_spacing = 6;
     size_info.after_title_spacing = 15;
+    size_info.stack_insets = cig_i_zero();
     break;
   case START:
+    size_info.insets = cig_i_horizontal(6);
+    size_info.height = 32;
+    size_info.icon_width = 32;
+    size_info.icon_title_spacing = 6;
+    size_info.after_title_spacing = 19;
+    /* Space for the vertical Windows 95 text */
+    size_info.stack_insets = cig_i_make(21, 0, 0, 0);
     break;
   case START_SUBMENU:
+    size_info.insets = cig_i_horizontal(6);
+    size_info.height = 22;
+    size_info.icon_width = 16;
+    size_info.icon_title_spacing = 6;
+    size_info.after_title_spacing = 19;
+    size_info.stack_insets = cig_i_zero();
     break;
   }
 
   int panel_width = panel_insets.left
+    + size_info.stack_insets.left
     + size_info.insets.left
     + size_info.icon_width +
     + size_info.icon_title_spacing
     + this->base_width
     + size_info.after_title_spacing
     + size_info.insets.right
+    + size_info.stack_insets.right
     + panel_insets.right;
 
-  int panel_height = panel_insets.top + panel_insets.bottom;
+  int panel_height = panel_insets.top
+    + panel_insets.bottom
+    + size_info.stack_insets.top
+    + size_info.stack_insets.bottom;
 
   for (i = 0; i < this->groups.count; ++i) {
     panel_height += this->groups.list[i].items.count * size_info.height;
@@ -195,9 +216,15 @@ void menu_draw(win95_menu *this, menu_presentation presentation) {
     }
   }
 
+  cig_v menu_pos = presentation.position;
+
+  if (presentation.origin == ORIGIN_BOTTOM_LEFT) {
+    menu_pos.y -= panel_height;
+  }
+
   cig_set_next_id(cig_hash(this->title));
   CIG(
-    RECT(presentation.position.x, presentation.position.y, panel_width, panel_height),
+    RECT(menu_pos.x, menu_pos.y, panel_width, panel_height),
     CIG_INSETS(panel_insets)
   ) {
     cig_retain(cig_current());
@@ -214,8 +241,15 @@ void menu_draw(win95_menu *this, menu_presentation presentation) {
       *presented_submenu = NULL;
     }
     
-    CIG_VSTACK(_, NO_INSETS, CIG_PARAMS({
-      CIG_HEIGHT(18)
+    if (this->style == START) {
+      CIG(_W(size_info.stack_insets.left)) {
+        cig_fill_solid(get_color(COLOR_WINDOW_INACTIVE_TITLEBAR));
+        cig_draw_image(get_image(IMAGE_START_SIDEBAR), CIG_IMAGE_MODE_BOTTOM);
+      }
+    }
+
+    CIG_VSTACK(_, CIG_INSETS(size_info.stack_insets), CIG_PARAMS({
+      CIG_HEIGHT(size_info.height)
     })) {
       for (i = 0; i < this->groups.count; ++i) {
         group = &this->groups.list[i];
@@ -238,7 +272,7 @@ void menu_draw(win95_menu *this, menu_presentation presentation) {
             if (item_hovered) {
               if (item->type == CHILD_MENU) {
                 *presented_submenu = child_menu;
-                *submenu_position = cig_v_make(CIG_W_INSET - 3, CIG_Y - 3);
+                *submenu_position = cig_v_make(size_info.stack_insets.left + CIG_R_INSET - 2, CIG_Y - 3);
               } else {
                 *presented_submenu = NULL;
               }
@@ -279,6 +313,8 @@ void menu_draw(win95_menu *this, menu_presentation presentation) {
                   }
                 } else if (item->type == RADIO_ON) {
                   cig_draw_image(get_image(item_hovered ? IMAGE_MENU_RADIO_INVERTED : IMAGE_MENU_RADIO), CIG_IMAGE_MODE_CENTER);
+                } else if (item->icon) {
+                  cig_draw_image(get_image(item->icon), CIG_IMAGE_MODE_CENTER);
                 }
               }
 
@@ -316,7 +352,8 @@ void menu_draw(win95_menu *this, menu_presentation presentation) {
 
     if (*presented_submenu) {
       menu_draw(*presented_submenu, (menu_presentation) {
-        .position = *submenu_position
+        .position = *submenu_position,
+        .origin = ORIGIN_TOP_LEFT
       });
     }
   }

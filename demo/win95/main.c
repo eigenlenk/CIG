@@ -85,9 +85,11 @@ int main(int argc, const char *argv[]) {
   SetTargetFPS(60);
   // ToggleFullscreen();
 
+  // TODO: Would be neater to package multiple sizes and reference these simply as "name@16" or something
   load_texture(&images[IMAGE_BRIGHT_YELLOW_PATTERN], "res/images/light_yellow_pattern.png");
   load_texture(&images[IMAGE_GRAY_DITHER], "res/images/gray_dither.png");
   load_texture(&images[IMAGE_START_ICON], "res/images/start.png");
+  load_texture(&images[IMAGE_START_SIDEBAR], "res/images/start_sidebar.png");
   load_texture(&images[IMAGE_MY_COMPUTER_16], "res/images/my_computer.png");
   load_texture(&images[IMAGE_MY_COMPUTER_32], "res/images/my_computer_32.png");
   load_texture(&images[IMAGE_TIP_OF_THE_DAY], "res/images/tip_of_the_day.png");
@@ -111,6 +113,21 @@ int main(int argc, const char *argv[]) {
   load_texture(&images[IMAGE_MENU_RADIO_INVERTED], "res/images/menu_radio_inverted.png");
   load_texture(&images[IMAGE_MENU_ARROW], "res/images/menu_arrow.png");
   load_texture(&images[IMAGE_MENU_ARROW_INVERTED], "res/images/menu_arrow_inverted.png");
+  load_texture(&images[IMAGE_PROGRAM_FOLDER_24], "res/images/program_folder_24.png");
+  load_texture(&images[IMAGE_PROGRAM_FOLDER_16], "res/images/program_folder_16.png");
+  load_texture(&images[IMAGE_DOCUMENTS_24], "res/images/documents_24.png");
+  load_texture(&images[IMAGE_SETTINGS_24], "res/images/settings_24.png");
+  load_texture(&images[IMAGE_FIND_24], "res/images/find_24.png");
+  load_texture(&images[IMAGE_HELP_24], "res/images/help_24.png");
+  load_texture(&images[IMAGE_RUN_24], "res/images/run_24.png");
+  load_texture(&images[IMAGE_SHUT_DOWN_24], "res/images/shut_down_24.png");
+  load_texture(&images[IMAGE_MAIL_16], "res/images/mail_16.png");
+  load_texture(&images[IMAGE_MSDOS_16], "res/images/msdos_16.png");
+  load_texture(&images[IMAGE_MSN_16], "res/images/msn_16.png");
+  load_texture(&images[IMAGE_EXPLORER_16], "res/images/explorer_16.png");
+  load_texture(&images[IMAGE_CALCULATOR_16], "res/images/calculator_16.png");
+  load_texture(&images[IMAGE_NOTEPAD_16], "res/images/notepad_16.png");
+  load_texture(&images[IMAGE_PAINT_16], "res/images/paint_16.png");
 
   blue_dither_shader = LoadShader(0, "res/shaders/blue_dither.fs");
 

@@ -33,6 +33,7 @@ typedef enum {
   IMAGE_BRIGHT_YELLOW_PATTERN = 0,
   IMAGE_GRAY_DITHER,
   IMAGE_START_ICON,
+  IMAGE_START_SIDEBAR,
   IMAGE_MY_COMPUTER_16,
   IMAGE_MY_COMPUTER_32,
   IMAGE_TIP_OF_THE_DAY,
@@ -56,6 +57,21 @@ typedef enum {
   IMAGE_MENU_RADIO_INVERTED,
   IMAGE_MENU_ARROW,
   IMAGE_MENU_ARROW_INVERTED,
+  IMAGE_PROGRAM_FOLDER_24,
+  IMAGE_PROGRAM_FOLDER_16,
+  IMAGE_DOCUMENTS_24,
+  IMAGE_SETTINGS_24,
+  IMAGE_FIND_24,
+  IMAGE_HELP_24,
+  IMAGE_RUN_24,
+  IMAGE_SHUT_DOWN_24,
+  IMAGE_MAIL_16,
+  IMAGE_MSDOS_16,
+  IMAGE_MSN_16,
+  IMAGE_EXPLORER_16,
+  IMAGE_CALCULATOR_16,
+  IMAGE_NOTEPAD_16,
+  IMAGE_PAINT_16,
   __IMAGE_COUNT
 } image_id_t;
 
@@ -157,6 +173,7 @@ void end_file_browser();
 
 typedef struct menu_item {
   cig_id id;
+  image_id_t icon;
   const char *title;
   enum CIG_PACKED {
     NONE,
@@ -197,6 +214,10 @@ typedef struct win95_menu {
 
 typedef struct {
   cig_v position;
+  enum CIG_PACKED {
+    ORIGIN_TOP_LEFT,
+    ORIGIN_BOTTOM_LEFT
+  } origin;
 } menu_presentation;
 
 void menubar(size_t, win95_menu*[]);

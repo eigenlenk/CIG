@@ -20,6 +20,17 @@ typedef enum {
 } window_resize_edge_t;
 
 static win95_t *this = NULL;
+static win95_menu start_menus[7];
+
+enum {
+  START_MAIN,
+  START_PROGRAMS,
+  START_PROGRAMS_ACCESSORIES,
+  START_PROGRAMS_STARTUP,
+  START_DOCUMENTS,
+  START_SETTINGS,
+  START_FIND
+};
 
 static void process_apps();
 static void process_windows();
@@ -29,6 +40,7 @@ static void end_window(window_t*);
 static cig_frame* large_file_icon(int, const char*, color_id_t, bool, bool*, bool*);
 static void open_explorer_at(const char*);
 static void handle_window_resize(window_t*, window_resize_edge_t);
+static bool present_menu(win95_menu *, menu_presentation);
 static cig_r rect_of(cig_v, cig_v);
 
 static bool taskbar_button(
@@ -75,19 +87,22 @@ static bool taskbar_button(
   return clicked;
 }
 
-static bool start_button(cig_r rect) {
-  bool clicked = false;
-  
+static void start_button(cig_r rect) {
   CIG(rect, CIG_INSETS(cig_i_make(4, 2, 4, 2))) {
     cig_enable_interaction();
-    
-    const bool pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE);
-    
-    cig_fill_panel(get_panel(PANEL_BUTTON), pressed ? CIG_PANEL_PRESSED : 0);
+    cig_disable_culling();
+    cig_enable_focus();
+
+    const bool menu_visible = present_menu(&start_menus[START_MAIN], (menu_presentation) {
+      .position = { -4, -2 },
+      .origin = ORIGIN_BOTTOM_LEFT,
+    });
+
+    cig_fill_panel(get_panel(PANEL_BUTTON), menu_visible ? CIG_PANEL_PRESSED : 0);
     
     CIG_HSTACK(
       _,
-      CIG_INSETS(pressed ? cig_i_make(0, 1, 0, -1) : cig_i_zero()),
+      CIG_INSETS(menu_visible ? cig_i_make(0, 1, 0, -1) : cig_i_zero()),
       CIG_PARAMS({
         CIG_SPACING(2)
       })
@@ -103,11 +118,7 @@ static bool start_button(cig_r rect) {
         }, "Start");
       }
     }
-
-    clicked = cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_DEFAULT_OPTIONS);
-  }
-  
-  return clicked;
+  };
 }
 
 static void do_desktop_icons() {
@@ -209,6 +220,103 @@ void start_win95(win95_t *win95) {
 
   win95_open_app(explorer_app());
   win95_open_app(welcome_app());
+
+  menu_setup(&start_menus[START_PROGRAMS_ACCESSORIES], "Accessories", START_SUBMENU, NULL, 1, (menu_group[]) {
+    {
+      .items = {
+        .count = 3,
+        .list = {
+          { .title = "Calculator", .icon = IMAGE_CALCULATOR_16 },
+          { .title = "Notepad", .icon = IMAGE_NOTEPAD_16 },
+          { .title = "Paint", .icon = IMAGE_PAINT_16 }
+        }
+      }
+    }
+  });
+
+  menu_setup(&start_menus[START_PROGRAMS_STARTUP], "StartUp", START_SUBMENU, NULL, 1, (menu_group[]) {
+    {
+      .items = {
+        .count = 1,
+        .list = {
+          { .title = "(Empty)", .type = DISABLED }
+        }
+      }
+    }
+  });
+
+  menu_setup(&start_menus[START_PROGRAMS], "Programs", START_SUBMENU, NULL, 1, (menu_group[]) {
+    {
+      .items = {
+        .count = 5,
+        .list = {
+          { .type = CHILD_MENU, .data = &start_menus[START_PROGRAMS_ACCESSORIES], .icon = IMAGE_PROGRAM_FOLDER_16 },
+          { .type = CHILD_MENU, .data = &start_menus[START_PROGRAMS_STARTUP], .icon = IMAGE_PROGRAM_FOLDER_16 },
+          { .title = "Microsoft Exchange", .icon = IMAGE_MAIL_16 },
+          { .title = "MS-DOS Prompt", .icon = IMAGE_MSDOS_16 },
+          { .title = "The Microsoft Network", .icon = IMAGE_MSN_16 },
+          { .title = "Windows Explorer", .icon = IMAGE_EXPLORER_16 }
+        }
+      }
+    }
+  });
+
+  menu_setup(&start_menus[START_DOCUMENTS], "Documents", START_SUBMENU, NULL, 1, (menu_group[]) {
+    {
+      .items = {
+        .count = 1,
+        .list = {
+          { .title = "(Empty)", .type = DISABLED }
+        }
+      }
+    }
+  });
+
+  menu_setup(&start_menus[START_SETTINGS], "Settings", START_SUBMENU, NULL, 1, (menu_group[]) {
+    {
+      .items = {
+        .count = 1,
+        .list = {
+          { .title = "(Empty)", .type = DISABLED }
+        }
+      }
+    }
+  });
+
+  menu_setup(&start_menus[START_FIND], "Find", START_SUBMENU, NULL, 1, (menu_group[]) {
+    {
+      .items = {
+        .count = 1,
+        .list = {
+          { .title = "(Empty)", .type = DISABLED }
+        }
+      }
+    }
+  });
+
+  menu_setup(&start_menus[START_MAIN], "Start", START, NULL, 2, (menu_group[]) {
+    {
+      .items = {
+        .count = 6,
+        .list = {
+          { .type = CHILD_MENU, .data = &start_menus[START_PROGRAMS], .icon = IMAGE_PROGRAM_FOLDER_24 },
+          { .type = CHILD_MENU, .data = &start_menus[START_DOCUMENTS], .icon = IMAGE_DOCUMENTS_24 },
+          { .type = CHILD_MENU, .data = &start_menus[START_SETTINGS], .icon = IMAGE_SETTINGS_24 },
+          { .type = CHILD_MENU, .data = &start_menus[START_FIND], .icon = IMAGE_FIND_24 },
+          { .title = "Help", .icon = IMAGE_HELP_24 },
+          { .title = "Run...", .icon = IMAGE_RUN_24 },
+        }
+      }
+    },
+    {
+      .items = {
+        .count = 1,
+        .list = {
+          { .title = "Shut Down...", .icon = IMAGE_SHUT_DOWN_24 },
+        }
+      }
+    },
+  });
 }
 
 void run_win95(win95_t *win95) {
@@ -823,6 +931,43 @@ static void handle_window_resize(window_t *wnd, window_resize_edge_t edge) {
       window_resize.active = false;
     }
   }
+}
+
+static bool present_menu(win95_menu *menu, menu_presentation presentation) {
+  enum CIG_PACKED tracking_st { NONE, BY_CLICK, BY_PRESS };
+  enum tracking_st *tracking = CIG_ALLOCATE(enum tracking_st);
+
+  cig_retain(cig_current());
+
+  /* Click or press Start button to activate tracking */
+  if (*tracking == NONE && cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE)) {
+    *tracking = BY_PRESS;
+  } else if (cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_STARTS_INSIDE | CIG_CLICK_EXPIRE)) {
+    *tracking = *tracking != BY_CLICK ? BY_CLICK : NONE;
+  }
+
+  if (*tracking) {
+    menu_draw(menu, presentation);
+  }
+
+  /*
+   * There is a bunch of commonality between this and the menubar tracking
+   * but I don't yet know if or how this could be refactored.
+   */
+  if (*tracking == BY_CLICK && cig_input_state()->click_state == EXPIRED) {
+    *tracking = NONE;
+  } else if (*tracking == BY_PRESS && cig_input_state()->action_mask == 0) {
+    /* Mouse button was released while in PRESS tracking mode */
+    *tracking = NONE;
+  } else if (*tracking == BY_CLICK && cig_input_state()->click_state == BEGAN && !(cig_current()->_flags & SUBTREE_INCLUSIVE_HOVER)) {
+    /* Mouse button was pressed down while outside the Start button and any of its children (menus) */
+    *tracking = NONE;
+  } else if (*tracking == BY_CLICK && cig_input_state()->click_state == ENDED && !(cig_current()->_flags & HOVER) && cig_current()->_flags & SUBTREE_INCLUSIVE_HOVER) {
+    /* Click was made, but inside one of its children (menus) and not the Start button itself */
+    *tracking = NONE;
+  }
+
+  return *tracking != 0;
 }
 
 static cig_r rect_of(cig_v p0, cig_v p1) {
