@@ -115,6 +115,7 @@ int main(int argc, char **argv)
       DEMO_FOLDER"win95/main.c",
       DEMO_FOLDER"win95/win95.c",
       DEMO_FOLDER"win95/components/menu.c",
+      DEMO_FOLDER"win95/components/file_browser.c",
       DEMO_FOLDER"win95/apps/explorer/explorer.c",
       DEMO_FOLDER"win95/apps/welcome/welcome.c",
       
