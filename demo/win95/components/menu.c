@@ -4,6 +4,9 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <float.h>
+
+#define CHILD_MENU_DELAY 0.4f
 
 void menubar(size_t n, win95_menu* menus[]) {
   register size_t i;
@@ -231,6 +234,7 @@ void menu_draw(win95_menu *this, menu_presentation presentation) {
 
     win95_menu **presented_submenu = CIG_ALLOCATE(win95_menu*);
     cig_v *submenu_position = CIG_ALLOCATE(cig_v);
+    float *submenu_delay = CIG_ALLOCATE(float);
 
     cig_fill_panel(get_panel(PANEL_STANDARD_DIALOG), 0);
 
@@ -271,6 +275,9 @@ void menu_draw(win95_menu *this, menu_presentation presentation) {
 
             if (item_hovered) {
               if (item->type == CHILD_MENU) {
+                if (*presented_submenu != child_menu) {
+                  *submenu_delay = CHILD_MENU_DELAY;
+                }
                 *presented_submenu = child_menu;
                 *submenu_position = cig_v_make(size_info.stack_insets.left + CIG_R_INSET - 2, CIG_Y - 3);
               } else {
@@ -351,10 +358,16 @@ void menu_draw(win95_menu *this, menu_presentation presentation) {
     }
 
     if (*presented_submenu) {
-      menu_draw(*presented_submenu, (menu_presentation) {
-        .position = *submenu_position,
-        .origin = ORIGIN_TOP_LEFT
-      });
+      if (*submenu_delay > FLT_EPSILON) {
+        *submenu_delay -= cig_delta_time();
+      } else {
+        *submenu_delay = 0.f;
+
+        menu_draw(*presented_submenu, (menu_presentation) {
+          .position = *submenu_position,
+          .origin = ORIGIN_TOP_LEFT
+        });
+      }
     }
   }
 }

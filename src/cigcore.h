@@ -557,6 +557,14 @@ cig_frame* cig_push_vstack(cig_r, cig_i, cig_params);
 
 cig_frame* cig_push_grid(cig_r, cig_i, cig_params);
 
+/*  ┌─────────┐
+    │ UTILITY │
+    └─────────┘ */
+
+float cig_delta_time();
+
+float cig_elapsed_time();
+
 /*  ┌───────────────────┐
     │ BACKEND CALLBACKS │
     └───────────────────┘ */

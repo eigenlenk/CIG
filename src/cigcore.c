@@ -770,6 +770,15 @@ cig_frame* cig_push_grid(cig_r rect, cig_i insets, cig_params params) {
   return cig_push_layout_function(&cig_default_layout_builder, rect, insets, params);
 }
 
+/*  ┌─────────┐
+    │ UTILITY │
+    └─────────┘ */
+
+float cig_delta_time() { return current->delta_time; }
+
+float cig_elapsed_time() { return current->elapsed_time; }
+
+
 /*  ┌───────────────────┐
     │ BACKEND CALLBACKS │
     └───────────────────┘ */
