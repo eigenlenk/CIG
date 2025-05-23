@@ -74,22 +74,44 @@
 #define _H(H) RECT_AUTO_H(H)
 
 typedef struct {
-  int pushed;
+  int pushed, retain;
   cig_args args;
   cig_frame *last_closed;
+  cig_frame **open;
 } cig__macro_ctx_st;
 
 extern cig__macro_ctx_st cig__macro_ctx;
 
 /*  This calls the push_frame function once, performs the function body and pops the frame */
-#define CIG(RECT, ...) for (cig__macro_ctx = (cig__macro_ctx_st) { 0 }; !(cig__macro_ctx.pushed++)&&cig_push_frame_args((cig_args) { RECT, __VA_ARGS__ }); cig__macro_ctx.last_closed=cig_pop_frame())
+#define CIG(RECT, ...) for ( \
+  cig__macro_ctx.pushed=0; \
+  !(cig__macro_ctx.pushed++)&&cig_push_frame_args((cig_args) {RECT,__VA_ARGS__}); \
+  cig_pop_frame())
 
-#define CIG_HSTACK(RECT, ...) for (cig__macro_ctx = (cig__macro_ctx_st) { 0, (cig_args) { RECT, __VA_ARGS__ } }; !(cig__macro_ctx.pushed++)&&cig_push_hstack(cig__macro_ctx.args.rect, cig__macro_ctx.args.insets, cig__macro_ctx.args.params); cig__macro_ctx.last_closed=cig_pop_frame())
-#define CIG_VSTACK(RECT, ...) for (cig__macro_ctx = (cig__macro_ctx_st) { 0, (cig_args) { RECT, __VA_ARGS__ } }; !(cig__macro_ctx.pushed++)&&cig_push_vstack(cig__macro_ctx.args.rect, cig__macro_ctx.args.insets, cig__macro_ctx.args.params); cig__macro_ctx.last_closed=cig_pop_frame())
-#define CIG_GRID(RECT, ...) for (cig__macro_ctx = (cig__macro_ctx_st) { 0, (cig_args) { RECT, __VA_ARGS__ } }; !(cig__macro_ctx.pushed++)&&cig_push_grid(cig__macro_ctx.args.rect, cig__macro_ctx.args.insets, cig__macro_ctx.args.params); cig__macro_ctx.last_closed=cig_pop_frame())
+#define CIG_HSTACK(RECT, ...) cig__macro_ctx.args=((cig_args){RECT,__VA_ARGS__}); for ( \
+  cig__macro_ctx.pushed=0; \
+  !(cig__macro_ctx.pushed++)&&cig_push_hstack(cig__macro_ctx.args.rect, cig__macro_ctx.args.insets, cig__macro_ctx.args.params); \
+  cig_pop_frame())
+
+#define CIG_VSTACK(RECT, ...) cig__macro_ctx.args=((cig_args){RECT,__VA_ARGS__}); for ( \
+  cig__macro_ctx.pushed=0; \
+  !(cig__macro_ctx.pushed++)&&cig_push_vstack(cig__macro_ctx.args.rect, cig__macro_ctx.args.insets, cig__macro_ctx.args.params); \
+  cig_pop_frame())
+
+#define CIG_GRID(RECT, ...) cig__macro_ctx.args=((cig_args){RECT,__VA_ARGS__}); for ( \
+  cig__macro_ctx.pushed=0; \
+  !(cig__macro_ctx.pushed++)&&cig_push_grid(cig__macro_ctx.args.rect, cig__macro_ctx.args.insets, cig__macro_ctx.args.params); \
+  cig_pop_frame())
+
+#define CIG__RETAIN_1(BODY) cig__macro_ctx.retain=1; cig__macro_ctx.open=NULL; BODY;
+#define CIG__RETAIN_2(VAR, BODY) cig__macro_ctx.retain=1; cig__macro_ctx.open=&VAR; BODY;
+#define CIG__RETAIN_X(_1,_2,NAME,...) NAME
+#define CIG_RETAIN(...) CIG__RETAIN_X(__VA_ARGS__, CIG__RETAIN_2, CIG__RETAIN_1)(__VA_ARGS__)
+
+/* Assigns CIG() macro result to a variable without retaining it */
+#define CIG_ASSIGN(VAR, BODY) cig__macro_ctx.retain=0; cig__macro_ctx.open=&VAR; BODY;
 
 #define CIG_LAST() cig__macro_ctx.last_closed
-#define CIG_CAPTURE(VAR, BODY) BODY; VAR=CIG_LAST();
 
 /* Layout pinning */
 
@@ -106,6 +128,10 @@ extern cig__macro_ctx_st cig__macro_ctx;
 #define CENTER_X_OF(FRAME) .relation = FRAME, .relation_attribute = CENTER_X
 #define CENTER_Y_OF(FRAME) .relation = FRAME, .relation_attribute = CENTER_Y
 #define ASPECT_OF(FRAME) .relation = FRAME, .relation_attribute = ASPECT
+#define ABOVE(FRAME) .attribute = BOTTOM, .relation = FRAME, .relation_attribute = TOP
+#define BELOW(FRAME) .attribute = TOP, .relation = FRAME, .relation_attribute = BOTTOM
+#define BEFORE(FRAME) .attribute = BOTTOM, .relation = FRAME, .relation_attribute = LEFT
+#define AFTER(FRAME) .attribute = LEFT, .relation = FRAME, .relation_attribute = RIGHT
 
 #define OFFSET_BY(VALUE) .value = VALUE
 

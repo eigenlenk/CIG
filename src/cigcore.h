@@ -174,14 +174,20 @@ typedef struct cig_frame {
   cig_params _layout_params;
   unsigned int _id_counter, _last_tick;
   enum CIG_PACKED {
+    /* */
+    OPEN = CIG_BIT(0),
+    /* This element has hover */
+    HOVER = CIG_BIT(1),
     /* This element or one if its descendants has hover */
-    SUBTREE_INCLUSIVE_HOVER = CIG_BIT(0),
+    SUBTREE_INCLUSIVE_HOVER = CIG_BIT(2),
     /* Clipping is enabled for this element */
-    CLIPPED = CIG_BIT(1),
+    CLIPPED = CIG_BIT(3),
     /**/
-    INTERACTIBLE = CIG_BIT(2),
+    INTERACTIBLE = CIG_BIT(4),
     /**/
-    FOCUSABLE = CIG_BIT(3)
+    FOCUSABLE = CIG_BIT(5),
+    /**/
+    RETAINED = CIG_BIT(6)
   } _flags;
 } cig_frame;
 
@@ -313,7 +319,7 @@ typedef struct {
   } state_list[CIG_STATES_MAX];
   struct {
     cig_frame elements[CIG_ELEMENTS_MAX];
-    size_t count, high;
+    size_t high;
   } frames;
 #ifdef DEBUG
   bool step_mode;
@@ -383,7 +389,11 @@ CIG_INLINED cig_r cig_absolute_rect() { return cig_current()->absolute_rect; }
 CIG_INLINED cig_r cig_content_rect() { return cig_current()->content_rect; }
 
 /* @return Current frame visibility status (appeared, visible, not visible) */
-CIG_INLINED cig_frame_visibility cig_visibility() { return cig_current()->visibility; }
+CIG_INLINED cig_frame_visibility cig_visibility() {
+  cig_frame *open_frame = cig_current();
+  assert(open_frame->_flags & RETAINED);
+  return open_frame->visibility;
+}
 
 /*  Converts a relative rect to a screen-space rect */
 cig_r cig_convert_relative_rect(cig_r);
@@ -394,6 +404,13 @@ cig_frame_ref_stack_t* cig_frame_stack();
 /*  ┌─────────────────────────────┐
     │ STATE & MEMORY ARENA ACCESS │
     └─────────────────────────────┘ */
+
+CIG_INLINED CIG_OPTIONAL(cig_frame *) cig_retain(CIG_OPTIONAL(cig_frame *) frame) {
+  if (frame) {
+    frame->_flags |= RETAINED;
+  }
+  return frame;
+}
 
 /*
  * Allocates N bytes in current element's memory arena.

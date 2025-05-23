@@ -2,9 +2,8 @@
 #include "cigcorem.h"
 #include <string.h>
 #include <assert.h>
-#include <stdio.h>
 
-cig__macro_ctx_st cig__macro_ctx;
+cig__macro_ctx_st cig__macro_ctx = { 0 };
 
 static cig_context *current = NULL;
 static cig_set_clip_callback set_clip = NULL;
@@ -94,11 +93,11 @@ void cig_begin_layout(
     ._layout_function = NULL,
     ._parent = NULL,
     ._layout_params = (cig_params) { 0 },
-    ._last_tick = current->tick
+    ._last_tick = current->tick,
+    ._flags = OPEN
   };
   current->frame_stack.push(&current->frame_stack, &current->frames.elements[0]);
-  current->frames.count = 1;
-  current->frames.high = CIG_MAX(current->frames.high, current->frames.count);
+  current->frames.high = CIG_MAX(current->frames.high, 1);
 
   cig_push_buffer(buffer);
   current->next_id = 0;
@@ -120,10 +119,6 @@ void cig_end_layout() {
     if (current->frames.elements[i]._last_tick == current->tick) {
       current->frames.elements[j++] = current->frames.elements[i];
     }
-  }
-
-  for (i = j; i < current->frames.high; ++i) {
-    current->frames.elements[i].visibility = 0;
   }
 
   current->frames.high = j;
@@ -162,9 +157,11 @@ cig_frame* cig_push_layout_function(
 
 cig_frame* cig_pop_frame() {
   cig_frame *popped_frame = stack_cig_frame_ref_pop(cig_frame_stack());
+  popped_frame->_flags &= ~OPEN;
   if (popped_frame->_flags & CLIPPED) {
     pop_clip();
   }
+  cig__macro_ctx.last_closed = popped_frame;
   return popped_frame;
 }
 
@@ -496,6 +493,10 @@ cig_r cig_build_rect(size_t n, cig_pin refs[]) {
       : pin.relation_attribute;
 
     assert(rel_attr);
+
+    if (pin.relation) {
+      assert(pin.relation->_flags & OPEN || pin.relation->_flags & RETAINED);
+    }
 
     double v = get_attribute_value_of_relative_to(rel_attr, pin.value, pin.relation, cur);
     attrs |= CIG_BIT(attr);
@@ -847,18 +848,19 @@ static cig_frame* push_frame(
   bool (*layout_function)(cig_r, cig_r, cig_params*, cig_r*)
 ) {
   register size_t i;
+  register cig_frame *f;
 
   cig_buffer_element_t *current_buffer = current->buffers.peek_ref(&current->buffers, 0);
   cig_frame *top = cig_current();
 
   if (top->_layout_params.limit.total > 0 && top->_layout_params._count.total == top->_layout_params.limit.total) {
-    return NULL;
+    goto failure;
   }
 
   cig_r next;
   if (!next_layout_rect(rect, top, &next)) {
     top->_id_counter ++;
-    return NULL;
+    goto failure;
   }
 
   top->content_rect = cig_r_containing(top->content_rect, next);
@@ -870,27 +872,54 @@ static cig_frame* push_frame(
   if (!(top->_layout_params.flags & CIG_LAYOUT_DISABLE_CULLING)
     && !cig_r_intersects(top->rect, cig_r_offset(next, top->rect.x+top->insets.left, top->rect.y+top->insets.top))) {
     top->_id_counter ++;
-    return NULL;
+    goto failure;
   }
 
   const cig_id next_id = current->next_id
     ? current->next_id
     : (top->id + CIG_TINYHASH((top->id+top->_id_counter++), cig_depth()));
 
-  size_t new_index = current->frames.high;
+  cig_frame *new_frame = NULL;
+  cig_frame_visibility previous_visibility = 0;
 
-  for (i = 0; i < current->frames.high; ++i) {
-    if (current->frames.elements[i].id == next_id) {
-      new_index = i;
-      break;
+  /* 1. Try find a retained frame */
+  for (i = 1; i < current->frames.high; ++i) {
+    f = &current->frames.elements[i];
+
+    if (f->_flags & RETAINED && f->id == next_id) {
+      new_frame = f;
+
+      if (new_frame->_last_tick != current->tick - 1) {
+        previous_visibility = new_frame->visibility = 0;
+      } else {
+        previous_visibility = new_frame->visibility;
+      }
+
+      goto insert_frame;
     }
   }
 
-  if (new_index == CIG_ELEMENTS_MAX) {
-    return NULL;
+  /* 2. Try find an available frame */
+  for (i = current->frame_stack.size; i < current->frames.high; ++i) {
+    f = &current->frames.elements[i];
+    
+    if (!(f->_flags & RETAINED) && !(f->_flags & OPEN)) {
+      new_frame = f;
+      goto insert_frame;
+    }
   }
 
-  const cig_frame_visibility previous_visibility = current->frames.elements[new_index].visibility;
+  /* 3. */
+  if (current->frames.high < CIG_ELEMENTS_MAX) {
+    new_frame = &current->frames.elements[current->frames.high++];
+    goto insert_frame;
+  }
+
+  if (!new_frame) {
+    goto failure;
+  }
+
+  insert_frame:
 
   top->_layout_params._count.total ++;
 
@@ -899,7 +928,7 @@ static cig_frame* push_frame(
     ? current_buffer->absolute_rect
     : current_buffer->clip_rects.peek(&current_buffer->clip_rects, 0);
 
-  current->frames.elements[new_index] = (cig_frame) {
+  *new_frame = (cig_frame) {
     .id = next_id,
     .rect = next,
     .clipped_rect = cig_r_offset(cig_r_union(absolute_rect, current_clip_rect), -absolute_rect.x + next.x, -absolute_rect.y + next.y),
@@ -909,15 +938,18 @@ static cig_frame* push_frame(
     ._layout_function = layout_function,
     ._layout_params = params,
     ._parent = top,
-    ._last_tick = current->tick
+    ._last_tick = current->tick,
+    ._flags = OPEN
   };
-  cig_frame *new_frame = &current->frames.elements[new_index];
 
   current->frame_stack.push(&current->frame_stack, new_frame);
-  current->frames.count++;
-  current->frames.high = CIG_MAX(current->frames.high, new_index + 1);
-
   current->next_id = 0;
+
+  if (cig__macro_ctx.open) { *cig__macro_ctx.open = new_frame; }
+  if (cig__macro_ctx.retain) { CIG_UNUSED(cig_retain(new_frame)); }
+  cig__macro_ctx.open = NULL;
+  cig__macro_ctx.retain = 0;
+  cig__macro_ctx.last_closed = NULL;
 
   handle_frame_hover(new_frame);
 
@@ -926,10 +958,18 @@ static cig_frame* push_frame(
 #endif
 
   return new_frame;
+
+  failure:
+  if (cig__macro_ctx.open) { *cig__macro_ctx.open = NULL; }
+  cig__macro_ctx.open = NULL;
+  cig__macro_ctx.retain = 0;
+  cig__macro_ctx.last_closed = NULL;
+  return NULL;
 }
 
 CIG_INLINED void handle_frame_hover(cig_frame *frame) {
   if (cig_r_contains(frame->absolute_rect, current->input_state.position)) {
+    frame->_flags |= HOVER;
     frame->_flags |= SUBTREE_INCLUSIVE_HOVER;
     cig_frame *parent = frame->_parent;
     while (parent) {
@@ -1016,6 +1056,9 @@ CIG_INLINED CIG_OPTIONAL(cig_state *) enable_state() {
     frame->_state->arena.mapped = 0;
     frame->_state->arena.read = 0;
   }
+  /*if (frame->_state) {
+    frame->_state->_flags |= RETAINED;
+  }*/
   return frame->_state;
 }
 

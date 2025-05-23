@@ -21,30 +21,32 @@ TEST_TEAR_DOWN(core_macros) {
     │ TEST CASES │
     └────────────┘ */
 
-TEST(core_macros, cig) {
+TEST(core_macros, main_macro_and_retaining) {
   register int i;
   cig_frame *out_of_bounds, *main_frame; 
 
   CIG(_) {}
+  /* CIG_LAST() gives us a reference to the last successfully closed element */
+  TEST_ASSERT_NOT_NULL(CIG_LAST());
 
-  /*  AVERT YOUR EYES - HACK AHEAD
+  /*
+   * AVERT YOUR EYES - HACK AHEAD
+   *
+   * While `cig_push_frame` returns a pointer to the newly added frame (or NULL), we
+   * can't read it when using the CIG macro because it's essentially a for-loop with
+   * no return value. So we need to use another macro to assign the reference through
+   * a global.
+   */
+  CIG_ASSIGN(out_of_bounds, CIG(RECT(9999, 9999, 100, 100)) { })
+  TEST_ASSERT_NULL(out_of_bounds);
+  TEST_ASSERT_NULL(CIG_LAST());
 
-      While `cig_push_frame` returns a pointer to the newly added frame (or NULL), we
-      can't read it when using the CIG macro because it's essentially a for-loop with
-      no return value. So we need to use another macro to declare a cig_frame
-      pointer of some name, run the CIG macro and assigns the frame pointer returned
-      through a global.
-
-      You may also do:
-
-        cig_frame *my_frame;
-        CIG(...) { }
-        my_frame = CIG_LAST();
-      */
-  CIG_CAPTURE(out_of_bounds, CIG(RECT(9999, 9999, 100, 100)) { })
-
-  /*  This creates a 500x400 frame with 4 unit inset and centers it in the root frame */
-  CIG_CAPTURE(main_frame, CIG(RECT_CENTERED(500, 400), CIG_INSETS(cig_i_uniform(4))) {
+  /*
+   * This creates a 500x400 frame with 4 unit inset and centers it in the root frame.
+   * CIG_RETAIN is similar to CIG_ASSIGN but also retains the frame so we can safely
+   * reference it even after it's closed.
+   */
+  CIG_RETAIN(main_frame, CIG(RECT_CENTERED(500, 400), CIG_INSETS(cig_i_uniform(4))) {
     /*  Regular control flow works in here */
     for (i = 0; i < 2; ++i) { }
 
@@ -54,14 +56,14 @@ TEST(core_macros, cig) {
   });
 
   TEST_ASSERT_NOT_NULL(main_frame);
+  TEST_ASSERT_EQUAL_PTR(main_frame, CIG_LAST());
   TEST_ASSERT_EQUAL_RECT(cig_r_make(70, 40, 500, 400), main_frame->rect);
-
-  TEST_ASSERT_NULL(out_of_bounds);
+  TEST_ASSERT_BITS_HIGH(RETAINED, main_frame->_flags);
 }
 
 TEST(core_macros, vstack) {
   register int i;
-  CIG_VSTACK(
+  CIG_RETAIN(CIG_VSTACK(
     RECT_AUTO,
     CIG_PARAMS({
       CIG_HEIGHT(200),
@@ -74,12 +76,14 @@ TEST(core_macros, vstack) {
         TEST_ASSERT_EQUAL_RECT(cig_r_make(0, i*(200+10), 640, 200), cig_rect());
       }
     }
-  }
+
+    TEST_ASSERT_BITS_HIGH(RETAINED, cig_current()->_flags);
+  });
 }
 
 TEST(core_macros, hstack) {
   register int i;
-  CIG_HSTACK(
+  CIG_RETAIN(CIG_HSTACK(
     RECT_AUTO,
     CIG_PARAMS({
       CIG_WIDTH(200),
@@ -92,12 +96,16 @@ TEST(core_macros, hstack) {
         TEST_ASSERT_EQUAL_RECT(cig_r_make(i*(200+10), 0, 200, 480), cig_rect());
       }
     }
-  }
+
+    TEST_ASSERT_BITS_HIGH(RETAINED, cig_current()->_flags);
+  });
 }
 
 TEST(core_macros, grid) {
   register int i;
-  CIG_GRID(
+  cig_frame *grid;
+
+  CIG_RETAIN(grid, CIG_GRID(
     RECT_AUTO,
     CIG_PARAMS({
       CIG_COLUMNS(5),
@@ -111,7 +119,10 @@ TEST(core_macros, grid) {
         TEST_ASSERT_EQUAL_RECT(cig_r_make(128*column, 96*row, 128, 96), cig_rect());
       }
     }
-  }
+  });
+
+  TEST_ASSERT_NOT_NULL(grid);
+  TEST_ASSERT_BITS_HIGH(RETAINED, grid->_flags);
 }
 
 TEST(core_macros, allocator) {
@@ -172,7 +183,7 @@ TEST(core_macros, pinning) {
 }
 
 TEST_GROUP_RUNNER(core_macros) {
-  RUN_TEST_CASE(core_macros, cig);
+  RUN_TEST_CASE(core_macros, main_macro_and_retaining);
   RUN_TEST_CASE(core_macros, vstack);
   RUN_TEST_CASE(core_macros, hstack);
   RUN_TEST_CASE(core_macros, grid);

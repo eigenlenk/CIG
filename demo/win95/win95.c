@@ -406,11 +406,11 @@ typedef struct {
 } file_browser_data_t;
 
 bool begin_file_browser(cig_r rect, int direction, color_id_t text_color, bool parent_focused, int *number_selected) {
-  if (!cig_push_grid(RECT_AUTO, cig_i_zero(), (cig_params) {
+  if (!cig_retain(cig_push_grid(RECT_AUTO, cig_i_zero(), (cig_params) {
     .width = 75,
     .height = 75,
     .direction = direction
-  })) {
+  }))) {
     return false;
   }
 
@@ -731,9 +731,7 @@ static cig_frame * large_file_icon(int icon,
                                    bool *did_double_click,
                                    bool *did_select)
 {
-  cig_frame *file_element;
-  
-  CIG_CAPTURE(file_element, CIG_VSTACK(RECT_AUTO, CIG_INSETS(cig_i_make(2, 2, 2, 0)), CIG_PARAMS({
+  CIG_RETAIN(CIG_VSTACK(RECT_AUTO, CIG_INSETS(cig_i_make(2, 2, 2, 0)), CIG_PARAMS({
     CIG_SPACING(6)
   })) {
     cig_enable_interaction();
@@ -777,7 +775,7 @@ static cig_frame * large_file_icon(int icon,
     }
   })
 
-  return file_element;
+  return CIG_LAST();
 }
 
 static void open_explorer_at(const char *path) {

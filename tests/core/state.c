@@ -38,7 +38,7 @@ TEST(core_state, visibility) {
       continue;
     }
 
-    cig_push_frame(RECT_AUTO);
+    cig_retain(cig_push_frame(RECT_AUTO));
 
     if (!persistent_id) { persistent_id = cig_current()->id; }
     else { TEST_ASSERT_EQUAL_UINT32(persistent_id, cig_current()->id); }

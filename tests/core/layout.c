@@ -882,23 +882,23 @@ TEST(core_layout, pinning) {
 
   /*  The following element is 8px from left and 10px from top edge of 'root',
       and has an explicit width of 70px and height of 50px. */
-  cig_frame *f0 = cig_push_frame(cig_build_rect(4, (cig_pin[]) {
+  cig_frame *f0 = cig_retain(cig_push_frame(cig_build_rect(4, (cig_pin[]) {
     { LEFT, 8, root, LEFT },
     { TOP, 10, root, TOP },
     { WIDTH, 70 },
     { HEIGHT, 50 }
-  }));
+  })));
   TEST_ASSERT_EQUAL_RECT(cig_r_make(8, 10, 70, 50), f0->rect);
   cig_pop_frame();
 
 
   /*  The second element is below and after 'f0' but 10px larger on both axis. */
-  cig_frame *f1 = cig_push_frame(cig_build_rect(4, (cig_pin[]) {
+  cig_frame *f1 = cig_retain(cig_push_frame(cig_build_rect(4, (cig_pin[]) {
     { LEFT, 0, f0, RIGHT },
     { TOP, 0, f0, BOTTOM },
     { WIDTH, 10, f0 },
     { HEIGHT, 10, f0 }
-  }));
+  })));
   TEST_ASSERT_EQUAL_RECT(cig_r_make(78, 60, 80, 60), f1->rect);
   cig_pop_frame();
 
@@ -931,12 +931,12 @@ TEST(core_layout, pinning) {
      │                                 │
      └─────────────────────────────────┘ */
 
-  cig_frame *f2 = cig_push_frame(cig_build_rect(4, (cig_pin[]) {
+  cig_frame *f2 = cig_retain(cig_push_frame(cig_build_rect(4, (cig_pin[]) {
     { LEFT, 0, f1, RIGHT },
     { RIGHT, 0, root, RIGHT },
     { TOP, 0, f0, TOP },
     { BOTTOM, 10, f1, BOTTOM },
-  }));
+  })));
 
   TEST_ASSERT_EQUAL_RECT(cig_r_make(158, 10, 482, 120), f2->rect);
 
@@ -955,12 +955,12 @@ TEST(core_layout, pinning) {
      │                                 │
      └─────────────────────────────────┘ */
 
-  cig_frame *f3 = cig_push_frame(cig_build_rect(4, (cig_pin[]) {
+  cig_frame *f3 = cig_retain(cig_push_frame(cig_build_rect(4, (cig_pin[]) {
     { CENTER_X, 0, f2 },
     { CENTER_Y, 0, f2 },
     { WIDTH, 50 },
     { HEIGHT, 50 },
-  }));
+  })));
   TEST_ASSERT_EQUAL_RECT(cig_r_make(216, 35, 50, 50), f3->rect);
   cig_pop_frame();
 
@@ -986,12 +986,12 @@ TEST(core_layout, pinning) {
       Left side will align with center X of 'f1', right will align with right side
       of 'f3', top edge will be just below f2 and bottom edge will align with root. */
   
-  cig_frame *f4 = cig_push_frame(cig_build_rect(4, (cig_pin[]) {
+  cig_frame *f4 = cig_retain(cig_push_frame(cig_build_rect(4, (cig_pin[]) {
     { LEFT, 0, f1, CENTER_X },
     { RIGHT, 0, f3, RIGHT },
     { TOP, 0, f2, BOTTOM },
     { BOTTOM, 0, root, BOTTOM }
-  }));
+  })));
   TEST_ASSERT_EQUAL_RECT(cig_r_make(118, 130, 306, 350), f4->rect);
   cig_pop_frame();
 }
@@ -1002,12 +1002,12 @@ TEST(core_layout, pinning_with_insets) {
   root->insets = cig_i_uniform(10);
 
 
-  cig_frame *f0 = cig_push_frame_insets(cig_build_rect(4, (cig_pin[]) {
+  cig_frame *f0 = cig_retain(cig_push_frame_insets(cig_build_rect(4, (cig_pin[]) {
     { LEFT, 0, root, LEFT_INSET },
     { TOP, 0, root, TOP_INSET },
     { WIDTH, 100 },
     { HEIGHT, 100 }
-  }), cig_i_uniform(10));
+  }), cig_i_uniform(10)));
   TEST_ASSERT_EQUAL_RECT(cig_r_make(10, 10, 100, 100), f0->absolute_rect);
   cig_pop_frame();
 
@@ -1037,12 +1037,12 @@ TEST(core_layout, pinning_with_insets) {
       │   ╚═════════╝                   │
       └─────────────────────────────────┘ */
 
-  cig_frame *f1 = cig_push_frame(cig_build_rect(4, (cig_pin[]) {
+  cig_frame *f1 = cig_retain(cig_push_frame(cig_build_rect(4, (cig_pin[]) {
     { LEFT, 0, f0, LEFT_INSET },
     { TOP, 0, f0, BOTTOM_INSET },
     { RIGHT, 0, f0, RIGHT },
     { HEIGHT, 100 }
-  }));
+  })));
   TEST_ASSERT_EQUAL_RECT(cig_r_make(20, 100, 100, 100), f1->absolute_rect);
   cig_pop_frame();
 }
