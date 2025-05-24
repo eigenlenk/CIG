@@ -149,6 +149,7 @@ static void do_taskbar() {
       for (i = 0; i < WIN95_OPEN_WINDOWS_MAX; ++i) {
         window_t *wnd = &this->window_manager.windows[i];
         if (wnd->id && taskbar_button(RECT_AUTO, wnd->title, wnd->icon, wnd->id == cig_focused_id())) {
+          window_manager_bring_to_front(&this->window_manager, wnd->id);
           cig_set_focused_id(wnd->id);
         }
       }
@@ -337,12 +338,24 @@ void window_manager_maximize(window_manager_t *manager, window_t *wnd) {
   }
 }
 
+void window_manager_minimize(window_manager_t *manager, window_t *wnd) {
+  if (wnd->flags & IS_MINIMIZED) {
+    return;
+  }
+  /* TODO: Actually Win95 focuses on whatever was focused *before* selecting
+   * this window. So either the desktop or some some window.
+   */
+  cig_set_focused_id(0);
+  wnd->flags |= IS_MINIMIZED;
+}
+
 void window_manager_bring_to_front(window_manager_t *manager, cig_id wnd_id) {
   register size_t i;
   if (!manager) { manager = &this->window_manager; }
   for (i = 0; i < manager->count; ++i) {
     if (manager->order[i]->id == wnd_id) {
       window_t *wnd = manager->order[i];
+      wnd->flags &= ~IS_MINIMIZED;
       manager->order[i] = manager->order[manager->count-1];
       manager->order[manager->count-1] = wnd;
       cig_set_focused_id(wnd_id);
@@ -359,7 +372,17 @@ window_t* window_manager_find_primary_window(window_manager_t *manager, applicat
       return manager->order[i];
     }
   }
+  return NULL;
+}
 
+window_t * window_manager_find_id(window_manager_t *manager, cig_id id) {
+  register size_t i;
+  if (!manager) { manager = &this->window_manager; }
+  for (i = 0; i < manager->count; ++i) {
+    if (manager->order[i]->id == id) {
+      return manager->order[i];
+    }
+  }
   return NULL;
 }
 
@@ -395,7 +418,7 @@ static void process_windows() {
   for (i = 0; i < this->window_manager.count;) {
     window_t *wnd = this->window_manager.order[i];
 
-    if (wnd->proc) {
+    if (wnd->proc && !(wnd->flags & IS_MINIMIZED)) {
       msg = 0;
       focused = false;
       if (!window_begin(wnd, &msg, &focused)) {
@@ -411,6 +434,10 @@ static void process_windows() {
       case WINDOW_MAXIMIZE:
         {
           window_manager_maximize(&this->window_manager, wnd);
+        } break;
+      case WINDOW_MINIMIZE:
+        {
+          window_manager_minimize(&this->window_manager, wnd);
         } break;
       default:
         break;
@@ -442,5 +469,10 @@ static void close_application(application_t *app) {
 static void open_explorer_at(const char *path) {
   application_t *explorer = win95_find_open_app("explorer");
   assert(explorer != NULL);
-  window_manager_create(&this->window_manager, explorer, explorer_create_window(explorer, path));
+  window_t *wnd;
+  if ((wnd = window_manager_find_id(&this->window_manager, cig_hash(path)))) {
+    window_manager_bring_to_front(&this->window_manager, wnd->id);
+  } else {
+    window_manager_create(&this->window_manager, explorer, explorer_create_window(explorer, path));
+  }
 }

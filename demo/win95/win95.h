@@ -119,7 +119,8 @@ typedef struct window_t {
   enum {
     IS_PRIMARY_WINDOW = CIG_BIT(0),
     IS_RESIZABLE = CIG_BIT(1),
-    IS_MAXIMIZED = CIG_BIT(2)
+    IS_MAXIMIZED = CIG_BIT(2),
+    IS_MINIMIZED = CIG_BIT(3)
   } flags;
 } window_t;
 
@@ -165,8 +166,10 @@ application_t *win95_find_open_app(const char *);
 window_t* window_manager_create(window_manager_t*, application_t*, window_t);
 void window_manager_close(window_manager_t*, window_t*);
 void window_manager_maximize(window_manager_t *, window_t *);
+void window_manager_minimize(window_manager_t *, window_t *);
 void window_manager_bring_to_front(window_manager_t*, cig_id);
-window_t* window_manager_find_primary_window(window_manager_t*, application_t*);
+window_t * window_manager_find_id(window_manager_t *, cig_id);
+window_t * window_manager_find_primary_window(window_manager_t*, application_t*);
 
 /*  ┌───────────────────┐
     │ COMMON COMPONENTS │
