@@ -80,7 +80,13 @@ CIG_INLINED void load_texture(Texture2D *dst, const char *path) {
 
 int main(int argc, const char *argv[]) {
   bool run_fullscreen = false;
-  int ray_w, ray_h;
+  int i, ray_w, ray_h;
+
+  for (i = 1; i < argc; ++i) {
+    if (!strcmp("-fullscreen", argv[i])) {
+      run_fullscreen = true;
+    }
+  }
 
   if (run_fullscreen) {
     InitWindow(0, 0, "Windooze 95");
@@ -179,7 +185,6 @@ int main(int argc, const char *argv[]) {
   colors[COLOR_WINDOW_ACTIVE_TITLEBAR] = (Color) { 0, 0, 127, 255 };
   colors[COLOR_WINDOW_INACTIVE_TITLEBAR] = (Color) { 127, 127, 127, 255 };
   
-  register int i;
   for (i = 0; i < __PANEL_COUNT; ++i) { panel_styles[i] = i; }
 
   cig_init_context(&ctx);

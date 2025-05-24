@@ -30,7 +30,7 @@ static void process_main_window(window_t *this, window_message_t *msg, bool wind
           .max_lines = 1,
           .flags = CIG_TEXT_FORMATTED
         },
-        "Welcome to <font=%x>Windows</font><font=%x><color=%x>95</color></font>",
+        "Welcome to <font=%x>Windooze</font><font=%x><color=%x>95</color></font>",
         get_font(FONT_ARIAL_BLACK_32),
         get_font(FONT_FRANKLIN_GOTHIC_BOOK_32),
         get_color(COLOR_WHITE)
