@@ -79,11 +79,29 @@ CIG_INLINED void load_texture(Texture2D *dst, const char *path) {
 }
 
 int main(int argc, const char *argv[]) {
-// SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
+  bool run_fullscreen = false;
+  int ray_w, ray_h;
+
+  if (run_fullscreen) {
+    InitWindow(0, 0, "Windooze 95");
+    ray_w = GetMonitorWidth(GetCurrentMonitor());
+    ray_h = GetMonitorHeight(GetCurrentMonitor());
+  } else {
+    ray_w = 1280;
+    ray_h = 960;
+  }
+
+  int win95_w = ray_w / 2;
+  int win95_h = ray_h / 2;
+
+  // SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
   SetConfigFlags(FLAG_WINDOW_ALWAYS_RUN);
-  InitWindow(1280, 960, "Windooze 95");
+  InitWindow(ray_w, ray_h, "Windooze 95");
   SetTargetFPS(60);
-  // ToggleFullscreen();
+
+  if (run_fullscreen) {
+    ToggleFullscreen();
+  }
 
   // TODO: Would be neater to package multiple sizes and reference these simply as "name@16" or something
   load_texture(&images[IMAGE_BRIGHT_YELLOW_PATTERN], "res/images/light_yellow_pattern.png");
@@ -185,12 +203,16 @@ int main(int argc, const char *argv[]) {
   cig_set_layout_breakpoint_callback(&layout_breakpoint);
 #endif
   
-  cig_begin_layout(&ctx, NULL, cig_r_make(0, 0, 640, 480), 0.f);
+  /*
+   * Calling begin layout here, so that when win95 instance starts,
+   * it already has a size reference to center some welcome windows into.
+   */
+  cig_begin_layout(&ctx, NULL, cig_r_make(0, 0, win95_w, win95_h), 0.f);
 
   win95_t win_instance = { 0 };
   start_win95(&win_instance);
 
-  render_texture = LoadRenderTexture(640, 480);
+  render_texture = LoadRenderTexture(win95_w, win95_h);
   SetTextureFilter(render_texture.texture, TEXTURE_FILTER_POINT);
 
 #ifdef DEBUG
@@ -213,7 +235,7 @@ int main(int argc, const char *argv[]) {
     ClearBackground((Color){0});
 #endif
 
-    cig_begin_layout(&ctx, NULL, cig_r_make(0, 0, 640, 480), GetFrameTime());
+    cig_begin_layout(&ctx, NULL, cig_r_make(0, 0, win95_w, win95_h), GetFrameTime());
     
     cig_set_input_state(
       cig_v_make(GetMouseX()/2, GetMouseY()/2),

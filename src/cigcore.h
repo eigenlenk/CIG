@@ -339,6 +339,9 @@ void cig_begin_layout(cig_context *, CIG_OPTIONAL(cig_buffer_ref), cig_r, float)
 /* */
 void cig_end_layout();
 
+/* @return Screen-space rectangle of current CIG context */
+cig_r cig_layout_rect();
+
 /*  Returns an opaque pointer to the current buffer where drawing operations would take place */
 cig_buffer_ref cig_buffer();
 

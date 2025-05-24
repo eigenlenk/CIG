@@ -614,8 +614,8 @@ static bool begin_window(window_t *wnd, window_message_t *msg, bool *focused) {
     } else if (window_drag.selected_window == wnd) {
       if (window_drag.active && cig_input_state()->drag.active) {
         wnd->rect = cig_r_make(
-          CIG_CLAMP(window_drag.original_rect.x + cig_input_state()->drag.change.x, -(wnd->rect.w - 50), 640 - 30),
-          CIG_CLAMP(window_drag.original_rect.y + cig_input_state()->drag.change.y, 0, 480 - 50),
+          CIG_CLAMP(window_drag.original_rect.x + cig_input_state()->drag.change.x, -(wnd->rect.w - 50), cig_layout_rect().w - 30),
+          CIG_CLAMP(window_drag.original_rect.y + cig_input_state()->drag.change.y, 0, cig_layout_rect().h - 50),
           wnd->rect.w,
           wnd->rect.h
         );

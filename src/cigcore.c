@@ -126,6 +126,10 @@ void cig_end_layout() {
   ++current->tick;
 }
 
+cig_r cig_layout_rect() {
+  return current->frames.elements[0].absolute_rect;
+}
+
 cig_buffer_ref cig_buffer() {
   return current->buffers.peek_ref(&current->buffers, 0)->buffer;
 }
