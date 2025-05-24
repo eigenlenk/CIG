@@ -220,6 +220,12 @@ typedef struct {
   } origin;
 } menu_presentation;
 
+typedef enum CIG_PACKED {
+  NOT_TRACKING,
+  BY_CLICK,
+  BY_PRESS
+} menu_tracking_st;
+
 void menubar(size_t, win95_menu*[]);
 CIG_DISCARDABLE(win95_menu *) menu_setup(
   win95_menu *,
@@ -230,5 +236,6 @@ CIG_DISCARDABLE(win95_menu *) menu_setup(
   menu_group[]
 );
 void menu_draw(win95_menu *, menu_presentation);
+menu_tracking_st menu_track(menu_tracking_st *, win95_menu *, menu_presentation);
 
 #endif

@@ -11,24 +11,13 @@
 void menubar(size_t n, win95_menu* menus[]) {
   register size_t i;
 
-  struct menubar_st {
-    enum CIG_PACKED { NONE, BY_CLICK, BY_PRESS } tracking;
-    uint16_t active_menu_idx;
-  };
-
-  struct menubar_st *this = CIG_ALLOCATE(struct menubar_st);
-  cig_v menu_position;
-
-  cig_retain(cig_current());
-
-  /* Menubar just became visible (parent window appeared basically) */
-  if (cig_visibility() == CIG_FRAME_APPEARED) {
-    this->tracking = NONE;
-  }
-
   /* */
   cig_enable_interaction();
   cig_disable_culling();
+
+  menu_tracking_st *tracking_state = CIG_ALLOCATE(menu_tracking_st);
+  win95_menu **last_hovered_menu = CIG_ALLOCATE(win95_menu *);
+  bool any_menu_active = false;
 
   CIG_HSTACK(RECT_AUTO, NO_INSETS) {
     for (i = 0; i < n; ++i) {
@@ -41,31 +30,33 @@ void menubar(size_t n, win95_menu* menus[]) {
 
       CIG(RECT_AUTO_W(text_size.x + 6*2), cig_i_horizontal(6)) {
         cig_enable_interaction();
+        cig_disable_culling();
 
-        /* Click or press any menubar item to activate tracking */
-        if (this->tracking == NONE && cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE)) {
-          this->tracking = BY_PRESS;
-          printf("Start tracking [by press]\n");
-        } else if (cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_STARTS_INSIDE | CIG_CLICK_EXPIRE)) {
-          this->tracking = this->tracking != BY_CLICK ? BY_CLICK : NONE;
-          if (this->tracking) {
-            printf("Start tracking [by click]\n");
-          } else {
-            printf("Stop tracking [by click]\n");
+        /*
+         * The menubar works similarly to the Start menu: a menu appears when you click a button.
+         * However, unlike the Start button, the menubar has multiple buttons (e.g., File, Edit, View),
+         * all sharing a single tracking state.
+         *
+         * - If any menubar button is being tracked (i.e., clicked or held), we activate and show its menu.
+         * - While tracking, we also monitor hover state to switch the active menu when the mouse moves
+         *   over another menubar button — without requiring another click.
+         */
+        if (cig_hovered()) {
+          *last_hovered_menu = menus[i];
+        }
+
+        const bool current_menu_selected = *last_hovered_menu == menus[i];
+
+        if (current_menu_selected) {
+          menu_track(tracking_state, menus[i], (menu_presentation) {
+            .position = { -6, CIG_B },
+            .origin = ORIGIN_TOP_LEFT,
+          });
+
+          if (*tracking_state > 0) {
+            any_menu_active = true;
+            cig_fill_solid(get_color(COLOR_WINDOW_ACTIVE_TITLEBAR));
           }
-        }
-
-        /* Change active menu to current one */
-        if (this->tracking && cig_hovered()) {
-          this->active_menu_idx = i;
-        }
-        
-        /* Draw menubar item based on tracking state */
-        const bool menu_open = this->tracking && this->active_menu_idx == i;
-        
-        if (menu_open) {
-          menu_position = cig_v_make(CIG_X, CIG_B);
-          cig_fill_solid(get_color(COLOR_WINDOW_ACTIVE_TITLEBAR));
         }
 
         cig_draw_raw_text(
@@ -73,45 +64,18 @@ void menubar(size_t n, win95_menu* menus[]) {
           text_size,
           NULL,         /* Font */
           0,            /* Text style modifiers */
-          menu_open ? get_color(COLOR_WHITE) : get_color(COLOR_BLACK),
+          *tracking_state > 0 && current_menu_selected
+            ? get_color(COLOR_WHITE)
+            : get_color(COLOR_BLACK),
           menus[i]->title
         );
       }
     }
-
-    /* Fill rest of the menubar */
-    CIG(_) {
-      cig_enable_interaction();
-      if (this->tracking && cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE)) {
-        this->tracking = NONE;
-        printf("Stop tracking [outside menu items]\n");
-      }
-    }
   }
 
-  /* Draw open menu */
-  if (this->tracking) {
-    menu_draw(menus[this->active_menu_idx], (menu_presentation) {
-      .position = menu_position,
-      .origin = ORIGIN_TOP_LEFT
-    });
-  }
-
-  if (this->tracking == BY_CLICK && cig_input_state()->click_state == EXPIRED) {
-    this->tracking = NONE;
-    printf("Stop tracking [click expired]\n");
-  } else if (this->tracking == BY_PRESS && cig_input_state()->action_mask == 0) {
-    /* Mouse button was released while in PRESS tracking mode */
-    this->tracking = NONE;
-    printf("Stop tracking [button released]\n");
-  } else if (this->tracking == BY_CLICK && cig_input_state()->click_state == BEGAN && !(cig_current()->_flags & SUBTREE_INCLUSIVE_HOVER)) {
-    /* Mouse button was pressed down while outside the menubar and any of its children (menus) */
-    this->tracking = NONE;
-    printf("Stop tracking [outside menubar]\n");
-  } else if (this->tracking == BY_CLICK && cig_input_state()->click_state == ENDED && !(cig_current()->_flags & HOVER) && cig_current()->_flags & SUBTREE_INCLUSIVE_HOVER) {
-    /* Click was made, but inside one of its children (menus) and not the bar itself */
-    this->tracking = NONE;
-    printf("Stop tracking [inside menu]\n");
+  /* None of the menu buttons were tracking */
+  if (!any_menu_active) {
+    *last_hovered_menu = NULL;
   }
 }
 
@@ -370,4 +334,37 @@ void menu_draw(win95_menu *this, menu_presentation presentation) {
       }
     }
   }
+}
+
+/*
+ * Function that tracks either:
+ * - Click start and click end
+ * - Press start and press release
+ */
+menu_tracking_st menu_track(menu_tracking_st *tracking, win95_menu *menu, menu_presentation presentation) {
+  /* CLICK or PRESS to activate tracking */
+  if (*tracking == NOT_TRACKING && cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE)) {
+    *tracking = BY_PRESS;
+  } else if (cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_STARTS_INSIDE | CIG_CLICK_EXPIRE)) {
+    *tracking = *tracking != BY_CLICK ? BY_CLICK : NOT_TRACKING;
+  }
+
+  if (*tracking) {
+    menu_draw(menu, presentation);
+  }
+
+  if (*tracking == BY_CLICK && cig_input_state()->click_state == EXPIRED) {
+    *tracking = NOT_TRACKING;
+  } else if (*tracking == BY_PRESS && cig_input_state()->action_mask == 0) {
+    /* Mouse button was released while in PRESS tracking mode */
+    *tracking = NOT_TRACKING;
+  } else if (*tracking == BY_CLICK && cig_input_state()->click_state == BEGAN && !(cig_current()->_flags & SUBTREE_INCLUSIVE_HOVER)) {
+    /* Mouse button was pressed down while outside the menu button and any of its children (menus) */
+    *tracking = NOT_TRACKING;
+  } else if (*tracking == BY_CLICK && cig_input_state()->click_state == ENDED && !(cig_current()->_flags & HOVER) && cig_current()->_flags & SUBTREE_INCLUSIVE_HOVER) {
+    /* Click was made, but inside one of its children (menus) and not the menu button itself */
+    *tracking = NOT_TRACKING;
+  }
+
+  return *tracking;
 }

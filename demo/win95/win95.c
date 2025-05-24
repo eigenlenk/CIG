@@ -39,7 +39,6 @@ static bool begin_window(window_t*, window_message_t*, bool*);
 static void end_window(window_t*);
 static void open_explorer_at(const char*);
 static void handle_window_resize(window_t*, window_resize_edge_t);
-static bool present_menu(win95_menu *, menu_presentation);
 
 static bool taskbar_button(
   cig_r rect,
@@ -91,16 +90,18 @@ static void start_button(cig_r rect) {
     cig_disable_culling();
     cig_enable_focus();
 
-    const bool menu_visible = present_menu(&start_menus[START_MAIN], (menu_presentation) {
+    menu_tracking_st *tracking = CIG_ALLOCATE(menu_tracking_st);
+
+    menu_track(tracking, &start_menus[START_MAIN], (menu_presentation) {
       .position = { -4, -2 },
       .origin = ORIGIN_BOTTOM_LEFT,
     });
 
-    cig_fill_panel(get_panel(PANEL_BUTTON), menu_visible ? CIG_PANEL_PRESSED : 0);
+    cig_fill_panel(get_panel(PANEL_BUTTON), *tracking > 0 ? CIG_PANEL_PRESSED : 0);
     
     CIG_HSTACK(
       _,
-      CIG_INSETS(menu_visible ? cig_i_make(0, 1, 0, -1) : cig_i_zero()),
+      CIG_INSETS(*tracking > 0 ? cig_i_make(0, 1, 0, -1) : cig_i_zero()),
       CIG_PARAMS({
         CIG_SPACING(2)
       })
@@ -753,41 +754,4 @@ static void handle_window_resize(window_t *wnd, window_resize_edge_t edge) {
       window_resize.active = false;
     }
   }
-}
-
-static bool present_menu(win95_menu *menu, menu_presentation presentation) {
-  enum CIG_PACKED tracking_st { NONE, BY_CLICK, BY_PRESS };
-  enum tracking_st *tracking = CIG_ALLOCATE(enum tracking_st);
-
-  cig_retain(cig_current());
-
-  /* Click or press Start button to activate tracking */
-  if (*tracking == NONE && cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE)) {
-    *tracking = BY_PRESS;
-  } else if (cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_STARTS_INSIDE | CIG_CLICK_EXPIRE)) {
-    *tracking = *tracking != BY_CLICK ? BY_CLICK : NONE;
-  }
-
-  if (*tracking) {
-    menu_draw(menu, presentation);
-  }
-
-  /*
-   * There is a bunch of commonality between this and the menubar tracking
-   * but I don't yet know if or how this could be refactored.
-   */
-  if (*tracking == BY_CLICK && cig_input_state()->click_state == EXPIRED) {
-    *tracking = NONE;
-  } else if (*tracking == BY_PRESS && cig_input_state()->action_mask == 0) {
-    /* Mouse button was released while in PRESS tracking mode */
-    *tracking = NONE;
-  } else if (*tracking == BY_CLICK && cig_input_state()->click_state == BEGAN && !(cig_current()->_flags & SUBTREE_INCLUSIVE_HOVER)) {
-    /* Mouse button was pressed down while outside the Start button and any of its children (menus) */
-    *tracking = NONE;
-  } else if (*tracking == BY_CLICK && cig_input_state()->click_state == ENDED && !(cig_current()->_flags & HOVER) && cig_current()->_flags & SUBTREE_INCLUSIVE_HOVER) {
-    /* Click was made, but inside one of its children (menus) and not the Start button itself */
-    *tracking = NONE;
-  }
-
-  return *tracking != 0;
 }
