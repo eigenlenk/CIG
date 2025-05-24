@@ -1,5 +1,4 @@
 #include "win95.h"
-#include "cigcorem.h"
 
 #include <string.h>
 #include <stdint.h>

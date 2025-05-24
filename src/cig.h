@@ -2,6 +2,7 @@
 #define CIG_UMBRELLA_HEADER_INCLUDED
 
 #include "cigcore.h"
+#include "cigcorem.h"
 
 #ifndef CIG_EXCLUDE_TEXT
 #include "cigtext.h"

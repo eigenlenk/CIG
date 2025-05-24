@@ -166,6 +166,10 @@ window_t* window_manager_find_primary_window(window_manager_t*, application_t*);
 bool standard_button(cig_r, const char *);
 bool icon_button(cig_r, image_id_t);
 bool checkbox(cig_r, bool *, const char *);
+bool taskbar_button(cig_r, const char *, int icon, bool);
+
+bool window_begin(window_t *, window_message_t *, bool *);
+void window_end(window_t *);
 
 bool begin_file_browser(cig_r, int, color_id_t, bool, int *);
 bool file_item(image_id_t, const char*);

@@ -1,5 +1,4 @@
 #include "welcome.h"
-#include "cigcorem.h"
 
 typedef struct {
   int tip_index;

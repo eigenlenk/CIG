@@ -1,5 +1,4 @@
 #include "win95.h"
-#include "cigcorem.h"
 
 #include <string.h>
 
@@ -181,6 +180,12 @@ static cig_frame * large_file_icon(int icon,
 
   return CIG_LAST();
 }
+
+/*
+ * ┌──────────┐
+ * │ INTERNAL │
+ * └──────────┘
+ */
 
 /* Rectangle between 2 points in any relation */
 static cig_r rect_of(cig_v p0, cig_v p1) {

@@ -8,17 +8,6 @@
 
 #define TASKBAR_H 28
 
-typedef enum {
-  WINDOW_RESIZE_BOTTOM_RIGHT = 0,
-  WINDOW_RESIZE_RIGHT,
-  WINDOW_RESIZE_TOP_RIGHT,
-  WINDOW_RESIZE_TOP,
-  WINDOW_RESIZE_TOP_LEFT,
-  WINDOW_RESIZE_LEFT,
-  WINDOW_RESIZE_BOTTOM_LEFT,
-  WINDOW_RESIZE_BOTTOM
-} window_resize_edge_t;
-
 static win95_t *this = NULL;
 static win95_menu start_menus[7];
 
@@ -35,54 +24,7 @@ enum {
 static void process_apps();
 static void process_windows();
 static void close_application(application_t *);
-static bool begin_window(window_t*, window_message_t*, bool*);
-static void end_window(window_t*);
 static void open_explorer_at(const char*);
-static void handle_window_resize(window_t*, window_resize_edge_t);
-
-static bool taskbar_button(
-  cig_r rect,
-  const char *title,
-  int icon,
-  bool selected
-) {
-  bool clicked = false;
-  
-  CIG(rect, CIG_INSETS(cig_i_make(4, 2, 4, 2))) {
-    cig_enable_interaction();
-    
-    const bool pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE);
-    clicked = cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_DEFAULT_OPTIONS);
-
-    cig_fill_panel(get_panel(PANEL_BUTTON), selected ? CIG_PANEL_SELECTED : (pressed ? CIG_PANEL_PRESSED : 0));
-    
-    CIG_HSTACK(
-      _,
-      CIG_INSETS(selected ? cig_i_make(0, 1, 0, -1) : cig_i_zero()),
-      CIG_PARAMS({
-        CIG_SPACING(2)
-      })
-    ) {
-      if (icon >= 0) {
-        CIG(RECT_AUTO_W(16)) {
-          cig_draw_image(get_image(icon), CIG_IMAGE_MODE_CENTER);
-        }
-      }
-      if (title) {
-        CIG(_) {
-          cig_draw_label((cig_text_properties) {
-            .font = get_font(selected ? FONT_BOLD : FONT_REGULAR),
-            .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
-            .max_lines = 1,
-            .overflow = CIG_TEXT_SHOW_ELLIPSIS
-          }, title);
-        }
-      }
-    }
-  }
-  
-  return clicked;
-}
 
 static void start_button(cig_r rect) {
   CIG(rect, CIG_INSETS(cig_i_make(4, 2, 4, 2))) {
@@ -410,99 +352,6 @@ window_t* window_manager_find_primary_window(window_manager_t *manager, applicat
   return NULL;
 }
 
-/*  ┌───────────────────┐
-    │ COMMON COMPONENTS │
-    └───────────────────┘ */
-
-bool standard_button(cig_r rect, const char *title) {
-  bool clicked = false;
-  
-  CIG(rect) {
-    cig_enable_interaction();
-    
-    const bool pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE);
-    
-    cig_fill_panel(get_panel(PANEL_BUTTON), pressed ? CIG_PANEL_PRESSED : 0);
-    
-    if (cig_push_frame_insets(RECT_AUTO,  pressed ? cig_i_make(2, 3, 1, 2) : cig_i_make(1, 1, 2, 2))) {
-      cig_draw_label((cig_text_properties) {
-        .font = get_font(FONT_REGULAR),
-        .max_lines = 1,
-        .overflow = CIG_TEXT_SHOW_ELLIPSIS
-      }, title);
-      cig_pop_frame();
-    }
-    
-    clicked = cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_DEFAULT_OPTIONS);
-  }
-  
-  return clicked;
-}
-
-bool icon_button(cig_r rect, image_id_t image_id) {
-  bool clicked = false;
-  
-  CIG(rect) {
-    cig_enable_interaction();
-    
-    const bool pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE);
-    
-    cig_fill_panel(get_panel(PANEL_BUTTON), pressed ? CIG_PANEL_PRESSED : 0);
-    
-    if (cig_push_frame_insets(RECT_AUTO, pressed ? cig_i_make(3, 3, 1, 1) : cig_i_make(2, 2, 2, 2))) {
-      cig_draw_image(get_image(image_id), CIG_IMAGE_MODE_CENTER);
-      cig_pop_frame();
-    }
-    
-    clicked = cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_DEFAULT_OPTIONS);
-  }
-  
-  return clicked;
-}
-
-bool checkbox(cig_r rect, bool *value, const char *text) {
-  bool toggled = false;
-  CIG_HSTACK(
-    rect,
-    CIG_PARAMS({
-      CIG_SPACING(5)
-    })
-  ) {
-    cig_enable_interaction();
-
-    if (!value) {
-      value = CIG_ALLOCATE(bool);
-    }
-
-    const bool pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_DEFAULT_OPTIONS);
-
-    if (cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_DEFAULT_OPTIONS)) {
-      *value = !*value;
-    }
-
-    CIG(RECT_AUTO_W(13)) {
-      CIG(RECT_CENTERED_VERTICALLY(RECT_SIZED(13, 13))) {
-        cig_fill_solid(pressed ? get_color(COLOR_DIALOG_BACKGROUND) : get_color(COLOR_WHITE));
-        cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
-        cig_draw_line(cig_v_make(CIG_SX+2, CIG_SY+1), cig_v_make(CIG_SX+11, CIG_SY+1), get_color(COLOR_BLACK), 1);
-        cig_draw_line(cig_v_make(CIG_SX+2, CIG_SY+1), cig_v_make(CIG_SX+2, CIG_SY+11), get_color(COLOR_BLACK), 1);
-        cig_draw_line(cig_v_make(CIG_SX+1, CIG_SY+11), cig_v_make(CIG_SX+12, CIG_SY+11), get_color(COLOR_DIALOG_BACKGROUND), 1);
-        cig_draw_line(cig_v_make(CIG_SX+12, CIG_SY+11), cig_v_make(CIG_SX+12, CIG_SY+1), get_color(COLOR_DIALOG_BACKGROUND), 1);
-
-        if (*value) {
-          cig_draw_image(get_image(IMAGE_CHECKMARK), CIG_IMAGE_MODE_CENTER);
-        }
-      }
-    }
-    CIG(_) {
-      cig_draw_label((cig_text_properties) {
-        .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
-      }, text);
-    }
-  }
-  return toggled;
-}
-
 /*  ┌──────────┐
     │ INTERNAL │
     └──────────┘ */
@@ -538,19 +387,19 @@ static void process_windows() {
     if (wnd->proc) {
       msg = 0;
       focused = false;
-      if (!begin_window(wnd, &msg, &focused)) {
+      if (!window_begin(wnd, &msg, &focused)) {
         continue;
       }
       wnd->proc(wnd, &msg, focused);
       switch (msg) {
         case WINDOW_CLOSE: {
           window_manager_close(&this->window_manager, wnd);
-          end_window(wnd);
+          window_end(wnd);
           continue;
         };
         default: break;
       }
-      end_window(wnd);
+      window_end(wnd);
     }
 
     ++i;
@@ -574,184 +423,8 @@ static void close_application(application_t *app) {
   }
 }
 
-static bool begin_window(window_t *wnd, window_message_t *msg, bool *focused) {
-  static struct {
-    window_t *selected_window;
-    bool active;
-    cig_r original_rect;
-  } window_drag = { 0 };
-
-  cig_set_next_id(wnd->id);
-  
-  const cig_i wnd_insets = cig_i_uniform(wnd->flags & IS_RESIZABLE ? 4 : 3);
-
-  if (!cig_push_frame_insets(wnd->rect, wnd_insets)) {
-    return false;
-  }
-
-  cig_fill_panel(get_panel(PANEL_STANDARD_DIALOG), 0);
-
-  *focused = cig_enable_focus();
-
-  /* Titlebar */
-  CIG_HSTACK(
-    RECT_AUTO_H(18),
-    CIG_INSETS(cig_i_uniform(2)),
-    CIG_PARAMS({
-      CIG_SPACING(2),
-      CIG_ALIGNMENT_HORIZONTAL(CIG_LAYOUT_ALIGNS_RIGHT)
-    })
-  ) {
-    cig_fill_solid(get_color(*focused ? COLOR_WINDOW_ACTIVE_TITLEBAR : COLOR_WINDOW_INACTIVE_TITLEBAR));
-    cig_enable_interaction();
-
-    /* TODO: This could probably be a little nicer to deal with */
-    if (!window_drag.active && cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE) && cig_input_state()->drag.active) {
-      cig_input_state()->locked = true;
-      window_drag.active = true;
-      window_drag.original_rect = wnd->rect;
-      window_drag.selected_window = wnd;
-    } else if (window_drag.selected_window == wnd) {
-      if (window_drag.active && cig_input_state()->drag.active) {
-        wnd->rect = cig_r_make(
-          CIG_CLAMP(window_drag.original_rect.x + cig_input_state()->drag.change.x, -(wnd->rect.w - 50), cig_layout_rect().w - 30),
-          CIG_CLAMP(window_drag.original_rect.y + cig_input_state()->drag.change.y, 0, cig_layout_rect().h - 50),
-          wnd->rect.w,
-          wnd->rect.h
-        );
-      } else {
-        window_drag.active = false;
-      }
-    }
-
-    /*  This container is right-aligned, so X will be 0 */
-    if (icon_button(RECT_AUTO_W(16), IMAGE_CROSS)) {
-      *msg = WINDOW_CLOSE;
-    }
-
-    CIG_HSTACK(_, CIG_PARAMS({
-      CIG_SPACING(2)
-    })) {
-      if (wnd->icon >= 0) {
-        CIG(RECT_AUTO_W(16)) {
-          cig_draw_image(get_image(wnd->icon), CIG_IMAGE_MODE_CENTER);
-        }
-      }
-      CIG(_) {
-        cig_draw_label((cig_text_properties) {
-          .font = get_font(FONT_BOLD),
-          .color = *focused ? get_color(COLOR_WHITE) : get_color(COLOR_DIALOG_BACKGROUND),
-          .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
-          .max_lines = 1,
-          .overflow = CIG_TEXT_SHOW_ELLIPSIS 
-        }, wnd->title);
-      }
-    }
-  }
-
-  /*
-   * Add resizable edge and corner regions.
-   * Resetting insets temporarily makes adding the resize regions easier to calculate.
-   */
-  cig_current()->insets = cig_i_zero();
-
-  if (wnd->flags & IS_RESIZABLE) {
-    struct {
-      cig_r rect;
-      window_resize_edge_t edge;
-    } resize_regions[10] = {
-      { cig_r_make(CIG_W-4, 20, 4, CIG_H-(20+16)), WINDOW_RESIZE_RIGHT },
-      { cig_r_make(CIG_W-4, 4, 4, 16), WINDOW_RESIZE_TOP_RIGHT },
-      { cig_r_make(CIG_W-20, 0, 20, 4), WINDOW_RESIZE_TOP_RIGHT },
-      { cig_r_make(20, 0, CIG_W-(20+20), 4), WINDOW_RESIZE_TOP },
-      { cig_r_make(0, 4, 4, 16), WINDOW_RESIZE_TOP_LEFT },
-      { cig_r_make(0, 0, 20, 4), WINDOW_RESIZE_TOP_LEFT },
-      { cig_r_make(0, 20, 4, CIG_H-(20+16)), WINDOW_RESIZE_LEFT },
-      { cig_r_make(0, CIG_H-20, 4, 16), WINDOW_RESIZE_BOTTOM_LEFT },
-      { cig_r_make(0, CIG_H-4, 20, 4), WINDOW_RESIZE_BOTTOM_LEFT },
-      { cig_r_make(20, CIG_H-4, CIG_W-(20+16), 4), WINDOW_RESIZE_BOTTOM },
-    };
-
-    int i;
-    for (i = 0; i < 10; ++i) {
-      CIG(resize_regions[i].rect) {
-        cig_enable_interaction();
-        handle_window_resize(wnd, resize_regions[i].edge);
-      }
-    }
-
-    CIG(RECT(CIG_W_INSET-16, CIG_H_INSET-16, 16, 16)) {
-      cig_enable_interaction();
-      handle_window_resize(wnd, WINDOW_RESIZE_BOTTOM_RIGHT);
-    }
-  }
-
-  cig_current()->insets = wnd_insets;
-
-  cig_push_frame(cig_r_make(0, 20, CIG_AUTO(), CIG_H_INSET - 20));
-    
-  return true;
-}
-
-static void end_window(window_t *wnd) {
-  cig_pop_frame(); /* Content frame */
-  cig_pop_frame(); /* Window panel */
-}
-
 static void open_explorer_at(const char *path) {
   application_t *explorer = win95_find_open_app("explorer");
   assert(explorer != NULL);
   window_manager_create(&this->window_manager, explorer, explorer_create_window(explorer, path));
-}
-
-static void handle_window_resize(window_t *wnd, window_resize_edge_t edge) {
-  static struct {
-    window_t *selected_window;
-    window_resize_edge_t active_edge;
-    bool active;
-    cig_r original_rect;
-  } window_resize = { 0 };
-
-  const struct {
-    int x, y, w, h;
-  } edge_adjustments[8] = {
-    { 0, 0, 1, 1 }, /* WINDOW_RESIZE_BOTTOM_RIGHT */
-    { 0, 0, 1, 0 }, /* WINDOW_RESIZE_RIGHT */
-    { 0, 1, 1, 0 }, /* WINDOW_RESIZE_TOP_RIGHT */
-    { 0, 1, 0, 0 }, /* WINDOW_RESIZE_TOP */
-    { 1, 1, 0, 0 }, /* WINDOW_RESIZE_TOP_LEFT */
-    { 1, 0, 0, 0 }, /* WINDOW_RESIZE_LEFT */
-    { 1, 0, 0, 1 }, /* WINDOW_RESIZE_BOTTOM_LEFT */
-    { 0, 0, 0, 1 }, /* WINDOW_RESIZE_BOTTOM */
-  };
-
-  if (!window_resize.active && cig_focused_id() == wnd->id && cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE) && cig_input_state()->drag.active) {
-    cig_input_state()->locked = true;
-    window_resize.active = true;
-    window_resize.original_rect = wnd->rect;
-    window_resize.selected_window = wnd;
-    window_resize.active_edge = edge;
-  } else if (window_resize.selected_window == wnd && window_resize.active_edge == edge) {
-    if (window_resize.active && cig_input_state()->drag.active) {
-      const int dx = cig_input_state()->drag.change.x,
-                dy = cig_input_state()->drag.change.y;
-
-      if (edge_adjustments[edge].x) {
-        wnd->rect.w = CIG_MAX(wnd->min_size.x, window_resize.original_rect.w - dx);
-        wnd->rect.x = window_resize.original_rect.x + (window_resize.original_rect.w - wnd->rect.w);
-      }
-      if (edge_adjustments[edge].y) {
-        wnd->rect.h = CIG_MAX(wnd->min_size.y, window_resize.original_rect.h - dy);
-        wnd->rect.y = window_resize.original_rect.y + (window_resize.original_rect.h - wnd->rect.h);
-      }
-      if (edge_adjustments[edge].w) {
-        wnd->rect.w = CIG_MAX(wnd->min_size.x, window_resize.original_rect.w + dx);
-      }
-      if (edge_adjustments[edge].h) {
-        wnd->rect.h = CIG_MAX(wnd->min_size.y, window_resize.original_rect.h + dy);
-      }
-    } else {
-      window_resize.active = false;
-    }
-  }
 }

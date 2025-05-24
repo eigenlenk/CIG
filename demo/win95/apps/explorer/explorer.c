@@ -1,5 +1,4 @@
 #include "explorer.h"
-#include "cigcorem.h"
 
 #include <string.h>
 #include <stdio.h>
