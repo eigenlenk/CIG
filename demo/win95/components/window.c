@@ -22,13 +22,19 @@ bool window_begin(window_t *wnd, window_message_t *msg, bool *focused) {
 
   cig_set_next_id(wnd->id);
   
-  const cig_i wnd_insets = cig_i_uniform(wnd->flags & IS_RESIZABLE ? 4 : 3);
+  const cig_i wnd_insets = (wnd->flags & IS_MAXIMIZED)
+    ? cig_i_zero()
+    : cig_i_uniform(wnd->flags & IS_RESIZABLE ? 4 : 3);
 
   if (!cig_push_frame_insets(wnd->rect, wnd_insets)) {
     return false;
   }
 
-  cig_fill_panel(get_panel(PANEL_STANDARD_DIALOG), 0);
+  if (wnd->flags & IS_MAXIMIZED) {
+    cig_fill_solid(get_color(COLOR_DIALOG_BACKGROUND));
+  } else {
+    cig_fill_panel(get_panel(PANEL_STANDARD_DIALOG), 0);
+  }
 
   *focused = cig_enable_focus();
 
@@ -44,8 +50,19 @@ bool window_begin(window_t *wnd, window_message_t *msg, bool *focused) {
     cig_fill_solid(get_color(*focused ? COLOR_WINDOW_ACTIVE_TITLEBAR : COLOR_WINDOW_INACTIVE_TITLEBAR));
     cig_enable_interaction();
 
+    if (wnd->flags & IS_RESIZABLE) {
+      if (cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_STARTS_INSIDE | CIG_CLICK_DOUBLE)) {
+        *msg = WINDOW_MAXIMIZE;
+      }
+    }
+
     /* TODO: This could probably be a little nicer to deal with */
-    if (!window_drag.active && cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE) && cig_input_state()->drag.active) {
+    if (!window_drag.active
+        && !(wnd->flags & IS_MAXIMIZED)
+        && cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE)
+        && cig_input_state()->drag.active
+        && cig_v_magnitude(cig_input_state()->drag.change) > 1
+    ) {
       cig_input_state()->locked = true;
       window_drag.active = true;
       window_drag.original_rect = wnd->rect;
@@ -66,6 +83,17 @@ bool window_begin(window_t *wnd, window_message_t *msg, bool *focused) {
     /*  This container is right-aligned, so x=0 will align the right edge to parent */
     if (icon_button(RECT_AUTO_W(16), IMAGE_CROSS)) {
       *msg = WINDOW_CLOSE;
+    }
+
+    if (wnd->flags & IS_RESIZABLE) {
+      CIG_HSTACK(_W(16*2)) {
+        if (icon_button(RECT_AUTO_W(16), IMAGE_MINIMIZE)) {
+          *msg = WINDOW_MINIMIZE;
+        }
+        if (icon_button(RECT_AUTO_W(16), wnd->flags & IS_MAXIMIZED ? IMAGE_RESTORE : IMAGE_MAXIMIZE)) {
+          *msg = WINDOW_MAXIMIZE;
+        }
+      }
     }
 
     CIG_HSTACK(_, CIG_PARAMS({
@@ -92,40 +120,42 @@ bool window_begin(window_t *wnd, window_message_t *msg, bool *focused) {
    * Add resizable edge and corner regions.
    * Resetting insets temporarily makes adding the resize regions easier to calculate.
    */
-  cig_current()->insets = cig_i_zero();
+  if (!(wnd->flags & IS_MAXIMIZED)) {
+    cig_current()->insets = cig_i_zero();
 
-  if (wnd->flags & IS_RESIZABLE) {
-    struct {
-      cig_r rect;
-      window_resize_edge_t edge;
-    } resize_regions[10] = {
-      { cig_r_make(CIG_W-4, 20, 4, CIG_H-(20+16)), WINDOW_RESIZE_RIGHT },
-      { cig_r_make(CIG_W-4, 4, 4, 16), WINDOW_RESIZE_TOP_RIGHT },
-      { cig_r_make(CIG_W-20, 0, 20, 4), WINDOW_RESIZE_TOP_RIGHT },
-      { cig_r_make(20, 0, CIG_W-(20+20), 4), WINDOW_RESIZE_TOP },
-      { cig_r_make(0, 4, 4, 16), WINDOW_RESIZE_TOP_LEFT },
-      { cig_r_make(0, 0, 20, 4), WINDOW_RESIZE_TOP_LEFT },
-      { cig_r_make(0, 20, 4, CIG_H-(20+16)), WINDOW_RESIZE_LEFT },
-      { cig_r_make(0, CIG_H-20, 4, 16), WINDOW_RESIZE_BOTTOM_LEFT },
-      { cig_r_make(0, CIG_H-4, 20, 4), WINDOW_RESIZE_BOTTOM_LEFT },
-      { cig_r_make(20, CIG_H-4, CIG_W-(20+16), 4), WINDOW_RESIZE_BOTTOM },
-    };
+    if (wnd->flags & IS_RESIZABLE) {
+      struct {
+        cig_r rect;
+        window_resize_edge_t edge;
+      } resize_regions[10] = {
+        { cig_r_make(CIG_W-4, 20, 4, CIG_H-(20+16)), WINDOW_RESIZE_RIGHT },
+        { cig_r_make(CIG_W-4, 4, 4, 16), WINDOW_RESIZE_TOP_RIGHT },
+        { cig_r_make(CIG_W-20, 0, 20, 4), WINDOW_RESIZE_TOP_RIGHT },
+        { cig_r_make(20, 0, CIG_W-(20+20), 4), WINDOW_RESIZE_TOP },
+        { cig_r_make(0, 4, 4, 16), WINDOW_RESIZE_TOP_LEFT },
+        { cig_r_make(0, 0, 20, 4), WINDOW_RESIZE_TOP_LEFT },
+        { cig_r_make(0, 20, 4, CIG_H-(20+16)), WINDOW_RESIZE_LEFT },
+        { cig_r_make(0, CIG_H-20, 4, 16), WINDOW_RESIZE_BOTTOM_LEFT },
+        { cig_r_make(0, CIG_H-4, 20, 4), WINDOW_RESIZE_BOTTOM_LEFT },
+        { cig_r_make(20, CIG_H-4, CIG_W-(20+16), 4), WINDOW_RESIZE_BOTTOM },
+      };
 
-    int i;
-    for (i = 0; i < 10; ++i) {
-      CIG(resize_regions[i].rect) {
+      int i;
+      for (i = 0; i < 10; ++i) {
+        CIG(resize_regions[i].rect) {
+          cig_enable_interaction();
+          handle_window_resize(wnd, resize_regions[i].edge);
+        }
+      }
+
+      CIG(RECT(CIG_W_INSET-16, CIG_H_INSET-16, 16, 16)) {
         cig_enable_interaction();
-        handle_window_resize(wnd, resize_regions[i].edge);
+        handle_window_resize(wnd, WINDOW_RESIZE_BOTTOM_RIGHT);
       }
     }
 
-    CIG(RECT(CIG_W_INSET-16, CIG_H_INSET-16, 16, 16)) {
-      cig_enable_interaction();
-      handle_window_resize(wnd, WINDOW_RESIZE_BOTTOM_RIGHT);
-    }
+    cig_current()->insets = wnd_insets;
   }
-
-  cig_current()->insets = wnd_insets;
 
   cig_push_frame(cig_r_make(0, 20, CIG_AUTO(), CIG_H_INSET - 20));
     

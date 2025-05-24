@@ -119,6 +119,9 @@ int main(int argc, const char *argv[]) {
   load_texture(&images[IMAGE_TIP_OF_THE_DAY], "res/images/tip_of_the_day.png");
   load_texture(&images[IMAGE_CHECKMARK], "res/images/check.png");
   load_texture(&images[IMAGE_CROSS], "res/images/cross.png");
+  load_texture(&images[IMAGE_MAXIMIZE], "res/images/maximize.png");
+  load_texture(&images[IMAGE_MINIMIZE], "res/images/minimize.png");
+  load_texture(&images[IMAGE_RESTORE], "res/images/restore.png");
   load_texture(&images[IMAGE_WELCOME_APP_ICON], "res/images/welcome.png");
   load_texture(&images[IMAGE_BIN_EMPTY], "res/images/bin_empty.png");
   load_texture(&images[IMAGE_BIN_EMPTY_16], "res/images/bin_16.png");

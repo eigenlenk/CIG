@@ -57,6 +57,10 @@ CIG_INLINED double DECLNAME##_dist(DECLNAME a, DECLNAME b) {              \
 	return sqrt(pow(fabs((double)(b.x-a.x)), 2) + pow(fabs((double)(b.y-a.y)), 2)); \
 }                                                                                 \
                                                                                   \
+CIG_INLINED double DECLNAME##_magnitude(DECLNAME v) {                             \
+  return sqrt(pow(v.x, 2) + pow(v.y, 2)); \
+}                                                                                 \
+                                                                                  \
 CIG_INLINED int DECLNAME##_distsq(DECLNAME a, DECLNAME b) {               \
 	return (pow(fabs((double)(a.x-b.x)), 2) + pow(fabs((double)(b.y-a.y)), 2));     \
 }                                                                                 \

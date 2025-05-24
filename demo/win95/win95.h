@@ -39,6 +39,9 @@ typedef enum {
   IMAGE_TIP_OF_THE_DAY,
   IMAGE_CHECKMARK,
   IMAGE_CROSS,
+  IMAGE_MAXIMIZE,
+  IMAGE_MINIMIZE,
+  IMAGE_RESTORE,
   IMAGE_WELCOME_APP_ICON,
   IMAGE_BIN_EMPTY,
   IMAGE_BIN_EMPTY_16,
@@ -89,7 +92,9 @@ struct application_t;
 struct window_t;
 
 typedef enum {
-  WINDOW_CLOSE = 1
+  WINDOW_CLOSE = 1,
+  WINDOW_MAXIMIZE,
+  WINDOW_MINIMIZE
 } window_message_t;
 
 typedef void (*win_proc_t)(struct window_t*, window_message_t*, bool);
@@ -107,12 +112,14 @@ typedef struct window_t {
   win_proc_t proc;
   void *data;
   cig_r rect;
+  cig_r rect_before_maximized;
   cig_v min_size;
   char *title;
   int icon;
   enum {
     IS_PRIMARY_WINDOW = CIG_BIT(0),
-    IS_RESIZABLE = CIG_BIT(1)
+    IS_RESIZABLE = CIG_BIT(1),
+    IS_MAXIMIZED = CIG_BIT(2)
   } flags;
 } window_t;
 
@@ -157,6 +164,7 @@ application_t *win95_find_open_app(const char *);
 
 window_t* window_manager_create(window_manager_t*, application_t*, window_t);
 void window_manager_close(window_manager_t*, window_t*);
+void window_manager_maximize(window_manager_t *, window_t *);
 void window_manager_bring_to_front(window_manager_t*, cig_id);
 window_t* window_manager_find_primary_window(window_manager_t*, application_t*);
 

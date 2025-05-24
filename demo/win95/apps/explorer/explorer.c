@@ -89,14 +89,12 @@ static void window_proc(window_t *this, window_message_t *msg, bool window_focus
             cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
           }
         }
+      }
 
+      if (!(this->flags & IS_MAXIMIZED)) {
         CIG(RECT(CIG_W_INSET-12, CIG_H_INSET-12, 12, 12)) {
           cig_draw_image(get_image(IMAGE_RESIZE_HANDLE), CIG_IMAGE_MODE_TOP_LEFT);
         }
-      }
-
-      CIG(RECT(CIG_W_INSET-12, CIG_H_INSET-12, 12, 12)) {
-        cig_draw_image(get_image(IMAGE_RESIZE_HANDLE), CIG_IMAGE_MODE_TOP_LEFT);
       }
     }
   }

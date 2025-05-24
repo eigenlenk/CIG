@@ -263,8 +263,8 @@ void start_win95(win95_t *win95) {
 void run_win95(win95_t *win95) {
   this = win95;
 
-  do_desktop();
   process_apps();
+  do_desktop();
   process_windows();
   do_taskbar();
 }
@@ -324,6 +324,17 @@ void window_manager_close(window_manager_t *manager, window_t *wnd) {
     }
   }
   manager->count--;
+}
+
+void window_manager_maximize(window_manager_t *manager, window_t *wnd) {
+  if (wnd->flags & IS_MAXIMIZED) {
+    wnd->flags &= ~IS_MAXIMIZED;
+    wnd->rect = wnd->rect_before_maximized;
+  } else {
+    wnd->flags |= IS_MAXIMIZED;
+    wnd->rect_before_maximized = wnd->rect;
+    wnd->rect = cig_r_make(0, 0, cig_layout_rect().w, cig_layout_rect().h - TASKBAR_H);
+  }
 }
 
 void window_manager_bring_to_front(window_manager_t *manager, cig_id wnd_id) {
@@ -392,12 +403,17 @@ static void process_windows() {
       }
       wnd->proc(wnd, &msg, focused);
       switch (msg) {
-        case WINDOW_CLOSE: {
+      case WINDOW_CLOSE:
+        {
           window_manager_close(&this->window_manager, wnd);
           window_end(wnd);
-          continue;
-        };
-        default: break;
+        } continue;
+      case WINDOW_MAXIMIZE:
+        {
+          window_manager_maximize(&this->window_manager, wnd);
+        } break;
+      default:
+        break;
       }
       window_end(wnd);
     }
