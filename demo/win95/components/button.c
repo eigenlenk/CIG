@@ -8,7 +8,7 @@ bool standard_button(cig_r rect, const char *title) {
     
     const bool pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE);
     
-    cig_fill_panel(get_panel(PANEL_BUTTON), pressed ? CIG_PANEL_PRESSED : 0);
+    cig_fill_style(get_style(STYLE_BUTTON), pressed ? CIG_STYLE_APPLY_PRESS : 0);
     
     if (cig_push_frame_insets(RECT_AUTO,  pressed ? cig_i_make(2, 3, 1, 2) : cig_i_make(1, 1, 2, 2))) {
       cig_draw_label((cig_text_properties) {
@@ -33,7 +33,7 @@ bool icon_button(cig_r rect, image_id_t image_id) {
     
     const bool pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE);
     
-    cig_fill_panel(get_panel(PANEL_BUTTON), pressed ? CIG_PANEL_PRESSED : 0);
+    cig_fill_style(get_style(STYLE_BUTTON), pressed ? CIG_STYLE_APPLY_PRESS : 0);
     
     if (cig_push_frame_insets(RECT_AUTO, pressed ? cig_i_make(3, 3, 1, 1) : cig_i_make(2, 2, 2, 2))) {
       cig_draw_image(get_image(image_id), CIG_IMAGE_MODE_CENTER);
@@ -68,8 +68,8 @@ bool checkbox(cig_r rect, bool *value, const char *text) {
 
     CIG(RECT_AUTO_W(13)) {
       CIG(RECT_CENTERED_VERTICALLY(RECT_SIZED(13, 13))) {
-        cig_fill_solid(pressed ? get_color(COLOR_DIALOG_BACKGROUND) : get_color(COLOR_WHITE));
-        cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
+        cig_fill_color(pressed ? get_color(COLOR_DIALOG_BACKGROUND) : get_color(COLOR_WHITE));
+        cig_fill_style(get_style(STYLE_INNER_BEVEL_NO_FILL), 0);
         cig_draw_line(cig_v_make(CIG_SX+2, CIG_SY+1), cig_v_make(CIG_SX+11, CIG_SY+1), get_color(COLOR_BLACK), 1);
         cig_draw_line(cig_v_make(CIG_SX+2, CIG_SY+1), cig_v_make(CIG_SX+2, CIG_SY+11), get_color(COLOR_BLACK), 1);
         cig_draw_line(cig_v_make(CIG_SX+1, CIG_SY+11), cig_v_make(CIG_SX+12, CIG_SY+11), get_color(COLOR_DIALOG_BACKGROUND), 1);
@@ -103,7 +103,7 @@ bool taskbar_button(
     const bool pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE);
     clicked = cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_DEFAULT_OPTIONS);
 
-    cig_fill_panel(get_panel(PANEL_BUTTON), selected ? CIG_PANEL_SELECTED : (pressed ? CIG_PANEL_PRESSED : 0));
+    cig_fill_style(get_style(STYLE_BUTTON), selected ? CIG_STYLE_APPLY_SELECTION : (pressed ? CIG_STYLE_APPLY_PRESS : 0));
     
     CIG_HSTACK(
       _,

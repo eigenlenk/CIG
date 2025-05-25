@@ -53,8 +53,8 @@ static void window_proc(window_t *this, window_message_t *msg, bool window_focus
     )),
     CIG_INSETS(cig_i_uniform(2))
   ) {
-    cig_fill_solid(get_color(COLOR_WHITE));
-    cig_fill_panel(get_panel(PANEL_FILES_CONTENT_BEVEL), 0);
+    cig_fill_color(get_color(COLOR_WHITE));
+    cig_fill_style(get_style(STYLE_FILES_CONTENT_BEVEL), 0);
 
     if (window_data->content_builder) {
       window_data->content_builder(this, window_focused, &status_text[0]);
@@ -71,7 +71,7 @@ static void window_proc(window_t *this, window_message_t *msg, bool window_focus
       cig_enable_clipping();
 
       CIG(_W(CIG_MIN(144, CIG_W)), cig_i_make(3, 2, 3, 2)) {
-        cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
+        cig_fill_style(get_style(STYLE_INNER_BEVEL_NO_FILL), 0);
         cig_draw_label((cig_text_properties) {
           .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
         }, status_text);
@@ -80,13 +80,13 @@ static void window_proc(window_t *this, window_message_t *msg, bool window_focus
       if (CIG_W > (144+2)) {
         int remaining_space = CIG_W - (144+2);
         CIG(RECT(CIG_W-remaining_space, 0, remaining_space, CIG_AUTO())) {
-          cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
+          cig_fill_style(get_style(STYLE_INNER_BEVEL_NO_FILL), 0);
         }
 
         if (CIG_W > (144+2)) {
           int remaining_space = CIG_W - (144+2);
           CIG(RECT(CIG_W-remaining_space, 0, remaining_space, CIG_AUTO())) {
-            cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
+            cig_fill_style(get_style(STYLE_INNER_BEVEL_NO_FILL), 0);
           }
         }
       }

@@ -39,7 +39,7 @@ static void start_button(cig_r rect) {
       .origin = ORIGIN_BOTTOM_LEFT,
     });
 
-    cig_fill_panel(get_panel(PANEL_BUTTON), *tracking > 0 ? CIG_PANEL_PRESSED : 0);
+    cig_fill_style(get_style(STYLE_BUTTON), *tracking > 0 ? CIG_STYLE_APPLY_PRESS : 0);
     
     CIG_HSTACK(
       _,
@@ -94,7 +94,7 @@ static void do_desktop_icons() {
 
 static void do_desktop() {
   if (cig_push_frame(cig_r_make(0, 0, CIG_W, CIG_H - TASKBAR_H))) {
-    cig_fill_solid(get_color(COLOR_DESKTOP));
+    cig_fill_color(get_color(COLOR_DESKTOP));
     cig_enable_focus();
     do_desktop_icons();
     cig_pop_frame();
@@ -115,7 +115,7 @@ static void do_taskbar() {
     cig_r_make(0, CIG_H - TASKBAR_H, CIG_W, TASKBAR_H),
     CIG_INSETS(cig_i_make(2, 4, 2, 2))
   ) {
-    cig_fill_solid(get_color(COLOR_DIALOG_BACKGROUND));
+    cig_fill_color(get_color(COLOR_DIALOG_BACKGROUND));
     cig_draw_line(cig_v_make(CIG_SX, CIG_SY+1), cig_v_make(CIG_SX+CIG_W, CIG_SY+1), get_color(COLOR_WHITE), 1);
 
     /* Left: Start button */
@@ -133,7 +133,7 @@ static void do_taskbar() {
       cig_r_make(CIG_W_INSET-clock_w, 0, clock_w, CIG_AUTO()),
       CIG_INSETS(cig_i_uniform(1))
     ) {
-      cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
+      cig_fill_style(get_style(STYLE_INNER_BEVEL_NO_FILL), 0);
       cig_label_draw(&clock_st.label);
     }
 

@@ -1,7 +1,7 @@
 #include "ciggfx.h"
 
 static cig_measure_image_callback measure_image = NULL;
-static cig_draw_panel_callback panel_callback = NULL;
+static cig_draw_style_callback style_callback = NULL;
 static cig_draw_rectangle_callback draw_rectangle = NULL;
 static cig_draw_line_callback draw_line = NULL;
 static cig_draw_image_callback draw_image = NULL;
@@ -18,8 +18,8 @@ void cig_assign_draw_image(cig_draw_image_callback fp) {
   draw_image = fp;
 }
 
-void cig_assign_draw_panel(cig_draw_panel_callback fp) {
-  panel_callback = fp;
+void cig_assign_draw_style(cig_draw_style_callback fp) {
+  style_callback = fp;
 }
 
 void cig_assign_draw_rectangle(cig_draw_rectangle_callback fp) {
@@ -96,12 +96,12 @@ void cig_draw_image(cig_image_ref image, cig_image_mode mode) {
 #endif
 }
 
-void cig_fill_panel(cig_panel_ref panel, cig_panel_modifiers modifiers) {
-  if (!panel_callback) { /* Log an error? */ return; }
-  panel_callback(panel, cig_absolute_rect(), modifiers);
+void cig_fill_style(cig_style_ref style, cig_style_modifiers modifiers) {
+  if (!style_callback) { /* Log an error? */ return; }
+  style_callback(style, cig_absolute_rect(), modifiers);
 }
 
-void cig_fill_solid(cig_color_ref color) {
+void cig_fill_color(cig_color_ref color) {
   if (!draw_rectangle) { /* Log an error? */ return; }
   draw_rectangle(color, 0, cig_absolute_rect(), 0);
 }

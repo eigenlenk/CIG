@@ -38,8 +38,8 @@ static void process_main_window(window_t *this, window_message_t *msg, bool wind
 
     /* Tip text and container */
     CIG(RECT_SIZED(330, 154), CIG_INSETS(cig_i_make(14, 20, 14, 20))) {
-      cig_fill_panel(get_panel(PANEL_LIGHT_YELLOW), 0);
-      cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
+      cig_fill_style(get_style(STYLE_LIGHT_YELLOW), 0);
+      cig_fill_style(get_style(STYLE_INNER_BEVEL_NO_FILL), 0);
 
       CIG_HSTACK(_, NO_INSETS, CIG_PARAMS({
         CIG_SPACING(14)
@@ -80,7 +80,7 @@ static void process_main_window(window_t *this, window_message_t *msg, bool wind
         CIG_ALIGNMENT_VERTICAL(CIG_LAYOUT_ALIGNS_BOTTOM)
       })) {
         CIG(_H(2)) { /* Separator */
-          cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
+          cig_fill_style(get_style(STYLE_INNER_BEVEL_NO_FILL), 0);
         }
       }
     }

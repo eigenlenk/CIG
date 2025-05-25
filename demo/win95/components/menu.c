@@ -54,7 +54,7 @@ void menubar(size_t n, win95_menu* menus[]) {
 
           if (*tracking_state > 0) {
             any_menu_active = true;
-            cig_fill_solid(get_color(COLOR_WINDOW_ACTIVE_TITLEBAR));
+            cig_fill_color(get_color(COLOR_WINDOW_ACTIVE_TITLEBAR));
           }
         }
 
@@ -199,7 +199,7 @@ void menu_draw(win95_menu *this, menu_presentation presentation) {
     cig_v *submenu_position = CIG_ALLOCATE(cig_v);
     float *submenu_delay = CIG_ALLOCATE(float);
 
-    cig_fill_panel(get_panel(PANEL_STANDARD_DIALOG), 0);
+    cig_fill_style(get_style(STYLE_STANDARD_DIALOG), 0);
 
     cig_enable_interaction();
 
@@ -210,7 +210,7 @@ void menu_draw(win95_menu *this, menu_presentation presentation) {
     
     if (this->style == START) {
       CIG(_W(size_info.stack_insets.left)) {
-        cig_fill_solid(get_color(COLOR_WINDOW_INACTIVE_TITLEBAR));
+        cig_fill_color(get_color(COLOR_WINDOW_INACTIVE_TITLEBAR));
         cig_draw_image(get_image(IMAGE_START_SIDEBAR), CIG_IMAGE_MODE_BOTTOM);
       }
     }
@@ -253,7 +253,7 @@ void menu_draw(win95_menu *this, menu_presentation presentation) {
             }
 
             if (draws_highlight) {
-              cig_fill_solid(get_color(COLOR_WINDOW_ACTIVE_TITLEBAR));
+              cig_fill_color(get_color(COLOR_WINDOW_ACTIVE_TITLEBAR));
             }
 
             if (item->type != DISABLED && item->type != CHILD_MENU) {
@@ -313,7 +313,7 @@ void menu_draw(win95_menu *this, menu_presentation presentation) {
         if (i < this->groups.count - 1) {
           CIG(_H(8)) {
             CIG(RECT_CENTERED_VERTICALLY(_H(2))) { /* Separator */
-              cig_fill_panel(get_panel(PANEL_INNER_BEVEL_NO_FILL), 0);
+              cig_fill_style(get_style(STYLE_INNER_BEVEL_NO_FILL), 0);
             }
           }
         }

@@ -31,9 +31,9 @@ bool window_begin(window_t *wnd, window_message_t *msg, bool *focused) {
   }
 
   if (wnd->flags & IS_MAXIMIZED) {
-    cig_fill_solid(get_color(COLOR_DIALOG_BACKGROUND));
+    cig_fill_color(get_color(COLOR_DIALOG_BACKGROUND));
   } else {
-    cig_fill_panel(get_panel(PANEL_STANDARD_DIALOG), 0);
+    cig_fill_style(get_style(STYLE_STANDARD_DIALOG), 0);
   }
 
   *focused = cig_enable_focus();
@@ -47,7 +47,7 @@ bool window_begin(window_t *wnd, window_message_t *msg, bool *focused) {
       CIG_ALIGNMENT_HORIZONTAL(CIG_LAYOUT_ALIGNS_RIGHT)
     })
   ) {
-    cig_fill_solid(get_color(*focused ? COLOR_WINDOW_ACTIVE_TITLEBAR : COLOR_WINDOW_INACTIVE_TITLEBAR));
+    cig_fill_color(get_color(*focused ? COLOR_WINDOW_ACTIVE_TITLEBAR : COLOR_WINDOW_INACTIVE_TITLEBAR));
     cig_enable_interaction();
 
     if (wnd->flags & IS_RESIZABLE) {

@@ -15,7 +15,7 @@ static struct font_store {
   int baseline_offset;
 } fonts[__FONT_COUNT];
 static Color colors[__COLOR_COUNT];
-static int panel_styles[__PANEL_COUNT];
+static int panel_styles[__STYLE_COUNT];
 static Texture2D images[__IMAGE_COUNT];
 static Shader blue_dither_shader;
 static bool dithering_shader_enabled = false;
@@ -44,7 +44,7 @@ static cig_font_info font_query(cig_font_ref);
 /* Gfx API */
 static void draw_image(cig_buffer_ref, cig_r, cig_r, cig_image_ref, cig_image_mode);
 static cig_v measure_image(cig_image_ref);
-static void render_panel(cig_panel_ref, cig_r, cig_panel_modifiers);
+static void draw_style(cig_style_ref, cig_r, cig_style_modifiers);
 static void draw_rectangle(cig_color_ref, cig_color_ref, cig_r, unsigned int);
 static void draw_line(cig_color_ref, cig_v, cig_v, float);
 
@@ -65,7 +65,7 @@ void* get_image(image_id_t id) {
   return &images[id];
 }
 
-void* get_panel(panel_id_t id) {
+void* get_style(style_id_t id) {
   return &panel_styles[id];
 }
 
@@ -81,9 +81,10 @@ CIG_INLINED void load_texture(Texture2D *dst, const char *path) {
 int main(int argc, const char *argv[]) {
   bool run_fullscreen = false;
   int i, ray_w, ray_h;
+  double scale;
 
   for (i = 1; i < argc; ++i) {
-    if (!strcmp("-fullscreen", argv[i])) {
+    if (!strcmp("-f", argv[i])) {
       run_fullscreen = true;
     }
   }
@@ -92,13 +93,15 @@ int main(int argc, const char *argv[]) {
     InitWindow(0, 0, "Windooze 95");
     ray_w = GetMonitorWidth(GetCurrentMonitor());
     ray_h = GetMonitorHeight(GetCurrentMonitor());
+    scale = 0.5;
   } else {
     ray_w = 1280;
     ray_h = 960;
+    scale = 0.5;
   }
 
-  int win95_w = ray_w / 2;
-  int win95_h = ray_h / 2;
+  int win95_w = ray_w * scale;
+  int win95_h = ray_h * scale;
 
   // SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
   SetConfigFlags(FLAG_WINDOW_ALWAYS_RUN);
@@ -188,7 +191,7 @@ int main(int argc, const char *argv[]) {
   colors[COLOR_WINDOW_ACTIVE_TITLEBAR] = (Color) { 0, 0, 127, 255 };
   colors[COLOR_WINDOW_INACTIVE_TITLEBAR] = (Color) { 127, 127, 127, 255 };
   
-  for (i = 0; i < __PANEL_COUNT; ++i) { panel_styles[i] = i; }
+  for (i = 0; i < __STYLE_COUNT; ++i) { panel_styles[i] = i; }
 
   cig_init_context(&ctx);
 
@@ -203,7 +206,7 @@ int main(int argc, const char *argv[]) {
 
   cig_assign_draw_image(&draw_image);
   cig_assign_measure_image(&measure_image);
-  cig_assign_draw_panel(&render_panel);
+  cig_assign_draw_style(&draw_style);
   cig_assign_draw_rectangle(&draw_rectangle);
   cig_assign_draw_line(&draw_line);
 
@@ -246,7 +249,7 @@ int main(int argc, const char *argv[]) {
     cig_begin_layout(&ctx, NULL, cig_r_make(0, 0, win95_w, win95_h), GetFrameTime());
     
     cig_set_input_state(
-      cig_v_make(GetMouseX()/2, GetMouseY()/2),
+      cig_v_make(GetMouseX()*scale, GetMouseY()*scale),
       IsMouseButtonDown(MOUSE_BUTTON_LEFT) ? CIG_INPUT_PRIMARY_ACTION : 0 +
       IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? CIG_INPUT_SECONDARY_ACTION : 0
     );
@@ -329,11 +332,11 @@ CIG_INLINED cig_font_info font_query(cig_font_ref font_ref) {
   };
 }
 
-CIG_INLINED void render_panel(cig_panel_ref panel, cig_r rect, cig_panel_modifiers modifiers) {
-  const int panel_style = *(int*)panel;
+CIG_INLINED void draw_style(cig_style_ref style_ref, cig_r rect, cig_style_modifiers modifiers) {
+  const int style = *(int*)style_ref;
   
-  switch (panel_style) {
-    case PANEL_STANDARD_DIALOG: {
+  switch (style) {
+    case STYLE_STANDARD_DIALOG: {
       DrawRectangleRec(RAYLIB_RECT(rect), colors[COLOR_DIALOG_BACKGROUND]);
 
       DrawLine(rect.x, rect.y + rect.h - 1, rect.x + rect.w, rect.y + rect.h - 1, (Color) { 0, 0, 0, 255 });
@@ -344,8 +347,8 @@ CIG_INLINED void render_panel(cig_panel_ref panel, cig_r rect, cig_panel_modifie
       DrawLine(rect.x + 2, rect.y + 1, rect.x + 2, rect.y + rect.h - 2, (Color) { 255, 255, 255, 255 });
     } break;
     
-    case PANEL_BUTTON: {
-      if (modifiers & CIG_PANEL_SELECTED) {
+    case STYLE_BUTTON: {
+      if (modifiers & CIG_STYLE_APPLY_SELECTION) {
         DrawTexturePro(images[IMAGE_GRAY_DITHER], (Rectangle) { 0, 0, rect.w-4, rect.h-5 }, (Rectangle) { rect.x+2, rect.y+3, rect.w-4, rect.h-5 }, (Vector2){ 0, 0 }, 0, WHITE);
         DrawLine(rect.x, rect.y, rect.x + rect.w - 1, rect.y, (Color){ 0, 0, 0, 255 });
         DrawLine(rect.x + 1, rect.y + 1, rect.x + 1, rect.y + rect.h - 1, (Color){ 0, 0, 0, 255 });
@@ -356,7 +359,7 @@ CIG_INLINED void render_panel(cig_panel_ref panel, cig_r rect, cig_panel_modifie
         DrawLine(rect.x + 2, rect.y + 1, rect.x + rect.w - 2, rect.y + 1, (Color){ 128, 128, 128, 255 });
         DrawLine(rect.x + 2, rect.y + 1, rect.x + 2, rect.y + rect.h - 2, (Color){ 128, 128, 128, 255 });
         DrawLine(rect.x + 2, rect.y + 2, rect.x + rect.w - 2, rect.y + 2, (Color){ 255, 255, 255, 255 });
-      } else if (modifiers & CIG_PANEL_PRESSED) {
+      } else if (modifiers & CIG_STYLE_APPLY_PRESS) {
         DrawRectangle(UNPACK_RECT(rect), colors[COLOR_DIALOG_BACKGROUND]);
         DrawLine(rect.x, rect.y, rect.x + rect.w - 1, rect.y, (Color){ 0, 0, 0, 255 });
         DrawLine(rect.x + 1, rect.y + 1, rect.x + 1, rect.y + rect.h - 1, (Color){ 0, 0, 0, 255 });
@@ -377,22 +380,22 @@ CIG_INLINED void render_panel(cig_panel_ref panel, cig_r rect, cig_panel_modifie
       }
     } break;
     
-    case PANEL_LIGHT_YELLOW: {
+    case STYLE_LIGHT_YELLOW: {
       DrawTexturePro(images[IMAGE_BRIGHT_YELLOW_PATTERN], (Rectangle) { 0, 0, rect.w, rect.h }, (Rectangle) { rect.x, rect.y, rect.w, rect.h }, (Vector2){ 0, 0 }, 0, WHITE);
     } break;
 
-    case PANEL_GRAY_DITHER: {
+    case STYLE_GRAY_DITHER: {
       DrawTexturePro(images[IMAGE_GRAY_DITHER], (Rectangle) { 0, 0, rect.w, rect.h }, (Rectangle) { rect.x, rect.y, rect.w, rect.h }, (Vector2){ 0, 0 }, 0, WHITE);
     } break;
     
-    case PANEL_INNER_BEVEL_NO_FILL: {
+    case STYLE_INNER_BEVEL_NO_FILL: {
       DrawLine(rect.x, rect.y, rect.x + rect.w - 1, rect.y, (Color) { 130, 130, 130, 255 });
       DrawLine(rect.x + 1, rect.y, rect.x + 1, rect.y + rect.h - 1, (Color) { 130, 130, 130, 255 });
       DrawLine(rect.x, rect.y + rect.h - 1, rect.x + rect.w , rect.y + rect.h - 1, (Color) { 255, 255, 255, 255 });
       DrawLine(rect.x + rect.w , rect.y, rect.x + rect.w , rect.y + rect.h, (Color) { 255, 255, 255, 255 });
     } break;
 
-  case PANEL_FILES_CONTENT_BEVEL:
+  case STYLE_FILES_CONTENT_BEVEL:
     {
       DrawLine(rect.x, rect.y, rect.x + rect.w - 1, rect.y, (Color) { 130, 130, 130, 255 });
       DrawLine(rect.x + 1, rect.y, rect.x + 1, rect.y + rect.h - 1, (Color) { 130, 130, 130, 255 });

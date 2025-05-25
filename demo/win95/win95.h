@@ -79,14 +79,14 @@ typedef enum {
 } image_id_t;
 
 typedef enum {
-  PANEL_STANDARD_DIALOG = 0,
-  PANEL_BUTTON,
-  PANEL_LIGHT_YELLOW,
-  PANEL_GRAY_DITHER,
-  PANEL_INNER_BEVEL_NO_FILL,
-  PANEL_FILES_CONTENT_BEVEL,
-  __PANEL_COUNT
-} panel_id_t;
+  STYLE_STANDARD_DIALOG = 0,
+  STYLE_BUTTON,
+  STYLE_LIGHT_YELLOW,
+  STYLE_GRAY_DITHER,
+  STYLE_INNER_BEVEL_NO_FILL,
+  STYLE_FILES_CONTENT_BEVEL,
+  __STYLE_COUNT
+} style_id_t;
 
 struct application_t;
 struct window_t;
@@ -143,7 +143,7 @@ typedef struct {
 void* get_font(font_id_t);
 void* get_color(color_id_t);
 void* get_image(image_id_t);
-void* get_panel(panel_id_t);
+void* get_style(style_id_t);
 /*  Applies a dark blue checkerboard dither to following image draw calls */
 void enable_blue_selection_dithering(bool);
 
