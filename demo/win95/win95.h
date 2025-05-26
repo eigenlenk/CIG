@@ -7,6 +7,9 @@
 #define WIN95_OPEN_WINDOWS_MAX 16
 #define WIN95_MAX_MENU_GROUPS 4
 #define WIN95_MAX_MENU_GROUP_ITEMS 16
+#define TASKBAR_H 28
+
+#define CENTER_APP_WINDOW(W, H) cig_r_make((cig_layout_rect().w-W)*0.5, (cig_layout_rect().h-H-TASKBAR_H)*0.5, W, H)
 
 typedef enum {
   FONT_REGULAR = 0,

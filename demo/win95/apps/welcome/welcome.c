@@ -108,7 +108,7 @@ application_t welcome_app() {
         .id = cig_hash("welcome"),
         .proc = &process_main_window,
         .data = data,
-        .rect = RECT_CENTERED(488, 280),
+        .rect = CENTER_APP_WINDOW(488, 280),
         .title = "Welcome",
         .icon = -1,
         .flags = IS_PRIMARY_WINDOW

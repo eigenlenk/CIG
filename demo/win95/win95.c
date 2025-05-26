@@ -6,8 +6,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#define TASKBAR_H 28
-
 static win95_t *this = NULL;
 static win95_menu start_menus[7];
 
