@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <ctype.h>
 
-#define LETTER_APPEARANCE_TIME 0.3f
+#define LETTER_APPEARANCE_TIME 0.35f
 
 enum CIG_PACKED {
   GAME_NEW,
@@ -106,10 +106,9 @@ static void check_guess(const char *guess, const char *word, letter_result *resu
 
   /* Find correct but misplaced letters */
   for (i = 0; i < 5; ++i) {
-    if (tmp[i] == ' ') { continue; }
     for (j = 0; j < 5; ++j) {
       if (tmp[j] == ' ') { continue; }
-      if (guess[i] == tmp[j] && result[i] != GUESS_CORRECT) {
+      if (guess[i] == word[j] && result[i] != GUESS_CORRECT) {
         result[i] = GUESS_MISPLACED;
         tmp[j] = ' ';
         break;
