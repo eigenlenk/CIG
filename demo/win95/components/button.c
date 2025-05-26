@@ -1,5 +1,7 @@
 #include "win95.h"
 
+cig_font_ref button_font = NULL;
+
 bool standard_button(cig_r rect, const char *title) {
   bool clicked = false;
   
@@ -12,7 +14,7 @@ bool standard_button(cig_r rect, const char *title) {
     
     if (cig_push_frame_insets(RECT_AUTO,  pressed ? cig_i_make(2, 3, 1, 2) : cig_i_make(1, 1, 2, 2))) {
       cig_draw_label((cig_text_properties) {
-        .font = get_font(FONT_REGULAR),
+        .font = button_font ? button_font : get_font(FONT_REGULAR),
         .max_lines = 1,
         .overflow = CIG_TEXT_SHOW_ELLIPSIS
       }, title);

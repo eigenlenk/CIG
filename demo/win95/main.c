@@ -1,8 +1,10 @@
 #include "raylib.h"
 #include "cig.h"
 #include "win95.h"
+
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #define UNPACK_RECT(R) R.x, R.y, R.w, R.h
 #define RAYLIB_RECT(R) (Rectangle ) { R.x, R.y, R.w, R.h } 
@@ -79,6 +81,8 @@ CIG_INLINED void load_texture(Texture2D *dst, const char *path) {
 }
 
 int main(int argc, const char *argv[]) {
+  srand(time(NULL));
+
   bool run_fullscreen = false;
   int i, ray_w, ray_h;
   double scale;
@@ -158,6 +162,7 @@ int main(int argc, const char *argv[]) {
   load_texture(&images[IMAGE_CALCULATOR_16], "res/images/calculator_16.png");
   load_texture(&images[IMAGE_NOTEPAD_16], "res/images/notepad_16.png");
   load_texture(&images[IMAGE_PAINT_16], "res/images/paint_16.png");
+  load_texture(&images[IMAGE_WORDWIZ_16], "res/images/wordwiz_16.png");
 
   blue_dither_shader = LoadShader(0, "res/shaders/blue_dither.fs");
 
@@ -186,6 +191,7 @@ int main(int argc, const char *argv[]) {
   colors[COLOR_BLACK] = (Color) { 0, 0, 0, 255 };
   colors[COLOR_WHITE] = (Color) { 255, 255, 255, 255 };
   colors[COLOR_YELLOW] = (Color) { 255, 255, 0, 255 };
+  colors[COLOR_GREEN] = (Color) { 0, 128, 0, 255 };
   colors[COLOR_DESKTOP] = (Color) { 0, 127, 127, 255 };
   colors[COLOR_DIALOG_BACKGROUND] = (Color) { 195, 195, 195, 255 };
   colors[COLOR_WINDOW_ACTIVE_TITLEBAR] = (Color) { 0, 0, 127, 255 };

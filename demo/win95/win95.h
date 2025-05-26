@@ -24,6 +24,7 @@ typedef enum {
   COLOR_BLACK = 0,
   COLOR_WHITE,
   COLOR_YELLOW,
+  COLOR_GREEN,
   COLOR_DESKTOP,
   COLOR_DIALOG_BACKGROUND,
   COLOR_WINDOW_ACTIVE_TITLEBAR,
@@ -78,6 +79,7 @@ typedef enum {
   IMAGE_CALCULATOR_16,
   IMAGE_NOTEPAD_16,
   IMAGE_PAINT_16,
+  IMAGE_WORDWIZ_16,
   __IMAGE_COUNT
 } image_id_t;
 
@@ -177,6 +179,7 @@ window_t * window_manager_find_primary_window(window_manager_t*, application_t*)
 /*  ┌───────────────────┐
     │ COMMON COMPONENTS │
     └───────────────────┘ */
+extern cig_font_ref button_font;
 bool standard_button(cig_r, const char *);
 bool icon_button(cig_r, image_id_t);
 bool checkbox(cig_r, bool *, const char *);

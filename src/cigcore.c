@@ -530,16 +530,22 @@ cig_r cig_build_rect(size_t n, cig_pin refs[]) {
 
   /* Calculate missing values based on what we have */
 
-  if (!(attrs & CIG_BIT(WIDTH))) {
-    if (attrs & CIG_BIT(HEIGHT) && attrs & CIG_BIT(ASPECT)) {
+  if (!(attrs & CIG_BIT(WIDTH)) && CIG_BIT(ASPECT)) {
+    if (attrs & CIG_BIT(HEIGHT)) {
       w = round(h * a);
+      attrs |= CIG_BIT(WIDTH);
+    } else if (attrs & CIG_BIT(TOP) && attrs & CIG_BIT(BOTTOM)) {
+      w = round((y1 - y0) * a);
       attrs |= CIG_BIT(WIDTH);
     }
   }
 
-  if (!(attrs & CIG_BIT(HEIGHT))) {
-    if (attrs & CIG_BIT(WIDTH) && attrs & CIG_BIT(ASPECT)) {
+  if (!(attrs & CIG_BIT(HEIGHT)) && CIG_BIT(ASPECT)) {
+    if (attrs & CIG_BIT(WIDTH)) {
       h = round(w / a);
+      attrs |= CIG_BIT(HEIGHT);
+    } else if (attrs & CIG_BIT(LEFT) && attrs & CIG_BIT(RIGHT)) {
+      h = round((x1 - x0) / a);
       attrs |= CIG_BIT(HEIGHT);
     }
   }
@@ -551,7 +557,7 @@ cig_r cig_build_rect(size_t n, cig_pin refs[]) {
       x0 = cx - (w * 0.5);
     } else if ((attrs & CIG_BIT(CENTER_X)) && (attrs & CIG_BIT(RIGHT))) {
       x0 = cx - (x1 - cx);
-    } else if (CIG_BIT(WIDTH)) {
+    } else if (attrs & CIG_BIT(WIDTH)) {
       x0 = 0;
     } else {
       assert(false);
@@ -579,7 +585,7 @@ cig_r cig_build_rect(size_t n, cig_pin refs[]) {
       y0 = cy - (h * 0.5);
     } else if ((attrs & CIG_BIT(CENTER_Y)) && (attrs & CIG_BIT(BOTTOM))) {
       y0 = cy - (y1 - cy);
-    } else if (CIG_BIT(HEIGHT)) {
+    } else if (attrs & CIG_BIT(HEIGHT)) {
       y0 = 0;
     } else {
       assert(false);

@@ -1,18 +1,20 @@
 #include "win95.h"
 #include "apps/explorer/explorer.h"
 #include "apps/welcome/welcome.h"
+#include "apps/games/wordwiz/wordwiz.h"
 #include "cigcorem.h"
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
 
 static win95_t *this = NULL;
-static win95_menu start_menus[7];
+static win95_menu start_menus[8];
 
 enum {
   START_MAIN,
   START_PROGRAMS,
   START_PROGRAMS_ACCESSORIES,
+  START_PROGRAMS_ACCESSORIES_GAMES,
   START_PROGRAMS_STARTUP,
   START_DOCUMENTS,
   START_SETTINGS,
@@ -23,6 +25,7 @@ static void process_apps();
 static void process_windows();
 static void close_application(application_t *);
 static void open_explorer_at(const char*);
+static void launch_app_by_id(menu_item *);
 
 static void start_button(cig_r rect) {
   CIG(rect, CIG_INSETS(cig_i_make(4, 2, 4, 2))) {
@@ -161,11 +164,23 @@ void start_win95(win95_t *win95) {
   win95_open_app(explorer_app());
   win95_open_app(welcome_app());
 
+  menu_setup(&start_menus[START_PROGRAMS_ACCESSORIES_GAMES], "Games", START_SUBMENU, NULL, 1, (menu_group[]) {
+    {
+      .items = {
+        .count = 1,
+        .list = {
+          { .title = "WordWiz", .icon = IMAGE_WORDWIZ_16, .data = "wordwiz", .handler = &launch_app_by_id }
+        }
+      }
+    }
+  });
+
   menu_setup(&start_menus[START_PROGRAMS_ACCESSORIES], "Accessories", START_SUBMENU, NULL, 1, (menu_group[]) {
     {
       .items = {
         .count = 3,
         .list = {
+          { .type = CHILD_MENU, .data = &start_menus[START_PROGRAMS_ACCESSORIES_GAMES], .icon = IMAGE_PROGRAM_FOLDER_16 },
           { .title = "Calculator", .icon = IMAGE_CALCULATOR_16 },
           { .title = "Notepad", .icon = IMAGE_NOTEPAD_16 },
           { .title = "Paint", .icon = IMAGE_PAINT_16 }
@@ -426,8 +441,8 @@ static void process_windows() {
       switch (msg) {
       case WINDOW_CLOSE:
         {
-          window_manager_close(&this->window_manager, wnd);
           window_end(wnd);
+          window_manager_close(&this->window_manager, wnd);
         } continue;
       case WINDOW_MAXIMIZE:
         {
@@ -472,5 +487,14 @@ static void open_explorer_at(const char *path) {
     window_manager_bring_to_front(&this->window_manager, wnd->id);
   } else {
     window_manager_create(&this->window_manager, explorer, explorer_create_window(explorer, path));
+  }
+}
+
+static void launch_app_by_id(menu_item *item) {
+  const char *app_id = (const char *)item->data;
+  printf("Launch application: %s\n", app_id);
+  
+  if (!strcmp(app_id, "wordwiz")) {
+    win95_open_app(wordwiz_app());
   }
 }

@@ -120,11 +120,12 @@ int main(int argc, char **argv)
       DEMO_FOLDER"win95/components/file_browser.c",
       DEMO_FOLDER"win95/apps/explorer/explorer.c",
       DEMO_FOLDER"win95/apps/welcome/welcome.c",
+      DEMO_FOLDER"win95/apps/games/wordwiz/wordwiz.c",
       
       DEPS_FOLDER"raylib-5.5_win32_mingw-w64/lib/libraylib.a",
       "-lopengl32",
       "-lgdi32",
-      "-lwinmm",
+      "-lwinmm"
     );
 
     if (!nob_cmd_run_sync_and_reset(&cmd)) return 1;
