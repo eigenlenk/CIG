@@ -57,6 +57,7 @@ CIG_INLINED void game_reset(game_data_st *game) {
     game->word_uppercase[i] = toupper(game->word[i]);
   } game->word_uppercase[5] = '\0';
   game->animation.active = false;
+  game->wrong_guess.visible = false;
   // printf("Current word: %s\n", game->word);
   memset(game->input, 0, 6);
   memset(game->keyboard, 0, 26);
