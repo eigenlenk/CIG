@@ -408,7 +408,7 @@ cig_input_action_type cig_clicked(
   } else {
     const int required_clicks = options & CIG_CLICK_DOUBLE ? 2 : 1;
     if (
-      (current->input_state.click_state == ENDED && current->input_state._click_count == required_clicks) ||
+      (current->input_state.click_state == ENDED && current->input_state._click_count >= required_clicks) ||
       (current->input_state.click_state == EXPIRED && !(options & CIG_CLICK_EXPIRE) && required_clicks == 1)
     ) {
       if (options & CIG_CLICK_STARTS_INSIDE && current->input_state._press_target_id != cig_current()->id) {
