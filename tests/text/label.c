@@ -25,7 +25,7 @@ CIG_INLINED void text_render(
 ) {
   int i = spans.count++;
   spans.rects[i] = rect;
-  sprintf(spans.strings[i], "%.*s", len, str);
+  sprintf(spans.strings[i], "%.*s", (uint32_t)len, str);
 }
 
 CIG_INLINED cig_v text_measure(

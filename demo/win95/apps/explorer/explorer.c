@@ -316,7 +316,7 @@ static void standard_menubar_builder(window_t *wnd, bool window_focused) {
 }
 
 static void default_menu_handler(win95_menu *menu, menu_group *group, menu_item *item) {
-  printf("Clicked: %s -> %s (Group ID: %lu)\n", menu->title, item->title, group->id);
+  printf("Clicked: %s -> %s (Group ID: %llx)\n", menu->title, item->title, (unsigned long long)group->id);
 }
 
 static void edit_menu_clipboard_operations(menu_group *group, menu_item *item) {

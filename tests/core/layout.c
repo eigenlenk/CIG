@@ -77,7 +77,7 @@ static bool assert_unique(const cig_id id, int line) {
   for (i = 0; i < ids.n; ++i) {
     if (ids.recorded[i] == id) {
       char failure_message[128];
-      sprintf(failure_message, "Line %d: ID %lu is not unique! [%d] = %lu", line, id, i, ids.recorded[i]);
+      sprintf(failure_message, "Line %d: ID %llx is not unique! [%d] = %llx", line, (unsigned long long)id, i, (unsigned long long)ids.recorded[i]);
       TEST_FAIL_MESSAGE(failure_message);
       break;
     }

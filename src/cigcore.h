@@ -64,7 +64,7 @@ DECLARE_RECT_T(int32_t, cig_r, cig_v, cig_i)
 
 /*  All layout element get a unique ID that tries to be unique across frames, but no promises.
     See `cig_next_id` how to definitely keep things consistent */
-typedef unsigned long cig_id;
+typedef uintptr_t cig_id;
 
 /*  Opaque pointer to a buffer/screen/texture/etc to be renderered into */
 typedef void* cig_buffer_ref;

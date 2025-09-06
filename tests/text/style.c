@@ -85,7 +85,7 @@ TEST(text_style, font_override) {
   
   cig_draw_label((cig_text_properties) {
     .flags = CIG_TEXT_FORMATTED
-  }, "Overriding font for <font=%x>IMPACT</font>", &fonts[1]);
+  }, "Overriding font for <font=%p>IMPACT</font>", &fonts[1]);
   
   TEST_ASSERT_EQUAL_PTR(&fonts[0], spans.info[0].font); /* Default font */
   TEST_ASSERT_EQUAL_PTR(&fonts[1], spans.info[1].font); /* Override */
@@ -96,7 +96,7 @@ TEST(text_style, color_override) {
   
   cig_draw_label((cig_text_properties) {
     .flags = CIG_TEXT_FORMATTED
-  }, "Roll out the <color=%x>red</color> carpet", &red_color);
+  }, "Roll out the <color=%p>red</color> carpet", &red_color);
   
   TEST_ASSERT_NULL(spans.info[0].color); /* "Roll out the " */
   TEST_ASSERT_EQUAL_PTR(&red_color, spans.info[1].color); /* "red" */
@@ -159,7 +159,7 @@ TEST(text_style, unclosed_tag) {
   
   cig_draw_label((cig_text_properties) {
     .flags = CIG_TEXT_FORMATTED
-  }, "Roll out the <color=%x>red carpet", &red_color);
+  }, "Roll out the <color=%p>red carpet", &red_color);
   
   TEST_ASSERT_NULL(spans.info[0].color);
   TEST_ASSERT_EQUAL_PTR(&red_color, spans.info[1].color); /* Override */

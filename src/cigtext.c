@@ -556,13 +556,13 @@ static void apply_tag(tag_parser_t *tag) {
     if (tag->terminating) {
       font_stack.count--;
     } else {
-      font_stack.fonts[font_stack.count++] = (cig_font_ref)strtol(tag->value, NULL, 16);
+      font_stack.fonts[font_stack.count++] = (cig_font_ref)strtoull(tag->value, NULL, 16);
     }
   } else if (!strcasecmp(tag->name, "color")) {
     if (tag->terminating) {
       color_stack.count--;
     } else {
-      color_stack.colors[color_stack.count++] = (cig_text_color_ref)strtol(tag->value, NULL, 16);
+      color_stack.colors[color_stack.count++] = (cig_text_color_ref)strtoull(tag->value, NULL, 16);
     }
   } else if (!strcasecmp(tag->name, "b")) {
     if (tag->terminating) {
