@@ -25,7 +25,7 @@ typedef enum {
   COLOR_WHITE,
   COLOR_YELLOW,
   COLOR_GREEN,
-  COLOR_DESKTOP,
+  COLOR_DESKTOP_BG,
   COLOR_DIALOG_BACKGROUND,
   COLOR_WINDOW_ACTIVE_TITLEBAR,
   COLOR_WINDOW_INACTIVE_TITLEBAR,
@@ -37,6 +37,7 @@ typedef enum {
   IMAGE_BRIGHT_YELLOW_PATTERN = 0,
   IMAGE_GRAY_DITHER,
   IMAGE_START_ICON,
+  IMAGE_LOGO_TEXT,
   IMAGE_START_SIDEBAR,
   IMAGE_MY_COMPUTER_16,
   IMAGE_MY_COMPUTER_32,
@@ -123,9 +124,10 @@ typedef struct window_t {
   int icon;
   enum {
     IS_PRIMARY_WINDOW = CIG_BIT(0),
-    IS_RESIZABLE = CIG_BIT(1),
-    IS_MAXIMIZED = CIG_BIT(2),
-    IS_MINIMIZED = CIG_BIT(3)
+    IS_UNIQUE_WINDOW = CIG_BIT(1), /* One instance of this window ID per app */
+    IS_RESIZABLE = CIG_BIT(2),
+    IS_MAXIMIZED = CIG_BIT(3),
+    IS_MINIMIZED = CIG_BIT(4)
   } flags;
 } window_t;
 
@@ -163,6 +165,9 @@ void start_win95(win95_t *);
 void run_win95(win95_t *);
 void win95_open_app(application_t);
 application_t *win95_find_open_app(const char *);
+
+void
+win95_show_about_window();
 
 /*  ┌────────────────┐
     │ WINDOW MANAGER │
@@ -205,6 +210,7 @@ typedef struct menu_item {
   } type;
   void *data;
   void (*handler)(struct menu_item *);
+  void (*_handler)();
 } menu_item;
 
 typedef struct menu_group {

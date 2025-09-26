@@ -7,6 +7,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
+
 static win95_t *this = NULL;
 static win95_menu start_menus[8];
 
@@ -26,6 +32,10 @@ static void process_windows();
 static void close_application(application_t *);
 static void open_explorer_at(const char*);
 static void launch_app_by_id(menu_item *);
+static void setup_menus();
+
+static void
+about_wnd_proc(window_t *this, window_message_t *msg, bool window_focused);
 
 static void start_button(cig_r rect) {
   CIG(rect, CIG_INSETS(cig_i_make(4, 2, 4, 2))) {
@@ -95,7 +105,7 @@ static void do_desktop_icons() {
 
 static void do_desktop() {
   if (cig_push_frame(cig_r_make(0, 0, CIG_W, CIG_H - TASKBAR_H))) {
-    cig_fill_color(get_color(COLOR_DESKTOP));
+    cig_fill_color(get_color(COLOR_DESKTOP_BG));
     cig_enable_focus();
     do_desktop_icons();
     cig_pop_frame();
@@ -149,7 +159,7 @@ static void do_taskbar() {
     ) {
       for (i = 0; i < WIN95_OPEN_WINDOWS_MAX; ++i) {
         window_t *wnd = &this->window_manager.windows[i];
-        if (wnd->id && taskbar_button(RECT_AUTO, wnd->title, wnd->icon, wnd->id == cig_focused_id())) {
+        if (wnd->id && wnd->flags & IS_PRIMARY_WINDOW && taskbar_button(RECT_AUTO, wnd->title, wnd->icon, wnd->id == cig_focused_id())) {
           window_manager_bring_to_front(&this->window_manager, wnd->id);
           cig_set_focused_id(wnd->id);
         }
@@ -164,114 +174,9 @@ void start_win95(win95_t *win95) {
   win95_open_app(explorer_app());
   win95_open_app(welcome_app());
 
-  menu_setup(&start_menus[START_PROGRAMS_ACCESSORIES_GAMES], "Games", START_SUBMENU, NULL, 1, (menu_group[]) {
-    {
-      .items = {
-        .count = 1,
-        .list = {
-          { .title = "WordWiz", .icon = IMAGE_WORDWIZ_16, .data = "wordwiz", .handler = &launch_app_by_id }
-        }
-      }
-    }
-  });
+  win95_show_about_window();
 
-  menu_setup(&start_menus[START_PROGRAMS_ACCESSORIES], "Accessories", START_SUBMENU, NULL, 1, (menu_group[]) {
-    {
-      .items = {
-        .count = 3,
-        .list = {
-          { .type = CHILD_MENU, .data = &start_menus[START_PROGRAMS_ACCESSORIES_GAMES], .icon = IMAGE_PROGRAM_FOLDER_16 },
-          { .title = "Calculator", .icon = IMAGE_CALCULATOR_16 },
-          { .title = "Notepad", .icon = IMAGE_NOTEPAD_16 },
-          { .title = "Paint", .icon = IMAGE_PAINT_16 }
-        }
-      }
-    }
-  });
-
-  menu_setup(&start_menus[START_PROGRAMS_STARTUP], "StartUp", START_SUBMENU, NULL, 1, (menu_group[]) {
-    {
-      .items = {
-        .count = 1,
-        .list = {
-          { .title = "(Empty)", .type = DISABLED }
-        }
-      }
-    }
-  });
-
-  menu_setup(&start_menus[START_PROGRAMS], "Programs", START_SUBMENU, NULL, 1, (menu_group[]) {
-    {
-      .items = {
-        .count = 6,
-        .list = {
-          { .type = CHILD_MENU, .data = &start_menus[START_PROGRAMS_ACCESSORIES], .icon = IMAGE_PROGRAM_FOLDER_16 },
-          { .type = CHILD_MENU, .data = &start_menus[START_PROGRAMS_STARTUP], .icon = IMAGE_PROGRAM_FOLDER_16 },
-          { .title = "Microsoft Exchange", .icon = IMAGE_MAIL_16 },
-          { .title = "MS-DOS Prompt", .icon = IMAGE_MSDOS_16 },
-          { .title = "The Microsoft Network", .icon = IMAGE_MSN_16 },
-          { .title = "Windows Explorer", .icon = IMAGE_EXPLORER_16 }
-        }
-      }
-    }
-  });
-
-  menu_setup(&start_menus[START_DOCUMENTS], "Documents", START_SUBMENU, NULL, 1, (menu_group[]) {
-    {
-      .items = {
-        .count = 1,
-        .list = {
-          { .title = "(Empty)", .type = DISABLED }
-        }
-      }
-    }
-  });
-
-  menu_setup(&start_menus[START_SETTINGS], "Settings", START_SUBMENU, NULL, 1, (menu_group[]) {
-    {
-      .items = {
-        .count = 1,
-        .list = {
-          { .title = "(Empty)", .type = DISABLED }
-        }
-      }
-    }
-  });
-
-  menu_setup(&start_menus[START_FIND], "Find", START_SUBMENU, NULL, 1, (menu_group[]) {
-    {
-      .items = {
-        .count = 1,
-        .list = {
-          { .title = "(Empty)", .type = DISABLED }
-        }
-      }
-    }
-  });
-
-  menu_setup(&start_menus[START_MAIN], "Start", START, NULL, 2, (menu_group[]) {
-    {
-      .items = {
-        .count = 6,
-        .list = {
-          { .type = CHILD_MENU, .data = &start_menus[START_PROGRAMS], .icon = IMAGE_PROGRAM_FOLDER_24 },
-          { .type = CHILD_MENU, .data = &start_menus[START_DOCUMENTS], .icon = IMAGE_DOCUMENTS_24 },
-          { .type = CHILD_MENU, .data = &start_menus[START_SETTINGS], .icon = IMAGE_SETTINGS_24 },
-          { .type = CHILD_MENU, .data = &start_menus[START_FIND], .icon = IMAGE_FIND_24 },
-          { .title = "Help", .icon = IMAGE_HELP_24 },
-          { .title = "Run...", .icon = IMAGE_RUN_24 },
-        }
-      }
-    },
-    {
-      .items = {
-        .count = 1,
-        .list = {
-          { .title = "Shut Down...", .icon = IMAGE_SHUT_DOWN_24 },
-        }
-      }
-    },
-  });
+  setup_menus();
 }
 
 void run_win95(win95_t *win95) {
@@ -303,6 +208,19 @@ application_t *win95_find_open_app(const char *id) {
   return NULL;
 }
 
+void
+win95_show_about_window()
+{
+  window_manager_create(&this->window_manager, NULL, (window_t) {
+    .id = cig_hash("aboutwin"),
+    .proc = &about_wnd_proc,
+    .rect = CENTER_APP_WINDOW(360, 280),
+    .title = "About Windooze",
+    .icon = -1,
+    .flags = IS_UNIQUE_WINDOW
+  });
+}
+
 /*  ┌────────────────┐
     │ WINDOW MANAGER │
     └────────────────┘ */
@@ -310,15 +228,27 @@ application_t *win95_find_open_app(const char *id) {
 window_t* window_manager_create(window_manager_t *manager, application_t *app, window_t wnd) {
   register size_t i;
   if (!manager) { manager = &this->window_manager; }
+  if (!wnd.id) { wnd.id = rand(); }
+
+  if (wnd.flags & IS_UNIQUE_WINDOW) {
+    window_t *existing_wnd = window_manager_find_id(manager, wnd.id);
+
+    if (existing_wnd) {
+      window_manager_bring_to_front(manager, existing_wnd->id);
+      return existing_wnd;
+    }
+  }
+
   for (i = 0; i < WIN95_OPEN_WINDOWS_MAX; ++i) {
     if (manager->windows[i].id) { continue; }
     wnd.owner = app;
-    if (!wnd.id) { wnd.id = rand(); }
+
     manager->windows[i] = wnd;
     manager->order[manager->count++] = &manager->windows[i];
     cig_set_focused_id(wnd.id);
     return manager->order[manager->count-1];
   }
+
   return NULL;
 }
 
@@ -388,7 +318,7 @@ window_t* window_manager_find_primary_window(window_manager_t *manager, applicat
   return NULL;
 }
 
-window_t * window_manager_find_id(window_manager_t *manager, cig_id id) {
+window_t* window_manager_find_id(window_manager_t *manager, cig_id id) {
   register size_t i;
   if (!manager) { manager = &this->window_manager; }
   for (i = 0; i < manager->count; ++i) {
@@ -431,13 +361,15 @@ static void process_windows() {
   for (i = 0; i < this->window_manager.count;) {
     window_t *wnd = this->window_manager.order[i];
 
-    if (wnd->proc && !(wnd->flags & IS_MINIMIZED)) {
+    if (!(wnd->flags & IS_MINIMIZED)) {
       msg = 0;
       focused = false;
       if (!window_begin(wnd, &msg, &focused)) {
         continue;
       }
-      wnd->proc(wnd, &msg, focused);
+      if (wnd->proc) {
+        wnd->proc(wnd, &msg, focused);
+      }
       switch (msg) {
       case WINDOW_CLOSE:
         {
@@ -496,5 +428,243 @@ static void launch_app_by_id(menu_item *item) {
   
   if (!strcmp(app_id, "wordwiz")) {
     win95_open_app(wordwiz_app());
+  }
+}
+
+/* Set up the main START menu and its children */
+static void
+setup_menus()
+{
+  /* The one and only. Best to ever do it. */
+  menu_setup(&start_menus[START_MAIN], "Start", START, NULL, 2, (menu_group[]) {
+    {
+      .items = {
+        .count = 6,
+        .list = {
+          { .type = CHILD_MENU, .data = &start_menus[START_PROGRAMS], .icon = IMAGE_PROGRAM_FOLDER_24 },
+          { .type = CHILD_MENU, .data = &start_menus[START_DOCUMENTS], .icon = IMAGE_DOCUMENTS_24 },
+          { .type = CHILD_MENU, .data = &start_menus[START_SETTINGS], .icon = IMAGE_SETTINGS_24 },
+          { .type = CHILD_MENU, .data = &start_menus[START_FIND], .icon = IMAGE_FIND_24 },
+          { .title = "Help", .icon = IMAGE_HELP_24 },
+          { .title = "Run...", .icon = IMAGE_RUN_24 },
+        }
+      }
+    },
+    {
+      .items = {
+        .count = 1,
+        .list = {
+          { .title = "Shut Down...", .icon = IMAGE_SHUT_DOWN_24 },
+        }
+      }
+    },
+  });
+
+  /* Start -> Programs */
+  menu_setup(&start_menus[START_PROGRAMS], "Programs", START_SUBMENU, NULL, 1, (menu_group[]) {
+    {
+      .items = {
+        .count = 6,
+        .list = {
+          { .type = CHILD_MENU, .data = &start_menus[START_PROGRAMS_ACCESSORIES], .icon = IMAGE_PROGRAM_FOLDER_16 },
+          { .type = CHILD_MENU, .data = &start_menus[START_PROGRAMS_STARTUP], .icon = IMAGE_PROGRAM_FOLDER_16 },
+          { .title = "Microsoft Exchange", .icon = IMAGE_MAIL_16 },
+          { .title = "MS-DOS Prompt", .icon = IMAGE_MSDOS_16 },
+          { .title = "The Microsoft Network", .icon = IMAGE_MSN_16 },
+          { .title = "Windows Explorer", .icon = IMAGE_EXPLORER_16 }
+        }
+      }
+    }
+  });
+
+  /* Start -> Documents */
+  menu_setup(&start_menus[START_DOCUMENTS], "Documents", START_SUBMENU, NULL, 1, (menu_group[]) {
+    {
+      .items = {
+        .count = 1,
+        .list = {
+          { .title = "(Empty)", .type = DISABLED }
+        }
+      }
+    }
+  });
+
+  /* Start -> Settings */
+  menu_setup(&start_menus[START_SETTINGS], "Settings", START_SUBMENU, NULL, 1, (menu_group[]) {
+    {
+      .items = {
+        .count = 1,
+        .list = {
+          { .title = "(Empty)", .type = DISABLED }
+        }
+      }
+    }
+  });
+
+  /* Start -> Find */
+  menu_setup(&start_menus[START_FIND], "Find", START_SUBMENU, NULL, 1, (menu_group[]) {
+    {
+      .items = {
+        .count = 1,
+        .list = {
+          { .title = "(Empty)", .type = DISABLED }
+        }
+      }
+    }
+  });
+
+  /* Start -> Programs -> Games */
+  menu_setup(&start_menus[START_PROGRAMS_ACCESSORIES_GAMES], "Games", START_SUBMENU, NULL, 1, (menu_group[]) {
+    {
+      .items = {
+        .count = 1,
+        .list = {
+          { .title = "WordWiz", .icon = IMAGE_WORDWIZ_16, .data = "wordwiz", .handler = &launch_app_by_id }
+        }
+      }
+    }
+  });
+
+  /* Start -> Programs -> Accessories */
+  menu_setup(&start_menus[START_PROGRAMS_ACCESSORIES], "Accessories", START_SUBMENU, NULL, 1, (menu_group[]) {
+    {
+      .items = {
+        .count = 3,
+        .list = {
+          { .type = CHILD_MENU, .data = &start_menus[START_PROGRAMS_ACCESSORIES_GAMES], .icon = IMAGE_PROGRAM_FOLDER_16 },
+          { .title = "Calculator", .icon = IMAGE_CALCULATOR_16 },
+          { .title = "Notepad", .icon = IMAGE_NOTEPAD_16 },
+          { .title = "Paint", .icon = IMAGE_PAINT_16 }
+        }
+      }
+    }
+  });
+
+  /* Start -> Programs -> StartUp */
+  menu_setup(&start_menus[START_PROGRAMS_STARTUP], "StartUp", START_SUBMENU, NULL, 1, (menu_group[]) {
+    {
+      .items = {
+        .count = 1,
+        .list = {
+          { .title = "(Empty)", .type = DISABLED }
+        }
+      }
+    }
+  });
+}
+
+static unsigned long long
+total_system_memory()
+{
+  static unsigned long long available_memory = 0;
+  if (!available_memory) {
+#ifdef _WIN32
+    MEMORYSTATUSEX status;
+    status.dwLength = sizeof(status);
+    GlobalMemoryStatusEx(&status);
+    available_memory = status.ullTotalPhys;
+#else
+    long pages = sysconf(_SC_PHYS_PAGES);
+    long page_size = sysconf(_SC_PAGE_SIZE);
+    available_memory = pages * page_size;
+#endif
+  }
+  return available_memory;
+}
+
+/* About Windooze 95 window */
+static void
+about_wnd_proc(window_t *this, window_message_t *msg, bool window_focused)
+{
+  CIG(_, CIG_INSETS(cig_i_uniform(12))) {
+    CIG_HSTACK(_, CIG_PARAMS({
+      CIG_SPACING(3)
+    })) {
+      CIG(RECT_SIZED(64, 64)) {
+        cig_draw_image(get_image(IMAGE_LOGO_TEXT), CIG_IMAGE_MODE_CENTER);
+      }
+      CIG(_, CIG_INSETS(cig_i_make(0, 9, 0, 0))) {
+        CIG_VSTACK(
+          _,
+          CIG_PARAMS({
+            CIG_SPACING(5),
+            CIG_ALIGNMENT_VERTICAL(CIG_LAYOUT_ALIGNS_BOTTOM)
+          })
+        ) {
+          CIG(_H(23), CIG_PARAMS({
+            CIG_ALIGNMENT_HORIZONTAL(CIG_LAYOUT_ALIGNS_RIGHT)
+          })) {
+            if (standard_button(_W(74), "OK")) {
+              *msg = WINDOW_CLOSE;
+            }
+          }
+
+          CIG_VSTACK(_, CIG_PARAMS({
+            CIG_SPACING(5),
+          })) {
+            CIG(_H(11)) {
+              cig_draw_label((cig_text_properties) { .alignment.horizontal = CIG_TEXT_ALIGN_LEFT }, "Macrohard Windooze");
+            }
+            CIG(_H(11)) {
+              cig_draw_label((cig_text_properties) { .alignment.horizontal = CIG_TEXT_ALIGN_LEFT }, "Windooze 95");
+            }
+            CIG(_H(11)) {
+              cig_draw_label((cig_text_properties) { .alignment.horizontal = CIG_TEXT_ALIGN_LEFT }, "Copyright © 2025 github.com/eigenlenk");
+            }
+
+            cig_spacer(28);
+
+            CIG(_H(11)) {
+              cig_draw_label((cig_text_properties) { .alignment.horizontal = CIG_TEXT_ALIGN_LEFT }, "This product is licensed to:");
+            }
+            CIG(_H(11)) {
+              cig_draw_label((cig_text_properties) { .alignment.horizontal = CIG_TEXT_ALIGN_LEFT }, "Bill Gates");
+            }
+            CIG(_H(11)) {
+              cig_draw_label((cig_text_properties) { .alignment.horizontal = CIG_TEXT_ALIGN_LEFT }, "Blue Screen Technologies");
+            }
+
+            cig_spacer(4);
+            CIG(_H(2)) { /* Separator */
+              cig_fill_style(get_style(STYLE_INNER_BEVEL_NO_FILL), 0);
+            }
+            cig_spacer(2);
+
+            CIG(_H(11)) {
+              cig_draw_label((cig_text_properties) {
+                .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
+              }, "Physical Memory Available to Windooze:");
+
+              cig_draw_label(
+                (cig_text_properties) {
+                  .alignment.horizontal = CIG_TEXT_ALIGN_RIGHT,
+                  .flags = CIG_TEXT_FORMATTED
+                },
+                "%lld MB",
+                total_system_memory() / (1024 * 1024)
+              );
+            }
+
+            CIG(_H(11)) {
+              time_t t = time(NULL);
+              struct tm *ct = localtime(&t);
+
+              cig_draw_label((cig_text_properties) {
+                .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
+              }, "System Resources:");
+
+              cig_draw_label(
+                (cig_text_properties) {
+                  .alignment.horizontal = CIG_TEXT_ALIGN_RIGHT,
+                  .flags = CIG_TEXT_FORMATTED
+                },
+                "%d%% Free",
+                100 - ct->tm_sec
+              );
+            }
+          }
+        }
+      }
+    }
   }
 }

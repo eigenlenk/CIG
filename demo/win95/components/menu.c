@@ -262,7 +262,9 @@ void menu_draw(win95_menu *this, menu_presentation presentation) {
                   bool *bool_value = (bool *)item->data;
                   if (bool_value) { *bool_value = !*bool_value; }
                 }
-                if (item->handler) {
+                if (item->_handler) {
+                  item->_handler();
+                } else if (item->handler) {
                   item->handler(item);
                 } else if (group->handler) {
                   group->handler(group, item);

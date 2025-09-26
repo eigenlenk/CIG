@@ -120,6 +120,7 @@ int main(int argc, const char *argv[]) {
   load_texture(&images[IMAGE_BRIGHT_YELLOW_PATTERN], "res/images/light_yellow_pattern.png");
   load_texture(&images[IMAGE_GRAY_DITHER], "res/images/gray_dither.png");
   load_texture(&images[IMAGE_START_ICON], "res/images/start.png");
+  load_texture(&images[IMAGE_LOGO_TEXT], "res/images/logotext.png");
   load_texture(&images[IMAGE_START_SIDEBAR], "res/images/start_sidebar.png");
   load_texture(&images[IMAGE_MY_COMPUTER_16], "res/images/my_computer.png");
   load_texture(&images[IMAGE_MY_COMPUTER_32], "res/images/my_computer_32.png");
@@ -192,7 +193,7 @@ int main(int argc, const char *argv[]) {
   colors[COLOR_WHITE] = (Color) { 255, 255, 255, 255 };
   colors[COLOR_YELLOW] = (Color) { 255, 255, 0, 255 };
   colors[COLOR_GREEN] = (Color) { 0, 128, 0, 255 };
-  colors[COLOR_DESKTOP] = (Color) { 0, 127, 127, 255 };
+  colors[COLOR_DESKTOP_BG] = (Color) { 0, 127, 127, 255 };
   colors[COLOR_DIALOG_BACKGROUND] = (Color) { 195, 195, 195, 255 };
   colors[COLOR_WINDOW_ACTIVE_TITLEBAR] = (Color) { 0, 0, 127, 255 };
   colors[COLOR_WINDOW_INACTIVE_TITLEBAR] = (Color) { 127, 127, 127, 255 };

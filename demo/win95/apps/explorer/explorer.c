@@ -301,7 +301,7 @@ static void standard_menubar_builder(window_t *wnd, bool window_focused) {
       .items = {
         .count = 1,
         .list = {
-          { .title = "About Windooze 95" }
+          { .title = "About Windooze 95", ._handler = &win95_show_about_window }
         }
       }
     },
