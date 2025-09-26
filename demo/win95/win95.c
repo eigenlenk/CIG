@@ -182,8 +182,6 @@ void start_win95(win95_t *win95) {
   win95_open_app(explorer_app());
   win95_open_app(welcome_app());
 
-  win95_show_about_window();
-
   setup_menus();
 }
 
