@@ -149,17 +149,25 @@ static void do_taskbar() {
     }
 
     /* Center: Fill remaining middle space with task buttons */
+    int taskbar_windows = 0;
+    for (i = 0; i < WIN95_OPEN_WINDOWS_MAX; ++i) {
+      window_t *wnd = &this->window_manager.windows[i];
+      if (wnd->id && wnd->owner) {
+        taskbar_windows++;
+      }
+    }
+
     CIG_HSTACK(
       cig_r_make(start_button_width+spacing, 0, CIG_W_INSET-start_button_width-clock_w-spacing*2, CIG_AUTO()),
       CIG_PARAMS({
         CIG_SPACING(spacing),
-        CIG_COLUMNS(this->window_manager.count),
+        CIG_COLUMNS(taskbar_windows),
         CIG_MAX_WIDTH(150)
       })
     ) {
       for (i = 0; i < WIN95_OPEN_WINDOWS_MAX; ++i) {
         window_t *wnd = &this->window_manager.windows[i];
-        if (wnd->id && wnd->flags & IS_PRIMARY_WINDOW && taskbar_button(RECT_AUTO, wnd->title, wnd->icon, wnd->id == cig_focused_id())) {
+        if (wnd->id && wnd->owner && taskbar_button(RECT_AUTO, wnd->title, wnd->icon, wnd->id == cig_focused_id())) {
           window_manager_bring_to_front(&this->window_manager, wnd->id);
           cig_set_focused_id(wnd->id);
         }
