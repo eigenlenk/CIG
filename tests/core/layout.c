@@ -30,6 +30,7 @@ TEST(core_layout, basic_checks) {
   TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 640, 480), cig_current()->rect);
   TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 640, 480), cig_current()->clipped_rect);
   TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 640, 480), cig_current()->absolute_rect);
+  TEST_ASSERT_FALSE(cig_is_vertical_layout());
   TEST_ASSERT(cig_current()->insets.left == 0 && cig_current()->insets.top == 0 &&
     cig_current()->insets.right == 0 && cig_current()->insets.bottom == 0);
 }
@@ -311,6 +312,8 @@ TEST(core_layout, vstack_layout) {
   })) {
     TEST_FAIL_MESSAGE("Unable to add layout builder frame");
   }
+
+  TEST_ASSERT_TRUE(cig_is_vertical_layout());
   
   cig_push_frame(RECT_AUTO_H(50)); /* RECT_AUTO_H: Width is calculated, but height is fixed at 50pt */
   TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 640, 50), cig_current()->rect);
@@ -336,6 +339,8 @@ TEST(core_layout, hstack_layout) {
     TEST_FAIL_MESSAGE("Unable to add layout builder frame");
   }
   
+  TEST_ASSERT_FALSE(cig_is_vertical_layout());
+
   cig_push_frame(RECT_AUTO_W(200)); /* RECT_AUTO_W: Width is calculated, but height is fixed at 50pt */
   TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 200, 480-2*10), cig_current()->rect);
   cig_pop_frame();
@@ -458,14 +463,15 @@ TEST(core_layout, grid_with_fixed_rows_and_columns) {
      how large each child needs to be by default (we *can* override).
      Here it's a 5x5 grid, meaning on our 640x480 screen,
      each cell would be 128x96 */
-  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_params) {
-    .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL,
+  if (!cig_push_grid(RECT_AUTO, cig_i_zero(), (cig_params) {
     .spacing = 0,
     .columns = 5,
     .rows = 5
   })) {
     TEST_FAIL_MESSAGE("Unable to add layout builder frame");
   }
+
+  TEST_ASSERT_FALSE(cig_is_vertical_layout());
   
   int i;
   for (i = 0; i < 25; ++i) {
@@ -499,8 +505,7 @@ TEST(core_layout, grid_with_fixed_cell_size) {
      │└────────┘└────────┘└────────┘...│
      │.................................│
      └─────────────────────────────────┘ */
-  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_params) {
-    .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL,
+  if (!cig_push_grid(RECT_AUTO, cig_i_zero(), (cig_params) {
     .width = 200,
     .height = 200
   })) {
@@ -532,8 +537,7 @@ TEST(core_layout, grid_with_varying_cell_size) {
      Then, again depending on the remaining space, cell will be inserted into the
      current row or pushed to the next. In addition, you can still specify the number
      of rows and columns, and these will now be used to limit number of cells on each axis */
-  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_params) {
-    .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL,
+  if (!cig_push_grid(RECT_AUTO, cig_i_zero(), (cig_params) {
     .limit.horizontal = 3
   })) {
     TEST_FAIL_MESSAGE("Unable to add layout builder frame");
@@ -599,13 +603,14 @@ TEST(core_layout, grid_with_down_direction) {
   /*  Grids support horizontal (default) and vertical layout direction. In vertical mode,
       instead of filling and adding rows, columns are filled and added instead. Otherwise
       they behave the same */
-  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_params) {
-    .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL,
+  if (!cig_push_grid(RECT_AUTO, cig_i_zero(), (cig_params) {
     .direction = CIG_LAYOUT_DIRECTION_VERTICAL
   })) {
     TEST_FAIL_MESSAGE("Unable to add layout builder frame");
   }
   
+  TEST_ASSERT_TRUE(cig_is_vertical_layout());
+
   /* Add 3 elements with increasing height and width. They should fit in the first column */
   cig_push_frame(RECT_SIZED(100, 120)); /* (1) */
   TEST_ASSERT_EQUAL_INT(0,    cig_current()->rect.y);
@@ -653,8 +658,7 @@ TEST(core_layout, grid_with_down_direction) {
 
 TEST(core_layout, grid_with_flipped_alignment_and_direction) {
   /*  Grid that aligns to bottom-right corner starts adding elmenents into columns */
-  if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_params) {
-    .axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL,
+  if (!cig_push_grid(RECT_AUTO, cig_i_zero(), (cig_params) {
     .direction = CIG_LAYOUT_DIRECTION_VERTICAL,
     .alignment.horizontal = CIG_LAYOUT_ALIGNS_RIGHT,
     .alignment.vertical = CIG_LAYOUT_ALIGNS_BOTTOM,

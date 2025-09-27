@@ -83,6 +83,7 @@ typedef struct {
 
   /*  Direction in which the layout flows. Used by default grid builder */
   enum CIG_PACKED {
+    CIG_LAYOUT_DIRECTION_DEFAULT = 0,
     CIG_LAYOUT_DIRECTION_HORIZONTAL,
     CIG_LAYOUT_DIRECTION_VERTICAL
   } direction;
@@ -543,6 +544,9 @@ unsigned int cig_depth();
 
 /*  Generates an ID from a string */
 cig_id cig_hash(const char *str);
+
+/*  Determines if current layout direction is vertical or not. False when undeterminable */
+bool cig_is_vertical_layout();
 
 /*  Pushes and pops an empty frame to trigger a layout function to allocate space.
     Useful when you have a stack or grid and want to trigger a new line or column */

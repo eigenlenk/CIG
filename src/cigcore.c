@@ -635,13 +635,36 @@ cig_id cig_hash(const char *str) {
   return hash;
 }
 
+bool
+cig_is_vertical_layout()
+{
+  const cig_frame *frame = cig_current();
+
+  if (frame->_layout_function) {
+    const bool vertical_axis = frame->_layout_params.axis & CIG_LAYOUT_AXIS_VERTICAL;
+    const bool horizontal_axis = frame->_layout_params.axis & CIG_LAYOUT_AXIS_HORIZONTAL;
+
+    if (vertical_axis && horizontal_axis) {
+      if (frame->_layout_params.direction == CIG_LAYOUT_DIRECTION_VERTICAL) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return vertical_axis;
+    }
+  }
+
+  return false;
+}
+
 void cig_empty() {
   cig_push_frame(RECT_AUTO);
   cig_pop_frame();
 }
 
 void cig_spacer(const int size) {
-  cig_push_frame(RECT_AUTO_H(size));
+  cig_push_frame(cig_is_vertical_layout() ? RECT_AUTO_H(size) : RECT_AUTO_W(size));
   cig_pop_frame();
 }
 
@@ -777,6 +800,9 @@ cig_frame* cig_push_vstack(cig_r rect, cig_i insets , cig_params params) {
 
 cig_frame* cig_push_grid(cig_r rect, cig_i insets, cig_params params) {
   params.axis = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL;
+  if (params.direction == CIG_LAYOUT_DIRECTION_DEFAULT) {
+    params.direction = CIG_LAYOUT_DIRECTION_HORIZONTAL;
+  }
   return cig_push_layout_function(&cig_default_layout_builder, rect, insets, params);
 }
 
