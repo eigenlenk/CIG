@@ -159,10 +159,12 @@ typedef struct {
   application_t applications[WIN95_APPS_MAX];
   window_manager_t window_manager;
   size_t running_apps;
+  bool running;
 } win95_t;
 
 void start_win95(win95_t *);
-void run_win95(win95_t *);
+void shutdown_win95();
+bool run_win95();
 void win95_open_app(application_t);
 application_t *win95_find_open_app(const char *);
 

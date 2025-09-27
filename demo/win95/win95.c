@@ -178,6 +178,7 @@ static void do_taskbar() {
 
 void start_win95(win95_t *win95) {
   this = win95;
+  this->running = true;
 
   win95_open_app(explorer_app());
   win95_open_app(welcome_app());
@@ -185,13 +186,19 @@ void start_win95(win95_t *win95) {
   setup_menus();
 }
 
-void run_win95(win95_t *win95) {
-  this = win95;
+void
+shutdown_win95()
+{
+  this->running = false;
+}
 
+bool run_win95() {
   process_apps();
   do_desktop();
   process_windows();
   do_taskbar();
+
+  return this->running;
 }
 
 void win95_open_app(application_t app) {
@@ -460,7 +467,7 @@ setup_menus()
       .items = {
         .count = 1,
         .list = {
-          { .title = "Shut Down...", .icon = IMAGE_SHUT_DOWN_24 },
+          { .title = "Shut Down...", .icon = IMAGE_SHUT_DOWN_24, ._handler = &shutdown_win95 },
         }
       }
     },

@@ -238,7 +238,9 @@ int main(int argc, const char *argv[]) {
   SetTextureFilter(render_texture.texture, TEXTURE_FILTER_POINT);
 #endif
 
-  while (!WindowShouldClose()) {
+  bool running = true;
+
+  while (!WindowShouldClose() && running) {
     BeginDrawing();
 
 #ifdef DEBUG
@@ -261,7 +263,7 @@ int main(int argc, const char *argv[]) {
       IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? CIG_INPUT_SECONDARY_ACTION : 0
     );
     
-    run_win95(&win_instance);
+    running = run_win95();
     
     cig_end_layout();
 
