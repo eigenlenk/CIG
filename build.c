@@ -114,6 +114,7 @@ int main(int argc, char **argv)
       SRC_FOLDER"ciggfx.c",
       DEMO_FOLDER"win95/main.c",
       DEMO_FOLDER"win95/win95.c",
+      DEMO_FOLDER"win95/system/window_manager.c",
       DEMO_FOLDER"win95/components/window.c",
       DEMO_FOLDER"win95/components/button.c",
       DEMO_FOLDER"win95/components/menu.c",
