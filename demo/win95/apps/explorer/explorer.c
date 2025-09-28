@@ -52,7 +52,7 @@ static void window_proc(window_t *this, bool window_focused) {
       PIN(LEFT_OF(content)),
       PIN(RIGHT_OF(content)),
       PIN(TOP_OF(content), OFFSET_BY(18)),
-      PIN(BOTTOM_OF(content), OFFSET_BY(window_data->status_bar_visible ? -20 : 0))
+      PIN(BOTTOM_OF(content), OFFSET_BY(window_data->status_bar_visible ? 20 : 0))
     )),
     CIG_INSETS(cig_i_uniform(2))
   ) {
@@ -106,7 +106,7 @@ static void window_proc(window_t *this, bool window_focused) {
     CIG(BUILD_RECT(
       PIN(LEFT_OF(content)),
       PIN(RIGHT_OF(content)),
-      PIN(ABOVE(file_content), OFFSET_BY(-2)),
+      PIN(ABOVE(file_content), OFFSET_BY(2)),
       PIN(TOP_OF(content))
     )) {
       window_data->menubar_builder(this, window_focused);

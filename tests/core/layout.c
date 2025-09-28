@@ -939,7 +939,7 @@ TEST(core_layout, pinning) {
     { LEFT, 0, f1, RIGHT },
     { RIGHT, 0, root, RIGHT },
     { TOP, 0, f0, TOP },
-    { BOTTOM, 10, f1, BOTTOM },
+    { BOTTOM, -10, f1, BOTTOM },
   })));
 
   TEST_ASSERT_EQUAL_RECT(cig_r_make(158, 10, 482, 120), f2->rect);
@@ -1007,8 +1007,8 @@ TEST(core_layout, pinning_with_insets) {
 
 
   cig_frame *f0 = cig_retain(cig_push_frame_insets(cig_build_rect(4, (cig_pin[]) {
-    { LEFT, 0, root, LEFT_INSET },
-    { TOP, 0, root, TOP_INSET },
+    { LEFT, 0, root, LEFT | INSET_ATTRIBUTE },
+    { TOP, 0, root, TOP | INSET_ATTRIBUTE },
     { WIDTH, 100 },
     { HEIGHT, 100 }
   }), cig_i_uniform(10)));
@@ -1042,8 +1042,8 @@ TEST(core_layout, pinning_with_insets) {
       └─────────────────────────────────┘ */
 
   cig_frame *f1 = cig_retain(cig_push_frame(cig_build_rect(4, (cig_pin[]) {
-    { LEFT, 0, f0, LEFT_INSET },
-    { TOP, 0, f0, BOTTOM_INSET },
+    { LEFT, 0, f0, LEFT | INSET_ATTRIBUTE },
+    { TOP, 0, f0, BOTTOM | INSET_ATTRIBUTE },
     { RIGHT, 0, f0, RIGHT },
     { HEIGHT, 100 }
   })));
@@ -1071,9 +1071,9 @@ TEST(core_layout, pinning_relative) {
   /* Testing relative left, right, top and bottom also */
   cig_frame *second = cig_push_frame(cig_build_rect(4, (cig_pin[]) {
     { LEFT, CIG_REL(0.2), root },
-    { RIGHT, CIG_REL(-0.2), root },
+    { RIGHT, CIG_REL(0.2), root },
     { TOP, CIG_REL(0.1), root },
-    { BOTTOM, CIG_REL(-0.1), root }
+    { BOTTOM, CIG_REL(0.1), root }
   }));
 
   TEST_ASSERT_EQUAL_RECT(cig_r_make(128, 48, 384, 384), second->absolute_rect);
@@ -1087,9 +1087,9 @@ TEST(core_layout, pinning_infer_edges) {
   /*  Left and top edges will be inferred by using center and right and bottom edges respectively */
   cig_frame *f0 = cig_push_frame(cig_build_rect(4, (cig_pin[]) {
     { CENTER_X, 0, root },
-    { RIGHT, -50, root },
+    { RIGHT, 50, root },
     { CENTER_Y, 0, root },
-    { BOTTOM, -50, root }
+    { BOTTOM, 50, root }
   }));
   TEST_ASSERT_EQUAL_RECT(cig_r_make(50, 50, 540, 380), f0->absolute_rect);
   cig_pop_frame();
@@ -1127,6 +1127,29 @@ TEST(core_layout, pinning_aspect_ratio) {
   TEST_ASSERT_EQUAL_RECT(cig_r_make(120, 90, 400, 300), r1);
 }
 
+TEST(core_layout, pinning_attribute_sign_swap) {
+  cig_frame *root = cig_current();
+
+  cig_r r0 = cig_build_rect(4, (cig_pin[]) {
+    { BOTTOM, 50, root }, /* Bottom edge is set 50pt above the bottom edge of 'root' */
+    { RIGHT, 50, root }, /* Right edge is set 50pt left of right edge of 'root' */
+    { WIDTH, 100 },
+    { HEIGHT, 100 },
+  });
+
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(490, 330, 100, 100), r0);
+
+
+  cig_r r1 = cig_build_rect(4, (cig_pin[]) {
+    { TOP, 50, root, BOTTOM }, /* Top edge is set 50pt below the bottom edge of 'root' */
+    { LEFT, 50, root, RIGHT }, /* Left edge is set 50pt right of right edge of 'root' */
+    { WIDTH, 100 },
+    { HEIGHT, 100 },
+  });
+
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(690, 530, 100, 100), r1);
+}
+
 TEST_GROUP_RUNNER(core_layout) {
   RUN_TEST_CASE(core_layout, basic_checks);
   RUN_TEST_CASE(core_layout, default_insets);
@@ -1159,4 +1182,5 @@ TEST_GROUP_RUNNER(core_layout) {
   RUN_TEST_CASE(core_layout, pinning_relative)
   RUN_TEST_CASE(core_layout, pinning_infer_edges)
   RUN_TEST_CASE(core_layout, pinning_aspect_ratio)
+  RUN_TEST_CASE(core_layout, pinning_attribute_sign_swap)
 }

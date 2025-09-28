@@ -138,10 +138,10 @@ TEST(core_macros, pinning) {
   cig_frame *root = cig_current();
 
 
-  /*  Pin right edge to right edge of 'root' offset by -5px (moves left) */
-  cig_pin left = PIN(RIGHT, OFFSET_BY(-5), RIGHT_OF(root));
+  /*  Pin right edge to right edge of 'root' offset by 5px (moves left) */
+  cig_pin left = PIN(RIGHT, OFFSET_BY(5), RIGHT_OF(root));
   TEST_ASSERT_EQUAL(RIGHT, left.attribute);
-  TEST_ASSERT_EQUAL_INT(-5, left.value);
+  TEST_ASSERT_EQUAL_INT(5, left.value);
   TEST_ASSERT_EQUAL_PTR(root, left.relation);
   TEST_ASSERT_EQUAL(RIGHT, left.relation_attribute);
 
@@ -180,6 +180,18 @@ TEST(core_macros, pinning) {
   );
 
   TEST_ASSERT_EQUAL_RECT(cig_r_make(220, 165, 200, 150), aspect_ratio_rect_1);
+
+
+  /* Pinning to inset edges */
+  root->insets = cig_i_uniform(10);
+  cig_r inset_rect = BUILD_RECT(
+    PIN(TOP_INSET_OF(root)),
+    PIN(RIGHT_INSET_OF(root)),
+    PIN(WIDTH, 200),
+    PIN(ASPECT_OF(root))
+  );
+
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(420, 0, 200, 150), inset_rect);
 }
 
 TEST_GROUP_RUNNER(core_macros) {

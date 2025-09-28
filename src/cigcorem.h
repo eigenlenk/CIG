@@ -125,10 +125,10 @@ extern cig__macro_ctx_st cig__macro_ctx;
 #define RIGHT_OF(FRAME) .relation = FRAME, .relation_attribute = RIGHT
 #define TOP_OF(FRAME) .relation = FRAME, .relation_attribute = TOP
 #define BOTTOM_OF(FRAME) .relation = FRAME, .relation_attribute = BOTTOM
-#define LEFT_INSET_OF(FRAME) .relation = FRAME, .relation_attribute = LEFT_INSET
-#define RIGHT_INSET_OF(FRAME) .relation = FRAME, .relation_attribute = RIGHT_INSET
-#define TOP_INSET_OF(FRAME) .relation = FRAME, .relation_attribute = TOP_INSET
-#define BOTTOM_INSET_OF(FRAME) .relation = FRAME, .relation_attribute = BOTTOM_INSET
+#define LEFT_INSET_OF(FRAME) .relation = FRAME, .relation_attribute = LEFT | INSET_ATTRIBUTE
+#define RIGHT_INSET_OF(FRAME) .relation = FRAME, .relation_attribute = RIGHT | INSET_ATTRIBUTE
+#define TOP_INSET_OF(FRAME) .relation = FRAME, .relation_attribute = TOP | INSET_ATTRIBUTE
+#define BOTTOM_INSET_OF(FRAME) .relation = FRAME, .relation_attribute = BOTTOM | INSET_ATTRIBUTE
 #define WIDTH_OF(FRAME) .relation = FRAME, .relation_attribute = WIDTH
 #define HEIGHT_OF(FRAME) .relation = FRAME, .relation_attribute = HEIGHT
 #define CENTER_X_OF(FRAME) .relation = FRAME, .relation_attribute = CENTER_X

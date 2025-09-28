@@ -302,7 +302,7 @@ static void game_window_proc(window_t *this, bool window_focused) {
     /* 6 by 5 letter grid */
     CIG_RETAIN(word_grid, CIG(BUILD_RECT(
       PIN(LEFT, 70, LEFT_OF(cig_current())),
-      PIN(RIGHT, -70, RIGHT_OF(cig_current())),
+      PIN(RIGHT, 70, RIGHT_OF(cig_current())),
       PIN(TOP, 24, TOP_OF(cig_current())),
       PIN(ASPECT, 1)
     )) {
@@ -385,6 +385,7 @@ static void game_window_proc(window_t *this, bool window_focused) {
         }
       }
     }
+
     const int key_w = 32;
     const int key_h = 28;
     const int key_spacing = 0;
