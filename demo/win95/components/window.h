@@ -13,13 +13,14 @@ typedef enum {
   WINDOW_MINIMIZE
 } window_message_t;
 
-typedef void (*win_proc_t)(struct window_t*, window_message_t*, bool);
+typedef void (*win_proc_t)(struct window_t*, bool);
 
 typedef struct window_t {
   struct window_manager_t *manager;
   struct application_t *owner;
   cig_id id;
   win_proc_t proc;
+  window_message_t last_message;
   void *data;
   cig_r rect;
   cig_r rect_before_maximized;
@@ -36,9 +37,15 @@ typedef struct window_t {
 } window_t;
 
 bool
-window_begin(window_t*, window_message_t*, bool*);
+window_begin(window_t*, bool*);
 
 void
 window_end(window_t*);
+
+CIG_INLINED void
+window_send_message(window_t *this, window_message_t msg)
+{
+  this->last_message = msg;
+}
 
 #endif

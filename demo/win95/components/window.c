@@ -17,7 +17,7 @@ static void
 handle_window_resize(window_t *, window_resize_edge_t);
 
 bool
-window_begin(window_t *wnd, window_message_t *msg, bool *focused)
+window_begin(window_t *wnd, bool *focused)
 {
   static struct {
     window_t *selected_window;
@@ -57,7 +57,7 @@ window_begin(window_t *wnd, window_message_t *msg, bool *focused)
 
     if (wnd->flags & IS_RESIZABLE) {
       if (cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_STARTS_INSIDE | CIG_CLICK_DOUBLE)) {
-        *msg = WINDOW_MAXIMIZE;
+        window_send_message(wnd, WINDOW_MAXIMIZE);
       }
     }
 
@@ -87,16 +87,16 @@ window_begin(window_t *wnd, window_message_t *msg, bool *focused)
 
     /*  This container is right-aligned, so x=0 will align the right edge to parent */
     if (icon_button(RECT_AUTO_W(16), IMAGE_CROSS)) {
-      *msg = WINDOW_CLOSE;
+      window_send_message(wnd, WINDOW_CLOSE);
     }
 
     if (wnd->flags & IS_RESIZABLE) {
       CIG_HSTACK(_W(16*2)) {
         if (icon_button(RECT_AUTO_W(16), IMAGE_MINIMIZE)) {
-          *msg = WINDOW_MINIMIZE;
+          window_send_message(wnd, WINDOW_MINIMIZE);
         }
         if (icon_button(RECT_AUTO_W(16), wnd->flags & IS_MAXIMIZED ? IMAGE_RESTORE : IMAGE_MAXIMIZE)) {
-          *msg = WINDOW_MAXIMIZE;
+          window_send_message(wnd, WINDOW_MAXIMIZE);
         }
       }
     }

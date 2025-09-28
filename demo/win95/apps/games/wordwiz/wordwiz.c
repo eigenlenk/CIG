@@ -197,7 +197,7 @@ static void game_menu_handler(win95_menu *menu, menu_group *group, menu_item *it
     } break;
   case GAME_QUIT:
     {
-      *((window_message_t *)item->data) = WINDOW_CLOSE;
+      window_send_message((window_t *)item->data, WINDOW_CLOSE);
     } break;
 
   default: break;
@@ -234,7 +234,7 @@ static void keyboard_button(game_data_st *game, cig_r rect, const char *key) {
 }
 
 
-static void game_menubar(window_t *wnd, window_message_t *msg) {
+static void game_menubar(window_t *wnd) {
   menu_setup(&menu_game, "Game", DROPDOWN, &game_menu_handler, 2, (menu_group[]) {
     {
       .items = {
@@ -248,7 +248,7 @@ static void game_menubar(window_t *wnd, window_message_t *msg) {
       .items = {
         .count = 1,
         .list = {
-          { .id = GAME_QUIT, .title = "Quit", .data = msg }
+          { .id = GAME_QUIT, .title = "Quit", .data = wnd }
         }
       }
     }
@@ -259,7 +259,7 @@ static void game_menubar(window_t *wnd, window_message_t *msg) {
   });
 }
 
-static void game_window_proc(window_t *this, window_message_t *msg, bool window_focused) {
+static void game_window_proc(window_t *this, bool window_focused) {
   static const char *keyboard_layout[3][10] = {
     { "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P" },
     { "A", "S", "D", "F", "G", "H", "J", "K", "L" },
@@ -458,7 +458,7 @@ static void game_window_proc(window_t *this, window_message_t *msg, bool window_
     PIN(HEIGHT, 18),
     PIN(TOP_OF(container))
   )) {
-    game_menubar(this, msg);
+    game_menubar(this);
   }
 }
 

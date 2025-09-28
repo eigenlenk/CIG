@@ -17,13 +17,7 @@ window_t*
 window_manager_create(window_manager_t*, struct application_t*, window_t);
 
 void
-window_manager_close(window_manager_t*, window_t*);
-
-void
-window_manager_maximize(window_manager_t*, window_t*);
-
-void
-window_manager_minimize(window_manager_t*, window_t*);
+window_manager_process(window_manager_t*);
 
 void
 window_manager_bring_to_front(window_manager_t*, window_t*);

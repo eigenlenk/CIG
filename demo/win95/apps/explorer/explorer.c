@@ -1,7 +1,7 @@
 #include "explorer.h"
+#include "components/window.h"
 #include "components/menu.h"
 #include "components/file_browser.h"
-#include "system/window_manager.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -38,7 +38,7 @@ typedef struct {
   win95_menu menus[16];
 } window_data_t;
 
-static void window_proc(window_t *this, window_message_t *msg, bool window_focused) {
+static void window_proc(window_t *this, bool window_focused) {
   window_data_t *window_data = (window_data_t*)this->data;
   const bool menubar_visible = window_data->menubar_builder != NULL;
   char status_text[STATUS_TEXT_LEN] = "";
@@ -325,8 +325,7 @@ static void edit_menu_clipboard_operations(menu_group *group, menu_item *item) {
 }
 
 static void menu_close_action(menu_item *close_item) {
-  window_t *window_to_close = (window_t *)close_item->data;
-  window_manager_close((window_manager_t *)window_to_close->manager, window_to_close);
+  window_send_message((window_t *)close_item->data, WINDOW_CLOSE);
 }
 
 /* */

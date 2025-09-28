@@ -32,13 +32,12 @@ enum {
 };
 
 static void process_apps();
-static void process_windows();
 static void open_explorer_at(const char*);
 static void launch_app_by_id(menu_item *);
 static void setup_menus();
 
 static void
-about_wnd_proc(window_t *this, window_message_t *msg, bool window_focused);
+about_wnd_proc(window_t *this, bool window_focused);
 
 static void start_button(cig_r rect) {
   CIG(rect, CIG_INSETS(cig_i_make(4, 2, 4, 2))) {
@@ -202,7 +201,7 @@ win95_run()
 {
   process_apps();
   do_desktop();
-  process_windows();
+  window_manager_process(&this->window_manager);
   do_taskbar();
 
   return this->running;
@@ -280,52 +279,6 @@ static void process_apps() {
       app->proc(app);
       // switch (app->proc(app)) { }
     }
-  }
-}
-
-static void process_windows() {
-  /* Make sure focused window is the topmost one */
-  if (this->window_manager.count > 0 && this->window_manager.order[this->window_manager.count-1]->id != cig_focused_id()) {
-    window_manager_bring_to_front(&this->window_manager, window_manager_find_id(&this->window_manager, cig_focused_id()));
-  }
-
-  register size_t i;
-  window_message_t msg;
-  bool focused;
-
-  for (i = 0; i < this->window_manager.count;) {
-    window_t *wnd = this->window_manager.order[i];
-
-    if (!(wnd->flags & IS_MINIMIZED)) {
-      msg = 0;
-      focused = false;
-      if (!window_begin(wnd, &msg, &focused)) {
-        continue;
-      }
-      if (wnd->proc) {
-        wnd->proc(wnd, &msg, focused);
-      }
-      switch (msg) {
-      case WINDOW_CLOSE:
-        {
-          window_end(wnd);
-          window_manager_close(&this->window_manager, wnd);
-        } continue;
-      case WINDOW_MAXIMIZE:
-        {
-          window_manager_maximize(&this->window_manager, wnd);
-        } break;
-      case WINDOW_MINIMIZE:
-        {
-          window_manager_minimize(&this->window_manager, wnd);
-        } break;
-      default:
-        break;
-      }
-      window_end(wnd);
-    }
-
-    ++i;
   }
 }
 
@@ -492,7 +445,7 @@ total_system_memory()
 
 /* About Windooze 95 window */
 static void
-about_wnd_proc(window_t *this, window_message_t *msg, bool window_focused)
+about_wnd_proc(window_t *this, bool window_focused)
 {
   CIG(_, CIG_INSETS(cig_i_uniform(12))) {
     CIG_HSTACK(_, CIG_PARAMS({
@@ -513,7 +466,7 @@ about_wnd_proc(window_t *this, window_message_t *msg, bool window_focused)
             CIG_ALIGNMENT_HORIZONTAL(CIG_LAYOUT_ALIGNS_RIGHT)
           })) {
             if (standard_button(_W(74), "OK")) {
-              *msg = WINDOW_CLOSE;
+              window_send_message(this, WINDOW_CLOSE);
             }
           }
 

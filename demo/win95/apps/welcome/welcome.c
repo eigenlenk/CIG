@@ -5,7 +5,7 @@ typedef struct {
   int tip_index;
 } window_data_t;
 
-static void process_main_window(window_t *this, window_message_t *msg, bool window_focused) {
+static void process_main_window(window_t *this, bool window_focused) {
   static const char *tips[] = {
     "This is not actually Windows 95 but a little demo application to develop and test a C immediate-mode GUI library called CIG.",
     "You can find the library on GitHub by visiting the World Wide Web link below:\n\nhttps://github.com/eigenlenk/cig",
@@ -92,7 +92,7 @@ static void process_main_window(window_t *this, window_message_t *msg, bool wind
 
     CIG(_) {
       if (standard_button(RECT_CENTERED_VERTICALLY(RECT_AUTO_H(23)), "Close")) {
-        *msg = WINDOW_CLOSE;
+        window_send_message(this, WINDOW_CLOSE);
       }
     }
   }
