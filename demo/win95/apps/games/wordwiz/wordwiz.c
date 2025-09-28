@@ -1,4 +1,6 @@
 #include "wordwiz.h"
+#include "components/button.h"
+#include "components/menu.h"
 
 #include <time.h>
 #include <string.h>

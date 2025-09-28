@@ -1,4 +1,8 @@
 #include "win95.h"
+#include "components/window.h"
+#include "components/button.h"
+#include "components/menu.h"
+#include "components/file_browser.h"
 #include "apps/explorer/explorer.h"
 #include "apps/welcome/welcome.h"
 #include "apps/games/wordwiz/wordwiz.h"
@@ -29,7 +33,6 @@ enum {
 
 static void process_apps();
 static void process_windows();
-static void close_application(application_t *);
 static void open_explorer_at(const char*);
 static void launch_app_by_id(menu_item *);
 static void setup_menus();
@@ -91,7 +94,7 @@ static void do_desktop_icons() {
     window_t *primary_wnd;
     if ((app = win95_find_open_app("welcome"))) {
       if ((primary_wnd = window_manager_find_primary_window(&this->window_manager, app))) {
-        window_manager_bring_to_front(&this->window_manager, primary_wnd->id);
+        window_manager_bring_to_front(&this->window_manager, primary_wnd);
       } else {
         window_manager_create(&this->window_manager, app, app->windows[0]);
       }
@@ -168,7 +171,7 @@ static void do_taskbar() {
       for (i = 0; i < WIN95_OPEN_WINDOWS_MAX; ++i) {
         window_t *wnd = &this->window_manager.windows[i];
         if (wnd->id && wnd->owner && taskbar_button(RECT_AUTO, wnd->title, wnd->icon, wnd->id == cig_focused_id())) {
-          window_manager_bring_to_front(&this->window_manager, wnd->id);
+          window_manager_bring_to_front(&this->window_manager, wnd);
           cig_set_focused_id(wnd->id);
         }
       }
@@ -176,7 +179,9 @@ static void do_taskbar() {
   }
 }
 
-void start_win95(win95_t *win95) {
+void
+win95_initialize(win95_t *win95)
+{
   this = win95;
   this->running = true;
 
@@ -187,12 +192,14 @@ void start_win95(win95_t *win95) {
 }
 
 void
-shutdown_win95()
+win95_shut_down()
 {
   this->running = false;
 }
 
-bool run_win95() {
+bool
+win95_run()
+{
   process_apps();
   do_desktop();
   process_windows();
@@ -201,7 +208,9 @@ bool run_win95() {
   return this->running;
 }
 
-void win95_open_app(application_t app) {
+void
+win95_open_app(application_t app)
+{
   application_t *new_app = &this->applications[this->running_apps++];
   *new_app = app;
   if (new_app->windows[0].id) {
@@ -209,7 +218,28 @@ void win95_open_app(application_t app) {
   }
 }
 
-application_t *win95_find_open_app(const char *id) {
+void
+win95_close_application(application_t *app)
+{
+  register size_t i, j;
+  app->proc = NULL;
+  if (app->data) {
+    free(app->data);
+    app->data = NULL;
+  }
+  for (i = 0; i < this->running_apps; ++i) {
+    if (&this->applications[i] == app) {
+      for (j = i+1; j < this->running_apps; ++j) {
+        this->applications[j-1] = this->applications[j];
+      }
+      this->running_apps--;
+    }
+  }
+}
+
+application_t*
+win95_find_open_app(const char *id)
+{
   register size_t i;
   application_t *app;
   for (i = 0; i < this->running_apps; ++i) {
@@ -234,114 +264,6 @@ win95_show_about_window()
   });
 }
 
-/*  ┌────────────────┐
-    │ WINDOW MANAGER │
-    └────────────────┘ */
-
-window_t* window_manager_create(window_manager_t *manager, application_t *app, window_t wnd) {
-  register size_t i;
-  if (!manager) { manager = &this->window_manager; }
-  if (!wnd.id) { wnd.id = rand(); }
-
-  if (wnd.flags & IS_UNIQUE_WINDOW) {
-    window_t *existing_wnd = window_manager_find_id(manager, wnd.id);
-
-    if (existing_wnd) {
-      window_manager_bring_to_front(manager, existing_wnd->id);
-      return existing_wnd;
-    }
-  }
-
-  for (i = 0; i < WIN95_OPEN_WINDOWS_MAX; ++i) {
-    if (manager->windows[i].id) { continue; }
-    wnd.owner = app;
-
-    manager->windows[i] = wnd;
-    manager->order[manager->count++] = &manager->windows[i];
-    cig_set_focused_id(wnd.id);
-    return manager->order[manager->count-1];
-  }
-
-  return NULL;
-}
-
-void window_manager_close(window_manager_t *manager, window_t *wnd) {
-  register size_t i, j;
-  if (!manager) { manager = &this->window_manager; }
-  if (wnd->owner && wnd->flags & IS_PRIMARY_WINDOW && wnd->owner->flags & KILL_WHEN_PRIMARY_WINDOW_CLOSED) {
-    close_application(wnd->owner);
-  }
-  wnd->id = 0;
-  for (i = 0; i < manager->count; ++i) {
-    if (manager->order[i] == wnd) {
-      for (j = i+1; j < manager->count; ++j) {
-        manager->order[j-1] = manager->order[j];
-      }
-      break;
-    }
-  }
-  manager->count--;
-}
-
-void window_manager_maximize(window_manager_t *manager, window_t *wnd) {
-  if (wnd->flags & IS_MAXIMIZED) {
-    wnd->flags &= ~IS_MAXIMIZED;
-    wnd->rect = wnd->rect_before_maximized;
-  } else {
-    wnd->flags |= IS_MAXIMIZED;
-    wnd->rect_before_maximized = wnd->rect;
-    wnd->rect = cig_r_make(0, 0, cig_layout_rect().w, cig_layout_rect().h - TASKBAR_H);
-  }
-}
-
-void window_manager_minimize(window_manager_t *manager, window_t *wnd) {
-  if (wnd->flags & IS_MINIMIZED) {
-    return;
-  }
-  /* TODO: Actually Win95 focuses on whatever was focused *before* selecting
-   * this window. So either the desktop or some some window.
-   */
-  cig_set_focused_id(0);
-  wnd->flags |= IS_MINIMIZED;
-}
-
-void window_manager_bring_to_front(window_manager_t *manager, cig_id wnd_id) {
-  register size_t i;
-  if (!manager) { manager = &this->window_manager; }
-  for (i = 0; i < manager->count; ++i) {
-    if (manager->order[i]->id == wnd_id) {
-      window_t *wnd = manager->order[i];
-      wnd->flags &= ~IS_MINIMIZED;
-      manager->order[i] = manager->order[manager->count-1];
-      manager->order[manager->count-1] = wnd;
-      cig_set_focused_id(wnd_id);
-      break;
-    }
-  }
-}
-
-window_t* window_manager_find_primary_window(window_manager_t *manager, application_t *app) {
-  register size_t i;
-  if (!manager) { manager = &this->window_manager; }
-  for (i = 0; i < manager->count; ++i) {
-    if (manager->order[i]->owner == app && manager->order[i]->flags & IS_PRIMARY_WINDOW) {
-      return manager->order[i];
-    }
-  }
-  return NULL;
-}
-
-window_t* window_manager_find_id(window_manager_t *manager, cig_id id) {
-  register size_t i;
-  if (!manager) { manager = &this->window_manager; }
-  for (i = 0; i < manager->count; ++i) {
-    if (manager->order[i]->id == id) {
-      return manager->order[i];
-    }
-  }
-  return NULL;
-}
-
 /*  ┌──────────┐
     │ INTERNAL │
     └──────────┘ */
@@ -364,7 +286,7 @@ static void process_apps() {
 static void process_windows() {
   /* Make sure focused window is the topmost one */
   if (this->window_manager.count > 0 && this->window_manager.order[this->window_manager.count-1]->id != cig_focused_id()) {
-    window_manager_bring_to_front(&this->window_manager, cig_focused_id());
+    window_manager_bring_to_front(&this->window_manager, window_manager_find_id(&this->window_manager, cig_focused_id()));
   }
 
   register size_t i;
@@ -407,29 +329,12 @@ static void process_windows() {
   }
 }
 
-static void close_application(application_t *app) {
-  register size_t i, j;
-  app->proc = NULL;
-  if (app->data) {
-    free(app->data);
-    app->data = NULL;
-  }
-  for (i = 0; i < this->running_apps; ++i) {
-    if (&this->applications[i] == app) {
-      for (j = i+1; j < this->running_apps; ++j) {
-        this->applications[j-1] = this->applications[j];
-      }
-      this->running_apps--;
-    }
-  }
-}
-
 static void open_explorer_at(const char *path) {
   application_t *explorer = win95_find_open_app("explorer");
   assert(explorer != NULL);
   window_t *wnd;
   if ((wnd = window_manager_find_id(&this->window_manager, cig_hash(path)))) {
-    window_manager_bring_to_front(&this->window_manager, wnd->id);
+    window_manager_bring_to_front(&this->window_manager, wnd);
   } else {
     window_manager_create(&this->window_manager, explorer, explorer_create_window(explorer, path));
   }
@@ -467,7 +372,7 @@ setup_menus()
       .items = {
         .count = 1,
         .list = {
-          { .title = "Shut Down...", .icon = IMAGE_SHUT_DOWN_24, ._handler = &shutdown_win95 },
+          { .title = "Shut Down...", .icon = IMAGE_SHUT_DOWN_24, ._handler = &win95_shut_down },
         }
       }
     },

@@ -1,4 +1,4 @@
-#include "win95.h"
+#include "components/file_browser.h"
 
 #include <string.h>
 
@@ -46,6 +46,7 @@ bool begin_file_browser(cig_r rect, int direction, color_id_t text_color, bool p
 
   cig_disable_culling();
   cig_enable_interaction();
+  cig_enable_scroll(NULL);
 
   /* Deselect everything */
   /* TODO: See if this could be ignored when focusing the window */

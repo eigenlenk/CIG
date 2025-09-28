@@ -1,4 +1,7 @@
 #include "explorer.h"
+#include "components/menu.h"
+#include "components/file_browser.h"
+#include "system/window_manager.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -117,8 +120,6 @@ static void my_computer_content(window_t *wnd, bool window_focused, char *status
   if (!begin_file_browser(RECT_AUTO, CIG_LAYOUT_DIRECTION_HORIZONTAL, COLOR_BLACK, window_focused, &window_data->number_of_files_selected)) {
     return;
   }
-
-  cig_enable_clipping();
 
   if (file_item(IMAGE_DRIVE_A_32, "3½ Floppy (A:)")) { }
   if (file_item(IMAGE_DRIVE_C_32, "(C:)")) { }
@@ -325,7 +326,7 @@ static void edit_menu_clipboard_operations(menu_group *group, menu_item *item) {
 
 static void menu_close_action(menu_item *close_item) {
   window_t *window_to_close = (window_t *)close_item->data;
-  window_manager_close(NULL, window_to_close);
+  window_manager_close((window_manager_t *)window_to_close->manager, window_to_close);
 }
 
 /* */

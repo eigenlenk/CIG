@@ -1,4 +1,6 @@
-#include "win95.h"
+#include "components/window.h"
+#include "components/button.h"
+#include "system/resources.h"
 
 typedef enum {
   WINDOW_RESIZE_BOTTOM_RIGHT = 0,
@@ -11,9 +13,12 @@ typedef enum {
   WINDOW_RESIZE_BOTTOM
 } window_resize_edge_t;
 
-static void handle_window_resize(window_t *, window_resize_edge_t);
+static void
+handle_window_resize(window_t *, window_resize_edge_t);
 
-bool window_begin(window_t *wnd, window_message_t *msg, bool *focused) {
+bool
+window_begin(window_t *wnd, window_message_t *msg, bool *focused)
+{
   static struct {
     window_t *selected_window;
     bool active;
@@ -162,7 +167,9 @@ bool window_begin(window_t *wnd, window_message_t *msg, bool *focused) {
   return true;
 }
 
-void window_end(window_t *wnd) {
+void
+window_end(window_t *wnd)
+{
   cig_pop_frame(); /* Content frame */
   cig_pop_frame(); /* Window panel */
 }
@@ -173,7 +180,9 @@ void window_end(window_t *wnd) {
  * └──────────┘
  */
 
-static void handle_window_resize(window_t *wnd, window_resize_edge_t edge) {
+static void
+handle_window_resize(window_t *wnd, window_resize_edge_t edge)
+{
   static struct {
     window_t *selected_window;
     window_resize_edge_t active_edge;

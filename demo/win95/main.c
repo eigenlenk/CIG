@@ -228,7 +228,7 @@ int main(int argc, const char *argv[]) {
   cig_begin_layout(&ctx, NULL, cig_r_make(0, 0, win95_w, win95_h), 0.f);
 
   win95_t win_instance = { 0 };
-  start_win95(&win_instance);
+  win95_initialize(&win_instance);
 
   render_texture = LoadRenderTexture(win95_w, win95_h);
   SetTextureFilter(render_texture.texture, TEXTURE_FILTER_POINT);
@@ -263,7 +263,7 @@ int main(int argc, const char *argv[]) {
       IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? CIG_INPUT_SECONDARY_ACTION : 0
     );
     
-    running = run_win95();
+    running = win95_run();
     
     cig_end_layout();
 

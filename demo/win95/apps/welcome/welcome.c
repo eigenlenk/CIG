@@ -1,4 +1,5 @@
 #include "welcome.h"
+#include "components/button.h"
 
 typedef struct {
   int tip_index;

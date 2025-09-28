@@ -1,8 +1,10 @@
-#include "win95.h"
+#include "components/button.h"
 
 cig_font_ref button_font = NULL;
 
-bool standard_button(cig_r rect, const char *title) {
+bool
+standard_button(cig_r rect, const char *title)
+{
   bool clicked = false;
   
   CIG(rect) {
@@ -27,7 +29,9 @@ bool standard_button(cig_r rect, const char *title) {
   return clicked;
 }
 
-bool icon_button(cig_r rect, image_id_t image_id) {
+bool
+icon_button(cig_r rect, image_id_t image_id)
+{
   bool clicked = false;
   
   CIG(rect) {
@@ -48,7 +52,9 @@ bool icon_button(cig_r rect, image_id_t image_id) {
   return clicked;
 }
 
-bool checkbox(cig_r rect, bool *value, const char *text) {
+bool
+checkbox(cig_r rect, bool *value, const char *text)
+{
   bool toggled = false;
   CIG_HSTACK(
     rect,
@@ -91,12 +97,9 @@ bool checkbox(cig_r rect, bool *value, const char *text) {
   return toggled;
 }
 
-bool taskbar_button(
-  cig_r rect,
-  const char *title,
-  int icon,
-  bool selected
-) {
+bool
+taskbar_button(cig_r rect, const char *title, int icon, bool selected)
+{
   bool clicked = false;
   
   CIG(rect, CIG_INSETS(cig_i_make(4, 2, 4, 2))) {
