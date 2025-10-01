@@ -134,33 +134,45 @@ TEST(core_macros, allocator) {
   TEST_ASSERT_EQUAL_INT(5, *j);
 }
 
-TEST(core_macros, pinning) {
+TEST(core_macros, pin_basic)
+{
+  cig_pin pin_top = PIN(TOP);
+  TEST_ASSERT_EQUAL(TOP, pin_top.attribute);
+  TEST_ASSERT_EQUAL_DOUBLE(0.0, pin_top.value);
+  TEST_ASSERT_EQUAL_PTR(NULL, pin_top.relation);
+  TEST_ASSERT_EQUAL_INT(0, pin_top.relation_attribute);
+
+  cig_pin pin_inset_bottom = PIN(BOTTOM_INSET_OF(cig_current()), OFFSET_BY(4));
+  TEST_ASSERT_EQUAL(BOTTOM | INSET_ATTRIBUTE, pin_inset_bottom.relation_attribute);
+  TEST_ASSERT_EQUAL_DOUBLE(4.0, pin_inset_bottom.value);
+  TEST_ASSERT_EQUAL_PTR(cig_current(), pin_inset_bottom.relation);
+  TEST_ASSERT_EQUAL_INT(0, pin_inset_bottom.attribute);
+}
+
+TEST(core_macros, pinning) 
+{
   cig_frame *root = cig_current();
 
-
-  /*  Pin right edge to right edge of 'root' offset by 5px (moves left) */
+  /* CASE 1 ::: Pin right edge to right edge of 'root' offset by 5px (moves left) */
   cig_pin left = PIN(RIGHT, OFFSET_BY(5), RIGHT_OF(root));
   TEST_ASSERT_EQUAL(RIGHT, left.attribute);
   TEST_ASSERT_EQUAL_INT(5, left.value);
   TEST_ASSERT_EQUAL_PTR(root, left.relation);
   TEST_ASSERT_EQUAL(RIGHT, left.relation_attribute);
 
-
-  /*  Pin width to width of 'root' but make it 50% */
+  /* CASE 2 ::: Pin width to width of 'root' but make it 50% */
   cig_pin width = PIN(WIDTH_OF(root), OFFSET_BY(CIG_REL(0.5)));
   TEST_ASSERT_EQUAL(UNSPECIFIED, width.attribute); /* Will default to WIDTH when building the rectangle */
   TEST_ASSERT_EQUAL_INT(CIG_REL(0.5), width.value);
   TEST_ASSERT_EQUAL_PTR(root, width.relation);
   TEST_ASSERT_EQUAL(WIDTH, width.relation_attribute);
 
-
-  /* Y/TOP will be defaulted to 0 */
+  /* CASE 3 ::: Y/TOP will be defaulted to 0 */
   cig_r rect = BUILD_RECT(left, width, PIN(HEIGHT, 50));
 
   TEST_ASSERT_EQUAL_RECT(cig_r_make(315, 0, 320, 50), rect);
 
-
-  /* Aspect ratio */
+  /* CASE 4 ::: Aspect ratio */
   cig_r aspect_ratio_rect_0 = BUILD_RECT(
     PIN(CENTER_X_OF(root)),
     PIN(CENTER_Y_OF(root)),
@@ -170,8 +182,7 @@ TEST(core_macros, pinning) {
 
   TEST_ASSERT_EQUAL_RECT(cig_r_make(120, 90, 400, 300), aspect_ratio_rect_0);
 
-
-  /* Aspect ratio of another element */
+  /* CASE 5 ::: Aspect ratio of another element */
   cig_r aspect_ratio_rect_1 = BUILD_RECT(
     PIN(CENTER_X_OF(root)),
     PIN(CENTER_Y_OF(root)),
@@ -181,8 +192,7 @@ TEST(core_macros, pinning) {
 
   TEST_ASSERT_EQUAL_RECT(cig_r_make(220, 165, 200, 150), aspect_ratio_rect_1);
 
-
-  /* Pinning to inset edges */
+  /* CASE 6 ::: Pinning to inset edges */
   root->insets = cig_i_uniform(10);
   cig_r inset_rect = BUILD_RECT(
     PIN(TOP_INSET_OF(root)),
@@ -194,12 +204,14 @@ TEST(core_macros, pinning) {
   TEST_ASSERT_EQUAL_RECT(cig_r_make(420, 0, 200, 150), inset_rect);
 }
 
-TEST_GROUP_RUNNER(core_macros) {
+TEST_GROUP_RUNNER(core_macros)
+{
   RUN_TEST_CASE(core_macros, main_macro_and_retaining);
   RUN_TEST_CASE(core_macros, vstack);
   RUN_TEST_CASE(core_macros, hstack);
   RUN_TEST_CASE(core_macros, grid);
   RUN_TEST_CASE(core_macros, allocator);
+  RUN_TEST_CASE(core_macros, pin_basic);
   RUN_TEST_CASE(core_macros, pinning);
   // TODO: check positional and rect macros
 }

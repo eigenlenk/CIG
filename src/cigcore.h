@@ -265,6 +265,11 @@ typedef enum CIG_PACKED {
 
   /* Option modifiers */
   INSET_ATTRIBUTE = CIG_BIT(31),
+
+  LEFT_INSET = LEFT | INSET_ATTRIBUTE,
+  RIGHT_INSET = RIGHT | INSET_ATTRIBUTE,
+  TOP_INSET = TOP | INSET_ATTRIBUTE,
+  BOTTOM_INSET = BOTTOM | INSET_ATTRIBUTE,
 } cig_pin_attribute;
 
 typedef struct {

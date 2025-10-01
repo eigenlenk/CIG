@@ -1167,25 +1167,34 @@ resolve_edge_attribute(
 {
   assert(of_frame);
   const cig_pin_attribute attr = relative_attribute & ~INSET_ATTRIBUTE;
-  const cig_r r0 = (relative_attribute & INSET_ATTRIBUTE)
+  const bool is_inset = (relative_attribute & INSET_ATTRIBUTE);
+  const cig_r r0 = is_inset
     ? cig_r_inset(of_frame->absolute_rect, of_frame->insets)
     : of_frame->absolute_rect;
-  const cig_r r1 = (relative_attribute & INSET_ATTRIBUTE)
-    ? cig_r_inset(relative_to_frame->absolute_rect, relative_to_frame->insets)
-    : relative_to_frame->absolute_rect;
+  const cig_r r1 = cig_r_inset(relative_to_frame->absolute_rect, relative_to_frame->insets);
 
   switch (attr) {
   case LEFT:
-    return value_or_relative_value_of(value, r0.w, attribute == RIGHT) + r0.x - r1.x;
+    return value_or_relative_value_of(value, r0.w, attribute == RIGHT)
+      + r0.x
+      - r1.x;
 
   case RIGHT:
-    return value_or_relative_value_of(value, r0.w, attribute == RIGHT) + r0.w + r0.x - r1.x;
+    return value_or_relative_value_of(value, r0.w, attribute == RIGHT)
+      + r0.w
+      + r0.x
+      - r1.x;
 
   case TOP:
-    return value_or_relative_value_of(value, r0.h, attribute == BOTTOM) + r0.y - r1.y;
+    return value_or_relative_value_of(value, r0.h, attribute == BOTTOM)
+      + r0.y
+      - r1.y;
 
   case BOTTOM:
-    return value_or_relative_value_of(value, r0.h, attribute == BOTTOM) + r0.h + r0.y - r1.y;
+    return value_or_relative_value_of(value, r0.h, attribute == BOTTOM)
+      + r0.h
+      + r0.y
+      - r1.y;
 
   default:
     assert(false);
@@ -1208,7 +1217,15 @@ get_attribute_value_of_relative_to(
   case RIGHT:
   case TOP:
   case BOTTOM:
-    return resolve_edge_attribute(attribute, relative_attribute, original_value, of_frame, relative_to_frame);
+    return resolve_edge_attribute(
+      attribute,
+      relative_attribute,
+      original_value,
+      of_frame
+        ? of_frame
+        : relative_to_frame,
+      relative_to_frame
+    );
 
   case WIDTH:
     if (CIG_IS_REL((int32_t)value)) {

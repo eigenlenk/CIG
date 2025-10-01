@@ -937,9 +937,9 @@ TEST(core_layout, pinning) {
 
   cig_frame *f2 = cig_retain(cig_push_frame(cig_build_rect(4, (cig_pin[]) {
     { LEFT, 0, f1, RIGHT },
-    { RIGHT, 0, root, RIGHT },
-    { TOP, 0, f0, TOP },
-    { BOTTOM, -10, f1, BOTTOM },
+    { RIGHT, 0, root },
+    { TOP, 0, f0 },
+    { BOTTOM, -10, f1 },
   })));
 
   TEST_ASSERT_EQUAL_RECT(cig_r_make(158, 10, 482, 120), f2->rect);
@@ -1007,19 +1007,20 @@ TEST(core_layout, pinning_with_insets) {
 
 
   cig_frame *f0 = cig_retain(cig_push_frame_insets(cig_build_rect(4, (cig_pin[]) {
-    { LEFT, 0, root, LEFT | INSET_ATTRIBUTE },
-    { TOP, 0, root, TOP | INSET_ATTRIBUTE },
+    { LEFT, 0, root, LEFT_INSET },
+    { TOP, 0, root, TOP_INSET },
     { WIDTH, 100 },
     { HEIGHT, 100 }
   }), cig_i_uniform(10)));
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 100, 100), f0->rect);
   TEST_ASSERT_EQUAL_RECT(cig_r_make(10, 10, 100, 100), f0->absolute_rect);
   cig_pop_frame();
 
 
   /* 
       ┌─────────────────────────────────┐
-      │ .....10......                   │
-      │.┌f0─────────┐                   │
+      │ ...... inset 10 ......          │
+      │.┌f0─────────┐... local y=0      │
       │.│  ┄┄┄10┄┄  │                   │
       │1│1┆       ┆ │                   │
       │0│0┆       ┆ │                   │
@@ -1041,14 +1042,63 @@ TEST(core_layout, pinning_with_insets) {
       │   ╚═════════╝                   │
       └─────────────────────────────────┘ */
 
-  cig_frame *f1 = cig_retain(cig_push_frame(cig_build_rect(4, (cig_pin[]) {
-    { LEFT, 0, f0, LEFT | INSET_ATTRIBUTE },
-    { TOP, 0, f0, BOTTOM | INSET_ATTRIBUTE },
+  cig_frame *f1 = cig_retain(cig_push_frame_insets(cig_build_rect(4, (cig_pin[]) {
+    { LEFT, 0, f0, LEFT_INSET },
+    { TOP, 0, f0, BOTTOM_INSET },
     { RIGHT, 0, f0, RIGHT },
     { HEIGHT, 100 }
+  }), cig_i_uniform(20)));
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(10, 90, 90, 100), f1->rect);
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(20, 100, 90, 100), f1->absolute_rect);
+
+  /*
+   * Without specifying anything, simply pinning to an edge
+   * will default the relation to currently open element ('f1' in this case.)
+   * We are pinning to actual edges, not inset edges, so the relative frame
+   * will have negative position to offset the inset.
+   */
+  cig_frame *f2 = cig_retain(cig_push_frame(cig_build_rect(4, (cig_pin[]) {
+    { LEFT },
+    { RIGHT },
+    { TOP },
+    { BOTTOM }
   })));
-  TEST_ASSERT_EQUAL_RECT(cig_r_make(20, 100, 100, 100), f1->absolute_rect);
-  cig_pop_frame();
+
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(-20, -20, 90, 100), f2->rect);
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(20, 100, 90, 100), f2->absolute_rect);
+  TEST_ASSERT_EQUAL_RECT(f1->absolute_rect, f2->absolute_rect);
+
+  /* Left edge refers the outermost element, so X will be negative in 'f2' coordinate-space */
+  cig_frame *f3 = cig_retain(cig_push_frame(cig_build_rect(4, (cig_pin[]) {
+    { LEFT, 0, root, LEFT },
+    { RIGHT },
+    { TOP },
+    { BOTTOM }
+  })));
+
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(-20, 0, 110, 100), f3->rect);
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 100, 110, 100), f3->absolute_rect);
+  
+  cig_pop_frame(); /* Pop 'f3' */
+
+  /* 
+    F3 aligns its top, bottom and right edge to its parent, but the left edge
+    is aligned to 'root'.
+      ┌─────────────────────────────────┐
+      │                                 │
+      │ ┌───────────┐                   │
+      │ │           │                   │
+      │ │           │                   │
+      │ │           │                   │
+      │ │ ┌─────────┐                   │
+      │═══.═════════╗                   │
+      ║   . [f3]    ║                   │
+      │═══.═════════╝                   │
+      │   └─────────┘                   │
+      └─────────────────────────────────┘ */
+
+  cig_pop_frame(); /* Pop 'f2' */
+  cig_pop_frame(); /* Pop 'f1' */
 }
 
 TEST(core_layout, pinning_relative) {
@@ -1150,7 +1200,8 @@ TEST(core_layout, pinning_attribute_sign_swap) {
   TEST_ASSERT_EQUAL_RECT(cig_r_make(690, 530, 100, 100), r1);
 }
 
-TEST_GROUP_RUNNER(core_layout) {
+TEST_GROUP_RUNNER(core_layout)
+{
   RUN_TEST_CASE(core_layout, basic_checks);
   RUN_TEST_CASE(core_layout, default_insets);
   RUN_TEST_CASE(core_layout, push_pop);
