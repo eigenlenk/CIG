@@ -119,6 +119,7 @@ int main(int argc, char **argv)
       DEMO_FOLDER"win95/components/button.c",
       DEMO_FOLDER"win95/components/menu.c",
       DEMO_FOLDER"win95/components/file_browser.c",
+      DEMO_FOLDER"win95/components/scroller.c",
       DEMO_FOLDER"win95/apps/explorer/explorer.c",
       DEMO_FOLDER"win95/apps/welcome/welcome.c",
       DEMO_FOLDER"win95/apps/games/wordwiz/wordwiz.c",

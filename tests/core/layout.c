@@ -785,6 +785,8 @@ TEST(core_layout, vstack_scroll) {
   }
 
   TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 640, 100*10), cig_content_rect());
+  TEST_ASSERT_EQUAL_VEC2(cig_v_make(0, 520), scroll->distance);
+  TEST_ASSERT_EQUAL_VEC2(cig_v_make(640, 1000), scroll->bounds);
 }
 
 TEST(core_layout, clipping) {

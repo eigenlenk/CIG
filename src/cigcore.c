@@ -908,6 +908,11 @@ static cig_frame* push_frame(
 
   if (top->_scroll_state) {
     next = cig_r_offset(next, -top->_scroll_state->offset.x, -top->_scroll_state->offset.y);
+
+    const int32_t dx = (top->content_rect.x + top->content_rect.w) - top->rect.w;
+    const int32_t dy = (top->content_rect.y + top->content_rect.h) - top->rect.h;
+    top->_scroll_state->distance = cig_v_make(CIG_MAX(0, dx), CIG_MAX(0, dy));
+    top->_scroll_state->bounds = cig_v_make(top->content_rect.w, top->content_rect.h);
   }
 
   if (!(top->_layout_params.flags & CIG_LAYOUT_DISABLE_CULLING)

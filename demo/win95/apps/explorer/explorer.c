@@ -2,6 +2,7 @@
 #include "components/window.h"
 #include "components/menu.h"
 #include "components/file_browser.h"
+#include "components/scroller.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -31,8 +32,8 @@ enum {
 };
 
 typedef struct {
-  void (*menubar_builder)(window_t *, bool);
-  void (*content_builder)(window_t *, bool, char *);
+  void (*menubar_builder)(window_t*, bool);
+  void (*content_builder)(window_t*, cig_scroll_state_t**, bool, char*);
   bool status_bar_visible;
   int number_of_files_selected;
   win95_menu menus[16];
@@ -45,6 +46,8 @@ static void window_proc(window_t *this, bool window_focused) {
 
   cig_frame *content = cig_current();
   cig_frame *file_content;
+  cig_scroll_state_t *scroll = NULL;
+  scroller_results scroller_results = 0;
 
   cig_set_next_id(CIG_TINYHASH(this->id, cig_hash("content")));
   CIG_RETAIN(file_content, CIG(
@@ -59,8 +62,14 @@ static void window_proc(window_t *this, bool window_focused) {
     cig_fill_color(get_color(COLOR_WHITE));
     cig_fill_style(get_style(STYLE_FILES_CONTENT_BEVEL), 0);
 
-    if (window_data->content_builder) {
-      window_data->content_builder(this, window_focused, &status_text[0]);
+    CIG(_) {
+      if (window_data->content_builder) {
+        window_data->content_builder(this, &scroll, window_focused, &status_text[0]);
+      }
+
+      if (scroll) {
+        display_scrollbars(scroll, &scroller_results);
+      }
     }
   })
 
@@ -100,6 +109,12 @@ static void window_proc(window_t *this, bool window_focused) {
         }
       }
     }
+  } else {
+    if (scroll && !(this->flags & IS_MAXIMIZED) && scroller_results & SCROLLER_DISPLAYED_X && scroller_results & SCROLLER_DISPLAYED_Y) {
+      CIG(RECT(CIG_W_INSET-14, CIG_H_INSET-14, 12, 12)) {
+        cig_draw_image(get_image(IMAGE_RESIZE_HANDLE), CIG_IMAGE_MODE_TOP_LEFT);
+      }
+    }
   }
 
   if (menubar_visible) {
@@ -114,28 +129,36 @@ static void window_proc(window_t *this, bool window_focused) {
   }
 }
 
-static void my_computer_content(window_t *wnd, bool window_focused, char *status_text) {
+static void my_computer_content(window_t *wnd, cig_scroll_state_t **scroll, bool window_focused, char *status_text) {
   window_data_t *window_data = (window_data_t*)wnd->data;
 
   if (!begin_file_browser(RECT_AUTO, CIG_LAYOUT_DIRECTION_HORIZONTAL, COLOR_BLACK, window_focused, &window_data->number_of_files_selected)) {
     return;
   }
 
+  *scroll = cig_scroll_state();
+
+  if (*scroll && cig_visibility() == CIG_FRAME_APPEARED) {
+    (*scroll)->offset = cig_v_zero();
+  }
+
   if (file_item(IMAGE_DRIVE_A_32, "3½ Floppy (A:)")) { }
   if (file_item(IMAGE_DRIVE_C_32, "(C:)")) { }
   if (file_item(IMAGE_DRIVE_D_32, "(D:)")) { }
   if (file_item(IMAGE_CONTROLS_FOLDER_32, "Control Panel")) { }
+  if (file_item(IMAGE_PRINTERS_FOLDER_32, "Printers")) { }
+  if (file_item(IMAGE_DIAL_UP_FOLDER_32, "Dial-Up Networking")) { }
 
   end_file_browser();
 
   if (window_data->number_of_files_selected > 0) {
     snprintf(status_text, STATUS_TEXT_LEN, "%d object(s) selected", window_data->number_of_files_selected);
   } else {
-    strcpy(status_text, "4 object(s)");
+    strcpy(status_text, "6 object(s)");
   }
 }
 
-static void recycle_bin_content(window_t *wnd, bool window_focused, char *status_text) {
+static void recycle_bin_content(window_t *wnd, cig_scroll_state_t **scroll, bool window_focused, char *status_text) {
   strcpy(status_text, "");
 }
 

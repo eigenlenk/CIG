@@ -143,7 +143,12 @@ typedef struct {
 
 /* */
 typedef struct {
+  /* Scroll offset from top-left corner */
   cig_v offset;
+  /* Amount you can scroll until bottom-right corner is flush with parent. Always >= 0 */
+  cig_v distance;
+  /* Total size of scrollable content */
+  cig_v bounds;
 } cig_scroll_state_t;
 
 typedef struct {

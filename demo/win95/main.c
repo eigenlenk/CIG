@@ -130,6 +130,10 @@ int main(int argc, const char *argv[]) {
   load_texture(&images[IMAGE_MAXIMIZE], "res/images/maximize.png");
   load_texture(&images[IMAGE_MINIMIZE], "res/images/minimize.png");
   load_texture(&images[IMAGE_RESTORE], "res/images/restore.png");
+  load_texture(&images[IMAGE_SCROLL_UP], "res/images/scroll_up.png");
+  load_texture(&images[IMAGE_SCROLL_DOWN], "res/images/scroll_down.png");
+  load_texture(&images[IMAGE_SCROLL_LEFT], "res/images/scroll_left.png");
+  load_texture(&images[IMAGE_SCROLL_RIGHT], "res/images/scroll_right.png");
   load_texture(&images[IMAGE_WELCOME_APP_ICON], "res/images/welcome.png");
   load_texture(&images[IMAGE_BIN_EMPTY], "res/images/bin_empty.png");
   load_texture(&images[IMAGE_BIN_EMPTY_16], "res/images/bin_16.png");
@@ -141,6 +145,10 @@ int main(int argc, const char *argv[]) {
   load_texture(&images[IMAGE_DRIVE_D_32], "res/images/drive_d_32.png");
   load_texture(&images[IMAGE_CONTROLS_FOLDER_16], "res/images/controls_folder_16.png");
   load_texture(&images[IMAGE_CONTROLS_FOLDER_32], "res/images/controls_folder_32.png");
+  load_texture(&images[IMAGE_PRINTERS_FOLDER_16], "res/images/printers_folder_16.png");
+  load_texture(&images[IMAGE_PRINTERS_FOLDER_32], "res/images/printers_folder_32.png");
+  load_texture(&images[IMAGE_DIAL_UP_FOLDER_16], "res/images/dial_up_folder_16.png");
+  load_texture(&images[IMAGE_DIAL_UP_FOLDER_32], "res/images/dial_up_folder_32.png");
   load_texture(&images[IMAGE_RESIZE_HANDLE], "res/images/resize_handle.png");
   load_texture(&images[IMAGE_MENU_CHECK], "res/images/menu_check.png");
   load_texture(&images[IMAGE_MENU_CHECK_INVERTED], "res/images/menu_check_inverted.png");
@@ -412,8 +420,23 @@ CIG_INLINED void draw_style(cig_style_ref style_ref, cig_r rect, cig_style_modif
       DrawLine(rect.x + rect.w , rect.y, rect.x + rect.w , rect.y + rect.h, (Color) { 255, 255, 255, 255 });
       DrawLine(rect.x + 1, rect.y + 1, rect.x + rect.w - 2, rect.y + 1, (Color){ 0, 0, 0, 255 });
       DrawLine(rect.x + 2, rect.y + 2, rect.x + 2, rect.y + rect.h - 2, (Color){ 0, 0, 0, 255 });
-      DrawLine(rect.x + 1, rect.y + rect.h - 2, rect.x + rect.w - 1, rect.y + rect.h - 2, (Color){ 223, 223, 223, 255 });
-      DrawLine(rect.x + rect.w - 1, rect.y + 1, rect.x + rect.w - 1, rect.y + rect.h - 2, (Color){ 223, 223, 223, 255 });
+      DrawLine(rect.x + 1, rect.y + rect.h - 2, rect.x + rect.w - 1, rect.y + rect.h - 2, colors[COLOR_DIALOG_BACKGROUND]);
+      DrawLine(rect.x + rect.w - 1, rect.y + 1, rect.x + rect.w - 1, rect.y + rect.h - 2, colors[COLOR_DIALOG_BACKGROUND]);
+    } break;
+
+    case STYLE_SCROLL_BUTTON: {
+      if (modifiers & CIG_STYLE_APPLY_PRESS) {
+        DrawRectangle(UNPACK_RECT(rect), colors[COLOR_DIALOG_BACKGROUND]);
+        DrawRectangleLinesEx(RAYLIB_RECT(rect), 1, (Color) { 128, 128, 128, 255 });
+      } else {
+        DrawRectangle(UNPACK_RECT(rect), colors[COLOR_DIALOG_BACKGROUND]);
+        DrawLine(rect.x + 1, rect.y + 1, rect.x + rect.w - 2, rect.y + 1, (Color){ 255, 255, 255, 255 });
+        DrawLine(rect.x + 2, rect.y + 2, rect.x + 2, rect.y + rect.h - 1, (Color){ 255, 255, 255, 255 });
+        DrawLine(rect.x, rect.y + rect.h - 1, rect.x + rect.w, rect.y + rect.h - 1, (Color){ 0, 0, 0, 255 });
+        DrawLine(rect.x + rect.w, rect.y, rect.x + rect.w, rect.y + rect.h - 1, (Color){ 0, 0, 0, 255 });
+        DrawLine(rect.x + 1, rect.y + rect.h - 2, rect.x + rect.w - 1, rect.y + rect.h - 2, (Color){ 130, 130, 130, 255 });
+        DrawLine(rect.x + rect.w - 1, rect.y + 1, rect.x + rect.w - 1, rect.y + rect.h - 2, (Color){ 130, 130, 130, 255 });
+      }
     } break;
   }
 }
