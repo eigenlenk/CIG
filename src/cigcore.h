@@ -117,7 +117,8 @@ typedef struct {
 
   /*  Some basic layout flags */
   enum CIG_PACKED {
-    CIG_LAYOUT_DISABLE_CULLING = CIG_BIT(0)
+    CIG_LAYOUT_DISABLE_CULLING = CIG_BIT(0),
+    CIG_LAYOUT_MINIMUM_LIMIT = CIG_BIT(1)
   } flags;
 
   /*  Opaque pointer for passing custom data to a custom layout builder */
@@ -160,11 +161,12 @@ typedef enum CIG_PACKED {
 /* */
 typedef struct cig_frame {
   cig_id id;
-  cig_r rect,          /* Relative rect */
-        clipped_rect,  /* Relative clipped rect */
-        absolute_rect, /* Screen-space rect */
-        content_rect;  /* Relative rect bounding the content */
-  cig_i insets;        /* Insets affect child elements within this element */
+  cig_r rect,                   /* Relative rect */
+        clipped_rect,           /* Relative clipped rect */
+        absolute_rect,          /* Screen-space rect */
+        absolute_clipped_rect,  /* Screen-space rect */
+        content_rect;           /* Relative rect bounding the content */
+  cig_i insets;                 /* Insets affect child elements within this element */
   cig_frame_visibility visibility;
 
   /*__PRIVATE__*/      
@@ -213,7 +215,8 @@ typedef struct {
 
   struct {
     bool active;
-    cig_v start_position;
+    cig_v start_position_absolute,
+          start_position_relative;
     cig_v change;
   } drag;
 
@@ -507,7 +510,7 @@ void cig_set_focused_id(cig_id);
     scrolling elements already, it may fail.
     
     @return TRUE if state could be allocated, FALSE otherwise */
-bool cig_enable_scroll(cig_scroll_state_t *);
+bool cig_enable_scroll(cig_scroll_state_t*);
 
 /*  @return Current scroll state objet, or NULL if scrolling is not enabled */
 CIG_OPTIONAL(cig_scroll_state_t*) cig_scroll_state();

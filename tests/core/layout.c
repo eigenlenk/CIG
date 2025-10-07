@@ -30,6 +30,7 @@ TEST(core_layout, basic_checks) {
   TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 640, 480), cig_current()->rect);
   TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 640, 480), cig_current()->clipped_rect);
   TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 640, 480), cig_current()->absolute_rect);
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 640, 480), cig_current()->absolute_clipped_rect);
   TEST_ASSERT_FALSE(cig_is_vertical_layout());
   TEST_ASSERT(cig_current()->insets.left == 0 && cig_current()->insets.top == 0 &&
     cig_current()->insets.right == 0 && cig_current()->insets.bottom == 0);
@@ -301,6 +302,24 @@ TEST(core_layout, content_bounds) {
 
   if (cig_push_frame(cig_r_make(600, 400, 100, 100))) { cig_pop_frame(); }
   TEST_ASSERT_EQUAL_RECT(cig_r_make(-35, -25, 735, 525), cig_content_rect());
+}
+
+TEST(core_layout, content_bounds_nested) {
+  TEST_ASSERT_EQUAL_RECT(cig_r_zero(), cig_content_rect());
+
+  cig_push_frame(RECT_AUTO); /* Frame 1: Fills 640x480 screen */
+  cig_push_frame(RECT_AUTO); /* Frame 2: Pushes another filled frame */
+  cig_push_frame(cig_r_make(0, 0, 640, 1024));
+
+  TEST_ASSERT_EQUAL_RECT(cig_r_zero(), cig_content_rect());
+
+  cig_pop_frame(); /* Pop Frame 2 */
+
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 640, 1024), cig_content_rect());
+
+  cig_pop_frame(); /* Pop Frame 1 */
+
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 640, 480), cig_content_rect());
 }
 
 TEST(core_layout, vstack_layout) {
@@ -702,6 +721,34 @@ TEST(core_layout, grid_with_flipped_alignment_and_direction) {
       └────────────────────────────┘ */
 }
 
+TEST(core_layout, grid_with_minimum)
+{
+  /* Grid that must contain 2 elemements per row before new row is pushed */
+  if (!cig_push_grid(RECT_AUTO, cig_i_zero(), (cig_params) {
+    .width = 400,
+    .height = 100,
+    .limit.horizontal = 2,
+    .flags = CIG_LAYOUT_MINIMUM_LIMIT
+  })) {
+    TEST_FAIL_MESSAGE("Unable to add layout builder frame");
+  }
+
+  if (cig_push_frame(RECT_AUTO)) {
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 400, 100), cig_current()->rect);
+    cig_pop_frame(); 
+  }
+
+  if (cig_push_frame(RECT_AUTO)) {
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(400, 0, 400, 100), cig_current()->rect);
+    cig_pop_frame(); 
+  }
+
+  if (cig_push_frame(RECT_AUTO)) {
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 100, 400, 100), cig_current()->rect);
+    cig_pop_frame(); 
+  }
+}
+
 TEST(core_layout, vstack_scroll) {
   register int i;
   /* Any element can be made scrollable, but it makes most sense for stacks/grids */
@@ -751,6 +798,7 @@ TEST(core_layout, clipping) {
   /*  An element that's partially outside the root bounds gets clipped */
   cig_push_frame(cig_r_make(100, -100, 440, 200));
   TEST_ASSERT_EQUAL_RECT(cig_r_make(100, 0, 440, 100), cig_current()->clipped_rect);
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(100, 0, 440, 100), cig_current()->absolute_clipped_rect);
   cig_pop_frame();
   
   /*  Some element filling the whole root */
@@ -762,9 +810,11 @@ TEST(core_layout, clipping) {
   cig_push_frame(cig_r_make(600, 400, 100, 100));
 
   TEST_ASSERT_EQUAL_RECT(cig_r_make(600, 400, 40, 80), cig_current()->clipped_rect);
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(600, 400, 40, 80), cig_current()->absolute_clipped_rect);
     
     cig_push_frame(cig_r_make(30, 70, 20, 20));
     TEST_ASSERT_EQUAL_RECT(cig_r_make(30, 70, 10, 10), cig_current()->clipped_rect);
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(630, 470, 10, 10), cig_current()->absolute_clipped_rect);
     cig_pop_frame();
     
   cig_pop_frame();
@@ -772,13 +822,16 @@ TEST(core_layout, clipping) {
   cig_push_frame(cig_r_make(-75, -50, 200, 200));
   
   TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 125, 150), cig_current()->clipped_rect);
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 125, 150), cig_current()->absolute_clipped_rect);
     
     cig_push_frame(cig_r_make(0, 0, 100, 100));
     TEST_ASSERT_EQUAL_RECT(cig_r_make(75, 50, 25, 50), cig_current()->clipped_rect);
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 25, 50), cig_current()->absolute_clipped_rect);
     cig_pop_frame();
     
     cig_push_frame(cig_r_make(-25, -50, 100, 100));
     TEST_ASSERT_EQUAL_RECT(cig_r_make(75, 50, 0, 0), cig_current()->clipped_rect);
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 0, 0), cig_current()->absolute_clipped_rect);
     cig_pop_frame();
 
   cig_pop_frame();
@@ -788,6 +841,7 @@ TEST(core_layout, clipping) {
 
     cig_push_frame(cig_r_make(-10, -50, 460, 100));
     TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 0, 440, 50), cig_current()->clipped_rect);
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(100, 100, 440, 50), cig_current()->absolute_clipped_rect);
     cig_pop_frame();
 
   cig_pop_frame();
@@ -804,6 +858,7 @@ TEST(core_layout, additional_buffers) {
   TEST_ASSERT_EQUAL(&secondary_buffer, cig_buffer());
   TEST_ASSERT_EQUAL_RECT(cig_r_make(100, 100, 440, 280), cig_current()->clipped_rect);
   TEST_ASSERT_EQUAL_RECT(cig_r_make(100, 100, 440, 280), cig_current()->absolute_rect);
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(100, 100, 440, 280), cig_current()->absolute_clipped_rect);
 
   /*  Another child within that new buffer */
   cig_push_frame(cig_r_make(100, 100, 240, 80));
@@ -829,6 +884,7 @@ TEST(core_layout, main_screen_subregion) {
 
   /*  The UI should be clipped within that larger screen */
   TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 240, 640, 240), cig_current()->clipped_rect);
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(0, 240, 640, 240), cig_current()->absolute_clipped_rect);
 
   cig_push_frame(RECT_AUTO);
 
@@ -1212,6 +1268,7 @@ TEST_GROUP_RUNNER(core_layout)
   RUN_TEST_CASE(core_layout, overlay);
   RUN_TEST_CASE(core_layout, culling);
   RUN_TEST_CASE(core_layout, content_bounds);
+  RUN_TEST_CASE(core_layout, content_bounds_nested);
   RUN_TEST_CASE(core_layout, vstack_layout);
   RUN_TEST_CASE(core_layout, hstack_layout);
   RUN_TEST_CASE(core_layout, hstack_mix);
@@ -1223,6 +1280,7 @@ TEST_GROUP_RUNNER(core_layout)
   RUN_TEST_CASE(core_layout, grid_with_varying_cell_size);
   RUN_TEST_CASE(core_layout, grid_with_down_direction);
   RUN_TEST_CASE(core_layout, grid_with_flipped_alignment_and_direction);
+  RUN_TEST_CASE(core_layout, grid_with_minimum);
   RUN_TEST_CASE(core_layout, vstack_scroll);
   RUN_TEST_CASE(core_layout, clipping);
   RUN_TEST_CASE(core_layout, additional_buffers);

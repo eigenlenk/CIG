@@ -1,5 +1,4 @@
 #include "components/menu.h"
-
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>

@@ -474,7 +474,7 @@ about_wnd_proc(window_t *this, bool window_focused)
             CIG_SPACING(5),
           })) {
             CIG(_H(11)) {
-              cig_draw_label((cig_text_properties) { .alignment.horizontal = CIG_TEXT_ALIGN_LEFT }, "Macrohard Windooze");
+              cig_draw_label((cig_text_properties) { .alignment.horizontal = CIG_TEXT_ALIGN_LEFT }, "rnicrosoft Windooze");
             }
             CIG(_H(11)) {
               cig_draw_label((cig_text_properties) { .alignment.horizontal = CIG_TEXT_ALIGN_LEFT }, "Windooze 95");

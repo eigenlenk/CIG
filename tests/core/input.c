@@ -190,7 +190,7 @@ TEST(core_input, simple_drag) {
       /*  Drag is activated on mouse button (primary action) down */
       TEST_ASSERT_TRUE(cig_input_state()->drag.active);
       TEST_ASSERT_TRUE(cig_input_state()->action_mask & CIG_INPUT_PRIMARY_ACTION);
-      TEST_ASSERT_EQUAL_VEC2(cig_v_make(25, 25), cig_input_state()->drag.start_position);
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(25, 25), cig_input_state()->drag.start_position_absolute);
       TEST_ASSERT_EQUAL_VEC2(cig_v_zero(), cig_input_state()->drag.change);
     } else if (i == 1) {
       cig_set_input_state(cig_v_make(50, 50), CIG_INPUT_PRIMARY_ACTION);

@@ -89,6 +89,7 @@ void cig_begin_layout(
     .rect = cig_r_make(0, 0, rect.w, rect.h),
     .clipped_rect = rect,
     .absolute_rect = rect,
+    .absolute_clipped_rect = rect,
     .insets = cig_i_zero(),
     ._layout_function = NULL,
     ._parent = NULL,
@@ -342,10 +343,10 @@ void cig_set_input_state(
   if (current->input_state.action_mask) {
     if (!current->input_state.drag.active) {
       current->input_state.drag.active = true;
-      current->input_state.drag.start_position = current->input_state.position;
+      current->input_state.drag.start_position_absolute = current->input_state.position;
       current->input_state.drag.change = cig_v_zero();
     } else {
-      current->input_state.drag.change = cig_v_sub(current->input_state.position, current->input_state.drag.start_position);
+      current->input_state.drag.change = cig_v_sub(current->input_state.position, current->input_state.drag.start_position_absolute);
     }
   } else if (current->input_state.drag.active) {
     current->input_state.drag.active = false;
@@ -724,10 +725,12 @@ bool cig_default_layout_builder(
   h = limit(h, prm->size_min.height, prm->size_max.height);
 
   if (h_axis && v_axis) {
-    /*  Can we fit the new frame onto current axis? */
+    const bool minimum_limit = prm->flags & CIG_LAYOUT_MINIMUM_LIMIT;
+
+    /* Can we fit the new frame onto current axis? */
     switch (prm->direction) {
       case CIG_LAYOUT_DIRECTION_HORIZONTAL: {
-        if ((prm->limit.horizontal && prm->_count.h_cur == prm->limit.horizontal) || prm->_h_pos + w > container.w) {
+        if ((prm->limit.horizontal && prm->_count.h_cur == prm->limit.horizontal) || (prm->_h_pos + w > container.w && !minimum_limit)) {
           move_to_next_row(prm);
           x = 0;
           y = prm->_v_pos;
@@ -738,12 +741,12 @@ bool cig_default_layout_builder(
         prm->_v_size = CIG_MAX(prm->_v_size, h);
         prm->_count.h_cur ++;
         
-        if (prm->_h_pos >= container.w) {
+        if (prm->_h_pos >= container.w && !minimum_limit) {
           move_to_next_row(prm);
         }
       } break;
       case CIG_LAYOUT_DIRECTION_VERTICAL: {
-        if ((prm->limit.vertical && prm->_count.v_cur == prm->limit.vertical) || prm->_v_pos + h > container.h) {
+        if ((prm->limit.vertical && prm->_count.v_cur == prm->limit.vertical) || (prm->_v_pos + h > container.h && !minimum_limit)) {
           move_to_next_column(prm);
           y = 0;
           x = prm->_h_pos;
@@ -754,7 +757,7 @@ bool cig_default_layout_builder(
         prm->_v_size = CIG_MAX(prm->_v_size, h);
         prm->_count.v_cur ++;
 
-        if (prm->_v_pos >= container.h) {
+        if (prm->_v_pos >= container.h && !minimum_limit) {
           move_to_next_column(prm);
         }
       } break;
@@ -961,16 +964,18 @@ static cig_frame* push_frame(
 
   top->_layout_params._count.total ++;
 
-  cig_r absolute_rect = cig_convert_relative_rect(next);
-  cig_r current_clip_rect = !current_buffer->clip_rects.size
+  const cig_r absolute_rect = cig_convert_relative_rect(next);
+  const cig_r current_clip_rect = !current_buffer->clip_rects.size
     ? current_buffer->absolute_rect
     : current_buffer->clip_rects.peek(&current_buffer->clip_rects, 0);
+  const cig_r clipped_absolute_rect = cig_r_union(absolute_rect, current_clip_rect);
 
   *new_frame = (cig_frame) {
     .id = next_id,
     .rect = next,
-    .clipped_rect = cig_r_offset(cig_r_union(absolute_rect, current_clip_rect), -absolute_rect.x + next.x, -absolute_rect.y + next.y),
+    .clipped_rect = cig_r_offset(clipped_absolute_rect, -absolute_rect.x + next.x, -absolute_rect.y + next.y),
     .absolute_rect = absolute_rect,
+    .absolute_clipped_rect = clipped_absolute_rect,
     .insets = insets,
     .visibility = CIG_MIN(CIG_FRAME_VISIBLE, previous_visibility + 1),
     ._layout_function = layout_function,
@@ -1006,7 +1011,7 @@ static cig_frame* push_frame(
 }
 
 CIG_INLINED void handle_frame_hover(cig_frame *frame) {
-  if (cig_r_contains(frame->absolute_rect, current->input_state.position)) {
+  if (cig_r_contains(frame->absolute_clipped_rect, current->input_state.position)) {
     frame->_flags |= HOVER;
     frame->_flags |= SUBTREE_INCLUSIVE_HOVER;
     cig_frame *parent = frame->_parent;

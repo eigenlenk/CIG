@@ -1,5 +1,4 @@
 #include "components/file_browser.h"
-
 #include <string.h>
 
 static cig_frame* large_file_icon(int, const char*, color_id_t, bool, bool*, bool*);
@@ -22,7 +21,9 @@ bool begin_file_browser(cig_r rect, int direction, color_id_t text_color, bool p
   if (!cig_push_grid(RECT_AUTO, cig_i_zero(), (cig_params) {
     .width = 75,
     .height = 75,
-    .direction = direction
+    .direction = direction,
+    .limit.horizontal = 4,
+    .flags = CIG_LAYOUT_MINIMUM_LIMIT
   })) {
     return false;
   }
@@ -56,18 +57,15 @@ bool begin_file_browser(cig_r rect, int direction, color_id_t text_color, bool p
     if (!data->drag_selection.active && parent_focused && cig_input_state()->drag.active && cig_v_magnitude(cig_input_state()->drag.change) > 2) {
       cig_input_state()->locked = true;
       data->drag_selection.active = true;
-      data->drag_selection.start = cig_v_sub(cig_input_state()->drag.start_position, cig_v_make(CIG_SX, CIG_SY));
+      data->drag_selection.start = cig_v_sub(cig_input_state()->drag.start_position_absolute, cig_v_make(CIG_SX, CIG_SY));
     }
   }
 
   if (cig_input_state()->drag.active) {
     if (data->drag_selection.active) {
-      data->drag_selection.relative_rect = cig_r_clip(
-        rect_of(
-          data->drag_selection.start,
-          cig_v_add(data->drag_selection.start, cig_input_state()->drag.change)
-        ),
-        cig_current()->rect
+      data->drag_selection.relative_rect = rect_of(
+        data->drag_selection.start,
+        cig_v_add(data->drag_selection.start, cig_input_state()->drag.change)
       );
     }
   } else {
