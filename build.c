@@ -102,7 +102,7 @@ int main(int argc, char **argv)
       "-I"SRC_FOLDER,
       "-I"DEMO_FOLDER"win95/",
       "-I"DEPS_FOLDER"utf8/",
-      "-I"DEPS_FOLDER"raylib-5.5_win32_mingw-w64/include",
+      "-I"DEPS_FOLDER"raylib-5.5_win64_mingw-w64/include",
       
       "-DDEBUG",
 
@@ -123,7 +123,7 @@ int main(int argc, char **argv)
       DEMO_FOLDER"win95/apps/welcome/welcome.c",
       DEMO_FOLDER"win95/apps/games/wordwiz/wordwiz.c",
       
-      DEPS_FOLDER"raylib-5.5_win32_mingw-w64/lib/libraylib.a",
+      DEPS_FOLDER"raylib-5.5_win64_mingw-w64/lib/libraylib.a",
       "-lopengl32",
       "-lgdi32",
       "-lwinmm"
