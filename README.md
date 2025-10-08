@@ -189,8 +189,8 @@ Adds an image element as well as line and rectangle drawing (passing calls to th
 * More documentation, examples and tutorials
 
 ### Known issues / limitations
-* Pinning certain layout combinations is tricky; aspect-ratio not taken into account always; offset value sign should be flipped in some cases (eg. pinning right edge to right edge)
-* Positional macros (`cigcorem.h`) are misleading when frame is inset, needs overhaul and proper naming convention
+* ~~Pinning certain layout combinations is tricky; aspect-ratio not taken into account always; offset value sign should be flipped in some cases (eg. pinning right edge to right edge)~~
+* ~~Positional macros (`cigcorem.h`) are misleading when frame is inset, needs overhaul and proper naming convention~~
 
 # What now?
 This is pretty much my first open-source library, so if you find this interesting or it gives you an idea how to make that thing of your own, that's awesome. If you want to try and use it, that's even better! Willing to contribute a fix or a new feature? OMG! We can chat on [Discord](https://discord.gg/X379hyV37f) 👋
