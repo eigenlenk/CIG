@@ -2,6 +2,7 @@
 #include "fixture.h"
 #include "cig.h"
 #include "asserts.h"
+#include "types/gap_buffer.h"
 
 /* Declare a stack type */
 #define STACK_CAPACITY_int 8
@@ -158,6 +159,48 @@ TEST(types, stack_operations) {
   TEST_ASSERT_EQUAL_INT(0, si.size);
 }
 
+TEST(types, gap_buffer)
+{
+  gap_buffer_char *gap_buffer;
+
+  /* Start with an empty buffer. Gap is at the beginning */
+  gap_buffer_char_new(&gap_buffer, 0, 16);                            /* [^_______________] */
+  TEST_ASSERT_EQUAL_INT(16, gap_buffer->size);
+  TEST_ASSERT_EQUAL_INT(0, gap_buffer->gap.start);
+  TEST_ASSERT_EQUAL_INT(16, gap_buffer->gap.size);
+  TEST_ASSERT_NOT_NULL(gap_buffer);
+
+  /* Insert something and reduce the gap */
+  gap_buffer_char_insert(&gap_buffer, GAPCURPOS, 10, "HelloWorld");   /* [HelloWorld^_____] */
+  TEST_ASSERT_EQUAL_INT(10, gap_buffer->gap.start);
+  TEST_ASSERT_EQUAL_INT(16-10, gap_buffer->gap.size);
+
+  /* Move gap to between 2 words and insert a space */
+  gap_buffer_char_insert(&gap_buffer, 5, 1, " ");                     /* [Hello^_____World] */
+  TEST_ASSERT_EQUAL_INT(6, gap_buffer->gap.start);                    /* [Hello ^____World] */
+  TEST_ASSERT_EQUAL_INT(16-11, gap_buffer->gap.size);
+
+  /* Move to the end of the text */
+  gap_buffer_char_insert(&gap_buffer, GAPTAIL, 1, "!");               /* [Hello World^____] */
+  TEST_ASSERT_EQUAL_INT(12, gap_buffer->gap.start);                   /* [Hello World!^___] */
+  TEST_ASSERT_EQUAL_INT(16-12, gap_buffer->gap.size);
+
+  /* Text does not fit in gap - buffer is doubled */
+  gap_buffer_char_insert(&gap_buffer, 6, 11, " From This ");          /* [Hello ^___World!] */
+  TEST_ASSERT_EQUAL_INT(32, gap_buffer->size);                        /* [Hello ^___________________World!] */
+                                                                      /* [Hello  From This ^________World!] */
+  /* Delete space */
+  gap_buffer_char_delete(&gap_buffer, 6, 1);                          /* [Hello ^________ From This World!] */
+  TEST_ASSERT_EQUAL_INT(6, gap_buffer->gap.start);                    /* [Hello ^_________From This World!] */
+  TEST_ASSERT_EQUAL_INT(10, gap_buffer->gap.size);
+
+  /* Replace a range with new text */
+  gap_buffer_char_replace(&gap_buffer, 11, 11, 4, "CIG!");            /* [Hello From ^____________________] */
+                                                                      /* [Hello From CIG!^________________] */
+  gap_buffer_char_free(&gap_buffer);
+  TEST_ASSERT_NULL(gap_buffer);
+}
+
 TEST_GROUP_RUNNER(types) {
   RUN_TEST_CASE(types, rect_constructors);
   RUN_TEST_CASE(types, rect_comparator);
@@ -174,4 +217,5 @@ TEST_GROUP_RUNNER(types) {
   RUN_TEST_CASE(types, vec2_comparator);
   RUN_TEST_CASE(types, vec2_math_utils);
   RUN_TEST_CASE(types, stack_operations);
+  RUN_TEST_CASE(types, gap_buffer);
 }
