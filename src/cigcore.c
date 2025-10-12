@@ -682,7 +682,7 @@ bool cig_default_layout_builder(
       if (prm->width > 0) {
         w = CIG_ANY_VALUE(rect.w, prm->width);
       } else if (prm->columns) {
-        w = CIG_ANY_VALUE(rect.w, (container.w - ((prm->columns - 1) * prm->spacing)) / prm->columns);
+        w = CIG_ANY_VALUE(rect.w, (container.w - ((prm->columns - 1) * prm->spacing.x)) / prm->columns);
       } else if (is_grid && prm->_h_size && prm->direction == CIG_LAYOUT_DIRECTION_VERTICAL) {
         w = CIG_ANY_VALUE(rect.w, prm->_h_size);
       } else {
@@ -704,7 +704,7 @@ bool cig_default_layout_builder(
       if (prm->height > 0) {
         h = CIG_ANY_VALUE(rect.h, prm->height);
       } else if (prm->rows) {
-        h = CIG_ANY_VALUE(rect.h, (container.h - ((prm->rows - 1) * prm->spacing)) / prm->rows);
+        h = CIG_ANY_VALUE(rect.h, (container.h - ((prm->rows - 1) * prm->spacing.y)) / prm->rows);
       } else if (is_grid && prm->_v_size && prm->direction == CIG_LAYOUT_DIRECTION_HORIZONTAL) {
         h = CIG_ANY_VALUE(rect.h, prm->_v_size);
       } else {
@@ -736,7 +736,7 @@ bool cig_default_layout_builder(
           y = prm->_v_pos;
         }
         
-        prm->_h_pos += (w + prm->spacing);
+        prm->_h_pos += (w + prm->spacing.x);
         prm->_h_size = CIG_MAX(prm->_h_size, w);
         prm->_v_size = CIG_MAX(prm->_v_size, h);
         prm->_count.h_cur ++;
@@ -752,7 +752,7 @@ bool cig_default_layout_builder(
           x = prm->_h_pos;
         }
 
-        prm->_v_pos += (h + prm->spacing);
+        prm->_v_pos += (h + prm->spacing.y);
         prm->_h_size = CIG_MAX(prm->_h_size, w);
         prm->_v_size = CIG_MAX(prm->_v_size, h);
         prm->_count.v_cur ++;
@@ -767,14 +767,14 @@ bool cig_default_layout_builder(
     if (prm->limit.horizontal && prm->_count.h_cur == prm->limit.horizontal) {
       return false;
     }
-    prm->_h_pos += (w + prm->spacing);
+    prm->_h_pos += (w + prm->spacing.x);
     prm->_h_size = CIG_MAX(prm->_h_size, w);
     prm->_count.h_cur ++;
   } else if (v_axis) {
     if (prm->limit.vertical && prm->_count.v_cur == prm->limit.vertical) {
       return false;
     }
-    prm->_v_pos += (h + prm->spacing);
+    prm->_v_pos += (h + prm->spacing.y);
     prm->_v_size = CIG_MAX(prm->_v_size, h);
     prm->_count.v_cur ++;
   }
@@ -1145,7 +1145,7 @@ static void pop_clip() {
 
 CIG_INLINED void move_to_next_row(cig_params *prm) {
   prm->_h_pos = 0;
-  prm->_v_pos += (prm->_v_size + prm->spacing);
+  prm->_v_pos += (prm->_v_size + prm->spacing.y);
   prm->_h_size = 0;
   prm->_v_size = 0;
   prm->_count.h_cur = 0;
@@ -1153,7 +1153,7 @@ CIG_INLINED void move_to_next_row(cig_params *prm) {
 
 CIG_INLINED void move_to_next_column(cig_params *prm) {
   prm->_v_pos = 0;
-  prm->_h_pos += (prm->_h_size + prm->spacing);
+  prm->_h_pos += (prm->_h_size + prm->spacing.x);
   prm->_h_size = 0;
   prm->_v_size = 0;
   prm->_count.v_cur = 0;

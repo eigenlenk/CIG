@@ -326,7 +326,7 @@ TEST(core_layout, vstack_layout) {
   /* Pushing a stack that lays out frames vertically with a 10pt spacing */
   if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_params) {
     .axis = CIG_LAYOUT_AXIS_VERTICAL,
-    .spacing = 10,
+    .spacing.y = 10,
     .limit.vertical = 2
   })) {
     TEST_FAIL_MESSAGE("Unable to add layout builder frame");
@@ -350,10 +350,10 @@ TEST(core_layout, vstack_layout) {
 }
 
 TEST(core_layout, hstack_layout) {
-  /* Pushing a stack that lays out frames horizontally with no spacing, but everything is inset by 10pt */
+  /* Pushing a stack that lays out frames horizontally with 5pt horizontal spacing, and everything is inset by 10pt */
   if (!cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_uniform(10), (cig_params) {
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL,
-    .spacing = 0
+    .spacing.x = 5 
   })) {
     TEST_FAIL_MESSAGE("Unable to add layout builder frame");
   }
@@ -365,10 +365,12 @@ TEST(core_layout, hstack_layout) {
   cig_pop_frame();
   
   cig_push_frame(RECT_AUTO_W(100));
-  TEST_ASSERT_EQUAL_RECT(cig_r_make(200, 0, 100, 480-2*10), cig_current()->rect);
+  TEST_ASSERT_EQUAL_RECT(cig_r_make(205, 0, 100, 480-2*10), cig_current()->rect);
   cig_pop_frame();
   
-  TEST_ASSERT_EQUAL_INT(300, cig_current()->_layout_params._h_pos);
+  /* Horizontal pos is the X-position where next frame would be set,
+   * so the horizontal spacing is factored in already. */
+  TEST_ASSERT_EQUAL_INT(310, cig_current()->_layout_params._h_pos);
   
   cig_pop_frame(); /* Not really necessary in testing, but.. */
 }
@@ -419,7 +421,7 @@ TEST(core_layout, vstack_align_bottom) {
     .axis = CIG_LAYOUT_AXIS_VERTICAL,
     .alignment.vertical = CIG_LAYOUT_ALIGNS_BOTTOM,
     .height = 50,
-    .spacing = 0
+    .spacing = cig_v_zero()
   })) {
     TEST_FAIL_MESSAGE("Unable to add layout builder frame");
   }
@@ -445,7 +447,7 @@ TEST(core_layout, hstack_align_right) {
     .axis = CIG_LAYOUT_AXIS_HORIZONTAL,
     .alignment.horizontal = CIG_LAYOUT_ALIGNS_RIGHT,
     .width = 50,
-    .spacing = 0
+    .spacing = cig_v_zero()
   })) {
     TEST_FAIL_MESSAGE("Unable to add layout builder frame");
   }
@@ -483,7 +485,7 @@ TEST(core_layout, grid_with_fixed_rows_and_columns) {
      Here it's a 5x5 grid, meaning on our 640x480 screen,
      each cell would be 128x96 */
   if (!cig_push_grid(RECT_AUTO, cig_i_zero(), (cig_params) {
-    .spacing = 0,
+    .spacing = cig_v_zero(),
     .columns = 5,
     .rows = 5
   })) {

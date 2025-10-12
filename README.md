@@ -28,7 +28,7 @@ if (cig_push_frame(RECT_CENTERED(800, 600))) {
      horizontal, or have both axis enabled, in which case they become grids */
   cig_push_layout_function(&cig_default_layout_builder, RECT_AUTO, cig_i_zero(), (cig_params) {
     .axis = CIG_LAYOUT_AXIS_VERTICAL,
-    .spacing = 10,
+    .spacing.y = 10,
     .height = 100
   });
   
@@ -111,7 +111,7 @@ if (cig_push_frame(cig_build_rect(4, (cig_pin[]) {
 ```c
 /* Create a vertical stack where each item will be 50 units high and with a 10 unit spacing */
 if (cig_push_vstack(cig_r_make(0, 0, 300, 500), cig_i_zero(), (cig_params) {
-    .spacing = 10,
+    .spacing.y = 10,
     .height = 50
 })) {
     /* This creates 3 rows in the stack */
@@ -153,7 +153,7 @@ CIG_VSTACK(
   RECT(0, 0, 300, 500), 
   CIG_INSETS(cig_i_zero()), 
   CIG_PARAMS({
-    CIG_SPACING(10),
+    CIG_SPACING_VERTICAL(10),
     CIG_HEIGHT(50)
   })
 ) {

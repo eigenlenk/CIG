@@ -41,7 +41,9 @@
 #define CIG_DIRECTION(A) .direction = A
 #define CIG_ALIGNMENT_HORIZONTAL(A) .alignment.horizontal = A
 #define CIG_ALIGNMENT_VERTICAL(A) .alignment.vertical = A
-#define CIG_SPACING(N) .spacing = N
+#define CIG_SPACING(N) .spacing = { N, N }
+#define CIG_SPACING_HORIZONTAL(N) .spacing.x = N
+#define CIG_SPACING_VERTICAL(N) .spacing.y = N
 #define CIG_WIDTH(W) .width = W
 #define CIG_HEIGHT(H) .height = H
 #define CIG_ROWS(N) .rows = N

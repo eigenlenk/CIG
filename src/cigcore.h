@@ -101,8 +101,11 @@ typedef struct {
     } vertical;
   } alignment;
 
+  /* Horizontal and vertical spacing between elements. Use is determined by type of layout function */
+  cig_v spacing;
+
   /*  Some common parameters the layout builder could use */
-  int16_t spacing, width, height, columns, rows;
+  int16_t width, height, columns, rows;
 
   /*  Limits how many elements can be added per axis on in total.
       Total number of elements is checked in `cig_push_frame` but horizontal
