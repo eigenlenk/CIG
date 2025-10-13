@@ -78,6 +78,8 @@ The library uses [nob.h](https://github.com/tsoding/nob.h) to bootstrap the buil
 1. Use `gcc -o build build.c -std=gnu99` to create the builder (or `CC`, depending on your compiler situation)
 2. Then run `build test` or `build demo`
 
+📌 TODO: Migrate to CMake
+
 # Using CIG
 
 🚧 UNDER CONSTRUCTION 🚧
