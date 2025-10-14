@@ -94,7 +94,7 @@ int main(int argc, const char *argv[]) {
   }
 
   if (run_fullscreen) {
-    InitWindow(0, 0, "Windooze 95");
+    InitWindow(0, 0, "Winlose 95");
     ray_w = GetMonitorWidth(GetCurrentMonitor());
     ray_h = GetMonitorHeight(GetCurrentMonitor());
     scale = 0.5;
@@ -109,7 +109,7 @@ int main(int argc, const char *argv[]) {
 
   // SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
   SetConfigFlags(FLAG_WINDOW_ALWAYS_RUN);
-  InitWindow(ray_w, ray_h, "Windooze 95");
+  InitWindow(ray_w, ray_h, "Winlose 95");
   SetTargetFPS(60);
 
   if (run_fullscreen) {

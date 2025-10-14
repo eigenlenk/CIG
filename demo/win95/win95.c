@@ -258,7 +258,7 @@ win95_show_about_window()
     .id = cig_hash("aboutwin"),
     .proc = &about_wnd_proc,
     .rect = CENTER_APP_WINDOW(360, 280),
-    .title = "About Windooze",
+    .title = "About Winlose",
     .icon = -1,
     .flags = IS_UNIQUE_WINDOW
   });
@@ -342,9 +342,9 @@ setup_menus()
         .list = {
           { .type = CHILD_MENU, .data = &start_menus[START_PROGRAMS_ACCESSORIES], .icon = IMAGE_PROGRAM_FOLDER_16 },
           { .type = CHILD_MENU, .data = &start_menus[START_PROGRAMS_STARTUP], .icon = IMAGE_PROGRAM_FOLDER_16 },
-          { .title = "Microsoft Exchange", .icon = IMAGE_MAIL_16 },
+          { .title = "RNicrosoft Exchange", .icon = IMAGE_MAIL_16 },
           { .title = "MS-DOS Prompt", .icon = IMAGE_MSDOS_16 },
-          { .title = "The Microsoft Network", .icon = IMAGE_MSN_16 },
+          { .title = "The RNicrosoft Network", .icon = IMAGE_MSN_16 },
           { .title = "Windows Explorer", .icon = IMAGE_EXPLORER_16 }
         }
       }
@@ -446,7 +446,7 @@ total_system_memory()
   return available_memory;
 }
 
-/* About Windooze 95 window */
+/* About Winlose 95 window */
 static void
 about_wnd_proc(window_t *this, bool window_focused)
 {
@@ -477,10 +477,10 @@ about_wnd_proc(window_t *this, bool window_focused)
             CIG_SPACING(5),
           })) {
             CIG(_H(11)) {
-              cig_draw_label((cig_text_properties) { .alignment.horizontal = CIG_TEXT_ALIGN_LEFT }, "rnicrosoft Windooze");
+              cig_draw_label((cig_text_properties) { .alignment.horizontal = CIG_TEXT_ALIGN_LEFT }, "rnicrosoft Winlose");
             }
             CIG(_H(11)) {
-              cig_draw_label((cig_text_properties) { .alignment.horizontal = CIG_TEXT_ALIGN_LEFT }, "Windooze 95");
+              cig_draw_label((cig_text_properties) { .alignment.horizontal = CIG_TEXT_ALIGN_LEFT }, "Winlose 95");
             }
             CIG(_H(11)) {
               cig_draw_label((cig_text_properties) { .alignment.horizontal = CIG_TEXT_ALIGN_LEFT }, "Copyright © 2025 github.com/eigenlenk");
@@ -507,7 +507,7 @@ about_wnd_proc(window_t *this, bool window_focused)
             CIG(_H(11)) {
               cig_draw_label((cig_text_properties) {
                 .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
-              }, "Physical Memory Available to Windooze:");
+              }, "Physical Memory Available to Winlose:");
 
               cig_draw_label(
                 (cig_text_properties) {

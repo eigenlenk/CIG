@@ -30,7 +30,7 @@ static void process_main_window(window_t *this, bool window_focused) {
           .max_lines = 1,
           .flags = CIG_TEXT_FORMATTED
         },
-        "Welcome to <font=%p>Windooze</font><font=%p><color=%p>95</color></font>",
+        "Welcome to <font=%p>Winlose</font><font=%p><color=%p>95</color></font>",
         get_font(FONT_ARIAL_BLACK_32),
         get_font(FONT_FRANKLIN_GOTHIC_BOOK_32),
         get_color(COLOR_WHITE)
