@@ -80,12 +80,51 @@ CIG_INLINED void load_texture(Texture2D *dst, const char *path) {
   SetTextureFilter(*dst, TEXTURE_FILTER_POINT);
 }
 
+static int win95_w, win95_h;
+static double scale;
+
+static void
+set_up_render_textures()
+{
+  render_texture = LoadRenderTexture(win95_w, win95_h);
+  SetTextureFilter(render_texture.texture, TEXTURE_FILTER_POINT);
+
+#ifdef DEBUG
+  debug_texture = LoadRenderTexture(render_texture.texture.width, render_texture.texture.height);
+  SetTextureFilter(render_texture.texture, TEXTURE_FILTER_POINT);
+#endif
+}
+
+static void
+check_alt_enter()
+{
+  if (IsKeyPressed(KEY_ENTER) && (IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT))) {
+    int ray_w, ray_h;
+    if (IsWindowFullscreen()) {
+      ray_w = 1280;
+      ray_h = 960;
+    } else {
+      int display = GetCurrentMonitor(); 
+      ray_w = GetMonitorWidth(display);
+      ray_h = GetMonitorHeight(display);
+    }
+    win95_w = ray_w * scale;
+    win95_h = ray_h * scale;
+    SetWindowSize(ray_w, ray_h);
+    ToggleFullscreen();
+
+    set_up_render_textures();
+
+    cig_begin_layout(&ctx, NULL, cig_r_make(0, 0, win95_w, win95_h), 0.f);
+    win95_did_change_resolution();
+  }
+}
+
 int main(int argc, const char *argv[]) {
   srand(time(NULL));
 
   bool run_fullscreen = false;
   int i, ray_w, ray_h;
-  double scale;
 
   for (i = 1; i < argc; ++i) {
     if (!strcmp("-f", argv[i])) {
@@ -104,8 +143,8 @@ int main(int argc, const char *argv[]) {
     scale = 0.5;
   }
 
-  int win95_w = ray_w * scale;
-  int win95_h = ray_h * scale;
+  win95_w = ray_w * scale;
+  win95_h = ray_h * scale;
 
   // SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
   SetConfigFlags(FLAG_WINDOW_ALWAYS_RUN);
@@ -242,17 +281,13 @@ int main(int argc, const char *argv[]) {
   win95_t win_instance = { 0 };
   win95_initialize(&win_instance);
 
-  render_texture = LoadRenderTexture(win95_w, win95_h);
-  SetTextureFilter(render_texture.texture, TEXTURE_FILTER_POINT);
-
-#ifdef DEBUG
-  debug_texture = LoadRenderTexture(render_texture.texture.width, render_texture.texture.height);
-  SetTextureFilter(render_texture.texture, TEXTURE_FILTER_POINT);
-#endif
+  set_up_render_textures();
 
   bool running = true;
 
   while (!WindowShouldClose() && running) {
+    check_alt_enter();
+
     BeginDrawing();
 
 #ifdef DEBUG

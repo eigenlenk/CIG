@@ -40,4 +40,7 @@ win95_find_open_app(const char*);
 void
 win95_show_about_window();
 
+void
+win95_did_change_resolution();
+
 #endif

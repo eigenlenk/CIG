@@ -264,6 +264,23 @@ win95_show_about_window()
   });
 }
 
+void
+win95_did_change_resolution()
+{
+  int i;
+
+  for (i = 0; i < WIN95_OPEN_WINDOWS_MAX; ++i) {
+    window_t *wnd = &this->window_manager.windows[i];
+    
+    wnd->rect = cig_r_make(
+      CIG_CLAMP(wnd->rect.x, 0, cig_layout_rect().w - wnd->rect.w),
+      CIG_CLAMP(wnd->rect.y, 0, cig_layout_rect().h - wnd->rect.h),
+      wnd->rect.w,
+      wnd->rect.h
+    );
+  }  
+}
+
 /*  ┌──────────┐
     │ INTERNAL │
     └──────────┘ */
