@@ -5,6 +5,7 @@
 #include "system/resources.h"
 
 extern cig_font_ref button_font;
+extern cig_color_ref button_title_color;
 
 bool
 standard_button(cig_r, const char *);

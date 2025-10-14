@@ -6,6 +6,7 @@
 #include "apps/explorer/explorer.h"
 #include "apps/welcome/welcome.h"
 #include "apps/games/wordwiz/wordwiz.h"
+#include "apps/accessories/calculator/calculator.h"
 #include "cigcorem.h"
 #include <time.h>
 #include <stdio.h>
@@ -299,6 +300,8 @@ static void launch_app_by_id(menu_item *item) {
   
   if (!strcmp(app_id, "wordwiz")) {
     win95_open_app(wordwiz_app());
+  } else if (!strcmp(app_id, "calculator")) {
+    win95_open_app(calculator_app());
   }
 }
 
@@ -403,7 +406,7 @@ setup_menus()
         .count = 3,
         .list = {
           { .type = CHILD_MENU, .data = &start_menus[START_PROGRAMS_ACCESSORIES_GAMES], .icon = IMAGE_PROGRAM_FOLDER_16 },
-          { .title = "Calculator", .icon = IMAGE_CALCULATOR_16 },
+          { .title = "Calculator", .icon = IMAGE_CALCULATOR_16, .data = "calculator", .handler = &launch_app_by_id },
           { .title = "Notepad", .icon = IMAGE_NOTEPAD_16 },
           { .title = "Paint", .icon = IMAGE_PAINT_16 }
         }

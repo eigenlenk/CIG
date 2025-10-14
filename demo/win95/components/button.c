@@ -1,6 +1,7 @@
 #include "components/button.h"
 
 cig_font_ref button_font = NULL;
+cig_color_ref button_title_color = NULL;
 
 bool
 standard_button(cig_r rect, const char *title)
@@ -17,6 +18,7 @@ standard_button(cig_r rect, const char *title)
     if (cig_push_frame_insets(RECT_AUTO,  pressed ? cig_i_make(2, 3, 1, 2) : cig_i_make(1, 1, 2, 2))) {
       cig_draw_label((cig_text_properties) {
         .font = button_font ? button_font : get_font(FONT_REGULAR),
+        .color = button_title_color,
         .max_lines = 1,
         .overflow = CIG_TEXT_SHOW_ELLIPSIS
       }, title);

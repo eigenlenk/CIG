@@ -201,6 +201,10 @@ int main(int argc, const char *argv[]) {
   colors[COLOR_WHITE] = (Color) { 255, 255, 255, 255 };
   colors[COLOR_YELLOW] = (Color) { 255, 255, 0, 255 };
   colors[COLOR_GREEN] = (Color) { 0, 128, 0, 255 };
+  colors[COLOR_RED] = (Color) { 255, 0, 0, 255 };
+  colors[COLOR_MAROON] = (Color) { 128, 0, 0, 255 };
+  colors[COLOR_BLUE] = (Color) { 0, 0, 255, 255 };
+  colors[COLOR_NAVY] = (Color) { 0, 0, 128, 255 };
   colors[COLOR_DESKTOP_BG] = (Color) { 0, 127, 127, 255 };
   colors[COLOR_DIALOG_BACKGROUND] = (Color) { 195, 195, 195, 255 };
   colors[COLOR_WINDOW_ACTIVE_TITLEBAR] = (Color) { 0, 0, 127, 255 };

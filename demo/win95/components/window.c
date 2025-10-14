@@ -162,7 +162,9 @@ window_begin(window_t *wnd, bool *focused)
     cig_current()->insets = wnd_insets;
   }
 
-  cig_push_frame(cig_r_make(0, 20, CIG_AUTO(), CIG_H_INSET - 20));
+  const int content_y = wnd->flags & IS_RESIZABLE ? 20 : 19;
+
+  cig_push_frame(cig_r_make(0, content_y, CIG_AUTO(), CIG_H_INSET - content_y));
     
   return true;
 }
