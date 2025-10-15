@@ -110,8 +110,9 @@ check_alt_enter()
     }
     win95_w = ray_w * scale;
     win95_h = ray_h * scale;
-    SetWindowSize(ray_w, ray_h);
+
     ToggleFullscreen();
+    SetWindowSize(ray_w, ray_h);
 
     set_up_render_textures();
 
