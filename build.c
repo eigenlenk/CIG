@@ -55,6 +55,9 @@ int main(int argc, char **argv)
       "gcc",
       "-std=gnu99",
       "-Wall",
+      // "-Wextra",
+      "-Wno-missing-field-initializers",
+      "-Wno-unused-parameter",
       "-Wfatal-errors",
       
       "-I"SRC_FOLDER,
@@ -97,6 +100,9 @@ int main(int argc, char **argv)
       "gcc",
       "-std=gnu99",
       "-Wall",
+      // "-Wextra",
+      "-Wno-missing-field-initializers",
+      "-Wno-unused-parameter",
       "-Wfatal-errors",
       
       "-I"SRC_FOLDER,
@@ -105,6 +111,7 @@ int main(int argc, char **argv)
       "-I"DEPS_FOLDER"raylib-5.5_win64_mingw-w64/include",
       
       "-DDEBUG",
+      // "-O2",
 
       "-o", BIN_FOLDER"win95",
 

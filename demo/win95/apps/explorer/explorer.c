@@ -51,12 +51,12 @@ static void window_proc(window_t *this, bool window_focused) {
 
   cig_set_next_id(CIG_TINYHASH(this->id, cig_hash("content")));
   CIG_RETAIN(file_content, CIG(
-    CIG_RECT(BUILD_RECT(
+    BUILD_RECT(
       PIN(LEFT_OF(content)),
       PIN(RIGHT_OF(content)),
       PIN(TOP_OF(content), OFFSET_BY(18)),
       PIN(BOTTOM_OF(content), OFFSET_BY(window_data->status_bar_visible ? 20 : 0))
-    )),
+    ),
     CIG_INSETS(cig_i_uniform(2))
   ) {
     cig_fill_color(get_color(COLOR_WHITE));

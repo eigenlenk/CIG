@@ -89,20 +89,20 @@ extern cig__macro_ctx_st cig__macro_ctx;
 /*  This calls the push_frame function once, performs the function body and pops the frame */
 #define CIG(RECT, ...) for ( \
   cig__macro_ctx.pushed=0; \
-  !(cig__macro_ctx.pushed++)&&cig_push_frame_args((cig_args) {RECT,__VA_ARGS__}); \
+  !(cig__macro_ctx.pushed++)&&cig_push_frame_args((cig_args) { RECT, __VA_ARGS__ }); \
   cig_pop_frame())
 
-#define CIG_HSTACK(RECT, ...) cig__macro_ctx.args=((cig_args){RECT,__VA_ARGS__}); for ( \
+#define CIG_HSTACK(RECT, ...) cig__macro_ctx.args=((cig_args) { RECT, __VA_ARGS__ }); for ( \
   cig__macro_ctx.pushed=0; \
   !(cig__macro_ctx.pushed++)&&cig_push_hstack(cig__macro_ctx.args.rect, cig__macro_ctx.args.insets, cig__macro_ctx.args.params); \
   cig_pop_frame())
 
-#define CIG_VSTACK(RECT, ...) cig__macro_ctx.args=((cig_args){RECT,__VA_ARGS__}); for ( \
+#define CIG_VSTACK(RECT, ...) cig__macro_ctx.args=((cig_args) { RECT, __VA_ARGS__ }); for ( \
   cig__macro_ctx.pushed=0; \
   !(cig__macro_ctx.pushed++)&&cig_push_vstack(cig__macro_ctx.args.rect, cig__macro_ctx.args.insets, cig__macro_ctx.args.params); \
   cig_pop_frame())
 
-#define CIG_GRID(RECT, ...) cig__macro_ctx.args=((cig_args){RECT,__VA_ARGS__}); for ( \
+#define CIG_GRID(RECT, ...) cig__macro_ctx.args=((cig_args) { RECT, __VA_ARGS__ }); for ( \
   cig__macro_ctx.pushed=0; \
   !(cig__macro_ctx.pushed++)&&cig_push_grid(cig__macro_ctx.args.rect, cig__macro_ctx.args.insets, cig__macro_ctx.args.params); \
   cig_pop_frame())

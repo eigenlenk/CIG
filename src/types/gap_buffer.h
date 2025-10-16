@@ -30,7 +30,7 @@ gap_buffer_char_new(gap_buffer_char **ptr, size_t position, size_t init_size)
 }
 
 CIG_INLINED void
-gap_buffer_char_place_gap(gap_buffer_char **ptr, size_t position)
+gap_buffer_char_place_gap(gap_buffer_char **ptr, ptrdiff_t position)
 {
   if (position == GAPCURPOS) {
     return;
@@ -38,9 +38,9 @@ gap_buffer_char_place_gap(gap_buffer_char **ptr, size_t position)
     position = (*ptr)->size - (*ptr)->gap.size;
   }
 
-  if ((*ptr)->gap.start == position) {
+  if ((*ptr)->gap.start == (size_t)position) {
     return;
-  } else if (position < (*ptr)->gap.start) {
+  } else if ((size_t)position < (*ptr)->gap.start) {
     const size_t num = ((*ptr)->gap.start - position);
 
     memmove(

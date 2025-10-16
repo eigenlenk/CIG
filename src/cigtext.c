@@ -33,7 +33,7 @@ static cig_text_style style;
 static void prepare_label(cig_label *, cig_text_properties *, cig_v, const char *);
 static cig_span* create_span(cig_label *, utf8_string, cig_font_ref, cig_text_color_ref, cig_text_style, cig_v);
 static void render_spans(cig_span *, size_t, cig_font_ref, cig_text_color_ref, cig_text_horizontal_alignment, cig_text_vertical_alignment, bounds_t, int);
-static void wrap_text(utf8_string *, size_t, cig_v *, cig_text_overflow, cig_font_ref, cig_font_ref, cig_text_color_ref, cig_text_style, size_t, cig_span *);
+static void wrap_text(utf8_string *, size_t, cig_v *, cig_text_overflow, cig_font_ref, cig_font_ref, cig_text_color_ref, cig_text_style, int32_t, cig_span *);
 static bool parse_tag(tag_parser_t*, utf8_char, uint32_t);
 static void apply_tag(tag_parser_t*);
 
@@ -225,7 +225,8 @@ static void prepare_label(
     utf8_char_iter iter = make_utf8_char_iter(utext);
     utf8_char ch;
     uint32_t cp;
-    size_t i = 0, line_width = 0, line_count = 1;
+    int32_t line_width = 0;
+    size_t i = 0, line_count = 1;
 
     cig_font_info base_font_info = font_query(label->font);
 
@@ -385,7 +386,7 @@ static void wrap_text(
   cig_font_ref font_override,
   cig_text_color_ref color_override,
   cig_text_style style,
-  size_t max_width,
+  int32_t max_width,
   cig_span *additional_span
 ) {
   switch (overflow_mode) {

@@ -109,7 +109,7 @@ void cig_begin_layout(
 }
 
 void cig_end_layout() {
-  register int i, j;
+  register unsigned int i, j;
   for (i = 0; i < CIG_STATES_MAX; ++i) {
     if (current->state_list[i].last_tick != current->tick) {
       current->state_list[i].value.active = false;
@@ -407,7 +407,7 @@ cig_input_action_type cig_clicked(
       return result;
     }
   } else {
-    const int required_clicks = options & CIG_CLICK_DOUBLE ? 2 : 1;
+    const unsigned int required_clicks = options & CIG_CLICK_DOUBLE ? 2 : 1;
     if (
       (current->input_state.click_state == ENDED && current->input_state._click_count >= required_clicks) ||
       (current->input_state.click_state == EXPIRED && !(options & CIG_CLICK_EXPIRE) && required_clicks == 1)

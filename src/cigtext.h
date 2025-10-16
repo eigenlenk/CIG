@@ -50,8 +50,8 @@ typedef struct {
     cig_text_horizontal_alignment horizontal;
     cig_text_vertical_alignment vertical;
   } alignment;
-  int max_lines,
-      line_spacing;
+  uint32_t max_lines;
+  int32_t line_spacing;
   cig_text_overflow overflow;
   enum CIG_PACKED {
     CIG_TEXT_FORMATTED = CIG_BIT(0)
