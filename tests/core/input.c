@@ -177,37 +177,85 @@ TEST(core_input, double_click_too_slow) {
 
 TEST(core_input, simple_drag) {
   register int i;
-  for (i = 0; i < 3; ++i) {
+  for (i = 0; i < 8; ++i) {
     begin(FRAME_TIME);
 
-    /*  Simulate mouse change over time */
-    if (i == 0) {
+    switch (i) {
+    case 0:
+      cig_set_input_state(cig_v_make(25, 25), 0);
+      break;
+    case 1:
       cig_set_input_state(cig_v_make(25, 25), CIG_INPUT_PRIMARY_ACTION);
-
-      /*  Taking exlusive ownership of the mouse. See `cig_input_state_t` for more info */
-      cig_input_state()->locked = true;
-
-      /*  Drag is activated on mouse button (primary action) down */
-      TEST_ASSERT_TRUE(cig_input_state()->drag.active);
-      TEST_ASSERT_TRUE(cig_input_state()->action_mask & CIG_INPUT_PRIMARY_ACTION);
-      TEST_ASSERT_EQUAL_VEC2(cig_v_make(25, 25), cig_input_state()->drag.start_position_absolute);
-      TEST_ASSERT_EQUAL_VEC2(cig_v_zero(), cig_input_state()->drag.change);
-    } else if (i == 1) {
-      cig_set_input_state(cig_v_make(50, 50), CIG_INPUT_PRIMARY_ACTION);
-
-      TEST_ASSERT_EQUAL_VEC2(cig_v_make(25, 25), cig_input_state()->drag.change);
-    } else if (i == 2) {
-      cig_set_input_state(cig_v_make(75, 75), 0);
-
-      TEST_ASSERT_FALSE(cig_input_state()->drag.active);
+      break;
+    case 2:
+    case 3:
+      cig_set_input_state(cig_v_make(30, 30), CIG_INPUT_PRIMARY_ACTION);
+      break;
+    case 4:
+      cig_set_input_state(cig_v_make(35, 35), CIG_INPUT_PRIMARY_ACTION);
+      break;
+    case 5:
+    case 6:
+    case 7:
+      cig_set_input_state(cig_v_make(45, 45), 0);
+      break;
     }
 
-    cig_push_frame(cig_r_make(0, 0, 100, 100));
     cig_enable_interaction();
 
-    if (i == 1) {
-      /*  Even though the mouse is over this element at this point, lock
-          prevents it from being detected */
+    switch (i) {
+    case 0: /* Button up */
+      TEST_ASSERT_EQUAL(CIG_DRAG_STATE_INACTIVE, cig_dragged(CIG_INPUT_PRIMARY_ACTION));
+      TEST_ASSERT_EQUAL(0, cig_input_state()->drag.id);
+      TEST_ASSERT_FALSE(cig_input_state()->locked);
+      break;
+    case 1: /* Button down, no movement */
+      TEST_ASSERT_EQUAL(CIG_DRAG_STATE_READY, cig_dragged(CIG_INPUT_PRIMARY_ACTION));
+      TEST_ASSERT_EQUAL(cig_current()->id, cig_input_state()->drag.id);
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(25, 25), cig_input_state()->drag._start_position_absolute);
+      TEST_ASSERT_EQUAL_VEC2(cig_v_zero(), cig_input_state()->drag.change_total);
+      break;
+    case 2: /* Initial mouse movement */
+      cig_input_state()->locked = true;
+      TEST_ASSERT_EQUAL(CIG_DRAG_STATE_BEGAN, cig_dragged(CIG_INPUT_PRIMARY_ACTION));
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(5, 5), cig_input_state()->drag.change_total);
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(5, 5), cig_input_state()->drag.change_last_frame);
+      break;
+    case 3: /* No mouse movement */
+      TEST_ASSERT_EQUAL(CIG_DRAG_STATE_IDLE, cig_dragged(CIG_INPUT_PRIMARY_ACTION));
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(5, 5), cig_input_state()->drag.change_total);
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(0, 0), cig_input_state()->drag.change_last_frame);
+      break;
+    case 4: /* Mouse moved again */
+      TEST_ASSERT_EQUAL(CIG_DRAG_STATE_MOVED, cig_dragged(CIG_INPUT_PRIMARY_ACTION));
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(10, 10), cig_input_state()->drag.change_total);
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(5, 5), cig_input_state()->drag.change_last_frame);
+      break;
+    case 5: /* Mouse moved and button released */
+      /* When button is released, the mouse may still have movsed compared to last frame.
+         In that case a final 'MOVED' state is emitted, followed by 'ENDED' */
+      TEST_ASSERT_EQUAL(CIG_DRAG_STATE_MOVED, cig_dragged(CIG_INPUT_PRIMARY_ACTION));
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(20, 20), cig_input_state()->drag.change_total);
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(10, 10), cig_input_state()->drag.change_last_frame);
+      break;
+    case 6: /* Button up */
+      TEST_ASSERT_EQUAL(CIG_DRAG_STATE_ENDED, cig_dragged(CIG_INPUT_PRIMARY_ACTION));
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(20, 20), cig_input_state()->drag.change_total);
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(0, 0), cig_input_state()->drag.change_last_frame);
+      break;
+    case 7: /* Button up */
+      TEST_ASSERT_EQUAL(CIG_DRAG_STATE_INACTIVE, cig_dragged(CIG_INPUT_PRIMARY_ACTION));
+      TEST_ASSERT_EQUAL(0, cig_input_state()->drag.id);
+      TEST_ASSERT_FALSE(cig_input_state()->locked);
+      break;
+    }
+
+    cig_push_frame(cig_r_make(32, 32, 100, 100));
+    cig_enable_interaction();
+
+    if (i == 2) {
+      /* Even though the mouse is over this element at this point, lock
+       * prevents it from being detected */
       TEST_ASSERT_FALSE(cig_hovered());
     }
 
@@ -216,7 +264,36 @@ TEST(core_input, simple_drag) {
   }
 }
 
+TEST(core_input, drag_other_input_button) {
+register int i;
+  for (i = 0; i < 3; ++i) {
+    begin(FRAME_TIME);
+
+    switch (i) {
+    case 0:
+      cig_set_input_state(cig_v_make(25, 25), 0);
+      break;
+    case 1:
+      cig_set_input_state(cig_v_make(30, 30), CIG_INPUT_SECONDARY_ACTION);
+      break;
+    case 2:
+      cig_set_input_state(cig_v_make(35, 35), CIG_INPUT_SECONDARY_ACTION);
+      break;
+    }
+
+    cig_enable_interaction();
+
+    /* Drag state is not activated because the action type is not recognized */
+    TEST_ASSERT_EQUAL(CIG_DRAG_STATE_INACTIVE, cig_dragged(CIG_INPUT_PRIMARY_ACTION));
+    TEST_ASSERT_EQUAL(0, cig_input_state()->drag.id);
+
+    end();
+  }
+}
+
 TEST(core_input, button_states) {
+  begin(0);
+
   /* (Time 0) */
   cig_set_input_state(cig_v_zero(), CIG_INPUT_PRIMARY_ACTION);
 
@@ -248,6 +325,8 @@ TEST(core_input, button_states) {
   TEST_ASSERT_EQUAL(0, cig_input_state()->action_mask);
   TEST_ASSERT_EQUAL(CIG_INPUT_SECONDARY_ACTION, cig_input_state()->last_action_ended);
   TEST_ASSERT_EQUAL(ENDED, cig_input_state()->click_state);
+
+  end();
 }
 
 TEST_GROUP_RUNNER(core_input) {
@@ -259,5 +338,6 @@ TEST_GROUP_RUNNER(core_input) {
   RUN_TEST_CASE(core_input, double_click);
   RUN_TEST_CASE(core_input, double_click_too_slow);
   RUN_TEST_CASE(core_input, simple_drag);
+  RUN_TEST_CASE(core_input, drag_other_input_button);
   RUN_TEST_CASE(core_input, button_states);
 }

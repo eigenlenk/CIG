@@ -68,18 +68,19 @@ scroll_bar(cig_r rect, int32_t *value, int32_t limit)
   CIG(thumb_frame) {
     cig_enable_interaction();
 
-    if (!thumb_state.active && cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE) && cig_input_state()->drag.active) {
+    switch (cig_dragged(CIG_INPUT_PRIMARY_ACTION)) {
+    case CIG_DRAG_STATE_BEGAN:
       cig_input_state()->locked = true;
-      thumb_state.active = true;
       thumb_state.initial_value = *value;
       thumb_state.value = value;
-    } else if (thumb_state.value == value) {
-      if (thumb_state.active && cig_input_state()->drag.active) {
-        *value = thumb_state.initial_value +
-          (is_y_axis ? cig_input_state()->drag.change.y : cig_input_state()->drag.change.x) * scroll_step;
-      } else {
-        thumb_state.active = false;
-      }
+      /* Fallthrough */
+
+    case CIG_DRAG_STATE_MOVED:
+      *value = thumb_state.initial_value +
+        (is_y_axis ? cig_input_state()->drag.change_total.y : cig_input_state()->drag.change_total.x) * scroll_step;
+      break;
+
+    default: break;
     }
 
     cig_fill_style(get_style(STYLE_SCROLL_BUTTON), 0);

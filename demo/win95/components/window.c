@@ -20,8 +20,6 @@ bool
 window_begin(window_t *wnd, bool *focused)
 {
   static struct {
-    window_t *selected_window;
-    bool active;
     cig_r original_rect;
   } window_drag = { 0 };
 
@@ -61,27 +59,23 @@ window_begin(window_t *wnd, bool *focused)
       }
     }
 
-    /* TODO: This could probably be a little nicer to deal with */
-    if (!window_drag.active
-        && !(wnd->flags & IS_MAXIMIZED)
-        && cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE)
-        && cig_input_state()->drag.active
-        && cig_v_magnitude(cig_input_state()->drag.change) > 1
-    ) {
-      cig_input_state()->locked = true;
-      window_drag.active = true;
-      window_drag.original_rect = wnd->rect;
-      window_drag.selected_window = wnd;
-    } else if (window_drag.selected_window == wnd) {
-      if (window_drag.active && cig_input_state()->drag.active) {
+    if ((wnd->flags & IS_MAXIMIZED) == false) {
+      switch (cig_dragged(CIG_INPUT_PRIMARY_ACTION)) {
+      case CIG_DRAG_STATE_BEGAN:
+        cig_input_state()->locked = true;
+        window_drag.original_rect = wnd->rect;
+        /* Fallthrough */
+
+      case CIG_DRAG_STATE_MOVED:
         wnd->rect = cig_r_make(
-          CIG_CLAMP(window_drag.original_rect.x + cig_input_state()->drag.change.x, -(wnd->rect.w - 50), cig_layout_rect().w - 30),
-          CIG_CLAMP(window_drag.original_rect.y + cig_input_state()->drag.change.y, 0, cig_layout_rect().h - 50),
+          CIG_CLAMP(window_drag.original_rect.x + cig_input_state()->drag.change_total.x, -(wnd->rect.w - 50), cig_layout_rect().w - 30),
+          CIG_CLAMP(window_drag.original_rect.y + cig_input_state()->drag.change_total.y, 0, cig_layout_rect().h - 50),
           wnd->rect.w,
           wnd->rect.h
         );
-      } else {
-        window_drag.active = false;
+        break;
+
+      default: break;
       }
     }
 
@@ -186,9 +180,7 @@ static void
 handle_window_resize(window_t *wnd, window_resize_edge_t edge)
 {
   static struct {
-    window_t *selected_window;
     window_resize_edge_t active_edge;
-    bool active;
     cig_r original_rect;
   } window_resize = { 0 };
 
@@ -205,16 +197,17 @@ handle_window_resize(window_t *wnd, window_resize_edge_t edge)
     { 0, 0, 0, 1 }, /* WINDOW_RESIZE_BOTTOM */
   };
 
-  if (!window_resize.active && cig_focused_id() == wnd->id && cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE) && cig_input_state()->drag.active) {
+  switch (cig_dragged(CIG_INPUT_PRIMARY_ACTION)) {
+  case CIG_DRAG_STATE_BEGAN:
     cig_input_state()->locked = true;
-    window_resize.active = true;
     window_resize.original_rect = wnd->rect;
-    window_resize.selected_window = wnd;
     window_resize.active_edge = edge;
-  } else if (window_resize.selected_window == wnd && window_resize.active_edge == edge) {
-    if (window_resize.active && cig_input_state()->drag.active) {
-      const int dx = cig_input_state()->drag.change.x,
-                dy = cig_input_state()->drag.change.y;
+    /* Fallthrough */
+
+  case CIG_DRAG_STATE_MOVED:
+  {
+      const int dx = cig_input_state()->drag.change_total.x,
+                dy = cig_input_state()->drag.change_total.y;
 
       if (edge_adjustments[edge].x) {
         wnd->rect.w = CIG_MAX(wnd->min_size.x, window_resize.original_rect.w - dx);
@@ -230,8 +223,9 @@ handle_window_resize(window_t *wnd, window_resize_edge_t edge)
       if (edge_adjustments[edge].h) {
         wnd->rect.h = CIG_MAX(wnd->min_size.y, window_resize.original_rect.h + dy);
       }
-    } else {
-      window_resize.active = false;
-    }
+    break;
+  }
+
+  default: break;
   }
 }

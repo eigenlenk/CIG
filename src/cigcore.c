@@ -268,14 +268,19 @@ void cig_set_input_state(
   const cig_v position,
   cig_input_action_type action_mask
 ) {
+  current->input_state.position = position;
+
+  /* Root frame has not had a hit check performed yet */
+  handle_frame_hover(cig_current());
+
   // TODO: Make sense and clean up the mess that is this function...
 
   if (current->input_state.locked == false) {
-    if (current->input_state._target_prev_tick != current->input_state._target_this_tick) {
+    if (current->input_state._hover_prev_tick != current->input_state._hover_this_tick) {
       current->input_state._click_count = 0;
     }
-    current->input_state._target_prev_tick = current->input_state._target_this_tick;
-    current->input_state._target_this_tick = 0;
+    current->input_state._hover_prev_tick = current->input_state._hover_this_tick;
+    current->input_state._hover_this_tick = 0;
   }
 
   if (current->input_state._focus_target_this > 0) {
@@ -285,7 +290,6 @@ void cig_set_input_state(
 
   const cig_input_action_type previous_action_mask = current->input_state.action_mask;
 
-  current->input_state.position = position;
   current->input_state.action_mask = action_mask;
 
   current->input_state.click_state = (!current->input_state.action_mask && previous_action_mask)
@@ -325,7 +329,7 @@ void cig_set_input_state(
   case BEGAN:
     {
       current->input_state._press_start_time = current->elapsed_time;
-      current->input_state._press_target_id = current->input_state._target_prev_tick;
+      current->input_state._press_target_id = current->input_state._hover_prev_tick;
     } break;
 
   case ENDED:
@@ -338,20 +342,6 @@ void cig_set_input_state(
     {
       current->input_state._click_count = 0;
     } break;
-  }
-
-  if (current->input_state.action_mask) {
-    if (!current->input_state.drag.active) {
-      current->input_state.drag.active = true;
-      current->input_state.drag.start_position_absolute = current->input_state.position;
-      current->input_state.drag.change = cig_v_zero();
-    } else {
-      current->input_state.drag.change = cig_v_sub(current->input_state.position, current->input_state.drag.start_position_absolute);
-    }
-  } else if (current->input_state.drag.active) {
-    current->input_state.drag.active = false;
-    current->input_state.drag.change = cig_v_zero();
-    current->input_state.locked = false;
   }
 }
 
@@ -366,13 +356,13 @@ void cig_enable_interaction() {
   }
   frame->_flags |= INTERACTIBLE;
   if (frame->_flags & SUBTREE_INCLUSIVE_HOVER) {
-    current->input_state._target_this_tick = frame->id;
+    current->input_state._hover_this_tick = frame->id;
   }
 }
 
 bool cig_hovered() {
   /*  See `handle_frame_hover` */
-  return current->input_state.locked == false && (cig_current()->_flags & INTERACTIBLE) && cig_current()->id == current->input_state._target_prev_tick;
+  return current->input_state.locked == false && (cig_current()->_flags & INTERACTIBLE) && cig_current()->id == current->input_state._hover_prev_tick;
 }
 
 cig_input_action_type cig_pressed(
@@ -423,6 +413,83 @@ cig_input_action_type cig_clicked(
   }
 
   return 0;
+}
+
+#include <stdio.h>
+
+cig_input_drag_state
+cig_dragged(cig_input_action_type actions)
+{
+  /* Ignore other draggable elements once something has started dragging */
+  if (current->input_state.drag.state > CIG_DRAG_STATE_INACTIVE && current->input_state.drag.id != cig_current()->id) {
+    return 0;
+  }
+
+  /* *****************
+     Update drag state */
+
+  if (actions & current->input_state.action_mask) { /* Mouse buttons down: */
+    switch (current->input_state.drag.state) {
+    case CIG_DRAG_STATE_INACTIVE: {
+      if (cig_pressed(actions, CIG_PRESS_INSIDE)) {
+        current->input_state.drag.state = CIG_DRAG_STATE_READY;
+        current->input_state.drag._start_position_absolute = current->input_state.position;
+        current->input_state.drag.change_total = cig_v_zero();
+        current->input_state.drag.change_last_frame = cig_v_zero();
+        current->input_state.drag.id = cig_current()->id;
+      }
+      break;
+    }
+
+    case CIG_DRAG_STATE_READY: {
+      const cig_v change = cig_v_sub(current->input_state.position, current->input_state.drag._start_position_absolute);
+      if (cig_v_magnitude(change) >= 2) {
+        current->input_state.drag.state = CIG_DRAG_STATE_BEGAN;
+        current->input_state.drag.change_total = change;
+        current->input_state.drag.change_last_frame = change;
+      }
+      break;
+    }
+
+    case CIG_DRAG_STATE_BEGAN:
+    case CIG_DRAG_STATE_MOVED:
+    case CIG_DRAG_STATE_IDLE: {
+      const cig_v change = cig_v_sub(current->input_state.position, current->input_state.drag._start_position_absolute);
+      if (cig_v_equals(current->input_state.drag.change_total, change)) {
+        current->input_state.drag.state = CIG_DRAG_STATE_IDLE;
+        current->input_state.drag.change_last_frame = cig_v_zero();
+      } else {
+        current->input_state.drag.state = CIG_DRAG_STATE_MOVED;
+        current->input_state.drag.change_last_frame = cig_v_sub(change, current->input_state.drag.change_total);
+        current->input_state.drag.change_total = change;
+      }
+      break;
+    }
+
+    default: break;
+    }
+  } else { /* Mouse buttons up: */
+    if (current->input_state.drag.state > CIG_DRAG_STATE_READY && current->input_state.drag.state < CIG_DRAG_STATE_ENDED) {
+      /* When button is released, the mouse may still have movsed compared to last frame.
+         In that case a final 'MOVED' state is emitted, followed by 'ENDED' on the next iteration */
+      const cig_v change = cig_v_sub(current->input_state.position, current->input_state.drag._start_position_absolute);
+      if (!cig_v_valid(current->input_state.drag._start_position_absolute) || cig_v_equals(current->input_state.drag.change_total, change)) {
+        current->input_state.drag.state = CIG_DRAG_STATE_ENDED;
+        current->input_state.drag.change_last_frame = cig_v_zero();
+      } else {
+        current->input_state.drag.state = CIG_DRAG_STATE_MOVED;
+        current->input_state.drag.change_last_frame = cig_v_sub(change, current->input_state.drag.change_total);
+        current->input_state.drag.change_total = change;
+        current->input_state.drag._start_position_absolute = cig_v_invalid();
+      }
+    } else {
+      current->input_state.drag.state = CIG_DRAG_STATE_INACTIVE;
+      current->input_state.drag.id = 0;
+      current->input_state.locked = false;
+    }
+  }
+
+  return current->input_state.drag.state;
 }
 
 bool cig_enable_focus() {

@@ -208,6 +208,18 @@ typedef enum CIG_PACKED {
   CIG_INPUT_ACTION_ANY = CIG_INPUT_PRIMARY_ACTION | CIG_INPUT_SECONDARY_ACTION
 } cig_input_action_type;
 
+typedef enum CIG_PACKED {
+  CIG_DRAG_STATE_INACTIVE,  /* All quiet on the front-end */
+  CIG_DRAG_STATE_READY,     /* When input is first pressed mouse location is saved but drag is not recignized yet. */
+                            /*   └ Active frame ID is saved */
+  CIG_DRAG_STATE_BEGAN,     /* Tracking exceeded some threshold and draging is activated. */
+                            /*   └ Movement delta can be read */
+  CIG_DRAG_STATE_MOVED,     /* Tracking position has changed compared to last value */
+  CIG_DRAG_STATE_IDLE,      /* No change in drag position compared to last frame */
+  CIG_DRAG_STATE_ENDED      /* Button released and input tracking stops. */
+                            /*   └ Movement delta can be read */
+} cig_input_drag_state;
+
 typedef struct {
   cig_input_action_type action_mask,
                         last_action_began,
@@ -222,10 +234,13 @@ typedef struct {
   } click_state;
 
   struct {
-    bool active;
-    cig_v start_position_absolute,
-          start_position_relative;
-    cig_v change;
+    cig_input_drag_state state;
+    cig_id id;
+    cig_v change_total,
+          change_last_frame;
+
+    /*_PRIVATE_*/
+    cig_v _start_position_absolute;
   } drag;
 
   /*  Elements are not tracked. Set to TRUE by widgets that want exclusive
@@ -234,15 +249,15 @@ typedef struct {
       reset to FALSE when drag ends */
   bool locked;
 
-  /*__PRIVATE__*/
+  /*_PRIVATE_*/
   float _press_start_time,
         _click_end_time;
   unsigned int _click_count;
-  cig_id  _press_target_id,   /* Element that was focused when button press began */
-            _target_prev_tick,
-            _target_this_tick,
-            _focus_target_this,
-            _focus_target;
+  cig_id _press_target_id,    /* Element that was hovered when button press began */
+         _hover_prev_tick,
+         _hover_this_tick,
+         _focus_target_this,
+         _focus_target;
 } cig_input_state_t;
 
 typedef enum CIG_PACKED {
@@ -489,6 +504,11 @@ cig_input_action_type cig_pressed(cig_input_action_type, cig_press_flags);
 /*  Checks if the current element is hovered and mouse button was clicked or released
     depending on the options. See `cig_click_flags` declaration for more info */
 cig_input_action_type cig_clicked(cig_input_action_type, cig_click_flags);
+
+/* After `cig_pressed` has been called with the desired options, drag can be initiated
+   and its state be read. This function only returns the state of the drag gesture.
+   Details can be read from `cig_input_state().drag` structure */
+cig_input_drag_state cig_dragged(cig_input_action_type);
 
 /*  Makes this frame focusable. Focus is gained by pressing mouse button in this frame
     regardless of interaction being enabled or not. Returns whether the same element

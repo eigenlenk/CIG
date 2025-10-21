@@ -49,27 +49,31 @@ bool begin_file_browser(cig_r rect, int direction, color_id_t text_color, bool p
   cig_enable_interaction();
   cig_enable_scroll(NULL);
 
-  /* Deselect everything */
-  /* TODO: See if this could be ignored when focusing the window */
-  if (cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_DEFAULT_OPTIONS)) {
+  switch (cig_dragged(CIG_INPUT_PRIMARY_ACTION)) {
+  case CIG_DRAG_STATE_READY:
+    /* Deselect everything */
+    /* TODO: See if this could be ignored when focusing the window */
     memset(data->selected, 0, sizeof(bool[32]));
+    break;
 
-    if (!data->drag_selection.active && parent_focused && cig_input_state()->drag.active && cig_v_magnitude(cig_input_state()->drag.change) > 2) {
-      cig_input_state()->locked = true;
-      data->drag_selection.active = true;
-      data->drag_selection.start = cig_v_sub(cig_input_state()->drag.start_position_absolute, cig_v_make(CIG_SX, CIG_SY));
-    }
-  }
+  case CIG_DRAG_STATE_BEGAN:
+    cig_input_state()->locked = true;
+    data->drag_selection.active = true;
+    data->drag_selection.start = cig_v_sub(cig_input_state()->drag._start_position_absolute, cig_v_make(CIG_SX, CIG_SY));
+    /* Fallthrough */
 
-  if (cig_input_state()->drag.active) {
-    if (data->drag_selection.active) {
-      data->drag_selection.relative_rect = rect_of(
-        data->drag_selection.start,
-        cig_v_add(data->drag_selection.start, cig_input_state()->drag.change)
-      );
-    }
-  } else {
+  case CIG_DRAG_STATE_MOVED:
+    data->drag_selection.relative_rect = rect_of(
+      data->drag_selection.start,
+      cig_v_add(data->drag_selection.start, cig_input_state()->drag.change_total)
+    );
+    break;
+
+  case CIG_DRAG_STATE_ENDED:
     data->drag_selection.active = false;
+    break;
+
+  default: break;
   }
 
   return true;
