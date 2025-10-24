@@ -2,6 +2,8 @@
 #include "system/window_manager.h"
 #include "system/application.h"
 
+#include <time.h>
+
 static void
 window_manager_close(window_manager_t*, window_t*);
 
@@ -22,6 +24,8 @@ window_t* window_manager_create(window_manager_t *manager, struct application_t 
       window_manager_bring_to_front(manager, existing_wnd);
       return existing_wnd;
     }
+  } else {
+    wnd.id = CIG_TINYHASH(wnd.id, time(NULL));
   }
 
   for (i = 0; i < WIN95_OPEN_WINDOWS_MAX; ++i) {

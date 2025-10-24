@@ -2,7 +2,6 @@
 #include "components/button.h"
 #include "components/menu.h"
 
-#include <time.h>
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -478,7 +477,7 @@ application_t wordwiz_app() {
     .id = "wordwiz",
     .windows = {
       (window_t) {
-        .id = CIG_TINYHASH(cig_hash("wordwiz"), time(NULL)),
+        .id = cig_hash("wordwiz"),
         .proc = &game_window_proc,
         .data = data,
         .rect = CENTER_APP_WINDOW(360, 400),

@@ -112,7 +112,7 @@ application_t welcome_app() {
         .rect = CENTER_APP_WINDOW(488, 280),
         .title = "Welcome",
         .icon = -1,
-        .flags = IS_PRIMARY_WINDOW
+        .flags = IS_PRIMARY_WINDOW | IS_UNIQUE_WINDOW
       }
     },
     .data = NULL,
