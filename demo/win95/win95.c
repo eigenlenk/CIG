@@ -7,6 +7,7 @@
 #include "apps/welcome/welcome.h"
 #include "apps/games/wordwiz/wordwiz.h"
 #include "apps/accessories/calculator/calculator.h"
+#include "apps/accessories/notepad/notepad.h"
 #include "cigcorem.h"
 #include <time.h>
 #include <stdio.h>
@@ -186,7 +187,9 @@ win95_initialize(win95_t *win95)
   this->running = true;
 
   win95_open_app(explorer_app());
-  win95_open_app(welcome_app());
+  // win95_open_app(welcome_app());
+
+  win95_open_app(notepad_app());
 
   setup_menus();
 }
@@ -316,14 +319,8 @@ static void open_explorer_at(const char *path) {
 }
 
 static void launch_app_by_id(menu_item *item) {
-  const char *app_id = (const char *)item->data;
-  printf("Launch application: %s\n", app_id);
-  
-  if (!strcmp(app_id, "wordwiz")) {
-    win95_open_app(wordwiz_app());
-  } else if (!strcmp(app_id, "calculator")) {
-    win95_open_app(calculator_app());
-  }
+  application_t (*app_entrypoint)() = (application_t(*)())item->data;
+  win95_open_app(app_entrypoint());
 }
 
 /* Set up the main START menu and its children */
@@ -414,7 +411,7 @@ setup_menus()
       .items = {
         .count = 1,
         .list = {
-          { .title = "WordWiz", .icon = IMAGE_WORDWIZ_16, .data = "wordwiz", .handler = &launch_app_by_id }
+          { .title = "WordWiz", .icon = IMAGE_WORDWIZ_16, .data = &wordwiz_app, .handler = &launch_app_by_id }
         }
       }
     }
@@ -427,8 +424,8 @@ setup_menus()
         .count = 3,
         .list = {
           { .type = CHILD_MENU, .data = &start_menus[START_PROGRAMS_ACCESSORIES_GAMES], .icon = IMAGE_PROGRAM_FOLDER_16 },
-          { .title = "Calculator", .icon = IMAGE_CALCULATOR_16, .data = "calculator", .handler = &launch_app_by_id },
-          { .title = "Notepad", .icon = IMAGE_NOTEPAD_16 },
+          { .title = "Calculator", .icon = IMAGE_CALCULATOR_16, .data = &calculator_app, .handler = &launch_app_by_id },
+          { .title = "Notepad", .icon = IMAGE_NOTEPAD_16, .data = &notepad_app, .handler = &launch_app_by_id },
           { .title = "Paint", .icon = IMAGE_PAINT_16 }
         }
       }

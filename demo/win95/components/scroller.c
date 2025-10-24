@@ -25,9 +25,16 @@ scroll_bar(cig_r rect, int32_t *value, int32_t limit)
   const int32_t visible = is_y_axis ? rect.h : rect.w;
   const int32_t total = visible + limit;
   const int32_t track = visible - 2 * SCROLL_BAR_SIZE;
-  const int32_t thumb_size = CIG_MAX((visible * track) / total, SCROLL_BAR_MINIMUM_THUMB);
-  const int32_t thumb_offset = (*value / (double)limit) * (track - thumb_size);
-  const int32_t scroll_step = limit / (track - thumb_size);
+  const bool is_scrollable = limit > 0;
+  const int32_t thumb_size = is_scrollable
+    ? CIG_MAX((visible * track) / total, SCROLL_BAR_MINIMUM_THUMB)
+    : 0;
+  const int32_t thumb_offset = is_scrollable
+    ? (*value / (double)limit) * (track - thumb_size)
+    : 0;
+  const int32_t scroll_step = is_scrollable
+    ? limit / (track - thumb_size)
+    : 0;
 
   const cig_r negative_button_frame = is_y_axis
     ? BUILD_RECT(PIN(TOP), PIN(LEFT), PIN(RIGHT), PIN(ASPECT, 1))
@@ -65,25 +72,27 @@ scroll_bar(cig_r rect, int32_t *value, int32_t limit)
     cig_fill_style(get_style(STYLE_GRAY_DITHER), 0);
   }
 
-  CIG(thumb_frame) {
-    cig_enable_interaction();
+  if (thumb_size) {
+    CIG(thumb_frame) {
+      cig_enable_interaction();
 
-    switch (cig_dragged(CIG_INPUT_PRIMARY_ACTION)) {
-    case CIG_DRAG_STATE_BEGAN:
-      cig_input_state()->locked = true;
-      thumb_state.initial_value = *value;
-      thumb_state.value = value;
-      /* Fallthrough */
+      switch (cig_dragged(CIG_INPUT_PRIMARY_ACTION)) {
+      case CIG_DRAG_STATE_BEGAN:
+        cig_input_state()->locked = true;
+        thumb_state.initial_value = *value;
+        thumb_state.value = value;
+        /* Fallthrough */
 
-    case CIG_DRAG_STATE_MOVED:
-      *value = thumb_state.initial_value +
-        (is_y_axis ? cig_input_state()->drag.change_total.y : cig_input_state()->drag.change_total.x) * scroll_step;
-      break;
+      case CIG_DRAG_STATE_MOVED:
+        *value = thumb_state.initial_value +
+          (is_y_axis ? cig_input_state()->drag.change_total.y : cig_input_state()->drag.change_total.x) * scroll_step;
+        break;
 
-    default: break;
+      default: break;
+      }
+
+      cig_fill_style(get_style(STYLE_SCROLL_BUTTON), 0);
     }
-
-    cig_fill_style(get_style(STYLE_SCROLL_BUTTON), 0);
   }
 
   *value = CIG_CLAMP(*value, 0, limit);
@@ -92,7 +101,7 @@ scroll_bar(cig_r rect, int32_t *value, int32_t limit)
 }
 
 void
-display_scrollbars(cig_scroll_state_t *scroll, scroller_results *results)
+display_scrollbars(cig_scroll_state_t *scroll, scroller_flags flags, scroller_results *results)
 {
   const bool scrolls_x = scroll->distance.x > 0;
   const bool scrolls_y = scroll->distance.y > 0;
@@ -118,8 +127,8 @@ display_scrollbars(cig_scroll_state_t *scroll, scroller_results *results)
 
   const int32_t total_dist_x = scroll->distance.x + extra_margin_x;
   const int32_t total_dist_y = scroll->distance.y + extra_margin_y;
-  const bool shows_x_axis = total_dist_x > 0;
-  const bool shows_y_axis = total_dist_y > 0;
+  const bool shows_x_axis = (total_dist_x > 0) || (flags & SCROLLER_ALWAYS_VISIBLE_X);
+  const bool shows_y_axis = (total_dist_y > 0) || (flags & SCROLLER_ALWAYS_VISIBLE_Y);
   const bool shows_both_axis = shows_x_axis && shows_y_axis;
 
   if (shows_x_axis) {

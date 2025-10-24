@@ -68,7 +68,7 @@ static void window_proc(window_t *this, bool window_focused) {
       }
 
       if (scroll) {
-        display_scrollbars(scroll, &scroller_results);
+        display_scrollbars(scroll, 0, &scroller_results);
       }
     }
   })
