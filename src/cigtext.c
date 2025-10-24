@@ -227,6 +227,7 @@ static void prepare_label(
     uint32_t cp;
     int32_t line_width = 0;
     size_t i = 0, line_count = 1;
+    cig_span *new_span = 0;
 
     cig_font_info base_font_info = font_query(label->font);
 
@@ -310,24 +311,30 @@ static void prepare_label(
 
             if (terminates_span) {
               // printf("\tForced end of span (1)!\n");
-              cig_span *new_span = create_span(label, slice, font_override, color_override, props->style | style, bounds);
-              line_count += new_span->newlines = newlines;
-              span.last_fitting.str = NULL;
-              span.reading = false;
-              line_width += bounds.x;
-              label->bounds.w = CIG_MAX(label->bounds.w, line_width);
+              if ((new_span = create_span(label, slice, font_override, color_override, props->style | style, bounds))) {
+                line_count += new_span->newlines = newlines;
+                span.last_fitting.str = NULL;
+                span.reading = false;
+                line_width += bounds.x;
+                label->bounds.w = CIG_MAX(label->bounds.w, line_width);
+              } else {
+                break;
+              }
             }
           } else {
             if (span.last_fitting.str && (!props->max_lines || line_count < props->max_lines)) {
               // printf("\tNo fit. Use last range [%i...%i]: |%.*s|\n", span.start, span.last_fitting.index, span.last_fitting.slice.byte_len, span.last_fitting.slice.str);
-              cig_span *new_span = create_span(label, span.last_fitting.slice, font_override, color_override, props->style | style, span.last_fitting.bounds);
-              line_count += new_span->newlines = 1;
-              iter.str = span.last_fitting.str;
-              i = span.last_fitting.index;
-              label->bounds.w = CIG_MAX(label->bounds.w, span.last_fitting.bounds.x);
-              line_width = 0;
-              span.last_fitting.str = NULL;
-              span.reading = false;
+              if ((new_span = create_span(label, span.last_fitting.slice, font_override, color_override, props->style | style, span.last_fitting.bounds))) {
+                line_count += new_span->newlines = 1;
+                iter.str = span.last_fitting.str;
+                i = span.last_fitting.index;
+                label->bounds.w = CIG_MAX(label->bounds.w, span.last_fitting.bounds.x);
+                line_width = 0;
+                span.last_fitting.str = NULL;
+                span.reading = false;
+              } else {
+                break;
+              }
             } else {
               bool ends_text = false;
               if (!end_of_string && props->max_lines == line_count && props->overflow == CIG_TEXT_OVERFLOW) {
@@ -341,18 +348,21 @@ static void prepare_label(
                 wrap_text(&slice, length, &bounds, props->overflow, display_font, font_override, color_override, props->style | style, max_bounds.x, &additional_span);
                 ends_text = true;
               }
-              cig_span *new_span = create_span(label, slice, font_override, color_override, props->style | style, bounds);
-              if (additional_span.str) {
-                label->spans[label->span_count++] = additional_span;
-              } else if (!end_of_string) {
-                line_count += new_span->newlines = 1;
-              }
-              span.last_fitting.str = NULL;
-              span.reading = false;
-              line_width = 0;
-              label->bounds.w = CIG_MAX(label->bounds.w, bounds.x);
-              if (ends_text) {
-                break;
+              if ((new_span = create_span(label, slice, font_override, color_override, props->style | style, bounds))) {
+                if (additional_span.str) {
+                  if (label->span_count < label->available_spans) {
+                    label->spans[label->span_count++] = additional_span;
+                  }
+                } else if (!end_of_string) {
+                  line_count += new_span->newlines = 1;
+                }
+                span.last_fitting.str = NULL;
+                span.reading = false;
+                line_width = 0;
+                label->bounds.w = CIG_MAX(label->bounds.w, bounds.x);
+                if (ends_text) {
+                  break;
+                }
               }
             }
           }
@@ -441,6 +451,10 @@ static cig_span* create_span(
   cig_text_style style,
   cig_v bounds
 ) {
+  if (label->span_count == label->available_spans) {
+    return NULL;
+  }
+
   label->spans[label->span_count++] = (cig_span) { 
     .str = slice.str,
     .font_override = font_override,

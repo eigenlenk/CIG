@@ -122,6 +122,24 @@ TEST(text_label, multiline) {
   TEST_ASSERT_EQUAL(4, text_measure_calls);
 }
 
+TEST(text_label, span_limit)
+{
+  begin();
+
+  /* We allocate 2 spans/lines. Third line in the text is not added to the label */
+  cig_label *label = cig_arena_allocate(NULL, sizeof(cig_label));
+  label->spans = CIG_ALLOCATE(cig_span[2]); /* Max 2 lines */
+  label->available_spans = 2;
+
+  cig_label_prepare(label, cig_v_make(15, 3), (cig_text_properties) { 0 }, "Olá mundo!\nHello world!\nTere maailm!");
+
+  TEST_ASSERT_EQUAL(2, label->span_count);
+  TEST_ASSERT_EQUAL_STRING("Olá mundo!", spans.strings[0]);
+  TEST_ASSERT_EQUAL_STRING("Hello world!", spans.strings[1]);
+
+  end();
+}
+
 TEST(text_label, horizontal_alignment_left) {
   begin();
 
@@ -388,6 +406,7 @@ TEST_GROUP_RUNNER(text_label) {
   RUN_TEST_CASE(text_label, fits_arena);
   RUN_TEST_CASE(text_label, single);
   RUN_TEST_CASE(text_label, multiline);
+  RUN_TEST_CASE(text_label, span_limit);
   RUN_TEST_CASE(text_label, horizontal_alignment_left);
   RUN_TEST_CASE(text_label, horizontal_alignment_center);
   RUN_TEST_CASE(text_label, horizontal_alignment_right);

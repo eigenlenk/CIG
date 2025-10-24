@@ -157,8 +157,8 @@ static cig_frame * large_file_icon(int icon,
     }
 
     cig_label *label = CIG_ALLOCATE(cig_label);
-    label->spans = CIG_ALLOCATE(cig_span[16]);
-    label->available_spans = 16;
+    label->spans = CIG_ALLOCATE(cig_span[3]); /* Max 3 lines */
+    label->available_spans = 3;
 
     /* We need to prepare the label here to know how large of a rectangle
        to draw around it when the icon is selected */
