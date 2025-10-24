@@ -95,12 +95,15 @@ window_manager_process(window_manager_t *this)
 }
 
 void window_manager_bring_to_front(window_manager_t *manager, window_t *wnd) {
-  register size_t i;
+  size_t i, j;
   if (!wnd) { return; }
   for (i = 0; i < manager->count; ++i) {
     if (manager->order[i] == wnd) {
       wnd->flags &= ~IS_MINIMIZED;
-      manager->order[i] = manager->order[manager->count-1];
+      /* Move everyting back by 1 and set the window as last element in the order */
+      for (j = i; j < manager->count - 1; ++j) {
+        manager->order[j] = manager->order[j+1];
+      }
       manager->order[manager->count-1] = wnd;
       cig_set_focused_id(wnd->id);
       break;
