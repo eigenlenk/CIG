@@ -8,7 +8,7 @@
 #define SCROLL_BAR_MINIMUM_THUMB 8
 
 static bool
-scroll_bar_button(cig_r, image_id_t);
+scroll_bar_button(cig_r, bool, image_id_t);
 
 void
 scroll_bar(cig_r rect, int32_t *value, int32_t limit)
@@ -48,14 +48,26 @@ scroll_bar(cig_r rect, int32_t *value, int32_t limit)
 
   CIG_RETAIN(
     scroll_negative,
-    if (scroll_bar_button(negative_button_frame, is_y_axis ? IMAGE_SCROLL_UP : IMAGE_SCROLL_LEFT)) {
+    if (scroll_bar_button(
+      negative_button_frame,
+      is_scrollable,
+      is_y_axis
+        ? is_scrollable ? IMAGE_SCROLL_UP : IMAGE_SCROLL_UP_DISABLED
+        : is_scrollable ? IMAGE_SCROLL_LEFT : IMAGE_SCROLL_LEFT_DISABLED
+    )) {
       *value -= scroll_step * 5;
     }
   )
 
   CIG_RETAIN(
     scroll_positive,
-    if (scroll_bar_button(positive_button_frame, is_y_axis ? IMAGE_SCROLL_DOWN : IMAGE_SCROLL_RIGHT)) {
+    if (scroll_bar_button(
+      positive_button_frame,
+      is_scrollable,
+      is_y_axis
+        ? is_scrollable ? IMAGE_SCROLL_DOWN : IMAGE_SCROLL_DOWN_DISABLED
+        : is_scrollable ? IMAGE_SCROLL_RIGHT : IMAGE_SCROLL_RIGHT_DISABLED
+    )) {
       *value += scroll_step * 5;
     }
   )
@@ -177,13 +189,15 @@ display_scrollbars(cig_scroll_state_t *scroll, scroller_flags flags, scroller_re
 }
 
 static bool
-scroll_bar_button(cig_r rect, image_id_t image_id)
+scroll_bar_button(cig_r rect, bool enabled, image_id_t image_id)
 {
   bool clicked = false;
   
   CIG(rect) {
-    cig_enable_interaction();
-    
+    if (enabled) {
+      cig_enable_interaction();
+    }
+
     const bool pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE);
     
     cig_fill_style(get_style(STYLE_SCROLL_BUTTON), pressed ? CIG_STYLE_APPLY_PRESS : 0);
