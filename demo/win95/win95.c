@@ -272,12 +272,16 @@ win95_did_change_resolution()
   for (i = 0; i < WIN95_OPEN_WINDOWS_MAX; ++i) {
     window_t *wnd = &this->window_manager.windows[i];
     
-    wnd->rect = cig_r_make(
-      CIG_CLAMP(wnd->rect.x, 0, cig_layout_rect().w - wnd->rect.w),
-      CIG_CLAMP(wnd->rect.y, 0, cig_layout_rect().h - wnd->rect.h),
-      wnd->rect.w,
-      wnd->rect.h
-    );
+    if (wnd->flags & IS_MAXIMIZED) {
+      wnd->rect = cig_r_make(0, 0, cig_layout_rect().w, cig_layout_rect().h - TASKBAR_H);
+    } else {
+      wnd->rect = cig_r_make(
+        CIG_CLAMP(wnd->rect.x, 0, cig_layout_rect().w - wnd->rect.w),
+        CIG_CLAMP(wnd->rect.y, 0, cig_layout_rect().h - wnd->rect.h),
+        wnd->rect.w,
+        wnd->rect.h
+      );
+    }
   }  
 }
 
