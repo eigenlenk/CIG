@@ -5,7 +5,7 @@
 
 #define CIG_LABEL_SPANS_MAX 48
 #define CIG_LABEL_PRINTF_BUF_LENGTH 512
-
+#define CIG_LABEL_SIZEOF(NUM_SPANS) (sizeof(cig_label) + sizeof(cig_span[NUM_SPANS]))
 #define CIG_RAW_TEXT_AUTOMATIC_SIZE cig_v_zero()
 
 typedef void* cig_font_ref;
@@ -75,7 +75,6 @@ typedef struct {
 } cig_span;
 
 typedef struct {
-  cig_span *spans;
   struct {
     cig_text_horizontal_alignment horizontal;
     cig_text_vertical_alignment vertical;
@@ -88,6 +87,7 @@ typedef struct {
   unsigned char span_count;
   unsigned char line_count;
   char line_spacing;
+  cig_span spans[];
 } cig_label;
 
 typedef void (*cig_draw_text_callback)(const char *, size_t, cig_r, cig_font_ref, cig_text_color_ref, cig_text_style);

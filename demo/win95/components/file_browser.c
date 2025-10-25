@@ -158,8 +158,8 @@ static cig_frame * large_file_icon(int icon,
       if (is_selected) { enable_blue_selection_dithering(false); }
     }
 
-    cig_label *label = CIG_ALLOCATE(cig_label);
-    label->spans = CIG_ALLOCATE(cig_span[3]); /* Max 3 lines */
+    /* Label with 3 lines */
+    cig_label *label = cig_arena_allocate(NULL, CIG_LABEL_SIZEOF(3));
     label->available_spans = 3;
 
     /* We need to prepare the label here to know how large of a rectangle

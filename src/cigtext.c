@@ -68,8 +68,7 @@ void cig_set_default_text_color(cig_text_color_ref color) {
 CIG_DISCARDABLE(cig_label *) cig_draw_label(cig_text_properties props, const char *text, ...) {
   register const cig_r absolute_rect = cig_r_inset(cig_absolute_rect(), cig_current()->insets);
 
-  cig_label *label = CIG_ALLOCATE(cig_label);
-  label->spans = CIG_ALLOCATE(cig_span[CIG_LABEL_SPANS_MAX]);
+  cig_label *label = cig_arena_allocate(NULL, sizeof(cig_label) + sizeof(cig_span[CIG_LABEL_SPANS_MAX]));
   label->available_spans = CIG_LABEL_SPANS_MAX;
 
   if (props.flags & CIG_TEXT_FORMATTED) {

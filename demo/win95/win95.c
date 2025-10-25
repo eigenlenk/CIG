@@ -116,19 +116,19 @@ static void do_desktop() {
 }
 
 static void do_taskbar() {
-  static struct {
-    cig_label label;
-    cig_span spans[1];
-  } clock_st = { .label.spans = clock_st.spans };
-
   const int start_button_width = 54;
   const int spacing = 4;
   register size_t i;
+
+  cig_set_next_id(cig_hash("taskbar_clock"));
 
   CIG(
     cig_r_make(0, CIG_H - TASKBAR_H, CIG_W, TASKBAR_H),
     CIG_INSETS(cig_i_make(2, 4, 2, 2))
   ) {
+    cig_label *clock_label = cig_arena_allocate(NULL, sizeof(cig_label) + sizeof(cig_span[1]));
+    clock_label->available_spans = 1;
+
     cig_fill_color(get_color(COLOR_DIALOG_BACKGROUND));
     cig_draw_line(cig_v_make(CIG_SX, CIG_SY+1), cig_v_make(CIG_SX+CIG_W, CIG_SY+1), get_color(COLOR_WHITE), 1);
 
@@ -139,16 +139,16 @@ static void do_taskbar() {
     time_t t = time(NULL);
     struct tm *ct = localtime(&t);
 
-    cig_label_prepare(&clock_st.label, cig_v_zero(), (cig_text_properties) { .flags = CIG_TEXT_FORMATTED }, "%02d:%02d", ct->tm_hour, ct->tm_min);
+    cig_label_prepare(clock_label, cig_v_zero(), (cig_text_properties) { .flags = CIG_TEXT_FORMATTED }, "%02d:%02d", ct->tm_hour, ct->tm_min);
 
-    const int clock_w = (clock_st.label.bounds.w+11*2);
+    const int clock_w = (clock_label->bounds.w+11*2);
 
     CIG(
       cig_r_make(CIG_W_INSET-clock_w, 0, clock_w, CIG_AUTO()),
       CIG_INSETS(cig_i_uniform(1))
     ) {
       cig_fill_style(get_style(STYLE_INNER_BEVEL_NO_FILL), 0);
-      cig_label_draw(&clock_st.label);
+      cig_label_draw(clock_label);
     }
 
     /* Center: Fill remaining middle space with task buttons */

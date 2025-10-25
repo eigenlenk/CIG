@@ -127,8 +127,7 @@ TEST(text_label, span_limit)
   begin();
 
   /* We allocate 2 spans/lines. Third line in the text is not added to the label */
-  cig_label *label = cig_arena_allocate(NULL, sizeof(cig_label));
-  label->spans = CIG_ALLOCATE(cig_span[2]); /* Max 2 lines */
+  cig_label *label = cig_arena_allocate(NULL, CIG_LABEL_SIZEOF(2));
   label->available_spans = 2;
 
   cig_label_prepare(label, cig_v_make(15, 3), (cig_text_properties) { 0 }, "Olá mundo!\nHello world!\nTere maailm!");
@@ -265,15 +264,15 @@ TEST(text_label, forced_line_change) {
 TEST(text_label, prepare_single_long_word) {
   begin();
 
-  cig_span span_list[4];
-  cig_label label = { .spans = span_list, .available_spans = 4 };
-  cig_label_prepare(&label, cig_v_make(7, 1), (cig_text_properties) { 0 }, "Foobarbaz");
+  cig_label *label = cig_arena_allocate(NULL, CIG_LABEL_SIZEOF(4));
+  label->available_spans = 4;
+  cig_label_prepare(label, cig_v_make(7, 1), (cig_text_properties) { 0 }, "Foobarbaz");
 
-  TEST_ASSERT_EQUAL_INT(9, label.bounds.w);
-  TEST_ASSERT_EQUAL_INT(1, label.bounds.h);
+  TEST_ASSERT_EQUAL_INT(9, label->bounds.w);
+  TEST_ASSERT_EQUAL_INT(1, label->bounds.h);
 
   CIG(cig_r_make(0, 0, 7, 1)) {
-    cig_label_draw(&label);
+    cig_label_draw(label);
 
     TEST_ASSERT_EQUAL_RECT(cig_r_make(-1, 0, 9, 1), spans.rects[0]);
   }
@@ -282,15 +281,15 @@ TEST(text_label, prepare_single_long_word) {
 TEST(text_label, prepare_multiple_long_words) {
   begin();
 
-  cig_span span_list[4];
-  cig_label label = { .spans = span_list, .available_spans = 4 };
-  cig_label_prepare(&label, cig_v_make(7, 1), (cig_text_properties) { 0 }, "Foobarbaz barbazfoo bazfoobar");
+  cig_label *label = cig_arena_allocate(NULL, CIG_LABEL_SIZEOF(4));
+  label->available_spans = 4;
+  cig_label_prepare(label, cig_v_make(7, 1), (cig_text_properties) { 0 }, "Foobarbaz barbazfoo bazfoobar");
 
-  TEST_ASSERT_EQUAL_INT(9, label.bounds.w);
-  TEST_ASSERT_EQUAL_INT(3, label.bounds.h);
+  TEST_ASSERT_EQUAL_INT(9, label->bounds.w);
+  TEST_ASSERT_EQUAL_INT(3, label->bounds.h);
 
   CIG(cig_r_make(0, 0, 7, 3)) {
-    cig_label_draw(&label);
+    cig_label_draw(label);
 
     TEST_ASSERT_EQUAL_RECT(cig_r_make(-1, 0, 9, 1), spans.rects[0]);
     TEST_ASSERT_EQUAL_RECT(cig_r_make(-1, 1, 9, 1), spans.rects[1]);
