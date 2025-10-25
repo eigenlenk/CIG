@@ -174,6 +174,10 @@ int main(int argc, const char *argv[]) {
   load_texture(&images[IMAGE_SCROLL_DOWN], "res/images/scroll_down.png");
   load_texture(&images[IMAGE_SCROLL_LEFT], "res/images/scroll_left.png");
   load_texture(&images[IMAGE_SCROLL_RIGHT], "res/images/scroll_right.png");
+  load_texture(&images[IMAGE_SCROLL_UP_DISABLED], "res/images/scroll_up_disabled.png");
+  load_texture(&images[IMAGE_SCROLL_DOWN_DISABLED], "res/images/scroll_down_disabled.png");
+  load_texture(&images[IMAGE_SCROLL_LEFT_DISABLED], "res/images/scroll_left_disabled.png");
+  load_texture(&images[IMAGE_SCROLL_RIGHT_DISABLED], "res/images/scroll_right_disabled.png");
   load_texture(&images[IMAGE_WELCOME_APP_ICON], "res/images/welcome.png");
   load_texture(&images[IMAGE_BIN_EMPTY], "res/images/bin_empty.png");
   load_texture(&images[IMAGE_BIN_EMPTY_16], "res/images/bin_16.png");
