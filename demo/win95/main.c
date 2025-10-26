@@ -216,6 +216,8 @@ int main(int argc, const char *argv[]) {
   load_texture(&images[IMAGE_NOTEPAD_16], "res/images/notepad_16.png");
   load_texture(&images[IMAGE_PAINT_16], "res/images/paint_16.png");
   load_texture(&images[IMAGE_WORDWIZ_16], "res/images/wordwiz_16.png");
+  load_texture(&images[IMAGE_NOTEPAD_DOCUMENT_16], "res/images/notepad_document_16.png");
+  load_texture(&images[IMAGE_NOTEPAD_DOCUMENT_32], "res/images/notepad_document_32.png");
 
   blue_dither_shader = LoadShader(0, "res/shaders/blue_dither.fs");
 
