@@ -234,11 +234,15 @@ int main(int argc, const char *argv[]) {
   fonts[FONT_FRANKLIN_GOTHIC_BOOK_32].font = LoadFont("res/fonts/gothbook32.fnt");
   fonts[FONT_FRANKLIN_GOTHIC_BOOK_32].baseline_offset = -8;
 
+  fonts[FONT_FIXEDSYS].font = LoadFont("res/fonts/fixedsys.fnt");
+  fonts[FONT_FIXEDSYS].baseline_offset = 0;
+
   SetTextureFilter(fonts[FONT_REGULAR].font.texture, TEXTURE_FILTER_POINT);
   SetTextureFilter(fonts[FONT_BOLD].font.texture, TEXTURE_FILTER_POINT);
   SetTextureFilter(fonts[FONT_TIMES_NEW_ROMAN_32_BOLD].font.texture, TEXTURE_FILTER_POINT);
   SetTextureFilter(fonts[FONT_ARIAL_BLACK_32].font.texture, TEXTURE_FILTER_POINT);
   SetTextureFilter(fonts[FONT_FRANKLIN_GOTHIC_BOOK_32].font.texture, TEXTURE_FILTER_POINT);
+  SetTextureFilter(fonts[FONT_FIXEDSYS].font.texture, TEXTURE_FILTER_POINT);
   
   colors[COLOR_DEBUG] = (Color) { 255, 0, 255, 255 };
   colors[COLOR_BLACK] = (Color) { 0, 0, 0, 255 };
