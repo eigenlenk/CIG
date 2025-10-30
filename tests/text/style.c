@@ -50,8 +50,8 @@ CIG_INLINED cig_v text_measure(
   return cig_v_make(utf8_char_count(slice), 1);
 }
 
-CIG_INLINED cig_font_info font_query(cig_font_ref font_ref) {
-  return (cig_font_info) {
+CIG_INLINED cig_font_info_st font_query(cig_font_ref font_ref) {
+  return (cig_font_info_st) {
     .height = 1,
     .baseline_offset = 0
   };

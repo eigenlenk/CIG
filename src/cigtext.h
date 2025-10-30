@@ -4,7 +4,7 @@
 #include "cigcore.h"
 
 #define CIG_LABEL_SPANS_MAX 48
-#define CIG_LABEL_PRINTF_BUF_LENGTH 512
+#define CIG_LABEL_PRINTF_BUF_LENGTH 4096
 #define CIG_LABEL_SIZEOF(NUM_SPANS) (sizeof(cig_label) + sizeof(cig_span[NUM_SPANS]))
 #define CIG_RAW_TEXT_AUTOMATIC_SIZE cig_v_zero()
 
@@ -14,7 +14,7 @@ typedef void* cig_text_color_ref;
 typedef struct {
   int height,
       baseline_offset;
-} cig_font_info;
+} cig_font_info_st;
 
 #define CIG_TEXT_ALIGN_DEFAULT 0
 
@@ -54,7 +54,9 @@ typedef struct {
   int32_t line_spacing;
   cig_text_overflow overflow;
   enum CIG_PACKED {
-    CIG_TEXT_FORMATTED = CIG_BIT(0)
+    CIG_TEXT_FORMATTED = CIG_BIT(0),
+    CIG_TEXT_HORIZONTAL_WRAP_DISABLED = CIG_BIT(1), /*  */
+    CIG_TEXT_VERTICAL_CLIPPING_ENABLED = CIG_BIT(2) /* New lines are added until they fit perfectly vertically */
   } flags;
   cig_text_style style;
 } cig_text_properties;
@@ -69,7 +71,7 @@ typedef struct {
   CIG_OPTIONAL(cig_font_ref) font_override;
   CIG_OPTIONAL(cig_text_color_ref) color_override;
   struct { unsigned short w, h; } bounds;
-  unsigned char byte_len;
+  unsigned short byte_len;
   unsigned char style_flags;
   unsigned char newlines;
 } cig_span;
@@ -84,15 +86,15 @@ typedef struct {
   cig_text_color_ref color;
   struct { unsigned short w, h; } bounds;
   size_t available_spans;
-  unsigned char span_count;
-  unsigned char line_count;
+  unsigned short span_count;
+  unsigned short line_count;
   char line_spacing;
   cig_span spans[];
 } cig_label;
 
 typedef void (*cig_draw_text_callback)(const char *, size_t, cig_r, cig_font_ref, cig_text_color_ref, cig_text_style);
 typedef cig_v (*cig_measure_text_callback)(const char *, size_t, cig_font_ref, cig_text_style);
-typedef cig_font_info (*cig_query_font_callback)(cig_font_ref);
+typedef cig_font_info_st (*cig_query_font_callback)(cig_font_ref);
 
 /*
  * ┌───────────────────┐
@@ -115,6 +117,9 @@ void cig_assign_query_font(cig_query_font_callback);
 void cig_set_default_font(cig_font_ref);
 
 void cig_set_default_text_color(cig_text_color_ref);
+
+cig_font_info_st
+cig_font_info(cig_font_ref);
 
 /*
  * Allocates a label type in the current element's state, prepares it and

@@ -41,7 +41,7 @@ static cig_v measure_text(
   cig_font_ref,
   cig_text_style
 );
-static cig_font_info font_query(cig_font_ref);
+static cig_font_info_st font_query(cig_font_ref);
 
 /* Gfx API */
 static void draw_image(cig_buffer_ref, cig_r, cig_r, cig_image_ref, cig_image_mode);
@@ -342,6 +342,8 @@ CIG_INLINED void set_clip_rect(cig_buffer_ref buffer, cig_r rect, bool reset) {
   }
 }
 
+static char text_api_buffer[4096];
+
 CIG_INLINED void render_text(
   const char *str,
   size_t len,
@@ -350,16 +352,15 @@ CIG_INLINED void render_text(
   cig_text_color_ref color,
   cig_text_style style
 ) {
-  static char buf[256];
-  strncpy(buf, str, len);
-  buf[len] = '\0';
+  strncpy(text_api_buffer, str, len);
+  text_api_buffer[len] = '\0';
   
   struct font_store *fs = (struct font_store*)font;
 
   // printf("render: |%s|\n", buf);
   
   // DrawRectangle(UNPACK_RECT(rect), GREEN);
-  DrawTextEx(fs->font, buf, (Vector2) { rect.x, rect.y }, fs->font.baseSize, 0, *(Color*)color);
+  DrawTextEx(fs->font, text_api_buffer, (Vector2) { rect.x, rect.y }, fs->font.baseSize, 0, *(Color*)color);
 }
 
 CIG_INLINED cig_v measure_text(
@@ -368,22 +369,21 @@ CIG_INLINED cig_v measure_text(
   cig_font_ref font,
   cig_text_style style
 ) {
-  static char buf[256];
-  strncpy(buf, str, len);
-  buf[len] = '\0';
+  strncpy(text_api_buffer, str, len);
+  text_api_buffer[len] = '\0';
   
   struct font_store *fs = (struct font_store*)font;
-  Vector2 bounds = MeasureTextEx(fs->font, buf, fs->font.baseSize, 0);
+  Vector2 bounds = MeasureTextEx(fs->font, text_api_buffer, fs->font.baseSize, 0);
   
   return cig_v_make(bounds.x, bounds.y);
 }
 
-CIG_INLINED cig_font_info font_query(cig_font_ref font_ref) {
+CIG_INLINED cig_font_info_st font_query(cig_font_ref font_ref) {
   struct font_store *fs = (struct font_store*)font_ref;
   
   // printf("GLYPH PADDING %d\n", fs->font.glyphPadding);
   
-  return (cig_font_info) {
+  return (cig_font_info_st) {
     .height = fs->font.baseSize,
     .baseline_offset = fs->baseline_offset
   };
