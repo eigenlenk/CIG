@@ -497,7 +497,8 @@ TEST(text_label, multiline_overflow_truncate)
   end();
 }
 
-TEST(text_label, multiline_overflow_ellipsis) {
+TEST(text_label, multiline_overflow_ellipsis)
+{
   begin();
   CIG(RECT(0, 0, 18, 2)) {
     cig_label *label = cig_draw_label((cig_text_properties) {
@@ -515,8 +516,21 @@ TEST(text_label, multiline_overflow_ellipsis) {
   end();
 }
 
+TEST(text_label, starts_with_empty_newline)
+{
+  begin();
+
+  cig_label *label = cig_draw_label((cig_text_properties) { }, "\nSecond line");
+
+  TEST_ASSERT_EQUAL_STRING("", spans.strings[0]);
+  TEST_ASSERT_EQUAL_STRING("Second line", spans.strings[1]);
+  TEST_ASSERT_EQUAL_INT(2, label->span_count);
+  TEST_ASSERT_EQUAL_INT(2, label->line_count);
+}
+
 /* Raw text is for measuring and drawing smaller strings directly without caching anything internally */
-TEST(text_label, raw_text) {
+TEST(text_label, raw_text)
+{
   begin();
 
   cig_v bounds = cig_measure_raw_text(NULL, 0, "Olá mundo!");
@@ -531,7 +545,8 @@ TEST(text_label, raw_text) {
   TEST_ASSERT_EQUAL_RECT(cig_r_make(6, 6, 10, 1), spans.rects[1]);
 }
 
-TEST(text_label, raw_text_formatted) {
+TEST(text_label, raw_text_formatted)
+{
   begin();
 
   cig_v bounds = cig_measure_raw_text_formatted(NULL, 0, "Price of eggs: %.2f$", 130.45000);
@@ -542,7 +557,8 @@ TEST(text_label, raw_text_formatted) {
   TEST_ASSERT_EQUAL_RECT(cig_r_make(5, 5, 22, 1), spans.rects[0]);
 }
 
-TEST_GROUP_RUNNER(text_label) {
+TEST_GROUP_RUNNER(text_label)
+{
   RUN_TEST_CASE(text_label, fits_arena);
   RUN_TEST_CASE(text_label, single);
   RUN_TEST_CASE(text_label, single_trailing_newlines);
@@ -567,6 +583,7 @@ TEST_GROUP_RUNNER(text_label) {
   RUN_TEST_CASE(text_label, single_line_overflow_ellipsis_ignores_newlines);
   RUN_TEST_CASE(text_label, multiline_overflow_truncate);
   RUN_TEST_CASE(text_label, multiline_overflow_ellipsis);
+  RUN_TEST_CASE(text_label, starts_with_empty_newline);
   RUN_TEST_CASE(text_label, raw_text);
   RUN_TEST_CASE(text_label, raw_text_formatted);
 }

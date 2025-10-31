@@ -413,7 +413,7 @@ static void label_process_string(
     const bool is_space = IS_CODEPOINT_SPACE(scope->cp);
     const bool is_end_of_string = (scope->i + scope->ch.byte_len == scope->utext.byte_len);
     const bool is_terminating_span =
-      (scope->i > scope->run.start && (is_newline || scope->tag_parser.opened_or_closed))
+      (scope->i >= scope->run.start && (is_newline || scope->tag_parser.opened_or_closed))
       || (is_end_of_string && (scope->i = scope->utext.byte_len));
 
     if ((scope->wrap_width && is_space) || is_terminating_span) {
