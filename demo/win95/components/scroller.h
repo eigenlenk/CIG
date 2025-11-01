@@ -2,12 +2,17 @@
 #define CIG_WIN95_DEMO_SCROLL_VIEW_INCLUDED
 
 #include "cig.h"
+#include <inttypes.h>
 
-typedef enum CIG_PACKED {
-  SCROLLER_ALWAYS_VISIBLE_X = CIG_BIT(0),
-  SCROLLER_ALWAYS_VISIBLE_Y = CIG_BIT(1),
-  SCROLLER_ALWAYS_VISIBLE = SCROLLER_ALWAYS_VISIBLE_X | SCROLLER_ALWAYS_VISIBLE_Y
-} scroller_flags;
+typedef struct CIG_PACKED {
+  enum {
+    SCROLLER_ALWAYS_VISIBLE_X = CIG_BIT(0),
+    SCROLLER_ALWAYS_VISIBLE_Y = CIG_BIT(1),
+    SCROLLER_ALWAYS_VISIBLE = SCROLLER_ALWAYS_VISIBLE_X | SCROLLER_ALWAYS_VISIBLE_Y
+  } flags;
+  uint16_t scale,
+           step;
+} scroller_config;
 
 typedef enum CIG_PACKED {
   SCROLLER_DISPLAYED_X = CIG_BIT(0),
@@ -15,9 +20,9 @@ typedef enum CIG_PACKED {
 } scroller_results;
 
 void
-scroll_bar(cig_r, int32_t*, int32_t);
+scroll_bar(cig_r, int32_t*, int32_t, scroller_config);
 
 void
-display_scrollbars(cig_scroll_state_t*, scroller_flags, CIG_OPTIONAL(scroller_results*));
+display_scrollbars(cig_scroll_state_t*, scroller_config, CIG_OPTIONAL(scroller_results*));
 
 #endif

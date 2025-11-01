@@ -66,6 +66,7 @@ window_manager_process(window_manager_t *this)
     }
 
     if (wnd->proc) {
+      cig_set_next_id(wnd->id + cig_hash("content"));
       wnd->proc(wnd, focused);
     }
 

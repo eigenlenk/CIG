@@ -76,6 +76,7 @@ typedef struct {
  * within a UTF-8 encoded string.
  */
 typedef struct {
+    const char* start;         ///< Pointer to the beginning of the string being iterated.
     const char* str;           ///< Pointer to the current position of the iterator.
     const char* terminator;    ///< Pointer to the last character in the string being iterated
 } utf8_char_iter;
@@ -189,6 +190,7 @@ utf8_string slice_utf8_string(utf8_string ustr, size_t byte_index, size_t byte_l
  * @return An iterator structure initialized to the start of the string.
  */
 utf8_char_iter make_utf8_char_iter(utf8_string ustr);
+utf8_char_iter make_utf8_char_iter_at(utf8_string ustr, const char* pos);
 
 /**
  * @brief Retrieves the next UTF-8 character from the iterator.
@@ -198,6 +200,15 @@ utf8_char_iter make_utf8_char_iter(utf8_string ustr);
  * @note If the iterator reaches the end, it keeps returning terminating '\0' of iter.str { .str = '\0', .byte_len = 0 }
  */
 utf8_char next_utf8_char(utf8_char_iter* iter);
+
+/**
+ * @brief Retrieves the previous UTF-8 character from the iterator.
+ *
+ * @param iter Pointer to the UTF-8 character iterator.
+ * @return The previous UTF-8 character from the iterator.
+ * @note If the iterator reaches the start, it keeps returning terminating '\0' of iter.str { .str = '\0', .byte_len = 0 }
+ */
+utf8_char previous_utf8_char(utf8_char_iter* iter);
 
 /**
  * @brief Retrieves the UTF-8 character at the specified character index within a UTF-8 string in O(n) time.

@@ -87,6 +87,7 @@ int main(int argc, char **argv)
       TESTS_FOLDER"core/macros.c",
       TESTS_FOLDER"text/label.c",
       TESTS_FOLDER"text/style.c",
+      TESTS_FOLDER"text/offset.c",
       TESTS_FOLDER"gfx/image.c",
       TESTS_FOLDER"types.c"
     );
@@ -111,6 +112,7 @@ int main(int argc, char **argv)
       "-I"DEPS_FOLDER"raylib-5.5_win64_mingw-w64/include",
       
       "-DDEBUG",
+      "-g",
       // "-O2",
 
       "-o", BIN_FOLDER"win95",

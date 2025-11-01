@@ -104,6 +104,10 @@ static void do_desktop_icons() {
     }
   }
 
+  if (file_item(IMAGE_NOTEPAD_DOCUMENT_32, "Readme.txt")) {
+    win95_open_app(notepad_app());
+  }
+
   end_file_browser();
 }
 

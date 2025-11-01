@@ -2,6 +2,8 @@
 #define CIG_TEXT_INCLUDED
 
 #include "cigcore.h"
+#include "utf8.h"
+#include <stdint.h>
 
 #define CIG_LABEL_SPANS_MAX 48
 #define CIG_LABEL_PRINTF_BUF_LENGTH 4096
@@ -56,7 +58,8 @@ typedef struct {
   enum CIG_PACKED {
     CIG_TEXT_FORMATTED = CIG_BIT(0),
     CIG_TEXT_HORIZONTAL_WRAP_DISABLED = CIG_BIT(1), /*  */
-    CIG_TEXT_VERTICAL_CLIPPING_ENABLED = CIG_BIT(2) /* New lines are added until they fit perfectly vertically */
+    CIG_TEXT_VERTICAL_CLIPPING_ENABLED = CIG_BIT(2), /* New lines are added until they fit perfectly vertically */
+    CIG_TEXT_UNIQUE_STRING_POINTER = CIG_BIT(3) /* String pointer address is used to identify text and observe changes */
   } flags;
   cig_text_style style;
 } cig_text_properties;
@@ -114,9 +117,11 @@ void cig_assign_query_font(cig_query_font_callback);
  * └──────────────┘
  */
 
-void cig_set_default_font(cig_font_ref);
+void
+cig_set_default_font(cig_font_ref);
 
-void cig_set_default_text_color(cig_text_color_ref);
+void
+cig_set_default_text_color(cig_text_color_ref);
 
 cig_font_info_st
 cig_font_info(cig_font_ref);
@@ -125,7 +130,8 @@ cig_font_info(cig_font_ref);
  * Allocates a label type in the current element's state, prepares it and
  * draws it. Label is cached based on the input string hash.
  */
-CIG_DISCARDABLE(cig_label *) cig_draw_label(cig_text_properties, const char *, ...);
+CIG_DISCARDABLE(cig_label*)
+cig_draw_label(cig_text_properties, const char*, ...);
 
 /*
  * For more advanced text display you can prepare a piece of text.
@@ -133,20 +139,34 @@ CIG_DISCARDABLE(cig_label *) cig_draw_label(cig_text_properties, const char *, .
  * pass as a size for the next layout frame for example. It also exposes
  * the underlying spans (smallest text components)
  */
-cig_label * cig_label_prepare(cig_label *, cig_v, cig_text_properties, const char *, ...);
+cig_label*
+cig_label_prepare(cig_label*, cig_v, cig_text_properties, const char*, ...);
 
 /* Renders a prepared label */
-void cig_label_draw(cig_label *);
+void
+cig_label_draw(cig_label*);
 
-/*
- * Raw text API allows drawing simple pieces of text without storing
- * anything internally.
- */
+/* */
+char*
+cig_utf8_string_line_location(utf8_string, const char*, int16_t line_offset);
 
-cig_v cig_measure_raw_text(cig_font_ref, cig_text_style, const char *);
-cig_v cig_measure_raw_text_formatted(cig_font_ref, cig_text_style, const char *, ...);
+/*=================================================================
 
-void cig_draw_raw_text(cig_v, cig_v, cig_font_ref, cig_text_style, cig_text_color_ref, const char *);
-void cig_draw_raw_text_formatted(cig_v, cig_v, cig_font_ref, cig_text_style, cig_text_color_ref, const char *, ...);
+   Raw text API allows drawing simple pieces of text
+   without storing anything internally.
+
+  =================================================================*/
+
+cig_v
+cig_measure_raw_text(cig_font_ref, cig_text_style, const char*);
+
+cig_v
+cig_measure_raw_text_formatted(cig_font_ref, cig_text_style, const char*, ...);
+
+void
+cig_draw_raw_text(cig_v, cig_v, cig_font_ref, cig_text_style, cig_text_color_ref, const char*);
+
+void
+cig_draw_raw_text_formatted(cig_v, cig_v, cig_font_ref, cig_text_style, cig_text_color_ref, const char*, ...);
 
 #endif

@@ -5,13 +5,13 @@
 #include <stdio.h>
 
 #define SCROLL_BAR_SIZE 16
-#define SCROLL_BAR_MINIMUM_THUMB 8
+#define SCROLL_BAR_MINIMUM_THUMB 6
 
 static bool
 scroll_bar_button(cig_r, bool, image_id_t);
 
 void
-scroll_bar(cig_r rect, int32_t *value, int32_t limit)
+scroll_bar(cig_r rect, int32_t *value, int32_t limit, scroller_config config)
 {
   static struct {
     int32_t *value;
@@ -23,7 +23,7 @@ scroll_bar(cig_r rect, int32_t *value, int32_t limit)
 
   const bool is_y_axis = rect.h > rect.w;
   const int32_t visible = is_y_axis ? rect.h : rect.w;
-  const int32_t total = visible + limit;
+  const int32_t total = CIG_MAX(1, config.scale) * (visible + limit);
   const int32_t track = visible - 2 * SCROLL_BAR_SIZE;
   const bool is_scrollable = limit > 0;
   const int32_t thumb_size = is_scrollable
@@ -32,8 +32,8 @@ scroll_bar(cig_r rect, int32_t *value, int32_t limit)
   const int32_t thumb_offset = is_scrollable
     ? (*value / (double)limit) * (track - thumb_size)
     : 0;
-  const int32_t scroll_step = is_scrollable
-    ? limit / (track - thumb_size)
+  const double scroll_step = is_scrollable
+    ? (double)limit / (track - thumb_size)
     : 0;
 
   const cig_r negative_button_frame = is_y_axis
@@ -55,7 +55,7 @@ scroll_bar(cig_r rect, int32_t *value, int32_t limit)
         ? is_scrollable ? IMAGE_SCROLL_UP : IMAGE_SCROLL_UP_DISABLED
         : is_scrollable ? IMAGE_SCROLL_LEFT : IMAGE_SCROLL_LEFT_DISABLED
     )) {
-      *value -= scroll_step * 5;
+      *value -= CIG_MAX(1, scroll_step) * config.step;
     }
   )
 
@@ -68,7 +68,7 @@ scroll_bar(cig_r rect, int32_t *value, int32_t limit)
         ? is_scrollable ? IMAGE_SCROLL_DOWN : IMAGE_SCROLL_DOWN_DISABLED
         : is_scrollable ? IMAGE_SCROLL_RIGHT : IMAGE_SCROLL_RIGHT_DISABLED
     )) {
-      *value += scroll_step * 5;
+      *value += CIG_MAX(1, scroll_step) * config.step;
     }
   )
 
@@ -113,7 +113,7 @@ scroll_bar(cig_r rect, int32_t *value, int32_t limit)
 }
 
 void
-display_scrollbars(cig_scroll_state_t *scroll, scroller_flags flags, scroller_results *results)
+display_scrollbars(cig_scroll_state_t *scroll, scroller_config config, scroller_results *results)
 {
   const bool scrolls_x = scroll->distance.x > 0;
   const bool scrolls_y = scroll->distance.y > 0;
@@ -139,8 +139,8 @@ display_scrollbars(cig_scroll_state_t *scroll, scroller_flags flags, scroller_re
 
   const int32_t total_dist_x = scroll->distance.x + extra_margin_x;
   const int32_t total_dist_y = scroll->distance.y + extra_margin_y;
-  const bool shows_x_axis = (total_dist_x > 0) || (flags & SCROLLER_ALWAYS_VISIBLE_X);
-  const bool shows_y_axis = (total_dist_y > 0) || (flags & SCROLLER_ALWAYS_VISIBLE_Y);
+  const bool shows_x_axis = (total_dist_x > 0) || (config.flags & SCROLLER_ALWAYS_VISIBLE_X);
+  const bool shows_y_axis = (total_dist_y > 0) || (config.flags & SCROLLER_ALWAYS_VISIBLE_Y);
   const bool shows_both_axis = shows_x_axis && shows_y_axis;
 
   if (shows_x_axis) {
@@ -152,7 +152,8 @@ display_scrollbars(cig_scroll_state_t *scroll, scroller_flags flags, scroller_re
         PIN(HEIGHT, SCROLL_BAR_SIZE)
       ),
       &scroll->offset.x,
-      total_dist_x
+      total_dist_x,
+      config
     );
 
     if (results) {
@@ -171,7 +172,8 @@ display_scrollbars(cig_scroll_state_t *scroll, scroller_flags flags, scroller_re
         PIN(WIDTH, SCROLL_BAR_SIZE)
       ),
       &scroll->offset.y,
-      total_dist_y
+      total_dist_y,
+      config
     );
 
     if (results) {

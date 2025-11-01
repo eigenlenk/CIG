@@ -1,7 +1,6 @@
 #include "cigtext.h"
 #include "cigcorem.h"
 #include "ciggfx.h"
-#include "utf8.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -119,6 +118,16 @@ scope_add_label_span(
   size_t
 );
 
+static bool
+move_to_next_newline(utf8_char_iter* iter, int8_t direction, bool peek);
+
+CIG_INLINED cig_id
+text_id(const char *str, cig_text_properties *props) {
+  return props->flags & CIG_TEXT_UNIQUE_STRING_POINTER
+    ? (cig_id)str
+    : cig_hash(str);
+}
+
 /*  ┌───────────────────┐
     │ BACKEND CALLBACKS │
     └───────────────────┘ */
@@ -179,7 +188,7 @@ cig_draw_label(cig_text_properties props, const char *text, ...)
   }
 
   const cig_v max_bounds = cig_r_size(absolute_rect);
-  const cig_id hash = cig_hash(str) + (cig_id)props.font + CIG_TINYHASH(max_bounds.x, max_bounds.y);
+  const cig_id hash = text_id(str, &props) + (cig_id)props.font + CIG_TINYHASH(max_bounds.x, max_bounds.y);
 
   if (label->hash != hash) {
     label->hash = hash;
@@ -236,7 +245,7 @@ cig_label_prepare(
     str = text;
   }
 
-  const cig_id hash = cig_hash(str) + (cig_id)props.font + CIG_TINYHASH(max_bounds.x, max_bounds.y);
+  const cig_id hash = text_id(str, &props) + (cig_id)props.font + CIG_TINYHASH(max_bounds.x, max_bounds.y);
 
   if (label->hash != hash) {
     label->hash = hash;
@@ -272,6 +281,36 @@ void cig_label_draw(cig_label *label) {
       label->line_spacing
     );
   }
+}
+
+char*
+cig_utf8_string_line_location(utf8_string str, const char *pos, int16_t line_offset)
+{
+  if (!line_offset) {
+    return (char*)pos;
+  }
+
+  int lines = 0,
+      lines_tot = abs(line_offset);
+  utf8_char_iter iter = make_utf8_char_iter_at(str, pos);
+
+  while (lines < lines_tot) {
+    if (move_to_next_newline(&iter, line_offset, false)) {
+      lines ++;
+
+      /* When moving backwards, we need to move to the start of the line
+         by peeking until \n is found and terminating after it */
+      if (line_offset < 0 && lines == lines_tot) {
+        if (!move_to_next_newline(&iter, line_offset, true)) {
+          break;
+        }
+      }
+    } else {
+      break;
+    }
+  }
+
+  return (char*)iter.str;
 }
 
 cig_v cig_measure_raw_text(
@@ -902,4 +941,35 @@ scope_add_label_span(
   scope->line_width = 0;
 
   return &label->spans[label->span_count-1];
+}
+
+static bool
+move_to_next_newline(utf8_char_iter *iter, int8_t direction, bool peek)
+{
+  utf8_char c;
+  const char *initc = iter->str;
+  const char *peekc = iter->str;
+
+  while (1) {
+    c = direction > 0
+      ? next_utf8_char(iter)
+      : previous_utf8_char(iter);
+
+    if (!c.byte_len) {
+      iter->str = direction > 0 ? initc : iter->start;
+      break;
+    }
+
+    if (IS_CODEPOINT_NEWLINE(unicode_code_point(c))) {
+      if (peek) {
+        /* Next character is '\n', let's end before/after it */
+        iter->str = peekc;
+      }
+      return true;
+    } else {
+      peekc = iter->str;
+    }
+  }
+
+  return false;
 }
