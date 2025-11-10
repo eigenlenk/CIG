@@ -172,7 +172,19 @@ void free_owned_utf8_string(owned_utf8_string* owned_str) {
 }
 
 utf8_char_iter make_utf8_char_iter(utf8_string ustr) {
-    return (utf8_char_iter) { .str = ustr.str, .terminator = &ustr.str[ustr.byte_len] };
+    return (utf8_char_iter) {
+        .start = ustr.str,
+        .str = ustr.str,
+        .terminator = &ustr.str[ustr.byte_len]
+    };
+}
+
+utf8_char_iter make_utf8_char_iter_at(utf8_string ustr, const char *position) {
+    return (utf8_char_iter) {
+        .start = ustr.str,
+        .str = position,
+        .terminator = &ustr.str[ustr.byte_len]
+    };
 }
 
 bool is_utf8_char_boundary(const char* str) {
@@ -207,6 +219,21 @@ utf8_char next_utf8_char(utf8_char_iter* iter) {
     }
 
     return (utf8_char) { .str = curr_boundary, .byte_len = byte_len };
+}
+
+utf8_char previous_utf8_char(utf8_char_iter* iter) {
+    if (iter->str == iter->start) return (utf8_char) { .str = "\0", .byte_len = 0 };
+
+    iter->str--;
+    uint8_t byte_len = 1;
+
+    // find the previous char's starting byte (previous char boundary) and set the iter->str to that.
+    while (!is_utf8_char_boundary(iter->str)) {
+        iter->str--;
+        byte_len++;
+    }
+
+    return (utf8_char) { .str = iter->str, .byte_len = byte_len };
 }
 
 utf8_char nth_utf8_char(utf8_string ustr, size_t char_index) {
