@@ -133,6 +133,8 @@ int main(int argc, const char *argv[]) {
     }
   }
 
+  SetTraceLogLevel(LOG_WARNING);
+
   if (run_fullscreen) {
     InitWindow(0, 0, "Winlose 95");
     ray_w = GetMonitorWidth(GetCurrentMonitor());

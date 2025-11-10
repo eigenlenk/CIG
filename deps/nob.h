@@ -692,7 +692,7 @@ char *nob_win32_error_message(DWORD err);
 #ifdef NOB_IMPLEMENTATION
 
 // Any messages with the level below nob_minimal_log_level are going to be suppressed.
-Nob_Log_Level nob_minimal_log_level = NOB_INFO;
+Nob_Log_Level nob_minimal_log_level = NOB_WARNING;
 
 #ifdef _WIN32
 
