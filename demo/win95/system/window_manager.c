@@ -66,6 +66,7 @@ window_manager_process(window_manager_t *this)
     }
 
     if (wnd->proc) {
+      cig_set_next_id(wnd->id + cig_hash("content"));
       wnd->proc(wnd, focused);
     }
 
@@ -137,6 +138,10 @@ window_manager_close(window_manager_t *manager, window_t *wnd)
   register size_t i, j;
   if (wnd->owner && wnd->flags & IS_PRIMARY_WINDOW && wnd->owner->flags & KILL_WHEN_PRIMARY_WINDOW_CLOSED) {
     win95_close_application(wnd->owner);
+  }
+  if (wnd->data) {
+    free(wnd->data);
+    wnd->data = NULL;
   }
   wnd->id = 0;
   for (i = 0; i < manager->count; ++i) {
