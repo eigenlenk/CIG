@@ -55,8 +55,7 @@ typedef struct {
   cig_text_overflow overflow;
   enum CIG_PACKED {
     CIG_TEXT_FORMATTED = CIG_BIT(0),
-    CIG_TEXT_HORIZONTAL_WRAP_DISABLED = CIG_BIT(1), /*  */
-    CIG_TEXT_VERTICAL_CLIPPING_ENABLED = CIG_BIT(2) /* New lines are added until they fit perfectly vertically */
+    CIG_TEXT_HORIZONTAL_WRAP_DISABLED = CIG_BIT(1)
   } flags;
   cig_text_style style;
 } cig_text_properties;

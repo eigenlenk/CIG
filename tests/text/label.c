@@ -12,7 +12,7 @@ static int text_measure_calls;
 static struct {
   cig_r rects[16];
   char strings[16][128];
-  size_t count;
+  size_t render_count;
 } spans;
 
 CIG_INLINED void text_render(
@@ -23,7 +23,7 @@ CIG_INLINED void text_render(
   cig_text_color_ref color,
   cig_text_style style
 ) {
-  int i = spans.count++;
+  int i = spans.render_count++;
   spans.rects[i] = rect;
   // printf("RENDER: %.*s (%d) IN %d, %d, %d, %d\n", len, str, (uint32_t)len, rect.x, rect.y, rect.w, rect.h);
   sprintf(spans.strings[i], "%.*s", (uint32_t)len, str);
@@ -65,7 +65,7 @@ static void begin() {
       bounds and positions are calculated in number of characters rather than pixels */
 	cig_begin_layout(&ctx, NULL, cig_r_make(0, 0, 80, 25), 0.1f); /* 80 x 25 character terminal */
 
-  spans.count = 0;
+  spans.render_count = 0;
 }
 
 static void end() {
@@ -95,7 +95,7 @@ TEST(text_label, single) {
     /*  Span is an atomic text component, a piece of text that runs until
         the horizontal bounds of the label, or until some property of the
         text changes (font, color, link etc.) */
-    TEST_ASSERT_EQUAL(1, spans.count);
+    TEST_ASSERT_EQUAL(1, spans.render_count);
     TEST_ASSERT_EQUAL(1, label->line_count);
     TEST_ASSERT_EQUAL_RECT(cig_r_make(35, 12, 10, 1), spans.rects[0]);
 
@@ -114,7 +114,7 @@ TEST(text_label, single_trailing_newlines)
   /* Trailing newline characters increase line count */
   cig_label *label = cig_draw_label((cig_text_properties) { 0 }, "Olá mundo!\n");
 
-  TEST_ASSERT_EQUAL(1, spans.count);
+  TEST_ASSERT_EQUAL(1, spans.render_count);
   TEST_ASSERT_EQUAL(2, label->line_count);
   TEST_ASSERT_EQUAL_RECT(cig_r_make(35, 11, 10, 1), spans.rects[0]);
 
@@ -126,17 +126,19 @@ TEST(text_label, multiline) {
   for (i = 0; i < 2; ++i) {
     begin();
 
-    cig_label *label = cig_draw_label((cig_text_properties) { 0 }, "Olá mundo!\nHello world!");
+    cig_label *label = cig_draw_label((cig_text_properties) { 0 }, "Olá mundo!\nHello world!\n\nTere maailm!");
 
-    TEST_ASSERT_EQUAL(2, spans.count);
-    TEST_ASSERT_EQUAL_INT(2, label->line_count);
-    TEST_ASSERT_EQUAL_RECT(cig_r_make(35, 11, 10, 1), spans.rects[0]);
-    TEST_ASSERT_EQUAL_RECT(cig_r_make(34, 12, 12, 1), spans.rects[1]);
+    TEST_ASSERT_EQUAL(3, spans.render_count);
+    TEST_ASSERT_EQUAL_INT(4, label->span_count);
+    TEST_ASSERT_EQUAL_INT(4, label->line_count);
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(35, 10, 10, 1), spans.rects[0]);
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(34, 11, 12, 1), spans.rects[1]);
+    TEST_ASSERT_EQUAL_RECT(cig_r_make(34, 13, 12, 1), spans.rects[2]);
 
     end();
   }
 
-  TEST_ASSERT_EQUAL(4, text_measure_calls);
+  TEST_ASSERT_EQUAL(6, text_measure_calls);
 }
 
 TEST(text_label, span_limit)
@@ -150,7 +152,7 @@ TEST(text_label, span_limit)
   cig_label_prepare(label, cig_v_make(15, 3), (cig_text_properties) { 0 }, "Olá mundo!\nHello world!\n\nTere maailm!");
 
   TEST_ASSERT_EQUAL(2, label->span_count);
-  TEST_ASSERT_EQUAL_INT(4, label->line_count);
+  TEST_ASSERT_EQUAL_INT(3, label->line_count);
 
   end();
 }
@@ -366,28 +368,6 @@ TEST(text_label, prepare_horizontal_wrap_disabled)
   end();
 }
 
-TEST(text_label, prepare_vertical_clipping_enabled)
-{
-  begin();
-
-  cig_label *label = cig_arena_allocate(NULL, CIG_LABEL_SIZEOF(10));
-  label->available_spans = 10;
-
-  cig_label_prepare(
-    label,
-    cig_v_make(15, 2),
-    (cig_text_properties) {
-      .flags = CIG_TEXT_VERTICAL_CLIPPING_ENABLED
-    },
-    "Olá mundo!\nHello world!\nTere maailm!"
-  );
-
-  TEST_ASSERT_EQUAL(3, label->span_count);
-  TEST_ASSERT_EQUAL(3, label->line_count);
-
-  end();
-}
-
 TEST(text_label, overflow_enabled_left_aligned)
 {
   begin();
@@ -522,8 +502,9 @@ TEST(text_label, starts_with_empty_newline)
 
   cig_label *label = cig_draw_label((cig_text_properties) { }, "\nSecond line");
 
-  TEST_ASSERT_EQUAL_STRING("", spans.strings[0]);
-  TEST_ASSERT_EQUAL_STRING("Second line", spans.strings[1]);
+  TEST_ASSERT_EQUAL(1, spans.render_count);
+  TEST_ASSERT_NULL(label->spans[0].str);
+  TEST_ASSERT_EQUAL_STRING("Second line", spans.strings[0]);
   TEST_ASSERT_EQUAL_INT(2, label->span_count);
   TEST_ASSERT_EQUAL_INT(2, label->line_count);
 }
@@ -575,7 +556,6 @@ TEST_GROUP_RUNNER(text_label)
   RUN_TEST_CASE(text_label, prepare_multiple_long_words);
   RUN_TEST_CASE(text_label, prepare_multiple_long_words_with_newlines);
   RUN_TEST_CASE(text_label, prepare_horizontal_wrap_disabled);
-  RUN_TEST_CASE(text_label, prepare_vertical_clipping_enabled);
   RUN_TEST_CASE(text_label, overflow_enabled_left_aligned);
   RUN_TEST_CASE(text_label, overflow_enabled_center_aligned);
   RUN_TEST_CASE(text_label, overflow_enabled_right_aligned);

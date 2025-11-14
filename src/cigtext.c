@@ -62,8 +62,7 @@ typedef struct {
          newlines,
          line_count;
   cig_text_style style;
-  const bool wrap_width,
-             clip_lines;
+  const bool wrap_width;
 } scope_st;
 
 static cig_draw_text_callback render_callback = NULL;
@@ -97,9 +96,6 @@ label_process_string(
 static void render_spans(cig_span *, size_t, cig_font_ref, cig_text_color_ref, cig_text_horizontal_alignment, cig_text_vertical_alignment, bounds_t, int);
 static void wrap_text(utf8_string *, size_t, cig_v *, cig_text_overflow, cig_font_ref, cig_font_ref, cig_text_color_ref, cig_text_style, int32_t, cig_span *);
 static bool tag_parser_append(tag_parser_t*, utf8_char, uint32_t);
-
-static size_t
-scope_count_consecutive_newlines_at_current_position(scope_st*);
 
 static void
 scope_apply_tag(scope_st*);
@@ -192,8 +188,7 @@ cig_draw_label(cig_text_properties props, const char *text, ...)
       .utext = utext,
       .iter = make_utf8_char_iter(utext),
       .line_count = 1,
-      .wrap_width = (max_bounds.x > 0) && !(props.flags & CIG_TEXT_HORIZONTAL_WRAP_DISABLED),
-      .clip_lines = (max_bounds.y > 0) && (props.flags & CIG_TEXT_VERTICAL_CLIPPING_ENABLED)
+      .wrap_width = (max_bounds.x > 0) && !(props.flags & CIG_TEXT_HORIZONTAL_WRAP_DISABLED)
     };
 
     label_process_string(label, &scope, &props, max_bounds, text);
@@ -249,8 +244,7 @@ cig_label_prepare(
       .utext = utext,
       .iter = make_utf8_char_iter(utext),
       .line_count = 1,
-      .wrap_width = (max_bounds.x > 0) && !(props.flags & CIG_TEXT_HORIZONTAL_WRAP_DISABLED),
-      .clip_lines = (max_bounds.y > 0) && (props.flags & CIG_TEXT_VERTICAL_CLIPPING_ENABLED)
+      .wrap_width = (max_bounds.x > 0) && !(props.flags & CIG_TEXT_HORIZONTAL_WRAP_DISABLED)
     };
 
     label_process_string(label, &scope, &props, max_bounds, text);
@@ -417,6 +411,11 @@ static void label_process_string(
       || (is_end_of_string && (scope->i = scope->utext.byte_len));
 
     if ((scope->wrap_width && is_space) || is_terminating_span) {
+      /* Outta spans! */
+      if (label->span_count == label->available_spans) {
+        break;
+      }
+
       /* Checks line limit */
       const bool can_continue_on_next_line = (!props->max_lines || scope->line_count < props->max_lines);
 
@@ -438,30 +437,25 @@ static void label_process_string(
       /* Current string slice length in number of characters */
       const size_t length = scope->i - scope->run.start;
 
-      /* Number of newlines to add for the next span. Consecutive newlines
-         are counted. When splitting a line at a space character, explicit
+      /* This span ends a line. When splitting a line at a space character, explicit
          newline is added. */
-      const size_t newlines = is_newline
-        ? 1 + scope_count_consecutive_newlines_at_current_position(scope)
-        : is_space
-          ? 1
-          : 0;
+      const size_t newlines = is_newline ? 1 : is_space ? 1 : 0;
 
-      utf8_string slice = slice_utf8_string(scope->utext, scope->run.start, length);
+      utf8_string slice = length
+        ? slice_utf8_string(scope->utext, scope->run.start, length)
+        : (utf8_string) { .str = NULL, .byte_len = 0 };
 
-      cig_v bounds = measure_callback(slice.str, slice.byte_len, display_font, scope->style);
-      
-      /* Stop parsing if the next line would not fit and the option to clip is ON */
-      if (is_newline && scope->clip_lines) {
-        const int current_lines = CIG_MAX(1, scope->line_count);
-        const int current_height = (current_lines * scope->base_font_info.height) + (current_lines - 1) * label->line_spacing;
-        
-        if (current_height > max_bounds.y) {
-          const int visible_lines_count = floorf(cig_rect().h / (float)scope->base_font_info.height);
-          scope->line_count = CIG_MIN(current_lines, visible_lines_count);
-          break;
-        }
-      }
+      cig_v bounds = length
+        ? measure_callback(slice.str, slice.byte_len, display_font, scope->style)
+        : cig_v_zero();
+
+      // if (length) {
+      //   printf("slice length: |%.*s| (%d/%d)\n", (int)slice.byte_len, slice.str, scope->i, scope->run.start);
+      // } else {
+      //   if (is_newline) {
+      //     printf("(empty newline)\n");
+      //   }
+      // }
 
       /* Width wrapping ON */
       if (scope->wrap_width) {
@@ -691,6 +685,14 @@ static void render_spans(
 
     if (span->newlines || span == last) {
       line_end = span;
+
+      if (!span->str) {
+#ifdef DEBUG
+        cig_trigger_layout_breakpoint(absolute_rect, cig_r_make(absolute_rect.x, dy, absolute_rect.w, font_info.height));
+#endif
+        goto append_newlines;
+      }
+
       dx = absolute_rect.x + (int)((absolute_rect.w - w) * alignment_constant[horizontal_alignment-1]);
 
       for (span = line_start; span <= line_end; span++) {
@@ -718,6 +720,7 @@ static void render_spans(
         dx += span->bounds.w;
       }
 
+      append_newlines:
       dy += (line_end->newlines * (font_info.height + line_spacing));
       w = 0;
       span = line_start = line_end+1;
@@ -766,28 +769,6 @@ tag_parser_append(tag_parser_t *this, utf8_char ch, uint32_t cp)
 
   return (this->opened_or_closed = false);
 }
-
-static size_t
-scope_count_consecutive_newlines_at_current_position(scope_st *scope)
-{
-  char *last_newline = (char *)scope->iter.str;
-  size_t result = 0, last_index = scope->i;
-
-  while ((scope->ch = next_utf8_char(&scope->iter)).byte_len > 0 && (scope->cp = unicode_code_point(scope->ch))) {
-    if (IS_CODEPOINT_NEWLINE(scope->cp)) {
-      result ++;
-      last_newline = (char *)scope->iter.str;
-      last_index = scope->i = scope->i + scope->ch.byte_len;
-    }
-    else {
-      scope->iter.str = last_newline;
-      scope->i = last_index;
-      break;
-    }
-  }
-
-  return result;
-}          
 
 static void
 scope_apply_tag(scope_st *scope)
@@ -900,6 +881,8 @@ scope_add_label_span(
   scope->line_count += newline_count;
   label->bounds.w = CIG_MAX(label->bounds.w, scope->line_width);
   scope->line_width = 0;
+
+  // printf("\t+ Added span (%d newlines)\n", (int)newline_count);
 
   return &label->spans[label->span_count-1];
 }
