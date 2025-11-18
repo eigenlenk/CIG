@@ -135,13 +135,13 @@ typedef struct {
 } cig_params;
 
 typedef struct {
-  unsigned char bytes[CIG_STATE_MEM_ARENA_BYTES];
-  size_t mapped, read;
-} cig_arena;
+  uint8_t *bytes;
+  size_t size, mapped;
+} cig_memory_st;
 
 typedef struct {
   bool active;
-  cig_arena arena;
+  cig_memory_st memory;
 } cig_state;
 
 /* */
@@ -323,10 +323,18 @@ DECLARE_ARRAY_STACK_T(cig_frame_ref)
 #define STACK_CAPACITY_cig_buffer_element_t CIG_BUFFERS_MAX
 DECLARE_ARRAY_STACK_T(cig_buffer_element_t)
 
+typedef struct {
+  void *(*alloc)  (void *ud, size_t size, size_t align);
+  void *(*realloc)(void *ud, void *ptr, size_t old_size, size_t new_size);
+  void  (*free)   (void *ud, void *ptr);
+  void *ud;
+} cig_allocator;
+
 /*  A single instance of CIG. Use one for each game state?
     Should be considered an opaque type! */
 typedef struct {
   /*  __PRIVATE__ */
+  cig_allocator allocator;
   cig_frame_ref_stack_t frame_stack;
   cig_buffer_element_t_stack_t buffers;
   cig_input_state_t input_state;
@@ -359,10 +367,10 @@ typedef struct {
     └─────────────┘ */
 
 /*  Call this once to initalize (or reset) the context */
-void cig_init_context(cig_context *);
+void cig_init_context(cig_context*);
 
 /* */
-void cig_begin_layout(cig_context *, CIG_OPTIONAL(cig_buffer_ref), cig_r, float);
+void cig_begin_layout(cig_context*, CIG_OPTIONAL(cig_buffer_ref), cig_r, float);
 
 /* */
 void cig_end_layout();
@@ -432,36 +440,43 @@ cig_r cig_convert_relative_rect(cig_r);
 /*  @return Pointer to the current layout element stack. Avoid accessing if possible. */
 cig_frame_ref_stack_t* cig_frame_stack();
 
-/*  ┌─────────────────────────────┐
-    │ STATE & MEMORY ARENA ACCESS │
-    └─────────────────────────────┘ */
+/*  ┌───────────────────────────┐
+    │ STATE & MEMORY ALLOCATION │
+    └───────────────────────────┘ */
 
-CIG_INLINED CIG_OPTIONAL(cig_frame *) cig_retain(CIG_OPTIONAL(cig_frame *) frame) {
+CIG_INLINED CIG_OPTIONAL(cig_frame*) cig_retain(CIG_OPTIONAL(cig_frame*) frame) {
   if (frame) {
     frame->_flags |= RETAINED;
   }
   return frame;
 }
 
-/*
- * Allocates N bytes in current element's memory arena.
- * @param arena - Memory arena to use, pass NULL to use current state arena (will enable state)
- * @return Pointer to the new object or NULL if memory could not be allocated (no space)
+/**
+ * @brief Allocates memory for the current element using the configured allocator.
+ * 
+ * @param bytes - Amount of bytes to allocate for this element
+ * 
+ * @return Pointer to the new block of memory or NULL if memory could not be allocated
  */
-CIG_OPTIONAL(void *) cig_arena_allocate(cig_arena *arena, size_t);
+CIG_OPTIONAL(void*) cig_memory_allocate(size_t bytes);
 
-/*
- * Similar to allocation, but for simply reading the arena.
- * @param arena       - Memory arena to use, pass NULL to use current state arena (will enable state)
- * @param from_start  - Resets read position to 0 before reading
- * @return Pointer to the new object or NULL if memory could not be allocated (no space)
+/**
+ * @brief Map some portion of the allocated memory in the current element
+ * 
+ * Reads the memory address at the current read postions, returns that and
+ * advances the internal counter.
+ * 
+ * @param bytes - Bytes to read. Pass zero to reset reader.
+ * 
+ * @return Pointer to the mapped object or NULL if no memory has been allocated or
+ * there's not enough space.
  */
-CIG_OPTIONAL(void *) cig_arena_read(cig_arena *arena, bool from_start, size_t);
+CIG_OPTIONAL(void*) cig_memory_read(size_t bytes);
 
-CIG_INLINED void cig_arena_reset(cig_arena *arena) {
-  arena->mapped = 0;
-  arena->read = 0;
-}
+/**
+ * Free memory associated with the current element
+ */
+void cig_memory_free();
 
 /*  ┌──────────────────────────────┐
     │ TEMPORARY BUFFERS (ADVANCED) │
@@ -607,6 +622,8 @@ float cig_elapsed_time();
 /*  ┌───────────────────┐
     │ BACKEND CALLBACKS │
     └───────────────────┘ */
+
+void cig_set_allocator(cig_context*, cig_allocator);
 
 void cig_assign_set_clip(cig_set_clip_callback);
 

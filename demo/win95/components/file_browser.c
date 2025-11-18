@@ -34,7 +34,7 @@ bool begin_file_browser(cig_r rect, int direction, color_id_t text_color, bool p
     *number_selected = 0;
   }
 
-  file_browser_data_t *data = CIG_ALLOCATE(file_browser_data_t);
+  file_browser_data_t *data = cig_memory_allocate(sizeof(file_browser_data_t));
   data->text_color = text_color;
   data->has_focus = parent_focused;
   data->number_selected = number_selected;
@@ -82,7 +82,8 @@ bool begin_file_browser(cig_r rect, int direction, color_id_t text_color, bool p
 }
 
 bool file_item(image_id_t image, const char *title) {
-  file_browser_data_t *data = CIG_READ(true, file_browser_data_t);
+  CIG_MEM_READ_RESET();
+  file_browser_data_t *data = CIG_MEM_READ(file_browser_data_t);
   cig_frame *file_frame;
   size_t index = data->count++;
   bool did_double_click = false, did_select = false;
@@ -109,8 +110,9 @@ bool file_item(image_id_t image, const char *title) {
 }
 
 void end_file_browser() {
-  register int i;
-  file_browser_data_t *data = CIG_READ(true, file_browser_data_t);
+  CIG_MEM_READ_RESET();
+  int i;
+  file_browser_data_t *data = CIG_MEM_READ(file_browser_data_t);
 
   if (data->number_selected) {
     for (i = 0; i < 32; ++i) {
@@ -159,7 +161,7 @@ static cig_frame * large_file_icon(int icon,
     }
 
     /* Label with 3 lines */
-    cig_label *label = cig_arena_allocate(NULL, CIG_LABEL_SIZEOF(3));
+    cig_label *label = cig_memory_allocate(CIG_LABEL_SIZEOF(3));
     label->available_spans = 3;
 
     /* We need to prepare the label here to know how large of a rectangle

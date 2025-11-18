@@ -3,6 +3,7 @@
 #include "cigtext.h"
 #include "cigcorem.h"
 #include "asserts.h"
+#include "allocator.h"
 #include "utf8.h"
 
 TEST_GROUP(text_label);
@@ -55,6 +56,8 @@ TEST_SETUP(text_label) {
   cig_assign_measure_text(&text_measure);
   cig_assign_query_font(&font_query);
 
+  set_up_test_allocator(&ctx);
+
   text_measure_calls = 0;
 }
 
@@ -75,11 +78,6 @@ static void end() {
 /*  ┌────────────┐
     │ TEST CASES │
     └────────────┘ */
-
-TEST(text_label, fits_arena) {
-  begin();
-  TEST_ASSERT_NOT_NULL(CIG_ALLOCATE(cig_label));
-}
 
 TEST(text_label, single) {  
   register int i;
@@ -146,7 +144,7 @@ TEST(text_label, span_limit)
   begin();
 
   /* We allocate 2 spans/lines. Third line in the text is not added to the label */
-  cig_label *label = cig_arena_allocate(NULL, CIG_LABEL_SIZEOF(2));
+  cig_label *label = cig_memory_allocate(CIG_LABEL_SIZEOF(2));
   label->available_spans = 2;
 
   cig_label_prepare(label, cig_v_make(15, 3), (cig_text_properties) { 0 }, "Olá mundo!\nHello world!\n\nTere maailm!");
@@ -287,7 +285,7 @@ TEST(text_label, forced_line_change) {
 TEST(text_label, prepare_single_long_word) {
   begin();
 
-  cig_label *label = cig_arena_allocate(NULL, CIG_LABEL_SIZEOF(4));
+  cig_label *label = cig_memory_allocate(CIG_LABEL_SIZEOF(4));
   label->available_spans = 4;
   cig_label_prepare(label, cig_v_make(7, 1), (cig_text_properties) { 0 }, "Foobarbaz");
 
@@ -305,7 +303,7 @@ TEST(text_label, prepare_single_long_word) {
 TEST(text_label, prepare_multiple_long_words) {
   begin();
 
-  cig_label *label = cig_arena_allocate(NULL, CIG_LABEL_SIZEOF(4));
+  cig_label *label = cig_memory_allocate(CIG_LABEL_SIZEOF(4));
   label->available_spans = 4;
   cig_label_prepare(label, cig_v_make(7, 4), (cig_text_properties) { 0 }, "Foobarbaz barbazfoo bazfoobar\n");
 
@@ -325,7 +323,7 @@ TEST(text_label, prepare_multiple_long_words) {
 TEST(text_label, prepare_multiple_long_words_with_newlines) {
   begin();
 
-  cig_label *label = cig_arena_allocate(NULL, CIG_LABEL_SIZEOF(4));
+  cig_label *label = cig_memory_allocate(CIG_LABEL_SIZEOF(4));
   label->available_spans = 4;
   cig_label_prepare(label, cig_v_make(7, 4), (cig_text_properties) { 0 }, "Foobarbaz\nbarbazfoo\nbazfoobar");
 
@@ -347,7 +345,7 @@ TEST(text_label, prepare_horizontal_wrap_disabled)
 {
   begin();
 
-  cig_label *label = cig_arena_allocate(NULL, CIG_LABEL_SIZEOF(10));
+  cig_label *label = cig_memory_allocate(CIG_LABEL_SIZEOF(10));
   label->available_spans = 10;
 
   /* Line of text is allowed to go outside the maximum bounds provided.
@@ -540,7 +538,6 @@ TEST(text_label, raw_text_formatted)
 
 TEST_GROUP_RUNNER(text_label)
 {
-  RUN_TEST_CASE(text_label, fits_arena);
   RUN_TEST_CASE(text_label, single);
   RUN_TEST_CASE(text_label, single_trailing_newlines);
   RUN_TEST_CASE(text_label, multiline);

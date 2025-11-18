@@ -125,15 +125,6 @@ TEST(core_macros, grid) {
   TEST_ASSERT_BITS_HIGH(RETAINED, grid->_flags);
 }
 
-TEST(core_macros, allocator) {
-  int *i = CIG_ALLOCATE(int);
-  *i = 5;
-  TEST_ASSERT_EQUAL_INT(5, *i);
-
-  int *j = CIG_READ(true, int);
-  TEST_ASSERT_EQUAL_INT(5, *j);
-}
-
 TEST(core_macros, pin_basic)
 {
   cig_pin pin_top = PIN(TOP);
@@ -210,7 +201,6 @@ TEST_GROUP_RUNNER(core_macros)
   RUN_TEST_CASE(core_macros, vstack);
   RUN_TEST_CASE(core_macros, hstack);
   RUN_TEST_CASE(core_macros, grid);
-  RUN_TEST_CASE(core_macros, allocator);
   RUN_TEST_CASE(core_macros, pin_basic);
   RUN_TEST_CASE(core_macros, pinning);
   // TODO: check positional and rect macros

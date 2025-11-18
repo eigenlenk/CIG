@@ -67,7 +67,7 @@ checkbox(cig_r rect, bool *value, const char *text)
     cig_enable_interaction();
 
     if (!value) {
-      value = CIG_ALLOCATE(bool);
+      value = cig_memory_allocate(sizeof(bool));
     }
 
     const bool pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_DEFAULT_OPTIONS);

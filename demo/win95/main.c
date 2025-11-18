@@ -80,6 +80,34 @@ CIG_INLINED void load_texture(Texture2D *dst, const char *path) {
   SetTextureFilter(*dst, TEXTURE_FILTER_POINT);
 }
 
+static void*
+demo_alloc(void *ud, size_t size, size_t align)
+{
+  void *new_bytes = malloc(size);
+  assert(new_bytes);
+  printf("[MEM] alloc %lld bytes (0x%p)\n", size, new_bytes);
+  memset(new_bytes, 0, size);
+  return new_bytes;
+}
+
+static void*
+demo_realloc(void *ud, void *ptr, size_t old_size, size_t new_size)
+{
+  printf("[MEM] realloc %lld bytes -> %lld bytes (0x%p)\n", old_size, new_size, ptr);
+  void *new_bytes = realloc(ptr, new_size);
+  assert(new_bytes);
+  memset(new_bytes + old_size, 0, new_size - old_size);
+  return new_bytes;
+}
+
+static void
+demo_free(void *ud, void *ptr)
+{
+  assert(ptr);
+  printf("[MEM] free (0x%p)\n", ptr);
+  free(ptr);
+}
+
 static int win95_w, win95_h;
 static double scale;
 
@@ -255,6 +283,13 @@ int main(int argc, const char *argv[]) {
   for (i = 0; i < __STYLE_COUNT; ++i) { panel_styles[i] = i; }
 
   cig_init_context(&ctx);
+
+  cig_set_allocator(&ctx, (cig_allocator) {
+    .alloc = demo_alloc,
+    .realloc = demo_realloc,
+    .free = demo_free,
+    .ud = NULL
+  });
 
   cig_assign_set_clip(&set_clip_rect);
   

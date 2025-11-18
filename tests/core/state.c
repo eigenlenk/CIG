@@ -1,7 +1,9 @@
 #include "unity.h"
 #include "fixture.h"
 #include "cigcore.h"
+#include "cigcorem.h"
 #include "asserts.h"
+#include "allocator.h"
 #include <string.h>
 
 TEST_GROUP(core_state);
@@ -10,6 +12,8 @@ static cig_context ctx = { 0 };
 
 TEST_SETUP(core_state) {
   cig_init_context(&ctx);
+
+  set_up_test_allocator(&ctx);
 }
 
 TEST_TEAR_DOWN(core_state) {}
@@ -55,6 +59,10 @@ TEST(core_state, visibility) {
   }
 }
 
+/*
+ * Test maximum number of stateful elements. Trying to allocate memory while
+ * exceeding the maximum yields NULL.
+ */
 TEST(core_state, pool_limit) {
   register int i;
   begin();
@@ -63,9 +71,9 @@ TEST(core_state, pool_limit) {
     cig_push_frame(RECT_AUTO);
     
     if (i < CIG_STATES_MAX) {
-      TEST_ASSERT_NOT_NULL(cig_arena_allocate(NULL, sizeof(int)));
+      TEST_ASSERT_NOT_NULL(cig_memory_allocate(sizeof(int)));
     } else {
-      TEST_ASSERT_NULL(cig_arena_allocate(NULL, sizeof(int)));
+      TEST_ASSERT_NULL(cig_memory_allocate(sizeof(int)));
     }
     
     cig_pop_frame();
@@ -74,62 +82,66 @@ TEST(core_state, pool_limit) {
   end();
 }
 
-TEST(core_state, stale) {
-  register int i;
+TEST(core_state, stale)
+{
+  int i;
+  
   begin();
-  /*  Tick 1: Mark all states as used */
-  for (i = 0; i < CIG_STATES_MAX + 1; ++i) {
+  /* (Tick 1) Mark all states as used */
+  for (i = 0; i < CIG_STATES_MAX; ++i) {
     cig_push_frame(RECT_AUTO);
-    CIG_UNUSED(cig_arena_read(NULL, true, sizeof(int)));
+    TEST_ASSERT_NOT_NULL(cig_memory_allocate(sizeof(int)));
     cig_pop_frame();
   }
   end();
 
-  /*  Tick 2: State is considered stale if it hasn't been used during the last tick,
-      so at this point we don't expect there to be any available states */
+  TEST_ASSERT_EQUAL_INT(CIG_STATES_MAX, alloc_count);
+
+  /*
+   * (Tick 2) State is considered stale if it hasn't been used during the last tick,
+   * so at this point we don't expect there to be any available states. Memory allocated
+   * for these frames will be deallocated.
+   */
   begin();
   cig_set_next_id(12345);
   cig_push_frame(RECT_AUTO);
-  TEST_ASSERT_NULL(cig_arena_allocate(NULL, sizeof(int)));
+  TEST_ASSERT_NULL(cig_memory_allocate(sizeof(int)));
   cig_pop_frame();
   end();
 
-  /*  Tick 3: Now there should be */
+  /* (Tick 3) Now there should be available states again */
   begin();
+
+  /* All stale states were in fact freed... */
+  TEST_ASSERT_EQUAL_INT(CIG_STATES_MAX, free_count);
+
   cig_set_next_id(12345);
   cig_push_frame(RECT_AUTO);
-  TEST_ASSERT_NOT_NULL(cig_arena_allocate(NULL, sizeof(int)));
+  /* ...and there are available states for allocation again */
+  TEST_ASSERT_NOT_NULL(cig_memory_allocate(sizeof(int)));
   cig_pop_frame();
   end();
 }
 
-TEST(core_state, memory_arena) {
-  register int i;
-  cig_arena arena;
+TEST(core_state, memory_allocation) {
+  int i;
+
   for (i = 0; i < 2; ++i) {
     begin();
 
-    cig_arena_reset(&arena);
+    void *new_mem = cig_memory_allocate(4096); /* Allocate whopping 4KB */
 
-    TEST_ASSERT_EQUAL_UINT(0, arena.mapped);
+    TEST_ASSERT_NOT_NULL(new_mem);
 
-    cig_v *vec2 = (cig_v *)cig_arena_allocate(&arena, sizeof(cig_v));
-    unsigned long *ul = (unsigned long *)cig_arena_allocate(&arena, sizeof(unsigned long));
-    char *str = (char *)cig_arena_allocate(&arena, sizeof(char[32]));
-    void *hundred_whole_kilobytes = cig_arena_allocate(&arena, sizeof(char[1024*100]));
+    cig_v *vec2 = CIG_MEM_READ(cig_v);
+    unsigned long *ul = CIG_MEM_READ(unsigned long);
+    char *str = cig_memory_read(sizeof(char[32]));
 
-    TEST_ASSERT_NULL(hundred_whole_kilobytes); /* Doesn't fit */
-
-    TEST_ASSERT_EQUAL_UINT(
-      sizeof(cig_v) + sizeof(unsigned long) + sizeof(char[32]),
-      arena.mapped
-    );
-
-    if (i == 0) { /* Store data */
+    if (i == 0) { /* Store data on first frame */
       *vec2 = cig_v_make(13, 17);
       *ul = cig_current()->id;
       strcpy(str, "Hello, World!");
-    } else { /* Read data */
+    } else { /* Read data on the second */
       TEST_ASSERT_EQUAL_VEC2(cig_v_make(13, 17), *vec2);
       TEST_ASSERT_EQUAL_UINT32(cig_current()->id, *ul);
       TEST_ASSERT_EQUAL_STRING("Hello, World!", str);
@@ -137,33 +149,32 @@ TEST(core_state, memory_arena) {
 
     end();
   }
+
+  TEST_ASSERT_EQUAL_INT(1, alloc_count);
 }
 
-TEST(core_state, memory_arena_read) {
-  register int i;
+TEST(core_state, memory_free)
+{
   begin();
 
-  /*  Write some values */
-  {
-    cig_v *vec2 = (cig_v *)cig_arena_allocate(NULL, sizeof(cig_v));
-    unsigned long *ul = (unsigned long *)cig_arena_allocate(NULL, sizeof(unsigned long));
-    char *str = (char *)cig_arena_allocate(NULL, sizeof(char[32]));
+  cig_memory_allocate(1);
+  cig_memory_free();
 
-    *vec2 = cig_v_make(13, 17);
-    *ul = cig_current()->id;
-    strcpy(str, "Hello, World!");
-  }
+  TEST_ASSERT_EQUAL_INT(1, alloc_count);
+  TEST_ASSERT_EQUAL_INT(1, free_count);
 
-  /*  Read them a couple of times */
-  for (i = 0; i < 2; ++i) {
-    cig_v *vec2 = (cig_v *)cig_arena_read(NULL, true, sizeof(cig_v));
-    unsigned long *ul = (unsigned long *)cig_arena_read(NULL, false, sizeof(unsigned long));
-    char *str = (char *)cig_arena_read(NULL, false, sizeof(char[32]));
+  end();
+}
 
-    TEST_ASSERT_EQUAL_VEC2(cig_v_make(13, 17), *vec2);
-    TEST_ASSERT_EQUAL_UINT32(cig_current()->id, *ul);
-    TEST_ASSERT_EQUAL_STRING("Hello, World!", str);
-  }
+TEST(core_state, memory_realloc)
+{
+  begin();
+
+  cig_memory_allocate(1);
+  cig_memory_allocate(2);
+
+  TEST_ASSERT_EQUAL_INT(1, alloc_count);
+  TEST_ASSERT_EQUAL_INT(1, realloc_count);
 
   end();
 }
@@ -172,6 +183,7 @@ TEST_GROUP_RUNNER(core_state) {
   RUN_TEST_CASE(core_state, visibility);
   RUN_TEST_CASE(core_state, pool_limit);
   RUN_TEST_CASE(core_state, stale);
-  RUN_TEST_CASE(core_state, memory_arena);
-  RUN_TEST_CASE(core_state, memory_arena_read);
+  RUN_TEST_CASE(core_state, memory_allocation);
+  RUN_TEST_CASE(core_state, memory_free);
+  RUN_TEST_CASE(core_state, memory_realloc);
 }

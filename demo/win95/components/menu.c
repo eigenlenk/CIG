@@ -13,8 +13,10 @@ void menubar(size_t n, win95_menu* menus[]) {
   cig_enable_interaction();
   cig_disable_culling();
 
-  menu_tracking_st *tracking_state = CIG_ALLOCATE(menu_tracking_st);
-  win95_menu **last_hovered_menu = CIG_ALLOCATE(win95_menu *);
+  void *mem = cig_memory_allocate(sizeof(menu_tracking_st) + sizeof(win95_menu*));
+
+  menu_tracking_st *tracking_state = (menu_tracking_st*)(mem);
+  win95_menu **last_hovered_menu = (win95_menu**)(mem + sizeof(tracking_state));
   bool any_menu_active = false;
 
   CIG_HSTACK(RECT_AUTO, NO_INSETS) {
@@ -194,9 +196,11 @@ void menu_draw(win95_menu *this, menu_presentation presentation) {
   ) {
     cig_retain(cig_current());
 
-    win95_menu **presented_submenu = CIG_ALLOCATE(win95_menu*);
-    cig_v *submenu_position = CIG_ALLOCATE(cig_v);
-    float *submenu_delay = CIG_ALLOCATE(float);
+    void *mem = cig_memory_allocate(sizeof(win95_menu*) + sizeof(cig_v) + sizeof(float));
+
+    win95_menu **presented_submenu = (win95_menu**)(mem);
+    cig_v *submenu_position = (cig_v*)(mem + sizeof(win95_menu*));
+    float *submenu_delay = (float*)(mem + sizeof(win95_menu*) + sizeof(cig_v));
 
     cig_fill_style(get_style(STYLE_STANDARD_DIALOG), 0);
 

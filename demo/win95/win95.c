@@ -46,7 +46,7 @@ static void start_button(cig_r rect) {
     cig_disable_culling();
     cig_enable_focus();
 
-    menu_tracking_st *tracking = CIG_ALLOCATE(menu_tracking_st);
+    menu_tracking_st *tracking = cig_memory_allocate(sizeof(menu_tracking_st));
 
     menu_track(tracking, &start_menus[START_MAIN], (menu_presentation) {
       .position = { -4, -2 },
@@ -126,7 +126,7 @@ static void do_taskbar() {
     cig_r_make(0, CIG_H - TASKBAR_H, CIG_W, TASKBAR_H),
     CIG_INSETS(cig_i_make(2, 4, 2, 2))
   ) {
-    cig_label *clock_label = cig_arena_allocate(NULL, sizeof(cig_label) + sizeof(cig_span[1]));
+    cig_label *clock_label = cig_memory_allocate(CIG_LABEL_SIZEOF(1));
     clock_label->available_spans = 1;
 
     cig_fill_color(get_color(COLOR_DIALOG_BACKGROUND));

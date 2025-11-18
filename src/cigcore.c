@@ -34,6 +34,12 @@ CIG_INLINED int limit(int v, const int minv_or_zero, const int maxv_or_zero) {
   return v;
 }
 
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+    #define ALIGN_OF(T) _Alignof(T)
+#else
+    #define ALIGN_OF(T) sizeof(void*) /* fallback */
+#endif
+
 /*  ┌─────────────┐
     │ CORE LAYOUT │
     └─────────────┘ */
@@ -53,6 +59,7 @@ void cig_init_context(cig_context *context) {
   for (i = 0; i < CIG_STATES_MAX; ++i) {
     context->state_list[i].id = 0;
     context->state_list[i].last_tick = context->tick;
+    context->state_list[i].value.memory.bytes = NULL;
   }
   
   for (i = 0; i < CIG_SCROLLABLE_ELEMENTS_MAX; ++i) {
@@ -113,6 +120,13 @@ void cig_end_layout() {
   for (i = 0; i < CIG_STATES_MAX; ++i) {
     if (current->state_list[i].last_tick != current->tick) {
       current->state_list[i].value.active = false;
+      if (current->state_list[i].value.memory.bytes) {
+        if (current->allocator.free) {
+          current->allocator.free(current->allocator.ud, current->state_list[i].value.memory.bytes);
+        }
+        current->state_list[i].value.memory.bytes = NULL;
+        current->state_list[i].value.memory.size = 0;
+      }
     }
   }
 
@@ -197,48 +211,63 @@ cig_frame_ref_stack_t* cig_frame_stack() {
     │ STATE │
     └───────┘ */
 
-CIG_OPTIONAL(void *) cig_arena_allocate(cig_arena *arena, size_t bytes) {
-  cig_arena *_arena = arena;
-
-  if (!_arena) {
-    cig_state *state = enable_state();
-    if (!state) {
-      return NULL;
-    }
-    _arena = &state->arena;
-  }
-
-  if (_arena->mapped + bytes >= CIG_STATE_MEM_ARENA_BYTES) {
+CIG_OPTIONAL(void*) cig_memory_allocate(size_t bytes) {
+  cig_state *state = enable_state();
+  
+  if (!state) {
     return NULL;
   }
 
-  void *result = &_arena->bytes[_arena->mapped];
-  _arena->mapped += bytes;
+  if (state->memory.bytes) {
+    /* Resize memory */
+    if (state->memory.size != bytes && current->allocator.realloc) {
+      state->memory.bytes = current->allocator.realloc(current->allocator.ud, state->memory.bytes, state->memory.size, bytes);
+    }
+    state->memory.mapped = 0;
+    return state->memory.bytes;
+  }
+
+  state->memory.bytes = current->allocator.alloc(current->allocator.ud, bytes, ALIGN_OF(max_align_t));
+  state->memory.size = bytes;
+  state->memory.mapped = 0;
+
+  return state->memory.bytes;
+}
+
+CIG_OPTIONAL(void*)
+cig_memory_read(size_t bytes)
+{
+  cig_state *state = cig_current()->_state;
+
+  if (!state || !state->memory.bytes) {
+    return NULL;
+  }
+  else if (bytes == 0) {
+    state->memory.mapped = 0;
+    return NULL;
+  }
+  else if (state->memory.mapped + bytes > state->memory.size) {
+    return NULL;
+  }
+
+  void *result = &state->memory.bytes[state->memory.mapped];
+  state->memory.mapped += bytes;
   return result;
 }
 
-CIG_OPTIONAL(void *) cig_arena_read(cig_arena *arena, bool from_start, size_t bytes) {
-  cig_arena *_arena = arena;
+void
+cig_memory_free()
+{
+  cig_state *state = cig_current()->_state;
 
-  if (!_arena) {
-    cig_state *state = enable_state();
-    if (!state) {
-      return NULL;
+  if (state && state->memory.bytes) {
+    if (current->allocator.free) {
+      current->allocator.free(current->allocator.ud, state->memory.bytes); /* Free */
     }
-    _arena = &state->arena;
+    state->memory.bytes = NULL;
+    state->memory.size = 0;
+    state->memory.mapped = 0;
   }
-
-  if (_arena->read + bytes >= CIG_STATE_MEM_ARENA_BYTES) {
-    return NULL;
-  }
-
-  if (from_start) {
-    _arena->read = 0;
-  }
-
-  void *result = &_arena->bytes[_arena->read];
-  _arena->read += bytes;
-  return result;
 }
 
 /*  ┌──────────────────────────────┐
@@ -882,6 +911,12 @@ float cig_elapsed_time() { return current->elapsed_time; }
     │ BACKEND CALLBACKS │
     └───────────────────┘ */
 
+void
+cig_set_allocator(cig_context* context, cig_allocator allocator)
+{
+  context->allocator = allocator;
+}
+
 void cig_assign_set_clip(cig_set_clip_callback fp) {
   set_clip = fp;
 }
@@ -1100,9 +1135,9 @@ CIG_INLINED void handle_frame_hover(cig_frame *frame) {
 }
 
 static CIG_OPTIONAL(cig_state*) find_state(const cig_id id) {
-  register int i, open = -1, stale = -1;
+  int i, open = -1, stale = -1;
 
-  /*  Find a state with a matching ID, with no ID yet, or a stale state */
+  /* Find a state with a matching ID, with no ID yet, or a stale state */
   for (i = 0; i < CIG_STATES_MAX; ++i) {
     if (current->state_list[i].id == id) {
       current->state_list[i].value.active = true;
@@ -1122,9 +1157,8 @@ static CIG_OPTIONAL(cig_state*) find_state(const cig_id id) {
   if (result >= 0) {
     current->state_list[result].id = id;
     current->state_list[result].last_tick = current->tick;
-    memset(&current->state_list[result].value.arena.bytes, 0, CIG_STATE_MEM_ARENA_BYTES);
-    current->state_list[result].value.arena.mapped = 0;
     current->state_list[result].value.active = true;
+
     return &current->state_list[result].value;
   }
 
@@ -1167,14 +1201,7 @@ CIG_INLINED CIG_OPTIONAL(cig_state *) enable_state() {
   if (frame->_state) {
     return frame->_state;
   }
-  if ((frame->_state = find_state(frame->id))) {
-    frame->_state->arena.mapped = 0;
-    frame->_state->arena.read = 0;
-  }
-  /*if (frame->_state) {
-    frame->_state->_flags |= RETAINED;
-  }*/
-  return frame->_state;
+  return (frame->_state = find_state(frame->id));
 }
 
 static void push_clip(cig_frame *frame) {

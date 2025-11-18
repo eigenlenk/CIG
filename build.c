@@ -88,6 +88,7 @@ int main(int argc, char **argv)
       TESTS_FOLDER"text/label.c",
       TESTS_FOLDER"text/style.c",
       TESTS_FOLDER"gfx/image.c",
+      TESTS_FOLDER"allocator.c",
       TESTS_FOLDER"types.c"
     );
 

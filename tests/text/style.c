@@ -3,6 +3,7 @@
 #include "cigtext.h"
 #include "cigcorem.h"
 #include "asserts.h"
+#include "allocator.h"
 #include "utf8.h"
 #include <string.h>
 
@@ -59,11 +60,13 @@ CIG_INLINED cig_font_info_st font_query(cig_font_ref font_ref) {
 
 TEST_SETUP(text_style) {
   cig_init_context(&ctx);
-  
+
   cig_assign_draw_text(&text_render);
   cig_assign_measure_text(&text_measure);
   cig_assign_query_font(&font_query);
   cig_set_default_font(&fonts[0]);
+  
+  set_up_test_allocator(&ctx);
   
   spans.count = 0;
 }
