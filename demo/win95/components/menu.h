@@ -79,7 +79,7 @@ menu_setup(
 );
 
 void
-menu_draw(win95_menu *, menu_presentation);
+menu_draw(win95_menu*, menu_presentation, bool*);
 
 menu_tracking_st
 menu_track(menu_tracking_st*, win95_menu*, menu_presentation);

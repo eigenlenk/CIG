@@ -115,7 +115,7 @@ win95_menu * menu_setup(
   return this;
 }
 
-void menu_draw(win95_menu *this, menu_presentation presentation) {
+void menu_draw(win95_menu *this, menu_presentation presentation, bool *prevent_close) {
   register int i, j;
   menu_group *group;
   menu_item *item;
@@ -231,7 +231,7 @@ void menu_draw(win95_menu *this, menu_presentation presentation) {
             cig_enable_interaction();
 
             const bool item_hovered = cig_hovered();
-            bool draws_highlight = item_hovered && item->type != DISABLED;
+            bool draws_highlight = item_hovered;
 
             if (item->type == CHILD_MENU && (child_menu = (win95_menu *)item->data)) {
               item_title = (char *)child_menu->title;
@@ -277,6 +277,11 @@ void menu_draw(win95_menu *this, menu_presentation presentation) {
                   printf("Note: No menu handler configured for '%s'\n", this->title);
                 }
               }
+            } else if (prevent_close) {
+              /*  Windows 95 keeps menus open when you click on a disabled or sub-menu item */
+              if (cig_clicked(CIG_INPUT_PRIMARY_ACTION, 0)) {
+                *prevent_close = true;
+              } 
             }
 
             CIG_HSTACK(_, size_info.insets) {
@@ -334,7 +339,7 @@ void menu_draw(win95_menu *this, menu_presentation presentation) {
         menu_draw(*presented_submenu, (menu_presentation) {
           .position = *submenu_position,
           .origin = ORIGIN_TOP_LEFT
-        });
+        }, prevent_close);
       }
     }
   }
@@ -353,20 +358,36 @@ menu_tracking_st menu_track(menu_tracking_st *tracking, win95_menu *menu, menu_p
     *tracking = *tracking != BY_CLICK ? BY_CLICK : NOT_TRACKING;
   }
 
+  bool prevent_close = false;
+
   if (*tracking) {
-    menu_draw(menu, presentation);
+    menu_draw(menu, presentation, &prevent_close);
   }
 
-  if (*tracking == BY_CLICK && cig_input_state()->click_state == EXPIRED) {
-    *tracking = NOT_TRACKING;
-  } else if (*tracking == BY_PRESS && cig_input_state()->action_mask == 0) {
+  /* We want to keep the menu open when clicking (releasing mouse buttoin) on a disabled or sub-menu item */
+  if (prevent_close) {
+    /* 'Press' tracking is converted to 'click' tracking */
+    if (*tracking == BY_PRESS) {
+      *tracking = BY_CLICK;
+    }
+    return *tracking;
+  }
+
+  if (*tracking == BY_CLICK) {
+    if (cig_input_state()->click_state == EXPIRED) {
+      *tracking = NOT_TRACKING;
+    }
+    else if (cig_input_state()->click_state == BEGAN && !(cig_current()->_flags & SUBTREE_INCLUSIVE_HOVER)) {
+      /* Mouse button was pressed down while outside the menu button and any of its children (menus) */
+      *tracking = NOT_TRACKING;
+    }
+    else if (cig_input_state()->click_state == ENDED && !(cig_current()->_flags & HOVER) && cig_current()->_flags & SUBTREE_INCLUSIVE_HOVER) {
+      /* Click was made, but inside one of its children (menus) and not the menu button itself */
+      *tracking = NOT_TRACKING;
+    }
+  }
+  else if (*tracking == BY_PRESS && cig_input_state()->action_mask == 0) {
     /* Mouse button was released while in PRESS tracking mode */
-    *tracking = NOT_TRACKING;
-  } else if (*tracking == BY_CLICK && cig_input_state()->click_state == BEGAN && !(cig_current()->_flags & SUBTREE_INCLUSIVE_HOVER)) {
-    /* Mouse button was pressed down while outside the menu button and any of its children (menus) */
-    *tracking = NOT_TRACKING;
-  } else if (*tracking == BY_CLICK && cig_input_state()->click_state == ENDED && !(cig_current()->_flags & HOVER) && cig_current()->_flags & SUBTREE_INCLUSIVE_HOVER) {
-    /* Click was made, but inside one of its children (menus) and not the menu button itself */
     *tracking = NOT_TRACKING;
   }
 
