@@ -16,7 +16,7 @@ void menubar(size_t n, win95_menu* menus[]) {
   void *mem = cig_memory_allocate(sizeof(menu_tracking_st) + sizeof(win95_menu*));
 
   menu_tracking_st *tracking_state = (menu_tracking_st*)(mem);
-  win95_menu **last_hovered_menu = (win95_menu**)(mem + sizeof(tracking_state));
+  win95_menu **last_hovered_menu = (win95_menu**)(mem + sizeof(menu_tracking_st));
   bool any_menu_active = false;
 
   CIG_HSTACK(RECT_AUTO, NO_INSETS) {
@@ -49,7 +49,7 @@ void menubar(size_t n, win95_menu* menus[]) {
 
         if (current_menu_selected) {
           menu_track(tracking_state, menus[i], (menu_presentation) {
-            .position = { -6, CIG_B },
+            .position = { -cig_current()->insets.left, CIG_B },
             .origin = ORIGIN_TOP_LEFT,
           });
 
@@ -160,7 +160,8 @@ void menu_draw(win95_menu *this, menu_presentation presentation, bool *prevent_c
     break;
   }
 
-  int panel_width = panel_insets.left
+  int panel_width =
+      panel_insets.left
     + size_info.stack_insets.left
     + size_info.insets.left
     + size_info.icon_width +
@@ -171,7 +172,8 @@ void menu_draw(win95_menu *this, menu_presentation presentation, bool *prevent_c
     + size_info.stack_insets.right
     + panel_insets.right;
 
-  int panel_height = panel_insets.top
+  int panel_height =
+      panel_insets.top
     + panel_insets.bottom
     + size_info.stack_insets.top
     + size_info.stack_insets.bottom;

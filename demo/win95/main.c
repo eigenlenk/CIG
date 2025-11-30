@@ -143,9 +143,6 @@ check_alt_enter()
     SetWindowSize(ray_w, ray_h);
 
     set_up_render_textures();
-
-    cig_begin_layout(&ctx, NULL, cig_r_make(0, 0, win95_w, win95_h), 0.f);
-    win95_did_change_resolution();
   }
 }
 
@@ -178,7 +175,7 @@ int main(int argc, const char *argv[]) {
   win95_h = ray_h * scale;
 
   // SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
-  SetConfigFlags(FLAG_WINDOW_ALWAYS_RUN);
+  SetConfigFlags(FLAG_WINDOW_ALWAYS_RUN | FLAG_WINDOW_RESIZABLE);
   InitWindow(ray_w, ray_h, "Winlose 95");
   SetTargetFPS(60);
 
@@ -326,11 +323,17 @@ int main(int argc, const char *argv[]) {
   while (!WindowShouldClose() && running) {
     check_alt_enter();
 
+    if (IsWindowResized()) {
+      win95_w = GetScreenWidth() * scale;
+      win95_h = GetScreenHeight() * scale;
+      set_up_render_textures();
+    }
+
     BeginDrawing();
 
 #ifdef DEBUG
     if (IsKeyPressed(KEY_F10)) {
-      cig_enable_debug_stepper(true);
+      cig_enable_debug_stepper();
     }
 #endif
 
@@ -344,8 +347,8 @@ int main(int argc, const char *argv[]) {
     
     cig_set_input_state(
       cig_v_make(GetMouseX()*scale, GetMouseY()*scale),
-      IsMouseButtonDown(MOUSE_BUTTON_LEFT) ? CIG_INPUT_PRIMARY_ACTION : 0 +
-      IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? CIG_INPUT_SECONDARY_ACTION : 0
+      (IsMouseButtonDown(MOUSE_BUTTON_LEFT) ? CIG_INPUT_PRIMARY_ACTION : 0) +
+      (IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? CIG_INPUT_SECONDARY_ACTION : 0)
     );
     
     running = win95_run();

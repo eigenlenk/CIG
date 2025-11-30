@@ -620,7 +620,7 @@ cig_r cig_build_rect(size_t n, cig_pin refs[]) {
 
   /* Calculate missing values based on what we have */
 
-  if (!(attrs & CIG_BIT(WIDTH)) && CIG_BIT(ASPECT)) {
+  if (!(attrs & CIG_BIT(WIDTH)) && (attrs & CIG_BIT(ASPECT))) {
     if (attrs & CIG_BIT(HEIGHT)) {
       w = round(h * a);
       attrs |= CIG_BIT(WIDTH);
@@ -630,7 +630,7 @@ cig_r cig_build_rect(size_t n, cig_pin refs[]) {
     }
   }
 
-  if (!(attrs & CIG_BIT(HEIGHT)) && CIG_BIT(ASPECT)) {
+  if (!(attrs & CIG_BIT(HEIGHT)) && (attrs & CIG_BIT(ASPECT))) {
     if (attrs & CIG_BIT(WIDTH)) {
       h = round(w / a);
       attrs |= CIG_BIT(HEIGHT);

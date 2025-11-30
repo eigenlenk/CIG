@@ -20,6 +20,7 @@
 
 static win95_t *this = NULL;
 static win95_menu start_menus[8];
+static cig_v last_size = (cig_v) { 0, 0 };
 
 enum {
   START_MAIN,
@@ -36,9 +37,8 @@ static void process_apps();
 static void open_explorer_at(const char*);
 static void launch_app_by_id(menu_item *);
 static void setup_menus();
-
-static void
-about_wnd_proc(window_t *this, bool window_focused);
+static void on_resize();
+static void about_wnd_proc(window_t *this, bool window_focused);
 
 static void start_button(cig_r rect) {
   CIG(rect, CIG_INSETS(cig_i_make(4, 2, 4, 2))) {
@@ -200,10 +200,16 @@ win95_shut_down()
 bool
 win95_run()
 {
+  if (last_size.x && last_size.y && (last_size.x != cig_layout_rect().w || last_size.y != cig_layout_rect().h)) {
+    on_resize();
+  }
+
   process_apps();
   do_desktop();
   window_manager_process(&this->window_manager);
   do_taskbar();
+
+  last_size = cig_r_size(cig_layout_rect());
 
   return this->running;
 }
@@ -262,27 +268,6 @@ win95_show_about_window()
     .icon = -1,
     .flags = IS_UNIQUE_WINDOW
   });
-}
-
-void
-win95_did_change_resolution()
-{
-  int i;
-
-  for (i = 0; i < WIN95_OPEN_WINDOWS_MAX; ++i) {
-    window_t *wnd = &this->window_manager.windows[i];
-    
-    if (wnd->flags & IS_MAXIMIZED) {
-      wnd->rect = cig_r_make(0, 0, cig_layout_rect().w, cig_layout_rect().h - TASKBAR_H);
-    } else {
-      wnd->rect = cig_r_make(
-        CIG_CLAMP(wnd->rect.x, 0, cig_layout_rect().w - wnd->rect.w),
-        CIG_CLAMP(wnd->rect.y, 0, cig_layout_rect().h - wnd->rect.h),
-        wnd->rect.w,
-        wnd->rect.h
-      );
-    }
-  }  
 }
 
 /*  ┌──────────┐
@@ -562,4 +547,25 @@ about_wnd_proc(window_t *this, bool window_focused)
       }
     }
   }
+}
+
+static void
+on_resize()
+{
+  int i;
+
+  for (i = 0; i < WIN95_OPEN_WINDOWS_MAX; ++i) {
+    window_t *wnd = &this->window_manager.windows[i];
+    
+    if (wnd->flags & IS_MAXIMIZED) {
+      wnd->rect = cig_r_make(0, 0, cig_layout_rect().w, cig_layout_rect().h - TASKBAR_H);
+    } else {
+      wnd->rect = cig_r_make(
+        CIG_CLAMP(wnd->rect.x, 0, cig_layout_rect().w - wnd->rect.w),
+        CIG_CLAMP(wnd->rect.y, 0, cig_layout_rect().h - wnd->rect.h),
+        wnd->rect.w,
+        wnd->rect.h
+      );
+    }
+  }  
 }
