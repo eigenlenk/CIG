@@ -405,7 +405,7 @@ static void label_process_string(
 
     const bool is_newline = IS_CODEPOINT_NEWLINE(scope->cp);
     const bool is_space = IS_CODEPOINT_SPACE(scope->cp);
-    const bool is_end_of_string = (scope->i + scope->ch.byte_len == scope->utext.byte_len);
+    const bool is_end_of_string = (scope->iter.str == scope->iter.terminator);
     const bool is_terminating_span =
       (scope->i >= scope->run.start && (is_newline || scope->tag_parser.opened_or_closed))
       || (is_end_of_string && (scope->i = scope->utext.byte_len));
