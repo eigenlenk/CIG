@@ -7,7 +7,7 @@ typedef void* cig_color_ref;
 typedef void* cig_style_ref;
 typedef void* cig_image_ref;
 
-typedef enum CIG_PACKED {
+typedef enum M_PACKED {
   CIG_IMAGE_MODE_ASPECT_FIT = 0,
   CIG_IMAGE_MODE_ASPECT_FILL,
   CIG_IMAGE_MODE_SCALE_TO_FILL,
@@ -23,11 +23,11 @@ typedef enum CIG_PACKED {
 } cig_image_mode;
 
 /* These can be application-specific and you can use custom flags as well */
-typedef enum CIG_PACKED {
-  CIG_STYLE_APPLY_HOVER = CIG_BIT(0),
-  CIG_STYLE_APPLY_PRESS = CIG_BIT(1),
-  CIG_STYLE_APPLY_SELECTION = CIG_BIT(2),
-  CIG_STYLE_APPLY_FOCUS = CIG_BIT(3),
+typedef enum M_PACKED {
+  CIG_STYLE_APPLY_HOVER = M_BIT(0),
+  CIG_STYLE_APPLY_PRESS = M_BIT(1),
+  CIG_STYLE_APPLY_SELECTION = M_BIT(2),
+  CIG_STYLE_APPLY_FOCUS = M_BIT(3),
 } cig_style_modifiers;
 /* TODO: Maybe pass to draw_image and fill_solid as well? */
 

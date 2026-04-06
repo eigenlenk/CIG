@@ -68,8 +68,8 @@ window_begin(window_t *wnd, bool *focused)
 
       case CIG_DRAG_STATE_MOVED:
         wnd->rect = cig_r_make(
-          CIG_CLAMP(window_drag.original_rect.x + cig_input_state()->drag.change_total.x, -(wnd->rect.w - 50), cig_layout_rect().w - 30),
-          CIG_CLAMP(window_drag.original_rect.y + cig_input_state()->drag.change_total.y, 0, cig_layout_rect().h - 50),
+          M_CLAMP(window_drag.original_rect.x + cig_input_state()->drag.change_total.x, -(wnd->rect.w - 50), cig_layout_rect().w - 30),
+          M_CLAMP(window_drag.original_rect.y + cig_input_state()->drag.change_total.y, 0, cig_layout_rect().h - 50),
           wnd->rect.w,
           wnd->rect.h
         );
@@ -210,18 +210,18 @@ handle_window_resize(window_t *wnd, window_resize_edge_t edge)
                 dy = cig_input_state()->drag.change_total.y;
 
       if (edge_adjustments[edge].x) {
-        wnd->rect.w = CIG_MAX(wnd->min_size.x, window_resize.original_rect.w - dx);
+        wnd->rect.w = M_MAX(wnd->min_size.x, window_resize.original_rect.w - dx);
         wnd->rect.x = window_resize.original_rect.x + (window_resize.original_rect.w - wnd->rect.w);
       }
       if (edge_adjustments[edge].y) {
-        wnd->rect.h = CIG_MAX(wnd->min_size.y, window_resize.original_rect.h - dy);
+        wnd->rect.h = M_MAX(wnd->min_size.y, window_resize.original_rect.h - dy);
         wnd->rect.y = window_resize.original_rect.y + (window_resize.original_rect.h - wnd->rect.h);
       }
       if (edge_adjustments[edge].w) {
-        wnd->rect.w = CIG_MAX(wnd->min_size.x, window_resize.original_rect.w + dx);
+        wnd->rect.w = M_MAX(wnd->min_size.x, window_resize.original_rect.w + dx);
       }
       if (edge_adjustments[edge].h) {
-        wnd->rect.h = CIG_MAX(wnd->min_size.y, window_resize.original_rect.h + dy);
+        wnd->rect.h = M_MAX(wnd->min_size.y, window_resize.original_rect.h + dy);
       }
     break;
   }

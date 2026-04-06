@@ -14,9 +14,9 @@ static bool requested_layout_step_mode = false;
 #endif
 
 /*  Forward delcarations */
-static CIG_OPTIONAL(cig_state*) find_state(cig_id);
-static CIG_OPTIONAL(cig_scroll_state_t*) find_scroll_state(cig_id);
-static CIG_OPTIONAL(cig_state *) enable_state();
+static M_OPTIONAL(cig_state*) find_state(cig_id);
+static M_OPTIONAL(cig_scroll_state_t*) find_scroll_state(cig_id);
+static M_OPTIONAL(cig_state *) enable_state();
 static void handle_frame_hover(cig_frame*);
 static void push_clip(cig_frame*);
 static void pop_clip();
@@ -28,9 +28,13 @@ static void move_to_next_row(cig_params*);
 static void move_to_next_column(cig_params*);
 static double get_attribute_value_of_relative_to(cig_pin_attribute, cig_pin_attribute, double, cig_frame*, cig_frame*);
 
-CIG_INLINED int limit(int v, const int minv_or_zero, const int maxv_or_zero) {
-  if (maxv_or_zero > 0) { v = CIG_MIN(maxv_or_zero, v); }
-  if (minv_or_zero > 0) { v = CIG_MAX(minv_or_zero, v); }
+M_INLINED bool cig_v_valid(cig_v v) {
+  return !(v.x == INT_MIN || v.y == INT_MIN); 
+}
+
+M_INLINED int limit(int v, const int minv_or_zero, const int maxv_or_zero) {
+  if (maxv_or_zero > 0) { v = M_MIN(maxv_or_zero, v); }
+  if (minv_or_zero > 0) { v = M_MAX(minv_or_zero, v); }
   return v;
 }
 
@@ -105,7 +109,7 @@ void cig_begin_layout(
     ._flags = OPEN
   };
   current->frame_stack.push(&current->frame_stack, &current->frames.elements[0]);
-  current->frames.high = CIG_MAX(current->frames.high, 1);
+  current->frames.high = M_MAX(current->frames.high, 1);
 
   cig_push_buffer(buffer);
   current->next_id = 0;
@@ -211,7 +215,7 @@ cig_frame_ref_stack_t* cig_frame_stack() {
     │ STATE │
     └───────┘ */
 
-CIG_OPTIONAL(void*) cig_memory_allocate(size_t bytes) {
+M_OPTIONAL(void*) cig_memory_allocate(size_t bytes) {
   cig_state *state = enable_state();
   
   if (!state) {
@@ -234,7 +238,7 @@ CIG_OPTIONAL(void*) cig_memory_allocate(size_t bytes) {
   return state->memory.bytes;
 }
 
-CIG_OPTIONAL(void*)
+M_OPTIONAL(void*)
 cig_memory_read(size_t bytes)
 {
   cig_state *state = cig_current()->_state;
@@ -286,7 +290,7 @@ void cig_push_buffer(const cig_buffer_ref buffer) {
 }
 
 void cig_pop_buffer() {
-  CIG_UNUSED(current->buffers.pop_ref(&current->buffers));
+  M_UNUSED(current->buffers.pop_ref(&current->buffers));
 }
 
 /*  ┌───────────────────────────┐
@@ -472,7 +476,7 @@ cig_dragged(cig_input_action_type actions)
 
     case CIG_DRAG_STATE_READY: {
       const cig_v change = cig_v_sub(current->input_state.position, current->input_state.drag._start_position_absolute);
-      if (cig_v_magnitude(change) >= 2) {
+      if (cig_v_length(change) >= 2) {
         current->input_state.drag.state = CIG_DRAG_STATE_BEGAN;
         current->input_state.drag.change_total = change;
         current->input_state.drag.change_last_frame = change;
@@ -509,7 +513,7 @@ cig_dragged(cig_input_action_type actions)
         current->input_state.drag.state = CIG_DRAG_STATE_MOVED;
         current->input_state.drag.change_last_frame = cig_v_sub(change, current->input_state.drag.change_total);
         current->input_state.drag.change_total = change;
-        current->input_state.drag._start_position_absolute = cig_v_invalid();
+        current->input_state.drag._start_position_absolute = (cig_v) { INT_MIN, INT_MIN };
       }
     } else {
       current->input_state.drag.state = CIG_DRAG_STATE_INACTIVE;
@@ -600,7 +604,7 @@ cig_r cig_build_rect(size_t n, cig_pin refs[]) {
     }
 
     double v = get_attribute_value_of_relative_to(attr, rel_attr, pin.value, pin.relation, cur);
-    attrs |= CIG_BIT(attr);
+    attrs |= M_BIT(attr);
 
     switch (attr) {
     case LEFT: x0 = v; break;
@@ -620,80 +624,80 @@ cig_r cig_build_rect(size_t n, cig_pin refs[]) {
 
   /* Calculate missing values based on what we have */
 
-  if (!(attrs & CIG_BIT(WIDTH)) && (attrs & CIG_BIT(ASPECT))) {
-    if (attrs & CIG_BIT(HEIGHT)) {
+  if (!(attrs & M_BIT(WIDTH)) && (attrs & M_BIT(ASPECT))) {
+    if (attrs & M_BIT(HEIGHT)) {
       w = round(h * a);
-      attrs |= CIG_BIT(WIDTH);
-    } else if (attrs & CIG_BIT(TOP) && attrs & CIG_BIT(BOTTOM)) {
+      attrs |= M_BIT(WIDTH);
+    } else if (attrs & M_BIT(TOP) && attrs & M_BIT(BOTTOM)) {
       w = round((y1 - y0) * a);
-      attrs |= CIG_BIT(WIDTH);
+      attrs |= M_BIT(WIDTH);
     }
   }
 
-  if (!(attrs & CIG_BIT(HEIGHT)) && (attrs & CIG_BIT(ASPECT))) {
-    if (attrs & CIG_BIT(WIDTH)) {
+  if (!(attrs & M_BIT(HEIGHT)) && (attrs & M_BIT(ASPECT))) {
+    if (attrs & M_BIT(WIDTH)) {
       h = round(w / a);
-      attrs |= CIG_BIT(HEIGHT);
-    } else if (attrs & CIG_BIT(LEFT) && attrs & CIG_BIT(RIGHT)) {
+      attrs |= M_BIT(HEIGHT);
+    } else if (attrs & M_BIT(LEFT) && attrs & M_BIT(RIGHT)) {
       h = round((x1 - x0) / a);
-      attrs |= CIG_BIT(HEIGHT);
+      attrs |= M_BIT(HEIGHT);
     }
   }
 
-  if (!(attrs & CIG_BIT(LEFT))) {
-    if (attrs & CIG_BIT(RIGHT) && attrs & CIG_BIT(WIDTH)) {
+  if (!(attrs & M_BIT(LEFT))) {
+    if (attrs & M_BIT(RIGHT) && attrs & M_BIT(WIDTH)) {
       x0 = x1 - w;
-    } else if ((attrs & CIG_BIT(CENTER_X)) && (attrs & CIG_BIT(WIDTH))) {
+    } else if ((attrs & M_BIT(CENTER_X)) && (attrs & M_BIT(WIDTH))) {
       x0 = cx - (w * 0.5);
-    } else if ((attrs & CIG_BIT(CENTER_X)) && (attrs & CIG_BIT(RIGHT))) {
+    } else if ((attrs & M_BIT(CENTER_X)) && (attrs & M_BIT(RIGHT))) {
       x0 = cx - (x1 - cx);
-    } else if (attrs & CIG_BIT(WIDTH)) {
+    } else if (attrs & M_BIT(WIDTH)) {
       x0 = 0;
     } else {
       assert(false);
     }
-    attrs |= CIG_BIT(LEFT);
+    attrs |= M_BIT(LEFT);
   } 
 
-  if (!(attrs & CIG_BIT(RIGHT))) {
-    if (attrs & CIG_BIT(LEFT) && attrs & CIG_BIT(WIDTH)) {
+  if (!(attrs & M_BIT(RIGHT))) {
+    if (attrs & M_BIT(LEFT) && attrs & M_BIT(WIDTH)) {
       x1 = x0 + w;
-    } else if ((attrs & CIG_BIT(CENTER_X)) && (attrs & CIG_BIT(WIDTH))) {
+    } else if ((attrs & M_BIT(CENTER_X)) && (attrs & M_BIT(WIDTH))) {
       x1 = cx + (w * 0.5);
-    } else if ((attrs & CIG_BIT(CENTER_X)) && (attrs & CIG_BIT(LEFT))) {
+    } else if ((attrs & M_BIT(CENTER_X)) && (attrs & M_BIT(LEFT))) {
       x1 = cx + (cx - x0);
     } else {
       assert(false);
     }
-    attrs |= CIG_BIT(RIGHT);
+    attrs |= M_BIT(RIGHT);
   }
 
-  if (!(attrs & CIG_BIT(TOP))) {
-    if (attrs & CIG_BIT(BOTTOM) && attrs & CIG_BIT(HEIGHT)) {
+  if (!(attrs & M_BIT(TOP))) {
+    if (attrs & M_BIT(BOTTOM) && attrs & M_BIT(HEIGHT)) {
       y0 = y1 - h;
-    } else if ((attrs & CIG_BIT(CENTER_Y)) && (attrs & CIG_BIT(HEIGHT))) {
+    } else if ((attrs & M_BIT(CENTER_Y)) && (attrs & M_BIT(HEIGHT))) {
       y0 = cy - (h * 0.5);
-    } else if ((attrs & CIG_BIT(CENTER_Y)) && (attrs & CIG_BIT(BOTTOM))) {
+    } else if ((attrs & M_BIT(CENTER_Y)) && (attrs & M_BIT(BOTTOM))) {
       y0 = cy - (y1 - cy);
-    } else if (attrs & CIG_BIT(HEIGHT)) {
+    } else if (attrs & M_BIT(HEIGHT)) {
       y0 = 0;
     } else {
       assert(false);
     }
-    attrs |= CIG_BIT(TOP);
+    attrs |= M_BIT(TOP);
   } 
 
-  if (!(attrs & CIG_BIT(BOTTOM))) {
-    if (attrs & CIG_BIT(TOP) && attrs & CIG_BIT(HEIGHT)) {
+  if (!(attrs & M_BIT(BOTTOM))) {
+    if (attrs & M_BIT(TOP) && attrs & M_BIT(HEIGHT)) {
       y1 = y0 + h;
-    } else if ((attrs & CIG_BIT(CENTER_Y)) && (attrs & CIG_BIT(HEIGHT))) {
+    } else if ((attrs & M_BIT(CENTER_Y)) && (attrs & M_BIT(HEIGHT))) {
       y1 = cy + (h * 0.5);
-    } else if ((attrs & CIG_BIT(CENTER_Y)) && (attrs & CIG_BIT(TOP))) {
+    } else if ((attrs & M_BIT(CENTER_Y)) && (attrs & M_BIT(TOP))) {
       y1 = cy + (cy - y0);
     } else {
       assert(false);
     }
-    attrs |= CIG_BIT(BOTTOM);
+    attrs |= M_BIT(BOTTOM);
   }
 
   return cig_r_make(x0, y0, x1 - x0, y1 - y0);
@@ -833,8 +837,8 @@ bool cig_default_layout_builder(
         }
         
         prm->_h_pos += (w + prm->spacing.x);
-        prm->_h_size = CIG_MAX(prm->_h_size, w);
-        prm->_v_size = CIG_MAX(prm->_v_size, h);
+        prm->_h_size = M_MAX(prm->_h_size, w);
+        prm->_v_size = M_MAX(prm->_v_size, h);
         prm->_count.h_cur ++;
         
         if (prm->_h_pos >= container.w && !minimum_limit) {
@@ -849,8 +853,8 @@ bool cig_default_layout_builder(
         }
 
         prm->_v_pos += (h + prm->spacing.y);
-        prm->_h_size = CIG_MAX(prm->_h_size, w);
-        prm->_v_size = CIG_MAX(prm->_v_size, h);
+        prm->_h_size = M_MAX(prm->_h_size, w);
+        prm->_v_size = M_MAX(prm->_v_size, h);
         prm->_count.v_cur ++;
 
         if (prm->_v_pos >= container.h && !minimum_limit) {
@@ -864,14 +868,14 @@ bool cig_default_layout_builder(
       return false;
     }
     prm->_h_pos += (w + prm->spacing.x);
-    prm->_h_size = CIG_MAX(prm->_h_size, w);
+    prm->_h_size = M_MAX(prm->_h_size, w);
     prm->_count.h_cur ++;
   } else if (v_axis) {
     if (prm->limit.vertical && prm->_count.v_cur == prm->limit.vertical) {
       return false;
     }
     prm->_v_pos += (h + prm->spacing.y);
-    prm->_v_size = CIG_MAX(prm->_v_size, h);
+    prm->_v_size = M_MAX(prm->_v_size, h);
     prm->_count.v_cur ++;
   }
 
@@ -925,7 +929,7 @@ void cig_assign_set_clip(cig_set_clip_callback fp) {
     │ INTERNAL FUNCTIONS │
     └────────────────────┘ */
 
-CIG_INLINED cig_r calculate_rect_in_parent(const cig_r rect, const cig_frame *parent) {
+M_INLINED cig_r calculate_rect_in_parent(const cig_r rect, const cig_frame *parent) {
   const cig_r content_rect = cig_r_inset(parent->rect, parent->insets);
 
   return align_rect_in_parent(cig_r_make(
@@ -946,7 +950,7 @@ CIG_INLINED cig_r calculate_rect_in_parent(const cig_r rect, const cig_frame *pa
   ), content_rect, &parent->_layout_params);
 }
 
-CIG_INLINED cig_r align_rect_in_parent(cig_r rect, cig_r parent_rect, const cig_params *prm) {
+M_INLINED cig_r align_rect_in_parent(cig_r rect, cig_r parent_rect, const cig_params *prm) {
   switch (prm->alignment.horizontal) {
   case CIG_LAYOUT_ALIGNS_CENTER: {
     rect.x = (parent_rect.w - rect.w) * 0.5;
@@ -970,7 +974,7 @@ CIG_INLINED cig_r align_rect_in_parent(cig_r rect, cig_r parent_rect, const cig_
   return rect;
 }
 
-CIG_INLINED bool next_layout_rect(const cig_r proposed, cig_frame *parent, cig_r *result) {
+M_INLINED bool next_layout_rect(const cig_r proposed, cig_frame *parent, cig_r *result) {
   if (parent->_layout_function) {
     return (*parent->_layout_function)(
       cig_r_inset(parent->rect, parent->insets),
@@ -1013,7 +1017,7 @@ static cig_frame* push_frame(
 
     const int32_t dx = (top->content_rect.x + top->content_rect.w) - top->rect.w;
     const int32_t dy = (top->content_rect.y + top->content_rect.h) - top->rect.h;
-    top->_scroll_state->distance = cig_v_make(CIG_MAX(0, dx), CIG_MAX(0, dy));
+    top->_scroll_state->distance = cig_v_make(M_MAX(0, dx), M_MAX(0, dy));
     top->_scroll_state->bounds = cig_v_make(top->content_rect.w, top->content_rect.h);
   }
 
@@ -1084,7 +1088,7 @@ static cig_frame* push_frame(
     .absolute_rect = absolute_rect,
     .absolute_clipped_rect = clipped_absolute_rect,
     .insets = insets,
-    .visibility = CIG_MIN(CIG_FRAME_VISIBLE, previous_visibility + 1),
+    .visibility = M_MIN(CIG_FRAME_VISIBLE, previous_visibility + 1),
     ._layout_function = layout_function,
     ._layout_params = params,
     ._parent = top,
@@ -1096,7 +1100,7 @@ static cig_frame* push_frame(
   current->next_id = 0;
 
   if (cig__macro_ctx.open) { *cig__macro_ctx.open = new_frame; }
-  if (cig__macro_ctx.retain) { CIG_UNUSED(cig_retain(new_frame)); }
+  if (cig__macro_ctx.retain) { M_UNUSED(cig_retain(new_frame)); }
   cig__macro_ctx.open = NULL;
   cig__macro_ctx.retain = 0;
   cig__macro_ctx.last_closed = NULL;
@@ -1117,7 +1121,7 @@ static cig_frame* push_frame(
   return NULL;
 }
 
-CIG_INLINED void handle_frame_hover(cig_frame *frame) {
+M_INLINED void handle_frame_hover(cig_frame *frame) {
   if (cig_r_contains(frame->absolute_clipped_rect, current->input_state.position)) {
     frame->_flags |= HOVER;
     frame->_flags |= SUBTREE_INCLUSIVE_HOVER;
@@ -1134,7 +1138,7 @@ CIG_INLINED void handle_frame_hover(cig_frame *frame) {
   }
 }
 
-static CIG_OPTIONAL(cig_state*) find_state(const cig_id id) {
+static M_OPTIONAL(cig_state*) find_state(const cig_id id) {
   int i, open = -1, stale = -1;
 
   /* Find a state with a matching ID, with no ID yet, or a stale state */
@@ -1165,7 +1169,7 @@ static CIG_OPTIONAL(cig_state*) find_state(const cig_id id) {
   return NULL;
 }
 
-static CIG_OPTIONAL(cig_scroll_state_t*) find_scroll_state(const cig_id id) {
+static M_OPTIONAL(cig_scroll_state_t*) find_scroll_state(const cig_id id) {
   register int i, first_unused = -1, first_stale = -1;
 
   for (i = 0; i < CIG_SCROLLABLE_ELEMENTS_MAX; ++i) {
@@ -1196,7 +1200,7 @@ static CIG_OPTIONAL(cig_scroll_state_t*) find_scroll_state(const cig_id id) {
   }
 }
 
-CIG_INLINED CIG_OPTIONAL(cig_state *) enable_state() {
+M_INLINED M_OPTIONAL(cig_state *) enable_state() {
   cig_frame *frame = cig_current();
   if (frame->_state) {
     return frame->_state;
@@ -1226,7 +1230,7 @@ static void push_clip(cig_frame *frame) {
 static void pop_clip() {
   cig_buffer_element_t *buf_element = current->buffers.peek_ref(&current->buffers, 0);
   cig_clip_rect_t_stack_t *clip_rects = &buf_element->clip_rects;
-  CIG_UNUSED(clip_rects->pop_ref(clip_rects));
+  M_UNUSED(clip_rects->pop_ref(clip_rects));
 
   if (set_clip) {
     if (!clip_rects->size) {
@@ -1237,7 +1241,7 @@ static void pop_clip() {
   }
 }
 
-CIG_INLINED void move_to_next_row(cig_params *prm) {
+M_INLINED void move_to_next_row(cig_params *prm) {
   prm->_h_pos = 0;
   prm->_v_pos += (prm->_v_size + prm->spacing.y);
   prm->_h_size = 0;
@@ -1245,7 +1249,7 @@ CIG_INLINED void move_to_next_row(cig_params *prm) {
   prm->_count.h_cur = 0;
 }
 
-CIG_INLINED void move_to_next_column(cig_params *prm) {
+M_INLINED void move_to_next_column(cig_params *prm) {
   prm->_v_pos = 0;
   prm->_h_pos += (prm->_h_size + prm->spacing.x);
   prm->_h_size = 0;
@@ -1253,14 +1257,14 @@ CIG_INLINED void move_to_next_column(cig_params *prm) {
   prm->_count.v_cur = 0;
 }
 
-CIG_INLINED double
+M_INLINED double
 value_or_relative_value_of(int32_t value, int32_t relative_to, bool negate)
 {
   const double v = CIG_IS_REL(value) ? CIG_REL_VALUE(value, relative_to) : value;
   return negate ? -v : v;
 }
 
-CIG_INLINED double
+M_INLINED double
 resolve_edge_attribute(
   cig_pin_attribute attribute,
   cig_pin_attribute relative_attribute,
@@ -1305,7 +1309,7 @@ resolve_edge_attribute(
   }
 }
 
-CIG_INLINED double
+M_INLINED double
 get_attribute_value_of_relative_to(
   cig_pin_attribute attribute,
   cig_pin_attribute relative_attribute,

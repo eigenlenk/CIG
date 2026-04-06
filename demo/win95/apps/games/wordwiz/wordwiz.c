@@ -8,12 +8,12 @@
 
 #define LETTER_APPEARANCE_TIME 0.35f
 
-enum CIG_PACKED {
+enum M_PACKED {
   GAME_NEW,
   GAME_QUIT
 };
 
-typedef enum CIG_PACKED {
+typedef enum M_PACKED {
   GUESS_WRONG = 1,
   GUESS_MISPLACED,
   GUESS_CORRECT
@@ -34,7 +34,7 @@ typedef struct {
     float time;
   } animation;
   letter_result keyboard[26];
-  enum CIG_PACKED {
+  enum M_PACKED {
     GAME_LOST = 1,
     GAME_WON = 2
   } final_result;
@@ -49,7 +49,7 @@ static char (*words)[6];
 static char (*all_words)[6];
 static int word_count = 0, all_words_count = 0;
 
-CIG_INLINED void game_reset(game_data_st *game) {
+M_INLINED void game_reset(game_data_st *game) {
   int i;
   game->guesses_made = 0;
   game->final_result = 0;
@@ -64,21 +64,21 @@ CIG_INLINED void game_reset(game_data_st *game) {
   memset(game->keyboard, 0, 26);
 }
 
-CIG_INLINED void append_input(game_data_st *game, const char *letter) {
+M_INLINED void append_input(game_data_st *game, const char *letter) {
   if (game->animation.active || game->final_result) { return; }
   size_t n = strlen(game->input);
   if (n == 5) { return; }
   game->input[n] = tolower(letter[0]);
 }
 
-CIG_INLINED void trim_input(game_data_st *game) {
+M_INLINED void trim_input(game_data_st *game) {
   if (game->animation.active || game->final_result) { return; }
   size_t n = strlen(game->input);
   if (!n) { return; }
   game->input[n-1] = '\0';
 }
 
-CIG_INLINED color_id_t result_color(letter_result result) {
+M_INLINED color_id_t result_color(letter_result result) {
   switch (result) {
   case GUESS_WRONG: return COLOR_WINDOW_INACTIVE_TITLEBAR;
   case GUESS_MISPLACED: return COLOR_YELLOW;

@@ -1,4 +1,5 @@
 #include "ciggfx.h"
+#include <math.h>
 
 static cig_measure_image_callback measure_image = NULL;
 static cig_draw_style_callback style_callback = NULL;

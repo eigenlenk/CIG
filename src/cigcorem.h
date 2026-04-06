@@ -52,10 +52,10 @@
 #define CIG_LIMIT_TOTAL(L) .limit.total = L
 #define CIG_LIMIT_HORIZONTAL(L) .limit.horizontal = L
 #define CIG_LIMIT_VERTICAL(L) .limit.vertical = L
-#define CIG_MAX_WIDTH(N) .size_max.width = N
-#define CIG_MAX_HEIGHT(N) .size_max.height = N
-#define CIG_MIN_WIDTH(N) .size_min.width = N
-#define CIG_MIN_HEIGHT(N) .size_min.height = N
+#define M_MAX_WIDTH(N) .size_max.width = N
+#define M_MAX_HEIGHT(N) .size_max.height = N
+#define M_MIN_WIDTH(N) .size_min.width = N
+#define M_MIN_HEIGHT(N) .size_min.height = N
 
 /*  `cig_args` fields */
 #define CIG_RECT(R) .rect = R
@@ -150,7 +150,7 @@ extern cig__macro_ctx_st cig__macro_ctx;
       PIN(CENTER_Y(some_frame), OFFSET_BY(20)),
       PIN(HEIGHT, WIDTH_OF(some_frame))
     ) */
-#define BUILD_RECT(...) cig_build_rect(CIG_NARG(__VA_ARGS__), (cig_pin[]) { __VA_ARGS__ })
+#define BUILD_RECT(...) cig_build_rect(M_NARG(__VA_ARGS__), (cig_pin[]) { __VA_ARGS__ })
 
 #define CIG_TINYHASH(A, B) ((A*31)^(B*17))
 

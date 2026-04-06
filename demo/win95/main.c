@@ -75,7 +75,7 @@ void enable_blue_selection_dithering(bool enabled) {
   dithering_shader_enabled = enabled;
 }
 
-CIG_INLINED void load_texture(Texture2D *dst, const char *path) {
+M_INLINED void load_texture(Texture2D *dst, const char *path) {
   *dst = LoadTexture(path);
   SetTextureFilter(*dst, TEXTURE_FILTER_POINT);
 }
@@ -374,7 +374,7 @@ int main(int argc, const char *argv[]) {
 
   return 0;
 }
-CIG_INLINED void set_clip_rect(cig_buffer_ref buffer, cig_r rect, bool reset) {
+M_INLINED void set_clip_rect(cig_buffer_ref buffer, cig_r rect, bool reset) {
   if (reset) {
     EndScissorMode();
   } else {
@@ -384,7 +384,7 @@ CIG_INLINED void set_clip_rect(cig_buffer_ref buffer, cig_r rect, bool reset) {
 
 static char text_api_buffer[4096];
 
-CIG_INLINED void render_text(
+M_INLINED void render_text(
   const char *str,
   size_t len,
   cig_r rect,
@@ -403,7 +403,7 @@ CIG_INLINED void render_text(
   DrawTextEx(fs->font, text_api_buffer, (Vector2) { rect.x, rect.y }, fs->font.baseSize, 0, *(Color*)color);
 }
 
-CIG_INLINED cig_v measure_text(
+M_INLINED cig_v measure_text(
   const char *str,
   size_t len,
   cig_font_ref font,
@@ -418,7 +418,7 @@ CIG_INLINED cig_v measure_text(
   return cig_v_make(bounds.x, bounds.y);
 }
 
-CIG_INLINED cig_font_info_st font_query(cig_font_ref font_ref) {
+M_INLINED cig_font_info_st font_query(cig_font_ref font_ref) {
   struct font_store *fs = (struct font_store*)font_ref;
   
   // printf("GLYPH PADDING %d\n", fs->font.glyphPadding);
@@ -429,7 +429,7 @@ CIG_INLINED cig_font_info_st font_query(cig_font_ref font_ref) {
   };
 }
 
-CIG_INLINED void draw_style(cig_style_ref style_ref, cig_r rect, cig_style_modifiers modifiers) {
+M_INLINED void draw_style(cig_style_ref style_ref, cig_r rect, cig_style_modifiers modifiers) {
   const int style = *(int*)style_ref;
   
   switch (style) {
@@ -521,7 +521,7 @@ CIG_INLINED void draw_style(cig_style_ref style_ref, cig_r rect, cig_style_modif
   }
 }
 
-CIG_INLINED void draw_rectangle(
+M_INLINED void draw_rectangle(
   cig_color_ref fill_color,
   cig_color_ref border_color,
   cig_r rect,
@@ -535,7 +535,7 @@ CIG_INLINED void draw_rectangle(
   }
 }
 
-CIG_INLINED void draw_line(
+M_INLINED void draw_line(
   cig_color_ref color,
   cig_v p0,
   cig_v p1,
@@ -544,12 +544,12 @@ CIG_INLINED void draw_line(
   DrawLineEx(RAYLIB_VEC2(p0), RAYLIB_VEC2(p1), thickness, *(Color*)color);
 }
 
-CIG_INLINED cig_v measure_image(cig_image_ref image) {
+M_INLINED cig_v measure_image(cig_image_ref image) {
   Texture2D *tex = (Texture2D *)image;
   return cig_v_make(tex->width, tex->height);
 }
 
-CIG_INLINED void draw_image(
+M_INLINED void draw_image(
   cig_buffer_ref buffer,
   cig_r container,
   cig_r rect,

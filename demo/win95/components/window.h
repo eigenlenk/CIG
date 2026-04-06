@@ -28,11 +28,11 @@ typedef struct window_t {
   char *title;
   int icon;
   enum {
-    IS_PRIMARY_WINDOW = CIG_BIT(0),
-    IS_UNIQUE_WINDOW = CIG_BIT(1), /* One instance of this window ID per app */
-    IS_RESIZABLE = CIG_BIT(2),
-    IS_MAXIMIZED = CIG_BIT(3),
-    IS_MINIMIZED = CIG_BIT(4)
+    IS_PRIMARY_WINDOW = M_BIT(0),
+    IS_UNIQUE_WINDOW = M_BIT(1), /* One instance of this window ID per app */
+    IS_RESIZABLE = M_BIT(2),
+    IS_MAXIMIZED = M_BIT(3),
+    IS_MINIMIZED = M_BIT(4)
   } flags;
 } window_t;
 
@@ -42,7 +42,7 @@ window_begin(window_t*, bool*);
 void
 window_end(window_t*);
 
-CIG_INLINED void
+M_INLINED void
 window_send_message(window_t *this, window_message_t msg)
 {
   this->last_message = msg;

@@ -104,16 +104,12 @@ TEST(types, insets_constructors) {
   TEST_ASSERT(i4.left == 0  && i4.top == 1  && i4.right == 0  && i4.bottom == 1 );
 }
 
-TEST(types, vec2_constructors_and_validity) {
+TEST(types, vec2_constructors) {
   const cig_v v0 = cig_v_zero();
   const cig_v v1 = cig_v_make(1, 2);
-  const cig_v v2 = cig_v_invalid();
   
   TEST_ASSERT(v0.x == 0 && v0.y == 0);
   TEST_ASSERT(v1.x == 1 && v1.y == 2);
-  TEST_ASSERT_TRUE(cig_v_valid(v0));
-  TEST_ASSERT_TRUE(cig_v_valid(v1));
-  TEST_ASSERT_FALSE(cig_v_valid(v2));
 }
 
 TEST(types, vec2_operations) {
@@ -132,13 +128,8 @@ TEST(types, vec2_comparator) {
   TEST_ASSERT_FALSE(cig_v_equals(b, c));
 }
 
-TEST(types, vec2_math_utils) {
-  TEST_ASSERT_GREATER_THAN(0, cig_v_sign(cig_v_make(10, 14), cig_v_make(2, 3), cig_v_make(5, 7)));
-  TEST_ASSERT_LESS_THAN(0, cig_v_sign(cig_v_make(4, 2), cig_v_make(1, 3), cig_v_make(5, 7)));
-  TEST_ASSERT_EQUAL_INT(0, cig_v_sign(cig_v_make(5, 2), cig_v_make(0, 2), cig_v_make(10, 2)));
-  TEST_ASSERT_DOUBLE_WITHIN(0.001, 2.828, cig_v_dist(cig_v_make(1, 1), cig_v_make(3, 3)));
-  TEST_ASSERT_EQUAL_INT(32, cig_v_distsq(cig_v_make(1, 1), cig_v_make(5, 5)));
-  TEST_ASSERT_EQUAL_VEC2(cig_v_make(5, 5), cig_v_abs(cig_v_make(-5, -5)));
+TEST(types, vec2_math) {
+  TEST_ASSERT_DOUBLE_WITHIN(0.001, 2.828, cig_v_length(cig_v_sub(cig_v_make(1, 1), cig_v_make(3, 3))));
 }
 
 TEST(types, stack_operations) {
@@ -212,10 +203,10 @@ TEST_GROUP_RUNNER(types) {
   RUN_TEST_CASE(types, rect_containing);
   RUN_TEST_CASE(types, rect_union);
   RUN_TEST_CASE(types, insets_constructors);
-  RUN_TEST_CASE(types, vec2_constructors_and_validity);
+  RUN_TEST_CASE(types, vec2_constructors);
   RUN_TEST_CASE(types, vec2_operations);
   RUN_TEST_CASE(types, vec2_comparator);
-  RUN_TEST_CASE(types, vec2_math_utils);
+  RUN_TEST_CASE(types, vec2_math);
   RUN_TEST_CASE(types, stack_operations);
   RUN_TEST_CASE(types, gap_buffer);
 }

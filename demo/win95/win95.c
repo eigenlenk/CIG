@@ -165,7 +165,7 @@ static void do_taskbar() {
       CIG_PARAMS({
         CIG_SPACING(spacing),
         CIG_COLUMNS(taskbar_windows),
-        CIG_MAX_WIDTH(150)
+        M_MAX_WIDTH(150)
       })
     ) {
       for (i = 0; i < WIN95_OPEN_WINDOWS_MAX; ++i) {
@@ -561,8 +561,8 @@ on_resize()
       wnd->rect = cig_r_make(0, 0, cig_layout_rect().w, cig_layout_rect().h - TASKBAR_H);
     } else {
       wnd->rect = cig_r_make(
-        CIG_CLAMP(wnd->rect.x, 0, cig_layout_rect().w - wnd->rect.w),
-        CIG_CLAMP(wnd->rect.y, 0, cig_layout_rect().h - wnd->rect.h),
+        M_CLAMP(wnd->rect.x, 0, cig_layout_rect().w - wnd->rect.w),
+        M_CLAMP(wnd->rect.y, 0, cig_layout_rect().h - wnd->rect.h),
         wnd->rect.w,
         wnd->rect.h
       );

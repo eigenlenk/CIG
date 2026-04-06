@@ -62,6 +62,7 @@ int main(int argc, char **argv)
       
       "-I"SRC_FOLDER,
       "-I"TESTS_FOLDER,
+      "-I"DEPS_FOLDER,
       "-I"DEPS_FOLDER"utf8/",
       "-I"DEPS_FOLDER"unity/src/",
       "-I"DEPS_FOLDER"unity/extras/fixture/src/",
@@ -107,6 +108,7 @@ int main(int argc, char **argv)
       "-Wfatal-errors",
       
       "-I"SRC_FOLDER,
+      "-I"DEPS_FOLDER,
       "-I"DEMO_FOLDER"win95/",
       "-I"DEPS_FOLDER"utf8/",
       "-I"DEPS_FOLDER"raylib-5.5_win64_mingw-w64/include",

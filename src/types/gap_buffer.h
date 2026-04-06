@@ -1,7 +1,7 @@
 #ifndef CIG_TYPE_GAP_BUFFER_T_INCLUDED
 #define CIG_TYPE_GAP_BUFFER_T_INCLUDED
 
-#include "cigmac.h"
+#include <common/macros.h>
 #include <stddef.h>
 #include <string.h>
 
@@ -19,7 +19,7 @@ typedef struct {
   char buffer[];
 } gap_buffer_char;
 
-CIG_INLINED void
+M_INLINED void
 gap_buffer_char_new(gap_buffer_char **ptr, size_t position, size_t init_size)
 {
   *ptr = (gap_buffer_char*)malloc(sizeof(gap_buffer_char) + sizeof(char) * init_size);
@@ -29,7 +29,7 @@ gap_buffer_char_new(gap_buffer_char **ptr, size_t position, size_t init_size)
   (*ptr)->gap.size = init_size;
 }
 
-CIG_INLINED void
+M_INLINED void
 gap_buffer_char_place_gap(gap_buffer_char **ptr, ptrdiff_t position)
 {
   if (position == GAPCURPOS) {
@@ -61,7 +61,7 @@ gap_buffer_char_place_gap(gap_buffer_char **ptr, ptrdiff_t position)
   (*ptr)->gap.start = position;
 }
 
-CIG_INLINED void
+M_INLINED void
 gap_buffer_char_extend_gap(gap_buffer_char **ptr, size_t size)
 {
   if (size <= (*ptr)->gap.size) {
@@ -83,7 +83,7 @@ gap_buffer_char_extend_gap(gap_buffer_char **ptr, size_t size)
   (*ptr)->size = new_size;
 }
 
-CIG_INLINED void
+M_INLINED void
 gap_buffer_char_insert(gap_buffer_char **ptr, ptrdiff_t position, size_t count, const char buffer[])
 {
   gap_buffer_char_place_gap(ptr, position);
@@ -95,21 +95,21 @@ gap_buffer_char_insert(gap_buffer_char **ptr, ptrdiff_t position, size_t count, 
   (*ptr)->gap.size -= count;
 }
 
-CIG_INLINED void
+M_INLINED void
 gap_buffer_char_delete(gap_buffer_char **ptr, ptrdiff_t position, size_t range)
 {
   gap_buffer_char_place_gap(ptr, position);
   (*ptr)->gap.size += range;
 }
 
-CIG_INLINED void
+M_INLINED void
 gap_buffer_char_replace(gap_buffer_char **ptr, ptrdiff_t position, size_t range, size_t count, const char buffer[])
 {
   gap_buffer_char_delete(ptr, position, range);
   gap_buffer_char_insert(ptr, position, count, buffer);
 }
 
-CIG_INLINED void
+M_INLINED void
 gap_buffer_char_free(gap_buffer_char **ptr)
 {
   if (*ptr) {

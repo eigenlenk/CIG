@@ -2,11 +2,11 @@
 #define CIG_CORE_INCLUDED
 
 #include "ciglimit.h"
-#include "cigmac.h"
-#include "types/vec2.h"
 #include "types/insets.h"
 #include "types/rect.h"
 #include "types/stack.h"
+#include <common/macros.h>
+#include <common/vec2.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -16,13 +16,13 @@
     └──────────────────────────┘ */
 
 /*  These macros declare a templated type essentially */
-DECLARE_VEC2_T(int32_t, cig_v, -999999)
+DECLARE_VEC2_T  (int32_t, cig_v)
 DECLARE_INSETS_T(int32_t, cig_i)
-DECLARE_RECT_T(int32_t, cig_r, cig_v, cig_i)
+DECLARE_RECT_T  (int32_t, cig_r, cig_v, cig_i)
 
 /*  A couple of option bits we can use with rect components */
-#define CIG__AUTO_BIT CIG_BIT(30)
-#define CIG__REL_BIT CIG_BIT(29)
+#define CIG__AUTO_BIT M_BIT(30)
+#define CIG__REL_BIT M_BIT(29)
 
 /*  Indicates the size of this element will be auto-calculated.
     When used in standard layout frames, AUTO essentially means to fill parent.
@@ -74,27 +74,27 @@ typedef void (*cig_set_clip_callback)(cig_buffer_ref, cig_r, bool);
 /*  Structure containing parameters passed to layout function */
 typedef struct {
   /*  One or more axis which a builder uses to position children */
-  enum CIG_PACKED {
+  enum M_PACKED {
     CIG__NOAXIS = 0,
-    CIG_LAYOUT_AXIS_HORIZONTAL = CIG_BIT(1),
-    CIG_LAYOUT_AXIS_VERTICAL = CIG_BIT(2),
+    CIG_LAYOUT_AXIS_HORIZONTAL = M_BIT(1),
+    CIG_LAYOUT_AXIS_VERTICAL = M_BIT(2),
     CIG_LAYOUT_AXIS_BOTH = CIG_LAYOUT_AXIS_HORIZONTAL | CIG_LAYOUT_AXIS_VERTICAL
   } axis;
 
   /*  Direction in which the layout flows. Used by default grid builder */
-  enum CIG_PACKED {
+  enum M_PACKED {
     CIG_LAYOUT_DIRECTION_DEFAULT = 0,
     CIG_LAYOUT_DIRECTION_HORIZONTAL,
     CIG_LAYOUT_DIRECTION_VERTICAL
   } direction;
 
   struct {
-    enum CIG_PACKED {
+    enum M_PACKED {
       CIG_LAYOUT_ALIGNS_LEFT = 0,
       CIG_LAYOUT_ALIGNS_CENTER,
       CIG_LAYOUT_ALIGNS_RIGHT
     } horizontal;
-    enum CIG_PACKED {
+    enum M_PACKED {
       CIG_LAYOUT_ALIGNS_TOP = 0,
       CIG_LAYOUT_ALIGNS_MIDDLE,
       CIG_LAYOUT_ALIGNS_BOTTOM
@@ -119,9 +119,9 @@ typedef struct {
   } size_max, size_min;
 
   /*  Some basic layout flags */
-  enum CIG_PACKED {
-    CIG_LAYOUT_DISABLE_CULLING = CIG_BIT(0),
-    CIG_LAYOUT_MINIMUM_LIMIT = CIG_BIT(1)
+  enum M_PACKED {
+    CIG_LAYOUT_DISABLE_CULLING = M_BIT(0),
+    CIG_LAYOUT_MINIMUM_LIMIT = M_BIT(1)
   } flags;
 
   /*  Opaque pointer for passing custom data to a custom layout builder */
@@ -161,7 +161,7 @@ typedef struct {
   bool (*builder)(cig_r, cig_r, cig_params*, cig_r*);
 } cig_args;
 
-typedef enum CIG_PACKED {
+typedef enum M_PACKED {
   CIG_FRAME_APPEARED = 1,
   CIG_FRAME_VISIBLE
 } cig_frame_visibility;
@@ -184,31 +184,31 @@ typedef struct cig_frame {
   struct cig_frame *_parent;
   cig_params _layout_params;
   unsigned int _id_counter, _last_tick;
-  enum CIG_PACKED {
+  enum M_PACKED {
     /* */
-    OPEN = CIG_BIT(0),
+    OPEN = M_BIT(0),
     /* This element has hover */
-    HOVER = CIG_BIT(1),
+    HOVER = M_BIT(1),
     /* This element or one if its descendants has hover */
-    SUBTREE_INCLUSIVE_HOVER = CIG_BIT(2),
+    SUBTREE_INCLUSIVE_HOVER = M_BIT(2),
     /* Clipping is enabled for this element */
-    CLIPPED = CIG_BIT(3),
+    CLIPPED = M_BIT(3),
     /**/
-    INTERACTIBLE = CIG_BIT(4),
+    INTERACTIBLE = M_BIT(4),
     /**/
-    FOCUSABLE = CIG_BIT(5),
+    FOCUSABLE = M_BIT(5),
     /**/
-    RETAINED = CIG_BIT(6)
+    RETAINED = M_BIT(6)
   } _flags;
 } cig_frame;
 
-typedef enum CIG_PACKED {
-  CIG_INPUT_PRIMARY_ACTION = CIG_BIT(0),
-  CIG_INPUT_SECONDARY_ACTION = CIG_BIT(1),
+typedef enum M_PACKED {
+  CIG_INPUT_PRIMARY_ACTION = M_BIT(0),
+  CIG_INPUT_SECONDARY_ACTION = M_BIT(1),
   CIG_INPUT_ACTION_ANY = CIG_INPUT_PRIMARY_ACTION | CIG_INPUT_SECONDARY_ACTION
 } cig_input_action_type;
 
-typedef enum CIG_PACKED {
+typedef enum M_PACKED {
   CIG_DRAG_STATE_INACTIVE,  /* All quiet on the front-end */
   CIG_DRAG_STATE_READY,     /* When input is first pressed mouse location is saved but drag is not recignized yet. */
                             /*   └ Active frame ID is saved */
@@ -226,7 +226,7 @@ typedef struct {
                         last_action_ended;
   cig_v position;
 
-  enum CIG_PACKED {
+  enum M_PACKED {
     NEITHER,  /* Button was neither pressed or released */
     BEGAN,    /* Button was pressed down (click started) */
     ENDED,    /* Button was released this (click ended) */
@@ -260,23 +260,23 @@ typedef struct {
          _focus_target;
 } cig_input_state_t;
 
-typedef enum CIG_PACKED {
+typedef enum M_PACKED {
   /*  `CIG_PRESS_INSIDE` option specifies whether the press has to start
       within the bounds of this element. Otherwise it can start outside,
       and the element will reflect pressed state as soon as mouse moves onto it */
-  CIG_PRESS_INSIDE = CIG_BIT(0),
+  CIG_PRESS_INSIDE = M_BIT(0),
   CIG_PRESS_DEFAULT_OPTIONS = CIG_PRESS_INSIDE
 } cig_press_flags;
 
-typedef enum CIG_PACKED {
-  CIG_CLICK_STARTS_INSIDE = CIG_BIT(0),
-  CIG_CLICK_ON_PRESS = CIG_BIT(1),
-  CIG_CLICK_EXPIRE = CIG_BIT(2),
-  CIG_CLICK_DOUBLE = CIG_BIT(3),
+typedef enum M_PACKED {
+  CIG_CLICK_STARTS_INSIDE = M_BIT(0),
+  CIG_CLICK_ON_PRESS = M_BIT(1),
+  CIG_CLICK_EXPIRE = M_BIT(2),
+  CIG_CLICK_DOUBLE = M_BIT(3),
   CIG_CLICK_DEFAULT_OPTIONS = CIG_CLICK_STARTS_INSIDE
 } cig_click_flags;
 
-typedef enum CIG_PACKED {
+typedef enum M_PACKED {
   UNSPECIFIED = 0,
 
   LEFT,
@@ -290,7 +290,7 @@ typedef enum CIG_PACKED {
   ASPECT,
 
   /* Option modifiers */
-  INSET_ATTRIBUTE = CIG_BIT(31),
+  INSET_ATTRIBUTE = M_BIT(31),
 
   LEFT_INSET = LEFT | INSET_ATTRIBUTE,
   RIGHT_INSET = RIGHT | INSET_ATTRIBUTE,
@@ -370,7 +370,7 @@ typedef struct {
 void cig_init_context(cig_context*);
 
 /* */
-void cig_begin_layout(cig_context*, CIG_OPTIONAL(cig_buffer_ref), cig_r, float);
+void cig_begin_layout(cig_context*, M_OPTIONAL(cig_buffer_ref), cig_r, float);
 
 /* */
 void cig_end_layout();
@@ -416,19 +416,19 @@ void cig_set_default_insets(cig_i);
 cig_frame* cig_current();
 
 /*  @return Current local rect relative to its parent */
-CIG_INLINED cig_r cig_rect() { return cig_current()->rect; }
+M_INLINED cig_r cig_rect() { return cig_current()->rect; }
 
 /*  @return Current local rect that's been clipped */
-CIG_INLINED cig_r cig_clipped_rect() { return cig_current()->clipped_rect; }
+M_INLINED cig_r cig_clipped_rect() { return cig_current()->clipped_rect; }
 
 /*  @return Current screen-space rect */
-CIG_INLINED cig_r cig_absolute_rect() { return cig_current()->absolute_rect; }
+M_INLINED cig_r cig_absolute_rect() { return cig_current()->absolute_rect; }
 
 /*  @return Relative bounding rect for current content */
-CIG_INLINED cig_r cig_content_rect() { return cig_current()->content_rect; }
+M_INLINED cig_r cig_content_rect() { return cig_current()->content_rect; }
 
 /* @return Current frame visibility status (appeared, visible, not visible) */
-CIG_INLINED cig_frame_visibility cig_visibility() {
+M_INLINED cig_frame_visibility cig_visibility() {
   cig_frame *open_frame = cig_current();
   assert(open_frame->_flags & RETAINED);
   return open_frame->visibility;
@@ -444,7 +444,7 @@ cig_frame_ref_stack_t* cig_frame_stack();
     │ STATE & MEMORY ALLOCATION │
     └───────────────────────────┘ */
 
-CIG_INLINED CIG_OPTIONAL(cig_frame*) cig_retain(CIG_OPTIONAL(cig_frame*) frame) {
+M_INLINED M_OPTIONAL(cig_frame*) cig_retain(M_OPTIONAL(cig_frame*) frame) {
   if (frame) {
     frame->_flags |= RETAINED;
   }
@@ -458,7 +458,7 @@ CIG_INLINED CIG_OPTIONAL(cig_frame*) cig_retain(CIG_OPTIONAL(cig_frame*) frame) 
  * 
  * @return Pointer to the new block of memory or NULL if memory could not be allocated
  */
-CIG_OPTIONAL(void*) cig_memory_allocate(size_t bytes);
+M_OPTIONAL(void*) cig_memory_allocate(size_t bytes);
 
 /**
  * @brief Map some portion of the allocated memory in the current element
@@ -471,7 +471,7 @@ CIG_OPTIONAL(void*) cig_memory_allocate(size_t bytes);
  * @return Pointer to the mapped object or NULL if no memory has been allocated or
  * there's not enough space.
  */
-CIG_OPTIONAL(void*) cig_memory_read(size_t bytes);
+M_OPTIONAL(void*) cig_memory_read(size_t bytes);
 
 /**
  * Free memory associated with the current element
@@ -503,7 +503,7 @@ void cig_pop_buffer();
 void cig_set_input_state(cig_v, cig_input_action_type);
 
 /*  @return Current input state as updated by last `cig_set_input_state` call */
-CIG_OPTIONAL(cig_input_state_t*) cig_input_state();
+M_OPTIONAL(cig_input_state_t*) cig_input_state();
 
 /*  Enables input tracking for the current layout element.
     Call this after a successful `cig_push_frame` call */
@@ -556,7 +556,7 @@ void cig_set_focused_id(cig_id);
 bool cig_enable_scroll(cig_scroll_state_t*);
 
 /*  @return Current scroll state objet, or NULL if scrolling is not enabled */
-CIG_OPTIONAL(cig_scroll_state_t*) cig_scroll_state();
+M_OPTIONAL(cig_scroll_state_t*) cig_scroll_state();
 
 /*  Set scroll offset values */
 void cig_set_offset(cig_v);

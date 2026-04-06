@@ -11,7 +11,7 @@ typedef struct menu_item {
   cig_id id;
   image_id_t icon;
   const char *title;
-  enum CIG_PACKED {
+  enum M_PACKED {
     NONE,
     TOGGLE,
     RADIO_ON,
@@ -51,13 +51,13 @@ typedef struct win95_menu {
 
 typedef struct {
   cig_v position;
-  enum CIG_PACKED {
+  enum M_PACKED {
     ORIGIN_TOP_LEFT,
     ORIGIN_BOTTOM_LEFT
   } origin;
 } menu_presentation;
 
-typedef enum CIG_PACKED {
+typedef enum M_PACKED {
   NOT_TRACKING,
   BY_CLICK,
   BY_PRESS
@@ -68,7 +68,7 @@ typedef enum CIG_PACKED {
 void
 menubar(size_t, win95_menu*[]);
 
-CIG_DISCARDABLE(win95_menu *)
+M_DISCARDABLE(win95_menu *)
 menu_setup(
   win95_menu*,
   const char*,

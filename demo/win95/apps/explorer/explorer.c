@@ -82,7 +82,7 @@ static void window_proc(window_t *this, bool window_focused) {
     )) {
       cig_enable_clipping();
 
-      CIG(_W(CIG_MIN(144, CIG_W)), cig_i_make(3, 2, 3, 2)) {
+      CIG(_W(M_MIN(144, CIG_W)), cig_i_make(3, 2, 3, 2)) {
         cig_fill_style(get_style(STYLE_INNER_BEVEL_NO_FILL), 0);
         cig_draw_label((cig_text_properties) {
           .alignment.horizontal = CIG_TEXT_ALIGN_LEFT

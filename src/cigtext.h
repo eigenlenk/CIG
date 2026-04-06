@@ -18,26 +18,26 @@ typedef struct {
 
 #define CIG_TEXT_ALIGN_DEFAULT 0
 
-typedef enum CIG_PACKED {
+typedef enum M_PACKED {
   CIG_TEXT_ALIGN_LEFT = 1,
   CIG_TEXT_ALIGN_CENTER,
   CIG_TEXT_ALIGN_RIGHT
 } cig_text_horizontal_alignment;
 
-typedef enum CIG_PACKED {
+typedef enum M_PACKED {
   CIG_TEXT_ALIGN_TOP = 1,
   CIG_TEXT_ALIGN_MIDDLE,
   CIG_TEXT_ALIGN_BOTTOM
 } cig_text_vertical_alignment;
 
-typedef enum CIG_PACKED {
-  CIG_TEXT_BOLD = CIG_BIT(0),
-  CIG_TEXT_ITALIC = CIG_BIT(1),
-  CIG_TEXT_UNDERLINE = CIG_BIT(2),
-  CIG_TEXT_STRIKETHROUGH = CIG_BIT(3)
+typedef enum M_PACKED {
+  CIG_TEXT_BOLD = M_BIT(0),
+  CIG_TEXT_ITALIC = M_BIT(1),
+  CIG_TEXT_UNDERLINE = M_BIT(2),
+  CIG_TEXT_STRIKETHROUGH = M_BIT(3)
 } cig_text_style;
 
-typedef enum CIG_PACKED {
+typedef enum M_PACKED {
   CIG_TEXT_OVERFLOW = 0,  /* Text is allowed to flow out of bounds */
   CIG_TEXT_TRUNCATE,      /* The last non-fitting word is truncated */
   CIG_TEXT_SHOW_ELLIPSIS
@@ -53,9 +53,9 @@ typedef struct {
   uint32_t max_lines;
   int32_t line_spacing;
   cig_text_overflow overflow;
-  enum CIG_PACKED {
-    CIG_TEXT_FORMATTED = CIG_BIT(0),
-    CIG_TEXT_HORIZONTAL_WRAP_DISABLED = CIG_BIT(1)
+  enum M_PACKED {
+    CIG_TEXT_FORMATTED = M_BIT(0),
+    CIG_TEXT_HORIZONTAL_WRAP_DISABLED = M_BIT(1)
   } flags;
   cig_text_style style;
 } cig_text_properties;
@@ -67,8 +67,8 @@ typedef struct {
  */
 typedef struct {
   const char *str;
-  CIG_OPTIONAL(cig_font_ref) font_override;
-  CIG_OPTIONAL(cig_text_color_ref) color_override;
+  M_OPTIONAL(cig_font_ref) font_override;
+  M_OPTIONAL(cig_text_color_ref) color_override;
   struct { unsigned short w, h; } bounds;
   unsigned short byte_len;
   unsigned char style_flags;
@@ -124,7 +124,7 @@ cig_font_info(cig_font_ref);
  * Allocates a label type in the current element's state, prepares it and
  * draws it. Label is cached based on the input string hash.
  */
-CIG_DISCARDABLE(cig_label *) cig_draw_label(cig_text_properties, const char *, ...);
+M_DISCARDABLE(cig_label *) cig_draw_label(cig_text_properties, const char *, ...);
 
 /*
  * For more advanced text display you can prepare a piece of text.

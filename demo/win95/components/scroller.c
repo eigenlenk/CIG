@@ -25,7 +25,7 @@ scroll_bar(cig_r rect, int32_t *value, int32_t limit)
   const int32_t visible = is_y_axis ? rect.h : rect.w;
   const int32_t total = visible + limit;
   const int32_t track = visible - 2 * SCROLL_BAR_SIZE;
-  const int32_t thumb_size = CIG_MAX((visible * track) / total, SCROLL_BAR_MINIMUM_THUMB);
+  const int32_t thumb_size = M_MAX((visible * track) / total, SCROLL_BAR_MINIMUM_THUMB);
   const int32_t thumb_offset = (*value / (double)limit) * (track - thumb_size);
   const int32_t scroll_step = limit / (track - thumb_size);
 
@@ -86,7 +86,7 @@ scroll_bar(cig_r rect, int32_t *value, int32_t limit)
     cig_fill_style(get_style(STYLE_SCROLL_BUTTON), 0);
   }
 
-  *value = CIG_CLAMP(*value, 0, limit);
+  *value = M_CLAMP(*value, 0, limit);
 
   cig_pop_frame();
 }
@@ -105,16 +105,16 @@ display_scrollbars(cig_scroll_state_t *scroll, scroller_results *results)
    * the scrollable area on the first axis.
    */ 
   if (scrolls_y)
-    extra_margin_x = CIG_CLAMP((scroll->bounds.x + SCROLL_BAR_SIZE - cig_rect().w), 0, SCROLL_BAR_SIZE);
+    extra_margin_x = M_CLAMP((scroll->bounds.x + SCROLL_BAR_SIZE - cig_rect().w), 0, SCROLL_BAR_SIZE);
 
   if (scrolls_x)
-    extra_margin_y = CIG_CLAMP((scroll->bounds.y + SCROLL_BAR_SIZE - cig_rect().h), 0, SCROLL_BAR_SIZE);
+    extra_margin_y = M_CLAMP((scroll->bounds.y + SCROLL_BAR_SIZE - cig_rect().h), 0, SCROLL_BAR_SIZE);
 
   if (extra_margin_y)
-    extra_margin_x = CIG_CLAMP((scroll->bounds.x + SCROLL_BAR_SIZE - cig_rect().w), 0, SCROLL_BAR_SIZE);
+    extra_margin_x = M_CLAMP((scroll->bounds.x + SCROLL_BAR_SIZE - cig_rect().w), 0, SCROLL_BAR_SIZE);
 
   if (extra_margin_x)
-    extra_margin_y = CIG_CLAMP((scroll->bounds.y + SCROLL_BAR_SIZE - cig_rect().h), 0, SCROLL_BAR_SIZE);
+    extra_margin_y = M_CLAMP((scroll->bounds.y + SCROLL_BAR_SIZE - cig_rect().h), 0, SCROLL_BAR_SIZE);
 
   const int32_t total_dist_x = scroll->distance.x + extra_margin_x;
   const int32_t total_dist_y = scroll->distance.y + extra_margin_y;

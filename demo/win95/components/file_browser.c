@@ -196,9 +196,9 @@ static cig_frame * large_file_icon(int icon,
 
 /* Rectangle between 2 points in any relation */
 static cig_r rect_of(cig_v p0, cig_v p1) {
-  int32_t min_x = CIG_MIN(p0.x, p1.x);
-  int32_t min_y = CIG_MIN(p0.y, p1.y);
-  int32_t max_x = CIG_MAX(p0.x, p1.x);
-  int32_t max_y = CIG_MAX(p0.y, p1.y);
+  int32_t min_x = M_MIN(p0.x, p1.x);
+  int32_t min_y = M_MIN(p0.y, p1.y);
+  int32_t max_x = M_MAX(p0.x, p1.x);
+  int32_t max_y = M_MAX(p0.y, p1.y);
   return cig_r_make(min_x, min_y, max_x-min_x, max_y-min_y);
 }

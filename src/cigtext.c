@@ -153,7 +153,7 @@ cig_font_info(cig_font_ref font)
   return font_query(font);
 }
 
-CIG_DISCARDABLE(cig_label *) 
+M_DISCARDABLE(cig_label *) 
 cig_draw_label(cig_text_properties props, const char *text, ...) 
 {
   register const cig_r absolute_rect = cig_r_inset(cig_absolute_rect(), cig_current()->insets);
@@ -597,7 +597,7 @@ static void label_process_string(
     scope->i += scope->ch.byte_len;
   }
 
-  label->line_count = CIG_MAX(1, scope->line_count);
+  label->line_count = M_MAX(1, scope->line_count);
   label->bounds.h = (label->line_count * scope->base_font_info.height) + (label->line_count - 1) * label->line_spacing;
 }
 
@@ -879,7 +879,7 @@ scope_add_label_span(
   scope->run.reading = false;
   scope->line_width += bounds.x;
   scope->line_count += newline_count;
-  label->bounds.w = CIG_MAX(label->bounds.w, scope->line_width);
+  label->bounds.w = M_MAX(label->bounds.w, scope->line_width);
   scope->line_width = 0;
 
   // printf("\t+ Added span (%d newlines)\n", (int)newline_count);

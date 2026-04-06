@@ -24,7 +24,7 @@ static struct {
   size_t count;
 } spans;
 
-CIG_INLINED void text_render(
+M_INLINED void text_render(
   const char *str,
   size_t len,
   cig_r rect,
@@ -41,7 +41,7 @@ CIG_INLINED void text_render(
   strncat(spans.info[spans.count-1].str, str, len);
 }
 
-CIG_INLINED cig_v text_measure(
+M_INLINED cig_v text_measure(
   const char *str,
   size_t len,
   cig_font_ref font,
@@ -51,7 +51,7 @@ CIG_INLINED cig_v text_measure(
   return cig_v_make(utf8_char_count(slice), 1);
 }
 
-CIG_INLINED cig_font_info_st font_query(cig_font_ref font_ref) {
+M_INLINED cig_font_info_st font_query(cig_font_ref font_ref) {
   return (cig_font_info_st) {
     .height = 1,
     .baseline_offset = 0
