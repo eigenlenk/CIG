@@ -176,8 +176,8 @@ This is the main chunk of the whole thing. Has all the actual layout logic.
 ### 2. Text
 Adds basic text element in form of a Label and deals with measuring and laying out text, as well as applying style through HTML-like tags.
 
-### 3. Graphics
-Adds an image element as well as line and rectangle drawing (passing calls to the backend essentially).
+### 3. Imnage
+Adds an image element.
 
 # TODO
 * Validate and refine the API by working on the demo
