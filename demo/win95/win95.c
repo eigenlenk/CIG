@@ -8,6 +8,7 @@
 #include "apps/games/wordwiz/wordwiz.h"
 #include "apps/accessories/calculator/calculator.h"
 #include "cigcorem.h"
+#include "cigext.h"
 #include <time.h>
 #include <stdio.h>
 #include <string.h>

@@ -1,7 +1,8 @@
 #include "components/button.h"
+#include "cigext.h"
 
 cig_font_ref button_font = NULL;
-cig_color_ref button_title_color = NULL;
+cig_text_color_ref button_title_color = NULL;
 
 bool
 standard_button(cig_r rect, const char *title)

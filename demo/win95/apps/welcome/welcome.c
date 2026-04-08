@@ -1,5 +1,6 @@
 #include "welcome.h"
 #include "components/button.h"
+#include "cigext.h"
 
 typedef struct {
   int tip_index;

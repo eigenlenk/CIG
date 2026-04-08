@@ -1,7 +1,7 @@
 #include "components/scroller.h"
 #include "components/button.h"
 #include "system/resources.h"
-
+#include "cigext.h"
 #include <stdio.h>
 
 #define SCROLL_BAR_SIZE 16

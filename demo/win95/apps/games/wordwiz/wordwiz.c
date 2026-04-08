@@ -1,6 +1,7 @@
 #include "wordwiz.h"
 #include "components/button.h"
 #include "components/menu.h"
+#include "cigext.h"
 
 #include <string.h>
 #include <stdio.h>

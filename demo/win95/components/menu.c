@@ -1,4 +1,5 @@
 #include "components/menu.h"
+#include "cigext.h"
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>

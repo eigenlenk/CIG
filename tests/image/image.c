@@ -1,6 +1,6 @@
 #include "unity.h"
 #include "fixture.h"
-#include "ciggfx.h"
+#include "cigimage.h"
 #include "cigcorem.h"
 #include "asserts.h"
 #include "utf8.h"

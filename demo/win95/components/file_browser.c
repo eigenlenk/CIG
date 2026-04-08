@@ -1,4 +1,5 @@
 #include "components/file_browser.h"
+#include "cigext.h"
 #include <string.h>
 
 static cig_frame* large_file_icon(int, const char*, color_id_t, bool, bool*, bool*);

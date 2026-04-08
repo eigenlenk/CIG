@@ -8,8 +8,8 @@
 #include "cigtext.h"
 #endif
 
-#ifndef CIG_EXCLUDE_GFX
-#include "ciggfx.h"
+#ifndef CIG_EXCLUDE_IMAGE
+#include "cigimage.h"
 #endif
 
 #endif

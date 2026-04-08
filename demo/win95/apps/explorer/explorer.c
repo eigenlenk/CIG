@@ -3,6 +3,7 @@
 #include "components/menu.h"
 #include "components/file_browser.h"
 #include "components/scroller.h"
+#include "cigext.h"
 
 #include <string.h>
 #include <stdio.h>

@@ -1,6 +1,7 @@
 #include "components/window.h"
 #include "components/button.h"
 #include "system/resources.h"
+#include "cigext.h"
 
 typedef enum {
   WINDOW_RESIZE_BOTTOM_RIGHT = 0,

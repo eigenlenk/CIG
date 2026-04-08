@@ -1,6 +1,7 @@
 #include "raylib.h"
 #include "cig.h"
 #include "win95.h"
+#include "cigext.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -374,6 +375,7 @@ int main(int argc, const char *argv[]) {
 
   return 0;
 }
+
 M_INLINED void set_clip_rect(cig_buffer_ref buffer, cig_r rect, bool reset) {
   if (reset) {
     EndScissorMode();
@@ -530,7 +532,7 @@ M_INLINED void draw_rectangle(
   if (fill_color) {
     DrawRectangle(UNPACK_RECT(rect), *(Color*)fill_color);
   }
-  if (border_color) {
+  if (border_color && border_width > 0) {
     DrawRectangleLinesEx(RAYLIB_RECT(rect), border_width, *(Color*)border_color);
   }
 }
