@@ -377,19 +377,19 @@ menu_tracking_st menu_track(menu_tracking_st *tracking, win95_menu *menu, menu_p
   }
 
   if (*tracking == BY_CLICK) {
-    if (cig_input_state()->click_state == EXPIRED) {
+    if (cig_input_state()->pointer.click_state == EXPIRED) {
       *tracking = NOT_TRACKING;
     }
-    else if (cig_input_state()->click_state == BEGAN && !(cig_current()->_flags & SUBTREE_INCLUSIVE_HOVER)) {
+    else if (cig_input_state()->pointer.click_state == BEGAN && !(cig_current()->_flags & SUBTREE_INCLUSIVE_HOVER)) {
       /* Mouse button was pressed down while outside the menu button and any of its children (menus) */
       *tracking = NOT_TRACKING;
     }
-    else if (cig_input_state()->click_state == ENDED && !(cig_current()->_flags & HOVER) && cig_current()->_flags & SUBTREE_INCLUSIVE_HOVER) {
+    else if (cig_input_state()->pointer.click_state == ENDED && !(cig_current()->_flags & HOVER) && cig_current()->_flags & SUBTREE_INCLUSIVE_HOVER) {
       /* Click was made, but inside one of its children (menus) and not the menu button itself */
       *tracking = NOT_TRACKING;
     }
   }
-  else if (*tracking == BY_PRESS && cig_input_state()->action_mask == 0) {
+  else if (*tracking == BY_PRESS && cig_input_state()->pointer.action_mask == 0) {
     /* Mouse button was released while in PRESS tracking mode */
     *tracking = NOT_TRACKING;
   }

@@ -53,7 +53,7 @@ void cig_init_context(cig_context *context) {
 
   context->frame_stack = INIT_STACK(cig_frame_ref);
   context->buffers = INIT_STACK(cig_buffer_element_t);
-  context->input_state = (cig_input_state_t) { 0 };
+  context->input = (cig_input_state_t) { 0 };
   context->next_id = 0;
   context->tick = 1;
   context->delta_time = 0.f;
@@ -138,6 +138,21 @@ void cig_end_layout() {
     if (current->frames.elements[i]._last_tick == current->tick) {
       current->frames.elements[j++] = current->frames.elements[i];
     }
+  }
+
+  /* Update hover target based on last iteration */
+  if (current->input.pointer.locked == false) {
+    if (current->input.pointer._hover_prev_tick != current->input.pointer._hover_this_tick) {
+      current->input.pointer._click_count = 0;
+    }
+    current->input.pointer._hover_prev_tick = current->input.pointer._hover_this_tick;
+    current->input.pointer._hover_this_tick = 0;
+  }
+
+  /* Update focus target based on last iteration */
+  if (current->input._focus_target_this > 0) {
+    current->input._focus_target = current->input._focus_target_this;
+    current->input._focus_target_this = 0;
   }
 
   current->frames.high = j;
@@ -293,93 +308,97 @@ void cig_pop_buffer() {
   M_UNUSED(current->buffers.pop_ref(&current->buffers));
 }
 
-/*  ┌───────────────────────────┐
-    │ MOUSE INTERACTION & FOCUS │
-    └───────────────────────────┘ */
+/*  ┌────────────────────────────┐
+    │ INPUT, INTERACTION & FOCUS │
+    └────────────────────────────┘ */
 
-void cig_set_input_state(
-  const cig_v position,
-  cig_input_action_type action_mask
-) {
-  current->input_state.position = position;
+void
+cig_set_pointer_position(cig_v position)
+{
+  current->input.pointer.position = position;
 
   /* Root frame has not had a hit check performed yet */
   handle_frame_hover(cig_current());
+}
 
-  // TODO: Make sense and clean up the mess that is this function...
+void
+cig_set_pointer_state(cig_input_action_type action_mask)
+{
+  /**
+   * Record action mask from previous interation and update current.
+   * We'll use it to compare and detect changes and generate events.
+   */
+  const cig_input_action_type prev_action_mask = current->input.pointer.action_mask;
 
-  if (current->input_state.locked == false) {
-    if (current->input_state._hover_prev_tick != current->input_state._hover_this_tick) {
-      current->input_state._click_count = 0;
-    }
-    current->input_state._hover_prev_tick = current->input_state._hover_this_tick;
-    current->input_state._hover_this_tick = 0;
-  }
+  current->input.pointer.action_mask = action_mask;
 
-  if (current->input_state._focus_target_this > 0) {
-    current->input_state._focus_target = current->input_state._focus_target_this;
-    current->input_state._focus_target_this = 0;
-  }
+  /**
+   * Click state is tracked regardless of action type and works by simply comparing
+   * the mask to previous value and detecting changes. Actual action type check
+   * is performed in `cig_pressed` and `cig_clicked`.
+   */
+  const bool is_primary_action_started = action_mask & CIG_INPUT_PRIMARY_ACTION && !(prev_action_mask & CIG_INPUT_PRIMARY_ACTION);
+  const bool is_secondary_action_started = action_mask & CIG_INPUT_SECONDARY_ACTION && !(prev_action_mask & CIG_INPUT_SECONDARY_ACTION);
+  const bool is_primary_action_ended = prev_action_mask & CIG_INPUT_PRIMARY_ACTION && !(action_mask & CIG_INPUT_PRIMARY_ACTION);
+  const bool is_secondary_action_ended = prev_action_mask & CIG_INPUT_SECONDARY_ACTION && !(action_mask & CIG_INPUT_SECONDARY_ACTION);
 
-  const cig_input_action_type previous_action_mask = current->input_state.action_mask;
-
-  current->input_state.action_mask = action_mask;
-
-  current->input_state.click_state = (!current->input_state.action_mask && previous_action_mask)
-    ? (current->elapsed_time - current->input_state._press_start_time) <= CIG_CLICK_EXPIRE_IN_SECONDS
+  current->input.pointer.click_state = (!action_mask && prev_action_mask)
+    ? (current->elapsed_time - current->input.pointer._press_start_time) <= CIG_CLICK_EXPIRE_IN_SECONDS
       ? ENDED
       : EXPIRED
-    : (action_mask & CIG_INPUT_PRIMARY_ACTION && !(previous_action_mask & CIG_INPUT_PRIMARY_ACTION)) || (action_mask & CIG_INPUT_SECONDARY_ACTION && !(previous_action_mask & CIG_INPUT_SECONDARY_ACTION))
-      ? current->input_state.click_state == BEGAN
+    : (is_primary_action_started || is_secondary_action_started)
+      ? current->input.pointer.click_state == BEGAN
         ? NEITHER
         : BEGAN
       : NEITHER;
 
-  if (current->input_state.action_mask & CIG_INPUT_PRIMARY_ACTION && !(previous_action_mask & CIG_INPUT_PRIMARY_ACTION)) {
-    current->input_state.last_action_began = CIG_INPUT_PRIMARY_ACTION;
-  } else if (current->input_state.action_mask & CIG_INPUT_SECONDARY_ACTION && !(previous_action_mask & CIG_INPUT_SECONDARY_ACTION)) {
-    current->input_state.last_action_began = CIG_INPUT_SECONDARY_ACTION;
+  /* Keep track which action began last */
+  if (is_primary_action_started) {
+    current->input.pointer.last_action_began = CIG_INPUT_PRIMARY_ACTION;
+  } else if (is_secondary_action_started) {
+    current->input.pointer.last_action_began = CIG_INPUT_SECONDARY_ACTION;
   } else {
-    current->input_state.last_action_began = 0;
+    current->input.pointer.last_action_began = 0;
   }
 
-  if (previous_action_mask & CIG_INPUT_PRIMARY_ACTION && !(current->input_state.action_mask & CIG_INPUT_PRIMARY_ACTION)) {
-    current->input_state.last_action_ended = CIG_INPUT_PRIMARY_ACTION;
-  } else if (previous_action_mask & CIG_INPUT_SECONDARY_ACTION && !(current->input_state.action_mask & CIG_INPUT_SECONDARY_ACTION)) {
-    current->input_state.last_action_ended = CIG_INPUT_SECONDARY_ACTION;
+  /* Keep track which action ended last */
+  if (is_primary_action_ended) {
+    current->input.pointer.last_action_ended = CIG_INPUT_PRIMARY_ACTION;
+  } else if (is_secondary_action_ended) {
+    current->input.pointer.last_action_ended = CIG_INPUT_SECONDARY_ACTION;
   } else {
-    current->input_state.last_action_ended = 0;
+    current->input.pointer.last_action_ended = 0;
   }
 
-  switch (current->input_state.click_state) {
+  switch (current->input.pointer.click_state) {
   case NEITHER:
     {
-      if (current->input_state._click_count && current->elapsed_time - current->input_state._click_end_time > CIG_CLICK_EXPIRE_IN_SECONDS) {
-        current->input_state._click_count = 0;
+      if (current->input.pointer._click_count && current->elapsed_time - current->input.pointer._click_end_time > CIG_CLICK_EXPIRE_IN_SECONDS) {
+        current->input.pointer._click_count = 0;
       }
     } break;
 
   case BEGAN:
     {
-      current->input_state._press_start_time = current->elapsed_time;
-      current->input_state._press_target_id = current->input_state._hover_prev_tick;
+      current->input.pointer._press_start_time = current->elapsed_time;
+      current->input.pointer._press_target_id = current->input.pointer._hover_prev_tick;
     } break;
 
   case ENDED:
     {
-      current->input_state._click_count ++;
-      current->input_state._click_end_time = current->elapsed_time;
+      current->input.pointer._click_count ++;
+      current->input.pointer._click_end_time = current->elapsed_time;
     } break;
 
   case EXPIRED:
     {
-      current->input_state._click_count = 0;
+      current->input.pointer._click_count = 0;
     } break;
   }
 }
 
 cig_input_state_t *cig_input_state() {
-  return &current->input_state;
+  return &current->input;
 }
 
 void cig_enable_interaction() {
@@ -389,13 +408,13 @@ void cig_enable_interaction() {
   }
   frame->_flags |= INTERACTIBLE;
   if (frame->_flags & SUBTREE_INCLUSIVE_HOVER) {
-    current->input_state._hover_this_tick = frame->id;
+    current->input.pointer._hover_this_tick = frame->id;
   }
 }
 
 bool cig_hovered() {
   /*  See `handle_frame_hover` */
-  return current->input_state.locked == false && (cig_current()->_flags & INTERACTIBLE) && cig_current()->id == current->input_state._hover_prev_tick;
+  return current->input.pointer.locked == false && (cig_current()->_flags & INTERACTIBLE) && cig_current()->id == current->input.pointer._hover_prev_tick;
 }
 
 cig_input_action_type cig_pressed(
@@ -406,9 +425,9 @@ cig_input_action_type cig_pressed(
     return 0;
   }
 
-  const cig_input_action_type action_mask = actions & current->input_state.action_mask;
+  const cig_input_action_type action_mask = actions & current->input.pointer.action_mask;
 
-  if (action_mask && ((options & CIG_PRESS_INSIDE) == false || (options & CIG_PRESS_INSIDE && current->input_state._press_target_id == cig_current()->id))) {
+  if (action_mask && ((options & CIG_PRESS_INSIDE) == false || (options & CIG_PRESS_INSIDE && current->input.pointer._press_target_id == cig_current()->id))) {
     return action_mask;
   } else {
     return 0;
@@ -426,20 +445,20 @@ cig_input_action_type cig_clicked(
   cig_input_action_type result;
 
   if (options & CIG_CLICK_ON_PRESS) {
-    if (current->input_state.click_state == BEGAN && (result = actions & current->input_state.action_mask)) {
+    if (current->input.pointer.click_state == BEGAN && (result = actions & current->input.pointer.action_mask)) {
       return result;
     }
   } else {
     const unsigned int required_clicks = options & CIG_CLICK_DOUBLE ? 2 : 1;
     if (
-      (current->input_state.click_state == ENDED && current->input_state._click_count >= required_clicks) ||
-      (current->input_state.click_state == EXPIRED && !(options & CIG_CLICK_EXPIRE) && required_clicks == 1)
+      (current->input.pointer.click_state == ENDED && current->input.pointer._click_count >= required_clicks) ||
+      (current->input.pointer.click_state == EXPIRED && !(options & CIG_CLICK_EXPIRE) && required_clicks == 1)
     ) {
-      if (options & CIG_CLICK_STARTS_INSIDE && current->input_state._press_target_id != cig_current()->id) {
+      if (options & CIG_CLICK_STARTS_INSIDE && current->input.pointer._press_target_id != cig_current()->id) {
         return 0;
       }
-      if ((result = actions & current->input_state.last_action_ended)) {
-        current->input_state._click_count = 0;
+      if ((result = actions & current->input.pointer.last_action_ended)) {
+        current->input.pointer._click_count = 0;
         return result;
       }
     }
@@ -448,38 +467,36 @@ cig_input_action_type cig_clicked(
   return 0;
 }
 
-#include <stdio.h>
-
 cig_input_drag_state
 cig_dragged(cig_input_action_type actions)
 {
   /* Ignore other draggable elements once something has started dragging */
-  if (current->input_state.drag.state > CIG_DRAG_STATE_INACTIVE && current->input_state.drag.id != cig_current()->id) {
+  if (current->input.pointer.drag.state > CIG_DRAG_STATE_INACTIVE && current->input.pointer.drag.id != cig_current()->id) {
     return 0;
   }
 
   /* *****************
      Update drag state */
 
-  if (actions & current->input_state.action_mask) { /* Mouse buttons down: */
-    switch (current->input_state.drag.state) {
+  if (actions & current->input.pointer.action_mask) { /* Mouse buttons down: */
+    switch (current->input.pointer.drag.state) {
     case CIG_DRAG_STATE_INACTIVE: {
       if (cig_pressed(actions, CIG_PRESS_INSIDE)) {
-        current->input_state.drag.state = CIG_DRAG_STATE_READY;
-        current->input_state.drag._start_position_absolute = current->input_state.position;
-        current->input_state.drag.change_total = cig_v_zero();
-        current->input_state.drag.change_last_frame = cig_v_zero();
-        current->input_state.drag.id = cig_current()->id;
+        current->input.pointer.drag.state = CIG_DRAG_STATE_READY;
+        current->input.pointer.drag._start_position_absolute = current->input.pointer.position;
+        current->input.pointer.drag.change_total = cig_v_zero();
+        current->input.pointer.drag.change_last_frame = cig_v_zero();
+        current->input.pointer.drag.id = cig_current()->id;
       }
       break;
     }
 
     case CIG_DRAG_STATE_READY: {
-      const cig_v change = cig_v_sub(current->input_state.position, current->input_state.drag._start_position_absolute);
+      const cig_v change = cig_v_sub(current->input.pointer.position, current->input.pointer.drag._start_position_absolute);
       if (cig_v_length(change) >= 2) {
-        current->input_state.drag.state = CIG_DRAG_STATE_BEGAN;
-        current->input_state.drag.change_total = change;
-        current->input_state.drag.change_last_frame = change;
+        current->input.pointer.drag.state = CIG_DRAG_STATE_BEGAN;
+        current->input.pointer.drag.change_total = change;
+        current->input.pointer.drag.change_last_frame = change;
       }
       break;
     }
@@ -487,14 +504,14 @@ cig_dragged(cig_input_action_type actions)
     case CIG_DRAG_STATE_BEGAN:
     case CIG_DRAG_STATE_MOVED:
     case CIG_DRAG_STATE_IDLE: {
-      const cig_v change = cig_v_sub(current->input_state.position, current->input_state.drag._start_position_absolute);
-      if (cig_v_equals(current->input_state.drag.change_total, change)) {
-        current->input_state.drag.state = CIG_DRAG_STATE_IDLE;
-        current->input_state.drag.change_last_frame = cig_v_zero();
+      const cig_v change = cig_v_sub(current->input.pointer.position, current->input.pointer.drag._start_position_absolute);
+      if (cig_v_equals(current->input.pointer.drag.change_total, change)) {
+        current->input.pointer.drag.state = CIG_DRAG_STATE_IDLE;
+        current->input.pointer.drag.change_last_frame = cig_v_zero();
       } else {
-        current->input_state.drag.state = CIG_DRAG_STATE_MOVED;
-        current->input_state.drag.change_last_frame = cig_v_sub(change, current->input_state.drag.change_total);
-        current->input_state.drag.change_total = change;
+        current->input.pointer.drag.state = CIG_DRAG_STATE_MOVED;
+        current->input.pointer.drag.change_last_frame = cig_v_sub(change, current->input.pointer.drag.change_total);
+        current->input.pointer.drag.change_total = change;
       }
       break;
     }
@@ -502,27 +519,27 @@ cig_dragged(cig_input_action_type actions)
     default: break;
     }
   } else { /* Mouse buttons up: */
-    if (current->input_state.drag.state > CIG_DRAG_STATE_READY && current->input_state.drag.state < CIG_DRAG_STATE_ENDED) {
-      /* When button is released, the mouse may still have movsed compared to last frame.
+    if (current->input.pointer.drag.state > CIG_DRAG_STATE_READY && current->input.pointer.drag.state < CIG_DRAG_STATE_ENDED) {
+      /* When button is released, the mouse may still have moved compared to last frame.
          In that case a final 'MOVED' state is emitted, followed by 'ENDED' on the next iteration */
-      const cig_v change = cig_v_sub(current->input_state.position, current->input_state.drag._start_position_absolute);
-      if (!cig_v_valid(current->input_state.drag._start_position_absolute) || cig_v_equals(current->input_state.drag.change_total, change)) {
-        current->input_state.drag.state = CIG_DRAG_STATE_ENDED;
-        current->input_state.drag.change_last_frame = cig_v_zero();
+      const cig_v change = cig_v_sub(current->input.pointer.position, current->input.pointer.drag._start_position_absolute);
+      if (!cig_v_valid(current->input.pointer.drag._start_position_absolute) || cig_v_equals(current->input.pointer.drag.change_total, change)) {
+        current->input.pointer.drag.state = CIG_DRAG_STATE_ENDED;
+        current->input.pointer.drag.change_last_frame = cig_v_zero();
       } else {
-        current->input_state.drag.state = CIG_DRAG_STATE_MOVED;
-        current->input_state.drag.change_last_frame = cig_v_sub(change, current->input_state.drag.change_total);
-        current->input_state.drag.change_total = change;
-        current->input_state.drag._start_position_absolute = (cig_v) { INT_MIN, INT_MIN };
+        current->input.pointer.drag.state = CIG_DRAG_STATE_MOVED;
+        current->input.pointer.drag.change_last_frame = cig_v_sub(change, current->input.pointer.drag.change_total);
+        current->input.pointer.drag.change_total = change;
+        current->input.pointer.drag._start_position_absolute = (cig_v) { INT_MIN, INT_MIN };
       }
     } else {
-      current->input_state.drag.state = CIG_DRAG_STATE_INACTIVE;
-      current->input_state.drag.id = 0;
-      current->input_state.locked = false;
+      current->input.pointer.drag.state = CIG_DRAG_STATE_INACTIVE;
+      current->input.pointer.drag.id = 0;
+      current->input.pointer.locked = false;
     }
   }
 
-  return current->input_state.drag.state;
+  return current->input.pointer.drag.state;
 }
 
 bool cig_enable_focus() {
@@ -536,11 +553,11 @@ bool cig_focused() {
 }
 
 cig_id cig_focused_id() {
-  return current->input_state._focus_target;
+  return current->input._focus_target;
 }
 
 void cig_set_focused_id(cig_id id) {
-  current->input_state._focus_target = id;
+  current->input._focus_target = id;
 }
 
 /*  ┌───────────┐
@@ -1122,15 +1139,15 @@ static cig_frame* push_frame(
 }
 
 M_INLINED void handle_frame_hover(cig_frame *frame) {
-  if (cig_r_contains(frame->absolute_clipped_rect, current->input_state.position)) {
+  if (cig_r_contains(frame->absolute_clipped_rect, current->input.pointer.position)) {
     frame->_flags |= HOVER;
     frame->_flags |= SUBTREE_INCLUSIVE_HOVER;
     cig_frame *parent = frame->_parent;
     while (parent) {
       parent->_flags |= SUBTREE_INCLUSIVE_HOVER;
       if (parent->_flags & FOCUSABLE) {
-        if (current->input_state.click_state == BEGAN) {
-          current->input_state._focus_target_this = parent->id;
+        if (current->input.pointer.click_state == BEGAN) {
+          current->input._focus_target_this = parent->id;
         }
       }
       parent = parent->_parent;

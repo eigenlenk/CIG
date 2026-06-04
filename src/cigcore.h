@@ -221,42 +221,54 @@ typedef enum M_PACKED {
 } cig_input_drag_state;
 
 typedef struct {
-  cig_input_action_type action_mask,
-                        last_action_began,
-                        last_action_ended;
-  cig_v position;
-
-  enum M_PACKED {
-    NEITHER,  /* Button was neither pressed or released */
-    BEGAN,    /* Button was pressed down (click started) */
-    ENDED,    /* Button was released this (click ended) */
-    EXPIRED   /* Button was held longer than deemed appropriate */
-  } click_state;
-
+  /**
+   * Pointer struct contains pointer position, click and drag state details.
+   */
   struct {
-    cig_input_drag_state state;
-    cig_id id;
-    cig_v change_total,
-          change_last_frame;
+    cig_input_action_type action_mask,
+                          last_action_began,
+                          last_action_ended;
+    cig_v position;
 
-    /*_PRIVATE_*/
-    cig_v _start_position_absolute;
-  } drag;
+    enum M_PACKED {
+      NEITHER,  /* Button was neither pressed or released */
+      BEGAN,    /* Button was pressed down (click started) */
+      ENDED,    /* Button was released this (click ended) */
+      EXPIRED   /* Button was held longer than deemed appropriate */
+    } click_state;
 
-  /*  Elements are not tracked. Set to TRUE by widgets that want exclusive
-      use of drag state. A scrollbar thumb for example where buttons and
-      other elements should not be highlighted even if hovered while moving.
-      reset to FALSE when drag ends */
-  bool locked;
+    struct {
+      cig_input_drag_state state;
+      cig_id id;
+      cig_v change_total,
+            change_last_frame;
+
+      /*_PRIVATE_*/
+      cig_v _start_position_absolute;
+    } drag;
+
+    /**
+     * Locked: Hover check is disabled.
+     * 
+     * Set to TRUE by widgets that want exclusive use of drag state.
+     * A scrollbar thumb for example where buttons and other elements
+     * should not be highlighted even if hovered while moving.
+     * 
+     * Reset to FALSE when drag ends.
+     */
+    bool locked;
+
+    /* __PRIVATE__ */
+    cig_id _press_target_id,    /* Element that was hovered when button press began */
+           _hover_prev_tick,
+           _hover_this_tick;
+    float _press_start_time,
+          _click_end_time;
+    unsigned int _click_count;
+  } pointer;
 
   /*_PRIVATE_*/
-  float _press_start_time,
-        _click_end_time;
-  unsigned int _click_count;
-  cig_id _press_target_id,    /* Element that was hovered when button press began */
-         _hover_prev_tick,
-         _hover_this_tick,
-         _focus_target_this,
+  cig_id _focus_target_this,
          _focus_target;
 } cig_input_state_t;
 
@@ -337,7 +349,7 @@ typedef struct {
   cig_allocator allocator;
   cig_frame_ref_stack_t frame_stack;
   cig_buffer_element_t_stack_t buffers;
-  cig_input_state_t input_state;
+  cig_input_state_t input;
   cig_i default_insets;
   cig_id next_id;
   float delta_time,
@@ -499,8 +511,13 @@ void cig_pop_buffer();
     │ INPUT INTERACTION & FOCUS │
     └───────────────────────────┘ */
 
-/*  Pass input coordinates and state[s] */
-void cig_set_input_state(cig_v, cig_input_action_type);
+/* Update pointer position */
+void
+cig_set_pointer_position(cig_v);
+
+/* Update pointer state */
+void
+cig_set_pointer_state(cig_input_action_type);
 
 /*  @return Current input state as updated by last `cig_set_input_state` call */
 M_OPTIONAL(cig_input_state_t*) cig_input_state();

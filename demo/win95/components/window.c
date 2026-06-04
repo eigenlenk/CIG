@@ -63,14 +63,14 @@ window_begin(window_t *wnd, bool *focused)
     if ((wnd->flags & IS_MAXIMIZED) == false) {
       switch (cig_dragged(CIG_INPUT_PRIMARY_ACTION)) {
       case CIG_DRAG_STATE_BEGAN:
-        cig_input_state()->locked = true;
+        cig_input_state()->pointer.locked = true;
         window_drag.original_rect = wnd->rect;
         /* Fallthrough */
 
       case CIG_DRAG_STATE_MOVED:
         wnd->rect = cig_r_make(
-          M_CLAMP(window_drag.original_rect.x + cig_input_state()->drag.change_total.x, -(wnd->rect.w - 50), cig_layout_rect().w - 30),
-          M_CLAMP(window_drag.original_rect.y + cig_input_state()->drag.change_total.y, 0, cig_layout_rect().h - 50),
+          M_CLAMP(window_drag.original_rect.x + cig_input_state()->pointer.drag.change_total.x, -(wnd->rect.w - 50), cig_layout_rect().w - 30),
+          M_CLAMP(window_drag.original_rect.y + cig_input_state()->pointer.drag.change_total.y, 0, cig_layout_rect().h - 50),
           wnd->rect.w,
           wnd->rect.h
         );
@@ -200,15 +200,15 @@ handle_window_resize(window_t *wnd, window_resize_edge_t edge)
 
   switch (cig_dragged(CIG_INPUT_PRIMARY_ACTION)) {
   case CIG_DRAG_STATE_BEGAN:
-    cig_input_state()->locked = true;
+    cig_input_state()->pointer.locked = true;
     window_resize.original_rect = wnd->rect;
     window_resize.active_edge = edge;
     /* Fallthrough */
 
   case CIG_DRAG_STATE_MOVED:
   {
-      const int dx = cig_input_state()->drag.change_total.x,
-                dy = cig_input_state()->drag.change_total.y;
+      const int dx = cig_input_state()->pointer.drag.change_total.x,
+                dy = cig_input_state()->pointer.drag.change_total.y;
 
       if (edge_adjustments[edge].x) {
         wnd->rect.w = M_MAX(wnd->min_size.x, window_resize.original_rect.w - dx);

@@ -59,15 +59,15 @@ bool begin_file_browser(cig_r rect, int direction, color_id_t text_color, bool p
       break;
 
     case CIG_DRAG_STATE_BEGAN:
-      cig_input_state()->locked = true;
+      cig_input_state()->pointer.locked = true;
       data->drag_selection.active = true;
-      data->drag_selection.start = cig_v_sub(cig_input_state()->drag._start_position_absolute, cig_v_make(CIG_SX, CIG_SY));
+      data->drag_selection.start = cig_v_sub(cig_input_state()->pointer.drag._start_position_absolute, cig_v_make(CIG_SX, CIG_SY));
       /* Fallthrough */
 
     case CIG_DRAG_STATE_MOVED:
       data->drag_selection.relative_rect = rect_of(
         data->drag_selection.start,
-        cig_v_add(data->drag_selection.start, cig_input_state()->drag.change_total)
+        cig_v_add(data->drag_selection.start, cig_input_state()->pointer.drag.change_total)
       );
       break;
 

@@ -30,7 +30,8 @@ TEST(core_input, hover_and_press) {
   register int i;
   for (i = 0; i < 2; ++i) {
     begin(FRAME_TIME);
-    cig_set_input_state(cig_v_make(50, 50), i == 1 ? CIG_INPUT_PRIMARY_ACTION : 0);
+    cig_set_pointer_position(cig_v_make(50, 50));
+    cig_set_pointer_state(i == 1 ? CIG_INPUT_PRIMARY_ACTION : 0);
     cig_push_frame(cig_r_make(0, 0, 100, 100));
     cig_enable_interaction(); /* This element now tracks mouse inputs */
 
@@ -48,7 +49,8 @@ TEST(core_input, overlapping_hover_and_press) {
   register int i;
   for (i = 0; i < 2; ++i) {
     begin(FRAME_TIME);
-    cig_set_input_state(cig_v_make(75, 75), i == 1 ? CIG_INPUT_PRIMARY_ACTION : 0);
+    cig_set_pointer_position(cig_v_make(75, 75));
+    cig_set_pointer_state(i == 1 ? CIG_INPUT_PRIMARY_ACTION : 0);
     cig_push_frame(cig_r_make(0, 0, 100, 100));
     cig_enable_interaction(); /* This element now tracks mouse inputs */
 
@@ -79,7 +81,8 @@ TEST(core_input, click_on_release) {
   register int i;
   for (i = 0; i < 3; ++i) {
     begin(FRAME_TIME);
-    cig_set_input_state(cig_v_make(75, 75), i == 1 ? CIG_INPUT_PRIMARY_ACTION : 0);
+    cig_set_pointer_position(cig_v_make(75, 75));
+    cig_set_pointer_state(i == 1 ? CIG_INPUT_PRIMARY_ACTION : 0);
     cig_push_frame(cig_r_make(0, 0, 100, 100));
     cig_pop_frame();
     cig_push_frame(cig_r_make(50, 50, 100, 100));
@@ -98,7 +101,8 @@ TEST(core_input, click_on_button_down) {
   register int i;
   for (i = 0; i < 2; ++i) {
     begin(FRAME_TIME);
-    cig_set_input_state(cig_v_make(75, 75), i == 1 ? CIG_INPUT_PRIMARY_ACTION : 0);
+    cig_set_pointer_position(cig_v_make(75, 75));
+    cig_set_pointer_state(i == 1 ? CIG_INPUT_PRIMARY_ACTION : 0);
     cig_push_frame(cig_r_make(50, 50, 100, 100));
     cig_enable_interaction();
 
@@ -119,11 +123,14 @@ TEST(core_input, click_starts_outside) {
 
     /*  Simulate mouse change over time */
     if (i == 0) {
-      cig_set_input_state(cig_v_make(25, 25), 0);
+      cig_set_pointer_position(cig_v_make(25, 25));
+      cig_set_pointer_state(0);
     } else if (i == 1) {
-      cig_set_input_state(cig_v_make(75, 75), CIG_INPUT_PRIMARY_ACTION);
+      cig_set_pointer_position(cig_v_make(75, 75));
+      cig_set_pointer_state(CIG_INPUT_PRIMARY_ACTION);
     } else if (i == 2) {
-      cig_set_input_state(cig_v_make(75, 75), 0);
+      cig_set_pointer_position(cig_v_make(75, 75));
+      cig_set_pointer_state(0);
     }
 
     cig_push_frame(cig_r_make(50, 50, 100, 100));
@@ -144,7 +151,8 @@ TEST(core_input, double_click) {
   register int i;
   for (i = 0; i < 5; ++i) {
     begin(FRAME_TIME);
-    cig_set_input_state(cig_v_make(75, 75), i == 1 || i == 3 ? CIG_INPUT_PRIMARY_ACTION : 0);
+    cig_set_pointer_position(cig_v_make(75, 75));
+    cig_set_pointer_state(i == 1 || i == 3 ? CIG_INPUT_PRIMARY_ACTION : 0);
     cig_push_frame(cig_r_make(50, 50, 100, 100));
     cig_enable_interaction();
 
@@ -162,7 +170,8 @@ TEST(core_input, double_click_too_slow) {
   /*  Default maximum time between clicks is 0.5 seconds */
   for (i = 0; i < 5; ++i) {
     begin(FRAME_TIME * 10);
-    cig_set_input_state(cig_v_make(75, 75), i == 1 || i == 3 ? CIG_INPUT_PRIMARY_ACTION : 0);
+    cig_set_pointer_position(cig_v_make(75, 75));
+    cig_set_pointer_state(i == 1 || i == 3 ? CIG_INPUT_PRIMARY_ACTION : 0);
     cig_push_frame(cig_r_make(50, 50, 100, 100));
     cig_enable_interaction();
 
@@ -182,22 +191,27 @@ TEST(core_input, simple_drag) {
 
     switch (i) {
     case 0:
-      cig_set_input_state(cig_v_make(25, 25), 0);
+      cig_set_pointer_position(cig_v_make(25, 25));
+      cig_set_pointer_state(0);
       break;
     case 1:
-      cig_set_input_state(cig_v_make(25, 25), CIG_INPUT_PRIMARY_ACTION);
+      cig_set_pointer_position(cig_v_make(25, 25));
+      cig_set_pointer_state(CIG_INPUT_PRIMARY_ACTION);
       break;
     case 2:
     case 3:
-      cig_set_input_state(cig_v_make(30, 30), CIG_INPUT_PRIMARY_ACTION);
+      cig_set_pointer_position(cig_v_make(30, 30));
+      cig_set_pointer_state(CIG_INPUT_PRIMARY_ACTION);
       break;
     case 4:
-      cig_set_input_state(cig_v_make(35, 35), CIG_INPUT_PRIMARY_ACTION);
+      cig_set_pointer_position(cig_v_make(35, 35));
+      cig_set_pointer_state(CIG_INPUT_PRIMARY_ACTION);
       break;
     case 5:
     case 6:
     case 7:
-      cig_set_input_state(cig_v_make(45, 45), 0);
+      cig_set_pointer_position(cig_v_make(45, 45));
+      cig_set_pointer_state(0);
       break;
     }
 
@@ -206,47 +220,47 @@ TEST(core_input, simple_drag) {
     switch (i) {
     case 0: /* Button up */
       TEST_ASSERT_EQUAL(CIG_DRAG_STATE_INACTIVE, cig_dragged(CIG_INPUT_PRIMARY_ACTION));
-      TEST_ASSERT_EQUAL(0, cig_input_state()->drag.id);
-      TEST_ASSERT_FALSE(cig_input_state()->locked);
+      TEST_ASSERT_EQUAL(0, cig_input_state()->pointer.drag.id);
+      TEST_ASSERT_FALSE(cig_input_state()->pointer.locked);
       break;
     case 1: /* Button down, no movement */
       TEST_ASSERT_EQUAL(CIG_DRAG_STATE_READY, cig_dragged(CIG_INPUT_PRIMARY_ACTION));
-      TEST_ASSERT_EQUAL(cig_current()->id, cig_input_state()->drag.id);
-      TEST_ASSERT_EQUAL_VEC2(cig_v_make(25, 25), cig_input_state()->drag._start_position_absolute);
-      TEST_ASSERT_EQUAL_VEC2(cig_v_zero(), cig_input_state()->drag.change_total);
+      TEST_ASSERT_EQUAL(cig_current()->id, cig_input_state()->pointer.drag.id);
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(25, 25), cig_input_state()->pointer.drag._start_position_absolute);
+      TEST_ASSERT_EQUAL_VEC2(cig_v_zero(), cig_input_state()->pointer.drag.change_total);
       break;
     case 2: /* Initial mouse movement */
-      cig_input_state()->locked = true;
+      cig_input_state()->pointer.locked = true;
       TEST_ASSERT_EQUAL(CIG_DRAG_STATE_BEGAN, cig_dragged(CIG_INPUT_PRIMARY_ACTION));
-      TEST_ASSERT_EQUAL_VEC2(cig_v_make(5, 5), cig_input_state()->drag.change_total);
-      TEST_ASSERT_EQUAL_VEC2(cig_v_make(5, 5), cig_input_state()->drag.change_last_frame);
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(5, 5), cig_input_state()->pointer.drag.change_total);
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(5, 5), cig_input_state()->pointer.drag.change_last_frame);
       break;
     case 3: /* No mouse movement */
       TEST_ASSERT_EQUAL(CIG_DRAG_STATE_IDLE, cig_dragged(CIG_INPUT_PRIMARY_ACTION));
-      TEST_ASSERT_EQUAL_VEC2(cig_v_make(5, 5), cig_input_state()->drag.change_total);
-      TEST_ASSERT_EQUAL_VEC2(cig_v_make(0, 0), cig_input_state()->drag.change_last_frame);
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(5, 5), cig_input_state()->pointer.drag.change_total);
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(0, 0), cig_input_state()->pointer.drag.change_last_frame);
       break;
     case 4: /* Mouse moved again */
       TEST_ASSERT_EQUAL(CIG_DRAG_STATE_MOVED, cig_dragged(CIG_INPUT_PRIMARY_ACTION));
-      TEST_ASSERT_EQUAL_VEC2(cig_v_make(10, 10), cig_input_state()->drag.change_total);
-      TEST_ASSERT_EQUAL_VEC2(cig_v_make(5, 5), cig_input_state()->drag.change_last_frame);
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(10, 10), cig_input_state()->pointer.drag.change_total);
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(5, 5), cig_input_state()->pointer.drag.change_last_frame);
       break;
     case 5: /* Mouse moved and button released */
       /* When button is released, the mouse may still have movsed compared to last frame.
          In that case a final 'MOVED' state is emitted, followed by 'ENDED' */
       TEST_ASSERT_EQUAL(CIG_DRAG_STATE_MOVED, cig_dragged(CIG_INPUT_PRIMARY_ACTION));
-      TEST_ASSERT_EQUAL_VEC2(cig_v_make(20, 20), cig_input_state()->drag.change_total);
-      TEST_ASSERT_EQUAL_VEC2(cig_v_make(10, 10), cig_input_state()->drag.change_last_frame);
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(20, 20), cig_input_state()->pointer.drag.change_total);
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(10, 10), cig_input_state()->pointer.drag.change_last_frame);
       break;
     case 6: /* Button up */
       TEST_ASSERT_EQUAL(CIG_DRAG_STATE_ENDED, cig_dragged(CIG_INPUT_PRIMARY_ACTION));
-      TEST_ASSERT_EQUAL_VEC2(cig_v_make(20, 20), cig_input_state()->drag.change_total);
-      TEST_ASSERT_EQUAL_VEC2(cig_v_make(0, 0), cig_input_state()->drag.change_last_frame);
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(20, 20), cig_input_state()->pointer.drag.change_total);
+      TEST_ASSERT_EQUAL_VEC2(cig_v_make(0, 0), cig_input_state()->pointer.drag.change_last_frame);
       break;
     case 7: /* Button up */
       TEST_ASSERT_EQUAL(CIG_DRAG_STATE_INACTIVE, cig_dragged(CIG_INPUT_PRIMARY_ACTION));
-      TEST_ASSERT_EQUAL(0, cig_input_state()->drag.id);
-      TEST_ASSERT_FALSE(cig_input_state()->locked);
+      TEST_ASSERT_EQUAL(0, cig_input_state()->pointer.drag.id);
+      TEST_ASSERT_FALSE(cig_input_state()->pointer.locked);
       break;
     }
 
@@ -265,19 +279,22 @@ TEST(core_input, simple_drag) {
 }
 
 TEST(core_input, drag_other_input_button) {
-register int i;
+  int i;
   for (i = 0; i < 3; ++i) {
     begin(FRAME_TIME);
 
     switch (i) {
     case 0:
-      cig_set_input_state(cig_v_make(25, 25), 0);
+      cig_set_pointer_position(cig_v_make(25, 25));
+      cig_set_pointer_state(0);
       break;
     case 1:
-      cig_set_input_state(cig_v_make(30, 30), CIG_INPUT_SECONDARY_ACTION);
+      cig_set_pointer_position(cig_v_make(30, 30));
+      cig_set_pointer_state(CIG_INPUT_SECONDARY_ACTION);
       break;
     case 2:
-      cig_set_input_state(cig_v_make(35, 35), CIG_INPUT_SECONDARY_ACTION);
+      cig_set_pointer_position(cig_v_make(35, 35));
+      cig_set_pointer_state(CIG_INPUT_SECONDARY_ACTION);
       break;
     }
 
@@ -285,48 +302,84 @@ register int i;
 
     /* Drag state is not activated because the action type is not recognized */
     TEST_ASSERT_EQUAL(CIG_DRAG_STATE_INACTIVE, cig_dragged(CIG_INPUT_PRIMARY_ACTION));
-    TEST_ASSERT_EQUAL(0, cig_input_state()->drag.id);
+    TEST_ASSERT_EQUAL(0, cig_input_state()->pointer.drag.id);
 
     end();
   }
 }
 
-TEST(core_input, button_states) {
+TEST(core_input, button_states)
+{
   begin(0);
 
   /* (Time 0) */
-  cig_set_input_state(cig_v_zero(), CIG_INPUT_PRIMARY_ACTION);
+  cig_set_pointer_position(cig_v_zero());
+  cig_set_pointer_state(CIG_INPUT_PRIMARY_ACTION);
 
-  TEST_ASSERT_TRUE(cig_input_state()->action_mask & CIG_INPUT_PRIMARY_ACTION);
-  TEST_ASSERT_EQUAL(CIG_INPUT_PRIMARY_ACTION, cig_input_state()->last_action_began);
-  TEST_ASSERT_EQUAL(0, cig_input_state()->last_action_ended);
-  TEST_ASSERT_EQUAL(BEGAN, cig_input_state()->click_state);
+  TEST_ASSERT_TRUE(cig_input_state()->pointer.action_mask & CIG_INPUT_PRIMARY_ACTION);
+  TEST_ASSERT_EQUAL(CIG_INPUT_PRIMARY_ACTION, cig_input_state()->pointer.last_action_began);
+  TEST_ASSERT_EQUAL(0, cig_input_state()->pointer.last_action_ended);
+  TEST_ASSERT_EQUAL(BEGAN, cig_input_state()->pointer.click_state);
 
   /* (T1) */
-  cig_set_input_state(cig_v_zero(), CIG_INPUT_PRIMARY_ACTION | CIG_INPUT_SECONDARY_ACTION);
+  cig_set_pointer_position(cig_v_zero());
+  cig_set_pointer_state(CIG_INPUT_PRIMARY_ACTION | CIG_INPUT_SECONDARY_ACTION);
 
-  TEST_ASSERT_TRUE(cig_input_state()->action_mask & CIG_INPUT_ACTION_ANY);
-  TEST_ASSERT_EQUAL(CIG_INPUT_SECONDARY_ACTION, cig_input_state()->last_action_began);
-  TEST_ASSERT_EQUAL(0, cig_input_state()->last_action_ended);
+  TEST_ASSERT_TRUE(cig_input_state()->pointer.action_mask & CIG_INPUT_ACTION_ANY);
+  TEST_ASSERT_EQUAL(CIG_INPUT_SECONDARY_ACTION, cig_input_state()->pointer.last_action_began);
+  TEST_ASSERT_EQUAL(0, cig_input_state()->pointer.last_action_ended);
   /* Maybe this should report a failed case or something because you're not
      pressing down both mouse buttons and expecting a click event normally? */
-  TEST_ASSERT_EQUAL(NEITHER, cig_input_state()->click_state);
+  TEST_ASSERT_EQUAL(NEITHER, cig_input_state()->pointer.click_state);
 
   /* (T2) */
-  cig_set_input_state(cig_v_zero(), CIG_INPUT_SECONDARY_ACTION);
+  cig_set_pointer_position(cig_v_zero());
+  cig_set_pointer_state(CIG_INPUT_SECONDARY_ACTION);
   
-  TEST_ASSERT_TRUE(cig_input_state()->action_mask & CIG_INPUT_SECONDARY_ACTION);
-  TEST_ASSERT_EQUAL(CIG_INPUT_PRIMARY_ACTION, cig_input_state()->last_action_ended);
-  TEST_ASSERT_EQUAL(NEITHER, cig_input_state()->click_state);
+  TEST_ASSERT_TRUE(cig_input_state()->pointer.action_mask & CIG_INPUT_SECONDARY_ACTION);
+  TEST_ASSERT_EQUAL(CIG_INPUT_PRIMARY_ACTION, cig_input_state()->pointer.last_action_ended);
+  TEST_ASSERT_EQUAL(NEITHER, cig_input_state()->pointer.click_state);
 
   /* (T3) */
-  cig_set_input_state(cig_v_zero(), 0);
+  cig_set_pointer_position(cig_v_zero());
+  cig_set_pointer_state(0);
   
-  TEST_ASSERT_EQUAL(0, cig_input_state()->action_mask);
-  TEST_ASSERT_EQUAL(CIG_INPUT_SECONDARY_ACTION, cig_input_state()->last_action_ended);
-  TEST_ASSERT_EQUAL(ENDED, cig_input_state()->click_state);
+  TEST_ASSERT_EQUAL(0, cig_input_state()->pointer.action_mask);
+  TEST_ASSERT_EQUAL(CIG_INPUT_SECONDARY_ACTION, cig_input_state()->pointer.last_action_ended);
+  TEST_ASSERT_EQUAL(ENDED, cig_input_state()->pointer.click_state);
 
   end();
+}
+
+/**
+ * Simulates backend only updating pointer state once when click begins and ends.
+ * No pointer updates are sent on intermediate iterations.
+ */
+TEST(core_input, pointer_state_changes_only)
+{
+  int i;
+
+  for (i = 0; i < 10; ++i) {
+    begin(FRAME_TIME);
+
+    cig_set_pointer_position(cig_v_make(25, 25));
+
+    cig_enable_interaction();
+
+    switch (i) {
+    case 1: /* Click starts at T1 */
+      cig_set_pointer_state(CIG_INPUT_PRIMARY_ACTION);
+      break;
+    case 9: /* Click ends at T8 */
+      cig_set_pointer_state(0);
+      TEST_ASSERT_TRUE(cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_DEFAULT_OPTIONS));
+      break;
+    default:
+      break;
+    }
+
+    end();
+  }
 }
 
 TEST_GROUP_RUNNER(core_input) {
@@ -340,4 +393,5 @@ TEST_GROUP_RUNNER(core_input) {
   RUN_TEST_CASE(core_input, simple_drag);
   RUN_TEST_CASE(core_input, drag_other_input_button);
   RUN_TEST_CASE(core_input, button_states);
+  RUN_TEST_CASE(core_input, pointer_state_changes_only);
 }

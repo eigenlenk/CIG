@@ -346,12 +346,13 @@ int main(int argc, const char *argv[]) {
 
     cig_begin_layout(&ctx, NULL, cig_r_make(0, 0, win95_w, win95_h), GetFrameTime());
     
-    cig_set_input_state(
-      cig_v_make(GetMouseX()*scale, GetMouseY()*scale),
-      (IsMouseButtonDown(MOUSE_BUTTON_LEFT) ? CIG_INPUT_PRIMARY_ACTION : 0) +
+    /* Update [mouse] pointer position and button states */
+    cig_set_pointer_position(cig_v_make(GetMouseX()*scale, GetMouseY()*scale));
+    cig_set_pointer_state(
+      (IsMouseButtonDown(MOUSE_BUTTON_LEFT)  ? CIG_INPUT_PRIMARY_ACTION   : 0) +
       (IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? CIG_INPUT_SECONDARY_ACTION : 0)
     );
-    
+
     running = win95_run();
     
     cig_end_layout();
