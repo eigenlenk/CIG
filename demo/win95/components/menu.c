@@ -19,6 +19,11 @@ void menubar(size_t n, win95_menu* menus[]) {
   menu_tracking_st *tracking_state = (menu_tracking_st*)(mem);
   win95_menu **last_hovered_menu = (win95_menu**)(mem + sizeof(menu_tracking_st));
   bool any_menu_active = false;
+  /**
+   * Tracking state at the start of the call. May be modified halfway through,
+   * so to keep things consistent a constant value is used until the next frame.
+   */
+  const menu_tracking_st current_tracking_state = *tracking_state;
 
   CIG_HSTACK(RECT_AUTO, NO_INSETS) {
     for (i = 0; i < n; ++i) {
@@ -34,9 +39,9 @@ void menubar(size_t n, win95_menu* menus[]) {
         cig_disable_culling();
 
         /*
-         * The menubar works similarly to the Start menu: a menu appears when you click a button.
+         * The menubar works similarly to the Start menu/button: a menu appears when you click a button.
          * However, unlike the Start button, the menubar has multiple buttons (e.g., File, Edit, View),
-         * all sharing a single tracking state.
+         * in series all sharing a single tracking state.
          *
          * - If any menubar button is being tracked (i.e., clicked or held), we activate and show its menu.
          * - While tracking, we also monitor hover state to switch the active menu when the mouse moves
@@ -54,7 +59,7 @@ void menubar(size_t n, win95_menu* menus[]) {
             .origin = ORIGIN_TOP_LEFT,
           });
 
-          if (*tracking_state > 0) {
+          if (current_tracking_state > 0) {
             any_menu_active = true;
             cig_fill_color(get_color(COLOR_WINDOW_ACTIVE_TITLEBAR));
           }
@@ -65,7 +70,7 @@ void menubar(size_t n, win95_menu* menus[]) {
           text_size,
           NULL,         /* Font */
           0,            /* Text style modifiers */
-          *tracking_state > 0 && current_menu_selected
+          current_tracking_state > 0 && current_menu_selected
             ? get_color(COLOR_WHITE)
             : get_color(COLOR_BLACK),
           menus[i]->title
@@ -122,6 +127,7 @@ void menu_draw(win95_menu *this, menu_presentation presentation, bool *prevent_c
   menu_item *item;
   win95_menu *child_menu;
   char *item_title;
+  bool *bool_to_toggle = NULL;
   struct {
     cig_i insets,
           stack_insets;
@@ -266,7 +272,11 @@ void menu_draw(win95_menu *this, menu_presentation presentation, bool *prevent_c
               if (cig_clicked(CIG_INPUT_PRIMARY_ACTION, 0)) {
                 if (item->type == TOGGLE) {
                   bool *bool_value = (bool *)item->data;
-                  if (bool_value) { *bool_value = !*bool_value; }
+                  /**
+                   * Boolean will be toggled at the end of scope as this value is used to draw
+                   * checkmark, and switching it halway through would show incorrect state.
+                   */
+                  if (bool_value) { bool_to_toggle = bool_value; }
                 }
                 if (item->_handler) {
                   item->_handler();
@@ -281,7 +291,7 @@ void menu_draw(win95_menu *this, menu_presentation presentation, bool *prevent_c
                 }
               }
             } else if (prevent_close) {
-              /*  Windows 95 keeps menus open when you click on a disabled or sub-menu item */
+              /* Windows 95 keeps menus open when you click on a disabled or sub-menu item */
               if (cig_clicked(CIG_INPUT_PRIMARY_ACTION, 0)) {
                 *prevent_close = true;
               } 
@@ -333,6 +343,10 @@ void menu_draw(win95_menu *this, menu_presentation presentation, bool *prevent_c
       }
     }
 
+    if (bool_to_toggle) {
+      *bool_to_toggle = !*bool_to_toggle;
+    }
+
     if (*presented_submenu) {
       if (*submenu_delay > FLT_EPSILON) {
         *submenu_delay -= cig_delta_time();
@@ -367,7 +381,7 @@ menu_tracking_st menu_track(menu_tracking_st *tracking, win95_menu *menu, menu_p
     menu_draw(menu, presentation, &prevent_close);
   }
 
-  /* We want to keep the menu open when clicking (releasing mouse buttoin) on a disabled or sub-menu item */
+  /* We want to keep the menu open when clicking (releasing mouse button) on disabled item or sub-menu */
   if (prevent_close) {
     /* 'Press' tracking is converted to 'click' tracking */
     if (*tracking == BY_PRESS) {
