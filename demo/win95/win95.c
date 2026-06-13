@@ -39,13 +39,13 @@ static void open_explorer_at(const char*);
 static void launch_app_by_id(menu_item *);
 static void setup_menus();
 static void on_resize();
-static void about_wnd_proc(window_t *this, bool window_focused);
+static void about_wnd_proc(window_t *this);
 
 static void start_button(cig_r rect) {
   CIG(rect, CIG_INSETS(cig_i_make(4, 2, 4, 2))) {
     cig_enable_interaction();
     cig_disable_culling();
-    cig_enable_focus();
+    cig_enable_focus(NULL);
 
     menu_tracking_st *tracking = cig_memory_allocate(sizeof(menu_tracking_st));
 
@@ -78,7 +78,7 @@ static void start_button(cig_r rect) {
 }
 
 static void do_desktop_icons() {
-  if (!begin_file_browser(RECT_AUTO, CIG_LAYOUT_DIRECTION_VERTICAL, COLOR_WHITE, cig_focused(), NULL)) {
+  if (!begin_file_browser(RECT_AUTO, CIG_LAYOUT_DIRECTION_VERTICAL, COLOR_WHITE, NULL)) {
     return;
   }
 
@@ -110,7 +110,7 @@ static void do_desktop_icons() {
 static void do_desktop() {
   if (cig_push_frame(cig_r_make(0, 0, CIG_W, CIG_H - TASKBAR_H))) {
     cig_fill_color(get_color(COLOR_DESKTOP_BG));
-    cig_enable_focus();
+    cig_enable_focus(NULL);
     do_desktop_icons();
     cig_pop_frame();
   }
@@ -171,9 +171,8 @@ static void do_taskbar() {
     ) {
       for (i = 0; i < WIN95_OPEN_WINDOWS_MAX; ++i) {
         window_t *wnd = &this->window_manager.windows[i];
-        if (wnd->id && wnd->owner && taskbar_button(RECT_AUTO, wnd->title, wnd->icon, wnd->id == cig_focused_id())) {
+        if (wnd->id && wnd->owner && taskbar_button(RECT_AUTO, wnd->title, wnd->icon, wnd->focused)) {
           window_manager_bring_to_front(&this->window_manager, wnd);
-          cig_set_focused_id(wnd->id);
         }
       }
     }
@@ -455,7 +454,7 @@ total_system_memory()
 
 /* About Winlose 95 window */
 static void
-about_wnd_proc(window_t *this, bool window_focused)
+about_wnd_proc(window_t *this)
 {
   CIG(_, CIG_INSETS(cig_i_uniform(12))) {
     CIG_HSTACK(_, CIG_PARAMS({

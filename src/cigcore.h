@@ -144,6 +144,12 @@ typedef struct {
   cig_memory_st memory;
 } cig_state;
 
+typedef struct cig_focus {
+  bool active;
+  unsigned int last_change_tick;
+  struct cig_focus *parent;
+} cig_focus;
+
 /* */
 typedef struct {
   /* Scroll offset from top-left corner */
@@ -181,6 +187,7 @@ typedef struct cig_frame {
   bool (*_layout_function)(cig_r, cig_r, cig_params*, cig_r*);
   cig_scroll_state_t *_scroll_state;
   cig_state *_state;
+  cig_focus *_focus;
   struct cig_frame *_parent;
   cig_params _layout_params;
   unsigned int _id_counter, _last_tick;
@@ -195,7 +202,7 @@ typedef struct cig_frame {
     CLIPPED = M_BIT(3),
     /**/
     INTERACTIBLE = M_BIT(4),
-    /**/
+    /* Element is focusable and affects child focus query */
     FOCUSABLE = M_BIT(5),
     /**/
     RETAINED = M_BIT(6)
@@ -209,15 +216,32 @@ typedef enum M_PACKED {
 } cig_input_action_type;
 
 typedef enum M_PACKED {
-  CIG_DRAG_STATE_INACTIVE,  /* All quiet on the front-end */
-  CIG_DRAG_STATE_READY,     /* When input is first pressed mouse location is saved but drag is not recignized yet. */
-                            /*   └ Active frame ID is saved */
-  CIG_DRAG_STATE_BEGAN,     /* Tracking exceeded some threshold and draging is activated. */
-                            /*   └ Movement delta can be read */
-  CIG_DRAG_STATE_MOVED,     /* Tracking position has changed compared to last value */
-  CIG_DRAG_STATE_IDLE,      /* No change in drag position compared to last frame */
-  CIG_DRAG_STATE_ENDED      /* Button released and input tracking stops. */
-                            /*   └ Movement delta can be read */
+  /* All quiet on the front-end */
+  CIG_DRAG_STATE_INACTIVE,
+
+  /**
+   * When input is first pressed mouse location is saved but
+   * drag is not recignized yet. Active frame ID is saved.
+   */
+  CIG_DRAG_STATE_READY,
+
+  /* Ready for tracking, but has not exceeded minimum delta (2pt) yet */
+  CIG_DRAG_STATE_WAITING_MOVE,
+
+  /**
+   * Tracking exceeded some threshold and draging is activated.
+   * Movement delta can be read.
+   */
+  CIG_DRAG_STATE_BEGAN,
+
+  /* Tracking position has changed compared to last value */
+  CIG_DRAG_STATE_MOVED,
+
+  /* No change in drag position compared to last frame */
+  CIG_DRAG_STATE_IDLE,
+
+  /* Button released and input tracking stops. Movement delta can be read. */
+  CIG_DRAG_STATE_ENDED
 } cig_input_drag_state;
 
 typedef struct {
@@ -268,7 +292,13 @@ typedef struct {
   } pointer;
 
   /*_PRIVATE_*/
-  cig_id _focus_target_this,
+  float _press_start_time,
+        _click_end_time;
+  unsigned int _click_count;
+  cig_id _press_target_id,    /* Element that was hovered when button press began */
+         _hover_prev_tick,
+         _hover_this_tick,
+         _focus_target_this,
          _focus_target;
 } cig_input_state_t;
 
@@ -366,9 +396,15 @@ typedef struct {
     unsigned int last_tick;
   } state_list[CIG_STATES_MAX];
   struct {
+    cig_id id;
+    unsigned int last_tick;
+    cig_focus value;
+  } focus_elements[CIG_FOCUSABLE_ELEMENTS_MAX];
+  struct {
     cig_frame elements[CIG_ELEMENTS_MAX];
     size_t high;
   } frames;
+  cig_focus *top_focus;
 #ifdef DEBUG
   bool step_mode;
 #endif
@@ -507,9 +543,18 @@ void cig_push_buffer(cig_buffer_ref);
     of the UI, unlike `cig_end_layout` */
 void cig_pop_buffer();
 
-/*  ┌───────────────────────────┐
-    │ INPUT INTERACTION & FOCUS │
-    └───────────────────────────┘ */
+/**
+ * ┌───────────────────┐
+ * │ INPUT INTERACTION │
+ * └───────────────────┘
+ * 
+ * General note about CIG input handling:
+ * 
+ * It is deferred by one cycle because the element capturing pointer position,
+ * click or key press will be determined by the state of the previous iteration,
+ * to know which element was the last to requst that. If that element is still
+ * present during the next iteration, it will get the events.
+ **/
 
 /* Update pointer position */
 void
@@ -542,20 +587,52 @@ cig_input_action_type cig_clicked(cig_input_action_type, cig_click_flags);
    Details can be read from `cig_input_state().drag` structure */
 cig_input_drag_state cig_dragged(cig_input_action_type);
 
-/*  Makes this frame focusable. Focus is gained by pressing mouse button in this frame
-    regardless of interaction being enabled or not. Returns whether the same element
-    was focused last */
-bool cig_enable_focus();
 
-/*  Returns whether this frame is the current focus target. Requires `cig_enable_focus` to
-    have been called */
-bool cig_focused();
+/**
+ * ┌─────────────────────────────────────────────────────────────────────────────────┐
+ * │ FOCUS                                                                           │
+ * │                                                                                 │
+ * │ General purpose way of marking frames focusable (or selectable). Can be used    │
+ * │ to mark active windows, input fields for receiving text inputs, etc.            │
+ * │                                                                                 │
+ * │ Internally, frame is focused when mouse button press while hovered.             │
+ * │                                                                                 │
+ * │ Focus propagates through the frame hierarchy. A child frame that does not       │
+ * │ explicitly manage focus is still considered focused if one of its ancestors is. │
+ * │ Similarly, all ancestors of a focused frame are marked as focused.              │
+ * │                                                                                 │
+ * │ Each frame can only have one focused child; others are automatically unfocused. │
+ * │                                                                                 │
+ * │ ! Acquiring focus is delayed by one layout iteration. This allows the library   │
+ * │   to determine the topmost focused path through the hierarchy before applying   │
+ * │   focus changes. Losing focus happens immediately and can be observed in the    │
+ * │   same iteration.                                                               │
+ * └─────────────────────────────────────────────────────────────────────────────────┘
+ */
 
-/* */
-cig_id cig_focused_id();
+/**
+ * Makes current frame focusable. Focus is gained by pressing mouse button in this frame
+ * regardless of interaction being enabled or not; or focus can be set externally.
+ * 
+ * @state: Optional binding to set & observe the focus state externally. Passing NULL
+ * allocates internal state.
+ * 
+ * @return: Whether this element is currently focused
+ */
+bool cig_enable_focus(bool *state);
 
-/*  Explicitly set focus to given frame ID */
-void cig_set_focused_id(cig_id);
+/**
+ * Checks whether current frame is actively focused or one of its ancestors has focus.
+ * 
+ * @return: Current focus state
+ */
+bool cig_focused(void);
+
+/* Returns TRUE when current frame has just gained focus, FALSE otherwise. */
+bool cig_gained_focus(void);
+
+/* Returns TRUE when current frame has just lost focus, FALSE otherwise. */
+bool cig_lost_focus(void);
 
 /*  ┌───────────┐
     │ SCROLLING │

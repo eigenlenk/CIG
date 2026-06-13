@@ -13,7 +13,7 @@ typedef enum {
   WINDOW_MINIMIZE
 } window_message_t;
 
-typedef void (*win_proc_t)(struct window_t*, bool);
+typedef void (*win_proc_t)(struct window_t*);
 
 typedef struct window_t {
   struct window_manager_t *manager;
@@ -27,6 +27,7 @@ typedef struct window_t {
   cig_v min_size;
   char *title;
   int icon;
+  bool focused;
   enum {
     IS_PRIMARY_WINDOW = M_BIT(0),
     IS_UNIQUE_WINDOW = M_BIT(1), /* One instance of this window ID per app */
@@ -37,7 +38,7 @@ typedef struct window_t {
 } window_t;
 
 bool
-window_begin(window_t*, bool*);
+window_begin(window_t*);
 
 void
 window_end(window_t*);

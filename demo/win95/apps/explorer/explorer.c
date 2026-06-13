@@ -33,14 +33,14 @@ enum {
 };
 
 typedef struct {
-  void (*menubar_builder)(window_t*, bool);
-  void (*content_builder)(window_t*, cig_scroll_state_t**, bool, char*);
+  void (*menubar_builder)(window_t*);
+  void (*content_builder)(window_t*, cig_scroll_state_t**, char*);
   bool status_bar_visible;
   int number_of_files_selected;
   win95_menu menus[16];
 } window_data_t;
 
-static void window_proc(window_t *this, bool window_focused) {
+static void window_proc(window_t *this) {
   window_data_t *window_data = (window_data_t*)this->data;
   const bool menubar_visible = window_data->menubar_builder != NULL;
   char status_text[STATUS_TEXT_LEN] = "";
@@ -65,7 +65,7 @@ static void window_proc(window_t *this, bool window_focused) {
 
     CIG(_) {
       if (window_data->content_builder) {
-        window_data->content_builder(this, &scroll, window_focused, &status_text[0]);
+        window_data->content_builder(this, &scroll, &status_text[0]);
       }
 
       if (scroll) {
@@ -125,15 +125,15 @@ static void window_proc(window_t *this, bool window_focused) {
       PIN(ABOVE(file_content), OFFSET_BY(2)),
       PIN(TOP_OF(content))
     )) {
-      window_data->menubar_builder(this, window_focused);
+      window_data->menubar_builder(this);
     }
   }
 }
 
-static void my_computer_content(window_t *wnd, cig_scroll_state_t **scroll, bool window_focused, char *status_text) {
+static void my_computer_content(window_t *wnd, cig_scroll_state_t **scroll, char *status_text) {
   window_data_t *window_data = (window_data_t*)wnd->data;
 
-  if (!begin_file_browser(RECT_AUTO, CIG_LAYOUT_DIRECTION_HORIZONTAL, COLOR_BLACK, window_focused, &window_data->number_of_files_selected)) {
+  if (!begin_file_browser(RECT_AUTO, CIG_LAYOUT_DIRECTION_HORIZONTAL, COLOR_BLACK, &window_data->number_of_files_selected)) {
     return;
   }
 
@@ -159,11 +159,11 @@ static void my_computer_content(window_t *wnd, cig_scroll_state_t **scroll, bool
   }
 }
 
-static void recycle_bin_content(window_t *wnd, cig_scroll_state_t **scroll, bool window_focused, char *status_text) {
+static void recycle_bin_content(window_t *wnd, cig_scroll_state_t **scroll, char *status_text) {
   strcpy(status_text, "");
 }
 
-static void standard_menubar_builder(window_t *wnd, bool window_focused) {
+static void standard_menubar_builder(window_t *wnd) {
   window_data_t *window_data = (window_data_t*)wnd->data;
 
   menu_setup(&window_data->menus[MENU_FILE_NEW], "New", DROPDOWN, &default_menu_handler, 2, (menu_group[]) {

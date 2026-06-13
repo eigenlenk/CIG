@@ -259,7 +259,7 @@ static void game_menubar(window_t *wnd) {
   });
 }
 
-static void game_window_proc(window_t *this, bool window_focused) {
+static void game_window_proc(window_t *this) {
   static const char *keyboard_layout[3][10] = {
     { "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P" },
     { "A", "S", "D", "F", "G", "H", "J", "K", "L" },

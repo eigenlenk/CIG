@@ -22,6 +22,7 @@ static int panel_styles[__STYLE_COUNT];
 static Texture2D images[__IMAGE_COUNT];
 static Shader blue_dither_shader;
 static bool dithering_shader_enabled = false;
+static bool is_verbose = false;
 static RenderTexture2D render_texture;
 
 /*  Core API */
@@ -86,7 +87,9 @@ demo_alloc(void *ud, size_t size, size_t align)
 {
   void *new_bytes = malloc(size);
   assert(new_bytes);
-  printf("[MEM] alloc %lld bytes (0x%p)\n", size, new_bytes);
+  if (is_verbose) {
+    printf("[MEM] alloc %lld bytes (0x%p)\n", size, new_bytes);
+  }
   memset(new_bytes, 0, size);
   return new_bytes;
 }
@@ -94,7 +97,9 @@ demo_alloc(void *ud, size_t size, size_t align)
 static void*
 demo_realloc(void *ud, void *ptr, size_t old_size, size_t new_size)
 {
-  printf("[MEM] realloc %lld bytes -> %lld bytes (0x%p)\n", old_size, new_size, ptr);
+  if (is_verbose) {
+    printf("[MEM] realloc %lld bytes -> %lld bytes (0x%p)\n", old_size, new_size, ptr);
+  }
   void *new_bytes = realloc(ptr, new_size);
   assert(new_bytes);
   memset(new_bytes + old_size, 0, new_size - old_size);
@@ -105,7 +110,9 @@ static void
 demo_free(void *ud, void *ptr)
 {
   assert(ptr);
-  printf("[MEM] free (0x%p)\n", ptr);
+  if (is_verbose) {
+    printf("[MEM] free (0x%p)\n", ptr);
+  }
   free(ptr);
 }
 
@@ -156,6 +163,8 @@ int main(int argc, const char *argv[]) {
   for (i = 1; i < argc; ++i) {
     if (!strcmp("-f", argv[i])) {
       run_fullscreen = true;
+    } else if (!strcmp("-v", argv[i])) {
+      is_verbose = true;
     }
   }
 

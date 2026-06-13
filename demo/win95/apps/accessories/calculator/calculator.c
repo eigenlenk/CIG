@@ -53,7 +53,7 @@ typedef struct {
   char display[32];
 } app_state;
 
-static void calculator_window_proc(window_t*, bool);
+static void calculator_window_proc(window_t*);
 static void memory_buttons(app_state*);
 static void clear_buttons(app_state*);
 static void numeric_function_keypad(app_state*);
@@ -220,7 +220,7 @@ numeric_function_keypad(app_state *state)
 
 /* Main window layout including all buttons and menubar */
 static void
-calculator_window_proc(window_t *this, bool window_focused)
+calculator_window_proc(window_t *this)
 {
   app_state *state = (app_state *)this->owner->data;
   cig_frame *container = cig_current();

@@ -18,7 +18,7 @@ static void
 handle_window_resize(window_t *, window_resize_edge_t);
 
 bool
-window_begin(window_t *wnd, bool *focused)
+window_begin(window_t *wnd)
 {
   static struct {
     cig_r original_rect;
@@ -40,7 +40,7 @@ window_begin(window_t *wnd, bool *focused)
     cig_fill_style(get_style(STYLE_STANDARD_DIALOG), 0);
   }
 
-  *focused = cig_enable_focus();
+  cig_enable_focus(&wnd->focused);
 
   /* Titlebar */
   CIG_HSTACK(
@@ -51,7 +51,7 @@ window_begin(window_t *wnd, bool *focused)
       CIG_ALIGNMENT_HORIZONTAL(CIG_LAYOUT_ALIGNS_RIGHT)
     })
   ) {
-    cig_fill_color(get_color(*focused ? COLOR_WINDOW_ACTIVE_TITLEBAR : COLOR_WINDOW_INACTIVE_TITLEBAR));
+    cig_fill_color(get_color(wnd->focused ? COLOR_WINDOW_ACTIVE_TITLEBAR : COLOR_WINDOW_INACTIVE_TITLEBAR));
     cig_enable_interaction();
 
     if (wnd->flags & IS_RESIZABLE) {
@@ -60,7 +60,7 @@ window_begin(window_t *wnd, bool *focused)
       }
     }
 
-    if ((wnd->flags & IS_MAXIMIZED) == false) {
+    if ((wnd->flags & IS_MAXIMIZED) == false && wnd->focused) {
       switch (cig_dragged(CIG_INPUT_PRIMARY_ACTION)) {
       case CIG_DRAG_STATE_BEGAN:
         cig_input_state()->pointer.locked = true;
@@ -107,7 +107,7 @@ window_begin(window_t *wnd, bool *focused)
       CIG(_) {
         cig_draw_label((cig_text_properties) {
           .font = get_font(FONT_BOLD),
-          .color = *focused ? get_color(COLOR_WHITE) : get_color(COLOR_DIALOG_BACKGROUND),
+          .color = wnd->focused ? get_color(COLOR_WHITE) : get_color(COLOR_DIALOG_BACKGROUND),
           .alignment.horizontal = CIG_TEXT_ALIGN_LEFT,
           .max_lines = 1,
           .overflow = CIG_TEXT_SHOW_ELLIPSIS 
@@ -197,6 +197,10 @@ handle_window_resize(window_t *wnd, window_resize_edge_t edge)
     { 1, 0, 0, 1 }, /* WINDOW_RESIZE_BOTTOM_LEFT */
     { 0, 0, 0, 1 }, /* WINDOW_RESIZE_BOTTOM */
   };
+
+  if (!wnd->focused) {
+    return;
+  }
 
   switch (cig_dragged(CIG_INPUT_PRIMARY_ACTION)) {
   case CIG_DRAG_STATE_BEGAN:

@@ -16,6 +16,7 @@ static bool requested_layout_step_mode = false;
 /*  Forward delcarations */
 static M_OPTIONAL(cig_state*) find_state(cig_id);
 static M_OPTIONAL(cig_scroll_state_t*) find_scroll_state(cig_id);
+static M_OPTIONAL(cig_focus*) find_focus_state(cig_id);
 static M_OPTIONAL(cig_state *) enable_state();
 static void handle_frame_hover(cig_frame*);
 static void push_clip(cig_frame*);
@@ -59,6 +60,7 @@ void cig_init_context(cig_context *context) {
   context->delta_time = 0.f;
   context->elapsed_time = 0.f;
   context->frames.high = 0;
+  context->top_focus = NULL;
 
   for (i = 0; i < CIG_STATES_MAX; ++i) {
     context->state_list[i].id = 0;
@@ -69,6 +71,11 @@ void cig_init_context(cig_context *context) {
   for (i = 0; i < CIG_SCROLLABLE_ELEMENTS_MAX; ++i) {
     context->scroll_elements[i].id = 0;
     context->scroll_elements[i].last_tick = context->tick;
+  }
+
+  for (i = 0; i < CIG_FOCUSABLE_ELEMENTS_MAX; ++i) {
+    context->focus_elements[i].id = 0;
+    context->focus_elements[i].last_tick = context->tick;
   }
 }
 
@@ -95,8 +102,10 @@ void cig_begin_layout(
   }
 #endif
 
+  const cig_id root_id = current->next_id ? current->next_id : cig_hash("root");
+
   current->frames.elements[0] = (cig_frame) {
-    .id = current->next_id ? current->next_id : cig_hash("root"),
+    .id = root_id,
     .rect = cig_r_make(0, 0, rect.w, rect.h),
     .clipped_rect = rect,
     .absolute_rect = rect,
@@ -117,6 +126,32 @@ void cig_begin_layout(
 #ifdef DEBUG
   cig_trigger_layout_breakpoint(cig_r_zero(), cig_r_make(0, 0, rect.w, rect.h));
 #endif
+}
+
+static cig_focus*
+find_focus_for_id(cig_id id)
+{
+  int i;
+
+  for (i = 0; i < CIG_FOCUSABLE_ELEMENTS_MAX; ++i) {
+    if (current->focus_elements[i].id == id) {
+      return &current->focus_elements[i].value;
+    }
+  }
+
+  return NULL;
+}
+
+static void
+update_focus_chain(cig_focus *start, bool focused)
+{
+  if (!start) { return; }
+  cig_focus *f = start;
+  while (f) {
+    f->active = focused;
+    f->last_change_tick = current->tick + 1;
+    f = f->parent;
+  }
 }
 
 void cig_end_layout() {
@@ -153,6 +188,16 @@ void cig_end_layout() {
   if (current->input._focus_target_this > 0) {
     current->input._focus_target = current->input._focus_target_this;
     current->input._focus_target_this = 0;
+
+    cig_focus *new_focus = find_focus_for_id(current->input._focus_target);
+
+    if (new_focus && new_focus != current->top_focus) {
+      /* Unfocus previous and focus new */
+      update_focus_chain(current->top_focus, false);
+      update_focus_chain(new_focus, true);
+
+      current->top_focus = new_focus;
+    }
   }
 
   current->frames.high = j;
@@ -395,6 +440,9 @@ cig_set_pointer_state(cig_input_action_type action_mask)
       current->input.pointer._click_count = 0;
     } break;
   }
+
+  /* Root frame has not had a hit check performed yet */
+  handle_frame_hover(cig_current());
 }
 
 cig_input_state_t *cig_input_state() {
@@ -491,12 +539,15 @@ cig_dragged(cig_input_action_type actions)
       break;
     }
 
-    case CIG_DRAG_STATE_READY: {
+    case CIG_DRAG_STATE_READY:
+    case CIG_DRAG_STATE_WAITING_MOVE: {
       const cig_v change = cig_v_sub(current->input.pointer.position, current->input.pointer.drag._start_position_absolute);
       if (cig_v_length(change) >= 2) {
         current->input.pointer.drag.state = CIG_DRAG_STATE_BEGAN;
         current->input.pointer.drag.change_total = change;
         current->input.pointer.drag.change_last_frame = change;
+      } else {
+        current->input.pointer.drag.state = CIG_DRAG_STATE_WAITING_MOVE;
       }
       break;
     }
@@ -542,22 +593,102 @@ cig_dragged(cig_input_action_type actions)
   return current->input.pointer.drag.state;
 }
 
-bool cig_enable_focus() {
+/*  ┌───────┐
+    │ FOCUS │
+    └───────┘ */
+
+/* Find the first available focus object navigating up the frame hierarchy, NULL if none found. */
+static cig_focus*
+find_next_focus(const cig_frame *frame)
+{
+  cig_frame *parent = frame->_parent;
+
+  while (parent) {
+    if (parent->_flags & FOCUSABLE) {
+      return parent->_focus;
+    } else {
+      parent = parent->_parent;
+    }
+  }
+
+  return NULL;
+}
+
+bool
+cig_enable_focus(bool* state)
+{
   cig_frame *frame = cig_current();
+  cig_focus *parent_focus = find_next_focus(frame);
+
   frame->_flags |= FOCUSABLE;
+  frame->_focus = find_focus_state(frame->id);
+  frame->_focus->parent = parent_focus;
+
+  if (frame->_flags & HOVER && current->input.pointer.click_state == BEGAN) {
+    current->input._focus_target_this = frame->id;
+  }
+
+  if (state) {
+    if (frame->_focus->last_change_tick == current->tick) {
+      *state = frame->_focus->active;
+    } else if (parent_focus && !parent_focus->active && frame->_focus->active) {
+      frame->_focus->active = false;
+      frame->_focus->last_change_tick = current->tick;
+      *state = frame->_focus->active;
+    } else if (*state && !frame->_focus->active) {
+      current->input._focus_target_this = frame->id;
+    } else if (!*state && frame->_focus->active) {
+      frame->_focus->active = false;
+      frame->_focus->last_change_tick = current->tick;
+    }
+  }
+
   return cig_focused();
 }
 
-bool cig_focused() {
-  return cig_focused_id() == cig_current()->id;
+bool
+cig_focused(void)
+{
+  /* Get object providing focus info (self or some ancestor) */
+  const cig_focus *focus = cig_current()->_focus
+    ? cig_current()->_focus
+    : find_next_focus(cig_current());
+
+  if (!focus) {
+    return false;
+  }
+
+  return focus->active && (!focus->parent || focus->parent->active);
 }
 
-cig_id cig_focused_id() {
-  return current->input._focus_target;
+bool
+cig_gained_focus(void)
+{
+  /* Get object providing focus info (self or some ancestor) */
+  const cig_focus *focus = cig_current()->_focus
+    ? cig_current()->_focus
+    : find_next_focus(cig_current());
+  
+  if (!focus) {
+    return false;
+  }
+
+  return focus->active && focus->last_change_tick == current->tick;
 }
 
-void cig_set_focused_id(cig_id id) {
-  current->input._focus_target = id;
+bool
+cig_lost_focus(void)
+{
+  /* Get object providing focus info (self or some ancestor) */
+  const cig_focus *focus = cig_current()->_focus
+    ? cig_current()->_focus
+    : find_next_focus(cig_current());
+  
+  if (!focus) {
+    return false;
+  }
+
+  return !focus->active && focus->last_change_tick == current->tick;
 }
 
 /*  ┌───────────┐
@@ -1011,8 +1142,8 @@ static cig_frame* push_frame(
   cig_params params,
   bool (*layout_function)(cig_r, cig_r, cig_params*, cig_r*)
 ) {
-  register size_t i;
-  register cig_frame *f;
+  size_t i;
+  cig_frame *f;
 
   cig_buffer_element_t *current_buffer = current->buffers.peek_ref(&current->buffers, 0);
   cig_frame *top = cig_current();
@@ -1139,23 +1270,33 @@ static cig_frame* push_frame(
 }
 
 M_INLINED void handle_frame_hover(cig_frame *frame) {
+  const bool click_began = current->input.pointer.click_state == BEGAN;
+  bool focus_set = false;
+
   if (cig_r_contains(frame->absolute_clipped_rect, current->input.pointer.position)) {
     frame->_flags |= HOVER;
     frame->_flags |= SUBTREE_INCLUSIVE_HOVER;
     cig_frame *parent = frame->_parent;
+
+    if (click_began && frame->_flags & FOCUSABLE) {
+      current->input._focus_target_this = frame->id;
+      focus_set = true;
+    }
+
     while (parent) {
-      parent->_flags |= SUBTREE_INCLUSIVE_HOVER;
-      if (parent->_flags & FOCUSABLE) {
-        if (current->input.pointer.click_state == BEGAN) {
-          current->input._focus_target_this = parent->id;
-        }
+      if (!focus_set && parent->_flags & FOCUSABLE && click_began) {
+        current->input._focus_target_this = parent->id;
+        focus_set = true;
       }
+      parent->_flags |= SUBTREE_INCLUSIVE_HOVER;
       parent = parent->_parent;
     }
   }
 }
 
-static M_OPTIONAL(cig_state*) find_state(const cig_id id) {
+static M_OPTIONAL(cig_state*)
+find_state(const cig_id id)
+{
   int i, open = -1, stale = -1;
 
   /* Find a state with a matching ID, with no ID yet, or a stale state */
@@ -1186,35 +1327,66 @@ static M_OPTIONAL(cig_state*) find_state(const cig_id id) {
   return NULL;
 }
 
-static M_OPTIONAL(cig_scroll_state_t*) find_scroll_state(const cig_id id) {
-  register int i, first_unused = -1, first_stale = -1;
+static M_OPTIONAL(cig_scroll_state_t*)
+find_scroll_state(const cig_id id)
+{
+  int i, open = -1, stale = -1;
 
   for (i = 0; i < CIG_SCROLLABLE_ELEMENTS_MAX; ++i) {
     if (current->scroll_elements[i].id == id) {
       current->scroll_elements[i].last_tick = current->tick;
       return &current->scroll_elements[i].value;
     }
-    else if (current->scroll_elements[i].id == 0 && first_unused < 0) {
-      first_unused = i;
+    else if (current->scroll_elements[i].id == 0 && open < 0) {
+      open = i;
     }
-    else if (current->scroll_elements[i].last_tick < current->tick-1 && first_stale < 0) {
-      first_stale = i;
+    else if (current->scroll_elements[i].last_tick < current->tick-1 && stale < 0) {
+      stale = i;
     }
   }
 
-  if (first_unused < 0 && first_stale < 0) {
-    return NULL;
-  }
-  else {
-    /*  Prefer an unused slot, use stale when nothing else is available */
-    int i = (first_unused >= 0) ? first_unused : first_stale;
+  const int result = open >= 0 ? open : stale;
 
-    current->scroll_elements[i].id = id;
-    current->scroll_elements[i].value.offset = cig_v_zero();
-    current->scroll_elements[i].last_tick = current->tick;
+  if (result >= 0) {
+    current->scroll_elements[result].id = id;
+    current->scroll_elements[result].value.offset = cig_v_zero();
+    current->scroll_elements[result].last_tick = current->tick;
 
-    return &current->scroll_elements[i].value;
+    return &current->scroll_elements[result].value;
   }
+
+  return NULL;
+}
+
+static M_OPTIONAL(cig_focus*)
+find_focus_state(const cig_id id)
+{
+  int i, open = -1, stale = -1;
+
+  for (i = 0; i < CIG_SCROLLABLE_ELEMENTS_MAX; ++i) {
+    if (current->focus_elements[i].id == id) {
+      current->focus_elements[i].last_tick = current->tick;
+      return &current->focus_elements[i].value;
+    }
+    else if (current->focus_elements[i].id == 0 && open < 0) {
+      open = i;
+    }
+    else if (current->focus_elements[i].last_tick < current->tick-1 && stale < 0) {
+      stale = i;
+    }
+  }
+
+  const int result = open >= 0 ? open : stale;
+
+  if (result >= 0) {
+    current->focus_elements[result].id = id;
+    current->focus_elements[result].value = (cig_focus) { 0 };
+    current->focus_elements[result].last_tick = current->tick;
+
+    return &current->focus_elements[result].value;
+  }
+
+  return NULL;
 }
 
 M_INLINED M_OPTIONAL(cig_state *) enable_state() {

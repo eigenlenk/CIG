@@ -14,6 +14,11 @@
  */
 #define CIG_SCROLLABLE_ELEMENTS_MAX 32
 
+/**
+ * 
+ */
+#define CIG_FOCUSABLE_ELEMENTS_MAX 32
+
 /*
  * Size of the internal widget state pool; number of stateful elements (+ labels) on
  * screen at once.

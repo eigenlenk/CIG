@@ -13,8 +13,22 @@ window_manager_maximize(window_manager_t*, window_t*);
 static void
 window_manager_minimize(window_manager_t*, window_t*);
 
+static M_OPTIONAL(window_t*)
+window_manager_active_window(window_manager_t *this)
+{
+  size_t i;
+
+  for (i = 0; i < this->count; ++i) {
+    if (this->order[i]->focused) {
+      return this->order[i];
+    }
+  }
+
+  return NULL;
+}
+
 window_t* window_manager_create(window_manager_t *manager, struct application_t *app, window_t wnd) {
-  register size_t i;
+  size_t i;
   if (!wnd.id) { wnd.id = rand(); }
 
   if (wnd.flags & IS_UNIQUE_WINDOW) {
@@ -33,9 +47,9 @@ window_t* window_manager_create(window_manager_t *manager, struct application_t 
     wnd.owner = app;
     wnd.manager = (struct window_manager_t *)manager;
 
+    wnd.focused = true;
     manager->windows[i] = wnd;
     manager->order[manager->count++] = &manager->windows[i];
-    cig_set_focused_id(wnd.id);
     return manager->order[manager->count-1];
   }
 
@@ -46,12 +60,11 @@ void
 window_manager_process(window_manager_t *this)
 {
   /* Make sure focused window is the topmost one */
-  if (this->count > 0 && this->order[this->count-1]->id != cig_focused_id()) {
-    window_manager_bring_to_front(this, window_manager_find_id(this, cig_focused_id()));
+  if (this->count > 0 && this->order[this->count-1]->focused == false) {
+    window_manager_bring_to_front(this, window_manager_active_window(this));
   }
 
   register size_t i;
-  bool focused;
 
   for (i = 0; i < this->count; ++i) {
     window_t *wnd = this->order[i];
@@ -60,14 +73,13 @@ window_manager_process(window_manager_t *this)
       continue;
     }
 
-    focused = false;
-    if (!window_begin(wnd, &focused)) {
+    if (!window_begin(wnd)) {
       continue;
     }
 
     if (wnd->proc) {
       cig_set_next_id(wnd->id + cig_hash("content"));
-      wnd->proc(wnd, focused);
+      wnd->proc(wnd);
     }
 
     if (wnd->last_message) {
@@ -104,9 +116,10 @@ void window_manager_bring_to_front(window_manager_t *manager, window_t *wnd) {
       /* Move everyting back by 1 and set the window as last element in the order */
       for (j = i; j < manager->count - 1; ++j) {
         manager->order[j] = manager->order[j+1];
+        manager->order[j]->focused = false;
       }
       manager->order[manager->count-1] = wnd;
-      cig_set_focused_id(wnd->id);
+      wnd->focused = true;
       break;
     }
   }
@@ -177,6 +190,6 @@ window_manager_minimize(window_manager_t *manager, window_t *wnd)
   /* TODO: Actually Win95 focuses on whatever was focused *before* selecting
    * this window. So either the desktop or some some window.
    */
-  cig_set_focused_id(0);
+  wnd->focused = false;
   wnd->flags |= IS_MINIMIZED;
 }
