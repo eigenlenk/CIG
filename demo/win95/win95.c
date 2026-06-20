@@ -526,20 +526,25 @@ about_wnd_proc(window_t *this)
             }
 
             CIG(_H(11)) {
-              time_t t = time(NULL);
-              struct tm *ct = localtime(&t);
-
               cig_draw_label((cig_text_properties) {
                 .alignment.horizontal = CIG_TEXT_ALIGN_LEFT
               }, "System Resources:");
+
+              double value = (double)cig_tracked_bytes(); // Bytes
+              char *unit = "B";
+
+              if (value > 1024) { value /= 1024; unit = "KB"; }
+              if (value > 1024) { value /= 1024; unit = "MB"; }
+              if (value > 1024) { value /= 1024; unit = "GB"; }
 
               cig_draw_label(
                 (cig_text_properties) {
                   .alignment.horizontal = CIG_TEXT_ALIGN_RIGHT,
                   .flags = CIG_TEXT_FORMATTED
                 },
-                "%d%% Free",
-                100 - ct->tm_sec
+                "%.2f %s tracked",
+                value,
+                unit
               );
             }
           }

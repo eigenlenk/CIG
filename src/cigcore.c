@@ -160,9 +160,12 @@ void cig_end_layout() {
     if (current->state_list[i].last_tick != current->tick) {
       current->state_list[i].value.active = false;
       if (current->state_list[i].value.memory.bytes) {
+        current->allocator.tracked_bytes -= current->state_list[i].value.memory.size;
+
         if (current->allocator.free) {
           current->allocator.free(current->allocator.ud, current->state_list[i].value.memory.bytes);
         }
+
         current->state_list[i].value.memory.bytes = NULL;
         current->state_list[i].value.memory.size = 0;
       }
@@ -285,12 +288,16 @@ M_OPTIONAL(void*) cig_memory_allocate(size_t bytes) {
   if (state->memory.bytes) {
     /* Resize memory */
     if (state->memory.size != bytes && current->allocator.realloc) {
+      current->allocator.tracked_bytes -= state->memory.size;
+      current->allocator.tracked_bytes += bytes;
       state->memory.bytes = current->allocator.realloc(current->allocator.ud, state->memory.bytes, state->memory.size, bytes);
+      state->memory.size = bytes;
     }
     state->memory.mapped = 0;
     return state->memory.bytes;
   }
 
+  current->allocator.tracked_bytes += bytes;
   state->memory.bytes = current->allocator.alloc(current->allocator.ud, bytes, ALIGN_OF(max_align_t));
   state->memory.size = bytes;
   state->memory.mapped = 0;
@@ -325,14 +332,24 @@ cig_memory_free()
   cig_state *state = cig_current()->_state;
 
   if (state && state->memory.bytes) {
+    current->allocator.tracked_bytes -= state->memory.size;
+
     if (current->allocator.free) {
       current->allocator.free(current->allocator.ud, state->memory.bytes); /* Free */
     }
+
     state->memory.bytes = NULL;
     state->memory.size = 0;
     state->memory.mapped = 0;
   }
 }
+
+size_t
+cig_tracked_bytes(void)
+{
+  return current->allocator.tracked_bytes;
+}
+
 
 /*  ┌──────────────────────────────┐
     │ TEMPORARY BUFFERS (ADVANCED) │

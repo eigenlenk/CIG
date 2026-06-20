@@ -179,6 +179,27 @@ TEST(core_state, memory_realloc)
   end();
 }
 
+TEST(core_state, tracked_bytes)
+{
+  begin();
+
+  TEST_ASSERT_EQUAL(0, cig_tracked_bytes());
+
+  cig_memory_allocate(1); /* Alloc */
+
+  TEST_ASSERT_EQUAL(1, cig_tracked_bytes());
+
+  cig_memory_allocate(2); /* Realloc */
+
+  TEST_ASSERT_EQUAL(2, cig_tracked_bytes());
+
+  cig_memory_free();
+
+  TEST_ASSERT_EQUAL(0, cig_tracked_bytes());
+
+  end();
+}
+
 TEST_GROUP_RUNNER(core_state) {
   RUN_TEST_CASE(core_state, visibility);
   RUN_TEST_CASE(core_state, pool_limit);
@@ -186,4 +207,5 @@ TEST_GROUP_RUNNER(core_state) {
   RUN_TEST_CASE(core_state, memory_allocation);
   RUN_TEST_CASE(core_state, memory_free);
   RUN_TEST_CASE(core_state, memory_realloc);
+  RUN_TEST_CASE(core_state, tracked_bytes);
 }

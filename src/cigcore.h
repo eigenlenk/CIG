@@ -370,6 +370,7 @@ typedef struct {
   void *(*realloc)(void *ud, void *ptr, size_t old_size, size_t new_size);
   void  (*free)   (void *ud, void *ptr);
   void *ud;
+  size_t tracked_bytes;
 } cig_allocator;
 
 /*  A single instance of CIG. Use one for each game state?
@@ -525,6 +526,8 @@ M_OPTIONAL(void*) cig_memory_read(size_t bytes);
  * Free memory associated with the current element
  */
 void cig_memory_free();
+
+size_t cig_tracked_bytes(void);
 
 /*  ┌──────────────────────────────┐
     │ TEMPORARY BUFFERS (ADVANCED) │
