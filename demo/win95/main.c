@@ -9,7 +9,97 @@
 
 #define UNPACK_RECT(R) R.x, R.y, R.w, R.h
 #define RAYLIB_RECT(R) (Rectangle ) { R.x, R.y, R.w, R.h } 
-#define RAYLIB_VEC2(V) (Vector2) { V.x, V.y } 
+#define RAYLIB_VEC2(V) (Vector2) { V.x, V.y }
+
+static const int raylib_key_table[CIG__KEY_COUNT] = {
+  [CIG_KEY_NONE] = KEY_NULL,
+
+  /* Letters */
+  [CIG_KEY_A] = KEY_A,
+  [CIG_KEY_B] = KEY_B,
+  [CIG_KEY_C] = KEY_C,
+  [CIG_KEY_D] = KEY_D,
+  [CIG_KEY_E] = KEY_E,
+  [CIG_KEY_F] = KEY_F,
+  [CIG_KEY_G] = KEY_G,
+  [CIG_KEY_H] = KEY_H,
+  [CIG_KEY_I] = KEY_I,
+  [CIG_KEY_J] = KEY_J,
+  [CIG_KEY_K] = KEY_K,
+  [CIG_KEY_L] = KEY_L,
+  [CIG_KEY_M] = KEY_M,
+  [CIG_KEY_N] = KEY_N,
+  [CIG_KEY_O] = KEY_O,
+  [CIG_KEY_P] = KEY_P,
+  [CIG_KEY_Q] = KEY_Q,
+  [CIG_KEY_R] = KEY_R,
+  [CIG_KEY_S] = KEY_S,
+  [CIG_KEY_T] = KEY_T,
+  [CIG_KEY_U] = KEY_U,
+  [CIG_KEY_V] = KEY_V,
+  [CIG_KEY_W] = KEY_W,
+  [CIG_KEY_X] = KEY_X,
+  [CIG_KEY_Y] = KEY_Y,
+  [CIG_KEY_Z] = KEY_Z,
+
+  /* Numbers */
+  [CIG_KEY_0] = KEY_ZERO,
+  [CIG_KEY_1] = KEY_ONE,
+  [CIG_KEY_2] = KEY_TWO,
+  [CIG_KEY_3] = KEY_THREE,
+  [CIG_KEY_4] = KEY_FOUR,
+  [CIG_KEY_5] = KEY_FIVE,
+  [CIG_KEY_6] = KEY_SIX,
+  [CIG_KEY_7] = KEY_SEVEN,
+  [CIG_KEY_8] = KEY_EIGHT,
+  [CIG_KEY_9] = KEY_NINE,
+
+  /* Controls */
+  [CIG_KEY_ENTER] = KEY_ENTER,
+  [CIG_KEY_ESCAPE] = KEY_ESCAPE,
+  [CIG_KEY_BACKSPACE] = KEY_BACKSPACE,
+  [CIG_KEY_TAB] = KEY_TAB,
+  [CIG_KEY_SPACE] = KEY_SPACE,
+
+  /* Navigation */
+  [CIG_KEY_LEFT] = KEY_LEFT,
+  [CIG_KEY_RIGHT] = KEY_RIGHT,
+  [CIG_KEY_UP] = KEY_UP,
+  [CIG_KEY_DOWN] = KEY_DOWN,
+
+  [CIG_KEY_HOME] = KEY_HOME,
+  [CIG_KEY_END] = KEY_END,
+  [CIG_KEY_PAGE_UP] = KEY_PAGE_UP,
+  [CIG_KEY_PAGE_DOWN] = KEY_PAGE_DOWN,
+  [CIG_KEY_INSERT] = KEY_INSERT,
+  [CIG_KEY_DELETE] = KEY_DELETE,
+
+  /* Modifiers */
+  [CIG_KEY_LSHIFT] = KEY_LEFT_SHIFT,
+  [CIG_KEY_RSHIFT] = KEY_RIGHT_SHIFT,
+  [CIG_KEY_LCTRL] = KEY_LEFT_CONTROL,
+  [CIG_KEY_RCTRL] = KEY_RIGHT_CONTROL,
+  [CIG_KEY_LALT] = KEY_LEFT_ALT,
+  [CIG_KEY_RALT] = KEY_RIGHT_ALT,
+
+  /* Symbols */
+  [CIG_KEY_MINUS] = KEY_MINUS,
+  [CIG_KEY_PLUS] = KEY_EQUAL,
+
+  /* Function keys */
+  [CIG_KEY_F1] = KEY_F1,
+  [CIG_KEY_F2] = KEY_F2,
+  [CIG_KEY_F3] = KEY_F3,
+  [CIG_KEY_F4] = KEY_F4,
+  [CIG_KEY_F5] = KEY_F5,
+  [CIG_KEY_F6] = KEY_F6,
+  [CIG_KEY_F7] = KEY_F7,
+  [CIG_KEY_F8] = KEY_F8,
+  [CIG_KEY_F9] = KEY_F9,
+  [CIG_KEY_F10] = KEY_F10,
+  [CIG_KEY_F11] = KEY_F11,
+  [CIG_KEY_F12] = KEY_F12,
+};
 
 static cig_context ctx = { 0 };
 
@@ -187,7 +277,7 @@ int main(int argc, const char *argv[]) {
   // SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
   SetConfigFlags(FLAG_WINDOW_ALWAYS_RUN | FLAG_WINDOW_RESIZABLE);
   InitWindow(ray_w, ray_h, "Winlose 95");
-  SetTargetFPS(60);
+  SetTargetFPS(90);
 
   if (run_fullscreen) {
     ToggleFullscreen();
@@ -361,6 +451,11 @@ int main(int argc, const char *argv[]) {
       (IsMouseButtonDown(MOUSE_BUTTON_LEFT)  ? CIG_INPUT_PRIMARY_ACTION   : 0) +
       (IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? CIG_INPUT_SECONDARY_ACTION : 0)
     );
+
+    /* Update key states (pressed / not pressed). CIG handles the rest, like repeating etc. */
+    for (i = 0; i < CIG__KEY_COUNT; ++i) {
+      cig_set_key_state((cig_key_code)i, IsKeyDown(raylib_key_table[i]));
+    }
 
     running = win95_run();
     

@@ -85,6 +85,8 @@ void cig_begin_layout(
   const cig_r rect,
   const float delta_time
 ) {
+  int i;
+
   current = context;
 
   current->frame_stack.clear(&current->frame_stack);
@@ -123,6 +125,10 @@ void cig_begin_layout(
   cig_push_buffer(buffer);
   current->next_id = 0;
 
+  for (i = 0; i < CIG__KEY_COUNT; ++i) {
+    current->input.key.code[i].listener_prev_tick = current->input.key.code[i].listener_this_tick;
+  }
+
 #ifdef DEBUG
   cig_trigger_layout_breakpoint(cig_r_zero(), cig_r_make(0, 0, rect.w, rect.h));
 #endif
@@ -154,8 +160,11 @@ update_focus_chain(cig_focus *start, bool focused)
   }
 }
 
-void cig_end_layout() {
+void
+cig_end_layout()
+{
   register unsigned int i, j;
+
   for (i = 0; i < CIG_STATES_MAX; ++i) {
     if (current->state_list[i].last_tick != current->tick) {
       current->state_list[i].value.active = false;
@@ -200,6 +209,41 @@ void cig_end_layout() {
       update_focus_chain(new_focus, true);
 
       current->top_focus = new_focus;
+    }
+  }
+
+  for (i = 0; i < CIG__KEY_COUNT; ++i) {
+    switch (current->input.key.code[i].state) {
+    case CIG_KEY_PRESSED | CIG_KEY_CLICKED:
+      {
+        current->input.key.code[i].state &= ~(CIG_KEY_CLICKED);
+        current->input.key.code[i].repeat_timer = 0.f;
+        current->input.key.code[i].last_update_at = current->tick + 1;
+        /* Fallthrough */
+      }
+
+    case CIG_KEY_PRESSED:
+    case CIG_KEY_PRESSED | CIG_KEY_REPEATED:
+      current->input.key.code[i].repeat_timer += current->delta_time;
+
+      if (current->input.key.code[i].repeat_timer >= current->input.key_repeat_rate - 0.001f) {
+        current->input.key.code[i].state |= CIG_KEY_REPEATED;
+        current->input.key.code[i].repeat_timer = 0.f;
+      } else {
+        current->input.key.code[i].state &= ~(CIG_KEY_REPEATED);
+      }
+      
+      break;
+
+    case CIG_KEY_RELEASED:
+      {
+        current->input.key.code[i].state = CIG_KEY_IDLE;
+        current->input.key.code[i].owned_by = 0;
+        break;
+      }
+
+    default:
+      break;
     }
   }
 
@@ -462,6 +506,31 @@ cig_set_pointer_state(cig_input_action_type action_mask)
   handle_frame_hover(cig_current());
 }
 
+#include <stdio.h>
+
+void
+cig_set_key_state(cig_key_code key, bool pressed)
+{
+  assert(key >= 0 && key < CIG__KEY_COUNT);
+
+  if (pressed) {
+    if (!(current->input.key.code[key].state & CIG_KEY_PRESSED)) {
+      current->input.key.code[key].state = CIG_KEY_PRESSED | CIG_KEY_CLICKED;
+      current->input.key.code[key].last_update_at = current->tick;
+    }
+  } else {
+    if (current->input.key.code[key].state & CIG_KEY_PRESSED) {
+      current->input.key.code[key].state = CIG_KEY_RELEASED;
+      current->input.key.code[key].last_update_at = current->tick;
+    }
+  }
+}
+
+void cig_set_key_repeat_rate(float rate)
+{
+  current->input.key_repeat_rate = rate;
+}
+
 cig_input_state_t *cig_input_state() {
   return &current->input;
 }
@@ -610,6 +679,113 @@ cig_dragged(cig_input_action_type actions)
   return current->input.pointer.drag.state;
 }
 
+M_DISCARDABLE(cig_input_key_state)
+cig_key(cig_key_code key)
+{
+  current->input.key.code[key].listener_this_tick = cig_current()->id;
+
+  if (!current->input.key.code[key].owned_by && current->input.key.code[key].state != 0 && current->input.key.code[key].listener_prev_tick == cig_current()->id) {
+    current->input.key.code[key].owned_by = cig_current()->id;
+  }
+
+  if (current->input.key.code[key].owned_by == cig_current()->id) {
+    return current->input.key.code[key].state;
+  } else {
+    return CIG_KEY_IDLE;
+  }
+}
+
+bool
+cig_key_poll(cig_key_code* key, cig_input_key_state* state)
+{
+  static int i = 0;
+  static cig_id current_id = 0;
+
+  const cig_id this_id = cig_current()->id;
+
+  if (this_id != current_id) {
+    current_id = this_id;
+    i = 0;
+  }
+
+  for (; i < CIG__KEY_COUNT; ++i) {
+    current->input.key.code[i].listener_this_tick = this_id;
+
+    if (!current->input.key.code[i].owned_by && current->input.key.code[i].state != 0 && current->input.key.code[i].listener_prev_tick == this_id) {
+      current->input.key.code[i].owned_by = this_id;
+    }
+
+    if (current->input.key.code[i].owned_by == this_id) {
+      if (key) {
+        *key = (cig_key_code)i;
+      }
+      if (state) {
+        *state = current->input.key.code[i].state;
+      }
+      ++i;
+      return true;
+    }
+  }
+
+  current_id = 0;
+
+  return false;
+}
+
+bool
+cig_key_raw_pressed(cig_key_code key)
+{
+  return current->input.key.code[key].state & CIG_KEY_PRESSED;
+}
+
+bool
+cig_key_raw_clicked(cig_key_code key)
+{
+  return current->input.key.code[key].state & CIG_KEY_CLICKED;
+}
+
+bool
+cig_key_raw_repeated(cig_key_code key)
+{
+  return current->input.key.code[key].state & CIG_KEY_REPEATED;
+}
+
+bool
+cig_key_raw_released(cig_key_code key)
+{
+  return current->input.key.code[key].state & CIG_KEY_RELEASED;
+}
+
+bool
+cig_key_raw_poll(cig_key_code* key, cig_input_key_state* state)
+{
+  static int i = 0;
+  static cig_id current_id = 0;
+
+  if (cig_current()->id != current_id) {
+    current_id = cig_current()->id;
+    i = 0;
+  }
+
+  for (; i < CIG__KEY_COUNT; ++i) {
+    if (current->input.key.code[i].last_update_at == current->tick) {
+      if (key) {
+        *key = (cig_key_code)i;
+      }
+      if (state) {
+        *state = current->input.key.code[i].state;
+      }
+      ++i;
+      return true;
+    }
+  }
+
+  current_id = 0;
+
+  return false;
+}
+
+
 /*  ┌───────┐
     │ FOCUS │
     └───────┘ */
@@ -707,6 +883,7 @@ cig_lost_focus(void)
 
   return !focus->active && focus->last_change_tick == current->tick;
 }
+
 
 /*  ┌───────────┐
     │ SCROLLING │
@@ -1286,7 +1463,9 @@ static cig_frame* push_frame(
   return NULL;
 }
 
-M_INLINED void handle_frame_hover(cig_frame *frame) {
+M_INLINED void
+handle_frame_hover(cig_frame *frame)
+{
   const bool click_began = current->input.pointer.click_state == BEGAN;
   bool focus_set = false;
 

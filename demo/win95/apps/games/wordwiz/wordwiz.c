@@ -204,14 +204,26 @@ static void game_menu_handler(win95_menu *menu, menu_group *group, menu_item *it
   }
 }
 
-static void keyboard_button(game_data_st *game, cig_r rect, const char *key) {
+static bool
+focused_key_check(cig_key_code k)
+{
+  return cig_focused() && (cig_key(k) & CIG_KEY_CLICKED);
+}
+
+static bool
+keyboard_button(game_data_st *game, cig_r rect, const char *key, cig_key_code keycode)
+{
   int letter_index = key[0]-65;
+  bool clicked = false;
+
   CIG(rect, cig_i_uniform(4)) {
     cig_enable_interaction();
     
-    const bool pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE);
+    const bool key_clicked = focused_key_check(keycode);
+    const bool key_pressed = cig_focused() && (cig_key(keycode) & CIG_KEY_PRESSED);
+    const bool mouse_pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE);
     
-    cig_fill_style(get_style(STYLE_BUTTON), pressed ? CIG_STYLE_APPLY_PRESS : 0);
+    cig_fill_style(get_style(STYLE_BUTTON), (mouse_pressed || key_pressed) ? CIG_STYLE_APPLY_PRESS : 0);
 
     if (game->keyboard[letter_index] > 0) {
       CIG(_) {
@@ -219,7 +231,7 @@ static void keyboard_button(game_data_st *game, cig_r rect, const char *key) {
       }
     }
     
-    if (cig_push_frame_insets(RECT_AUTO,  pressed ? cig_i_make(2, 3, 1, 2) : cig_i_make(1, 1, 2, 2))) {
+    if (cig_push_frame_insets(RECT_AUTO, (mouse_pressed || key_pressed) ? cig_i_make(2, 3, 1, 2) : cig_i_make(1, 1, 2, 2))) {
       cig_draw_label((cig_text_properties) {
         .font = get_font(FONT_BOLD),
         .color = get_color(COLOR_WINDOW_ACTIVE_TITLEBAR)
@@ -227,12 +239,13 @@ static void keyboard_button(game_data_st *game, cig_r rect, const char *key) {
       cig_pop_frame();
     }
     
-    if (cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_STARTS_INSIDE | CIG_CLICK_ON_PRESS)) {
-      append_input(game, key);
+    if (cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_STARTS_INSIDE | CIG_CLICK_ON_PRESS) || key_clicked) {
+      clicked = true;
     }
   }
-}
 
+  return clicked;
+}
 
 static void game_menubar(window_t *wnd) {
   menu_setup(&menu_game, "Game", DROPDOWN, &game_menu_handler, 2, (menu_group[]) {
@@ -263,7 +276,12 @@ static void game_window_proc(window_t *this) {
   static const char *keyboard_layout[3][10] = {
     { "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P" },
     { "A", "S", "D", "F", "G", "H", "J", "K", "L" },
-    { "Z", "X", "C", "V", "B", "N", "M" },
+    { "Z", "X", "C", "V", "B", "N", "M" }
+  };
+static const cig_key_code keyboard_layout_keycodes[3][10] = {
+    { CIG_KEY_Q, CIG_KEY_W, CIG_KEY_E, CIG_KEY_R, CIG_KEY_T, CIG_KEY_Y, CIG_KEY_U, CIG_KEY_I, CIG_KEY_O, CIG_KEY_P },
+    { CIG_KEY_A, CIG_KEY_S, CIG_KEY_D, CIG_KEY_F, CIG_KEY_G, CIG_KEY_H, CIG_KEY_J, CIG_KEY_K, CIG_KEY_L },
+    { CIG_KEY_Z, CIG_KEY_X, CIG_KEY_C, CIG_KEY_V, CIG_KEY_B, CIG_KEY_N, CIG_KEY_M }
   };
   static char *win_messages[6] = {
     "Bill Approved",
@@ -412,7 +430,9 @@ static void game_window_proc(window_t *this) {
         })
       ) {
         for (i = 0; i < 10; ++i) {
-          keyboard_button(game, _, keyboard_layout[0][i]);
+          if (keyboard_button(game, _, keyboard_layout[0][i], keyboard_layout_keycodes[0][i])) {
+            append_input(game, keyboard_layout[0][i]);
+          }
         }
       }
 
@@ -425,7 +445,9 @@ static void game_window_proc(window_t *this) {
         })
       ) {
         for (i = 0; i < 9; ++i) {
-          keyboard_button(game, _, keyboard_layout[1][i]);
+          if (keyboard_button(game, _, keyboard_layout[1][i], keyboard_layout_keycodes[1][i])) {
+            append_input(game, keyboard_layout[1][i]);
+          }
         }
       }
 
@@ -438,13 +460,15 @@ static void game_window_proc(window_t *this) {
         })
       ) {
         const int special_key_w = key_w * 1.5 + key_spacing;
-        if (standard_button(_W(special_key_w), "ENTER")) {
+        if (keyboard_button(game, _W(special_key_w), "ENTER", CIG_KEY_ENTER)) {
           submit_word(game);
         }
         for (i = 0; i < 7; ++i) {
-          keyboard_button(game, _, keyboard_layout[2][i]);
+          if (keyboard_button(game, _, keyboard_layout[2][i], keyboard_layout_keycodes[2][i])) {
+            append_input(game, keyboard_layout[2][i]);
+          }
         }
-        if (icon_button(_W(special_key_w), IMAGE_CROSS)) {
+        if (icon_button(_W(special_key_w), IMAGE_CROSS) || focused_key_check(CIG_KEY_BACKSPACE)) {
           trim_input(game);
         }
       }
