@@ -506,8 +506,6 @@ cig_set_pointer_state(cig_input_action_type action_mask)
   handle_frame_hover(cig_current());
 }
 
-#include <stdio.h>
-
 void
 cig_set_key_state(cig_key_code key, bool pressed)
 {
