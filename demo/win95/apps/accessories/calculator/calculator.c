@@ -136,10 +136,21 @@ memory_buttons(app_state *state)
     button_font = get_font(FONT_BOLD);
     button_title_color = get_color(COLOR_RED);
 
-    if (standard_button(_, "MC")) perform_memory_operation(state, MEMORY_CLEAR);
-    if (standard_button(_, "MR")) perform_memory_operation(state, MEMORY_RECALL);
-    if (standard_button(_, "MS")) perform_memory_operation(state, MEMORY_STORE);
-    if (standard_button(_, "M+")) perform_memory_operation(state, MEMORY_ADD);
+    STD_BTN("MC", CIG_KEY_MODIFIER_CTRL|CIG_KEY_L) {
+      perform_memory_operation(state, MEMORY_CLEAR);
+    }
+
+    STD_BTN("MR", CIG_KEY_MODIFIER_CTRL|CIG_KEY_R) {
+      perform_memory_operation(state, MEMORY_RECALL);
+    }
+
+    STD_BTN("MS", CIG_KEY_MODIFIER_CTRL|CIG_KEY_M) {
+      perform_memory_operation(state, MEMORY_STORE);
+    }
+
+    STD_BTN("M+", CIG_KEY_MODIFIER_CTRL|CIG_KEY_P) {
+      perform_memory_operation(state, MEMORY_ADD);
+    }
 
     button_font = NULL;
     button_title_color = NULL;
@@ -152,9 +163,17 @@ clear_buttons(app_state *state)
   button_font = get_font(FONT_BOLD);
   button_title_color = get_color(COLOR_MAROON);
 
-  if (standard_button(_, "C")) perform_clear_operation(state, CLEAR_ALL);
-  if (standard_button(_, "CE")) perform_clear_operation(state, CLEAR_ENTRY | CLEAR_LAST_ENTRY_CONDITIONAL);
-  if (standard_button(_, "Back")) remove_last_number(state);
+  STD_BTN("C", CIG_KEY_ESCAPE) {
+    perform_clear_operation(state, CLEAR_ALL);
+  }
+
+  STD_BTN("CE", CIG_KEY_DELETE) {
+    perform_clear_operation(state, CLEAR_ENTRY | CLEAR_LAST_ENTRY_CONDITIONAL);
+  }
+
+  STD_BTN("Back", CIG_KEY_BACKSPACE, CIG_KEY_LEFT) {
+    remove_last_number(state);
+  }
 
   button_font = NULL;
   button_title_color = NULL;
@@ -189,11 +208,13 @@ numeric_function_keypad(app_state *state)
   /* Fourth row */
   number_button(state, 0);
 
-  if (standard_button(_, "+/-")) {
+  button_title_color = get_color(COLOR_BLUE);
+
+  STD_BTN("+/-", CIG_KEY_F9) {
     app_state_flip_sign(state);
   }
-  
-  if (standard_button(_, ".")) {
+
+  STD_BTN(".", CIG_KEY_KP_DECIMAL) {
     if (!state->in_decimal_entry) {
       state->user_entry = true;
       state->in_decimal_entry = true;
@@ -206,11 +227,13 @@ numeric_function_keypad(app_state *state)
     }
   }
 
+  button_title_color = NULL;
+
   operation_button(state, MATH_ADD);
 
   button_title_color = get_color(COLOR_RED);
 
-  if (standard_button(_, "=")) {
+  STD_BTN("=", CIG_KEY_KP_ENTER, CIG_KEY_ENTER, CIG_KEY_EQUAL) {
     app_state_perform_current_operation(state);
   }
 
@@ -420,19 +443,22 @@ number_button(app_state *state, int n)
 
   button_title_color = get_color(COLOR_BLUE);
 
-  if (standard_button(_, numbers[n])) {
+  STD_BTN(numbers[n], (CIG_KEY_0 + n), (CIG_KEY_KP_0 + n)) {
     enter_number(state, n);
   }
+
+  button_title_color = NULL;
 }
 
 static void
 operation_button(app_state *state, math_operation op)
 {
   const char *operations[] = {"+","-","*","/"};
+  const cig_key_code codes[] = { CIG_KEY_KP_ADD, CIG_KEY_KP_SUBTRACT, CIG_KEY_KP_MULTIPLY, CIG_KEY_KP_DIVIDE };
 
   button_title_color = get_color(COLOR_RED);
 
-  if (standard_button(_, operations[op-1])) {
+  STD_BTN(operations[op-1], codes[op-1]) {
     if (state->has_entry) {
       app_state_perform_current_operation(state);
     }
@@ -442,16 +468,19 @@ operation_button(app_state *state, math_operation op)
     state->display_mode = DISPLAY_ACCUMULATOR;
     app_state_update_display(state);
   }
+
+  button_title_color = NULL;
 }
 
 static void
 function_button(app_state *state, math_function func)
 {
   const char *funcs[] = {"sqrt","%","1/x"};
+  const cig_key_code codes[] = { CIG_KEY_NONE, CIG_KEY_NONE, CIG_KEY_R };
 
   button_title_color = get_color(COLOR_NAVY);
 
-  if (standard_button(_, funcs[func])) {
+  STD_BTN(funcs[func], codes[func]) {
     switch (func) {
     case MATH_SQRT:
       app_state_sqrt(state);
@@ -464,6 +493,8 @@ function_button(app_state *state, math_function func)
       break;
     }
   }
+
+  button_title_color = NULL;
 }
 
 /* [[ APP STATE MUTATION ]]*/

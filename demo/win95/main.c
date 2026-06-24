@@ -54,6 +54,25 @@ static const int raylib_key_table[CIG__KEY_COUNT] = {
   [CIG_KEY_8] = KEY_EIGHT,
   [CIG_KEY_9] = KEY_NINE,
 
+  /* Keypad */
+  [CIG_KEY_KP_0] = KEY_KP_0,
+  [CIG_KEY_KP_1] = KEY_KP_1,
+  [CIG_KEY_KP_2] = KEY_KP_2,
+  [CIG_KEY_KP_3] = KEY_KP_3,
+  [CIG_KEY_KP_4] = KEY_KP_4,
+  [CIG_KEY_KP_5] = KEY_KP_5,
+  [CIG_KEY_KP_6] = KEY_KP_6,
+  [CIG_KEY_KP_7] = KEY_KP_7,
+  [CIG_KEY_KP_8] = KEY_KP_8,
+  [CIG_KEY_KP_9] = KEY_KP_9,
+  [CIG_KEY_KP_DECIMAL] = KEY_KP_DECIMAL,
+  [CIG_KEY_KP_DIVIDE] = KEY_KP_DIVIDE,
+  [CIG_KEY_KP_MULTIPLY] = KEY_KP_MULTIPLY,
+  [CIG_KEY_KP_SUBTRACT] = KEY_KP_SUBTRACT,
+  [CIG_KEY_KP_ADD] = KEY_KP_ADD,
+  [CIG_KEY_KP_ENTER] = KEY_KP_ENTER,
+  [CIG_KEY_KP_EQUAL] = KEY_KP_EQUAL,
+
   /* Controls */
   [CIG_KEY_ENTER] = KEY_ENTER,
   [CIG_KEY_ESCAPE] = KEY_ESCAPE,
@@ -84,7 +103,8 @@ static const int raylib_key_table[CIG__KEY_COUNT] = {
 
   /* Symbols */
   [CIG_KEY_MINUS] = KEY_MINUS,
-  [CIG_KEY_PLUS] = KEY_EQUAL,
+  [CIG_KEY_EQUAL] = KEY_EQUAL,
+  [CIG_KEY_PERIOD] = KEY_PERIOD,
 
   /* Function keys */
   [CIG_KEY_F1] = KEY_F1,
@@ -278,6 +298,7 @@ int main(int argc, const char *argv[]) {
   SetConfigFlags(FLAG_WINDOW_ALWAYS_RUN | FLAG_WINDOW_RESIZABLE);
   InitWindow(ray_w, ray_h, "Winlose 95");
   SetTargetFPS(90);
+  SetExitKey(0);
 
   if (run_fullscreen) {
     ToggleFullscreen();

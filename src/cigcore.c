@@ -680,6 +680,10 @@ cig_dragged(cig_input_action_type actions)
 M_DISCARDABLE(cig_input_key_state)
 cig_key(cig_key_code key)
 {
+  if (!key) {
+    return CIG_KEY_IDLE;
+  }
+
   current->input.key.code[key].listener_this_tick = cig_current()->id;
 
   if (!current->input.key.code[key].owned_by && current->input.key.code[key].state != 0 && current->input.key.code[key].listener_prev_tick == cig_current()->id) {

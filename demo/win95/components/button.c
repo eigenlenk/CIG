@@ -3,6 +3,7 @@
 
 cig_font_ref button_font = NULL;
 cig_text_color_ref button_title_color = NULL;
+bool button_is_pressed = false;
 
 bool
 standard_button(cig_r rect, const char *title)
@@ -12,7 +13,7 @@ standard_button(cig_r rect, const char *title)
   CIG(rect) {
     cig_enable_interaction();
     
-    const bool pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE);
+    const bool pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE) | button_is_pressed;
     
     cig_fill_style(get_style(STYLE_BUTTON), pressed ? CIG_STYLE_APPLY_PRESS : 0);
     
@@ -28,6 +29,8 @@ standard_button(cig_r rect, const char *title)
     
     clicked = cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_DEFAULT_OPTIONS);
   }
+
+  button_is_pressed = false;
   
   return clicked;
 }
@@ -40,7 +43,7 @@ icon_button(cig_r rect, image_id_t image_id)
   CIG(rect) {
     cig_enable_interaction();
     
-    const bool pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE);
+    const bool pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE) | button_is_pressed;
     
     cig_fill_style(get_style(STYLE_BUTTON), pressed ? CIG_STYLE_APPLY_PRESS : 0);
     
@@ -51,6 +54,8 @@ icon_button(cig_r rect, image_id_t image_id)
     
     clicked = cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_DEFAULT_OPTIONS);
   }
+
+  button_is_pressed = false;
   
   return clicked;
 }

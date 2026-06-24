@@ -468,6 +468,7 @@ static const cig_key_code keyboard_layout_keycodes[3][10] = {
             append_input(game, keyboard_layout[2][i]);
           }
         }
+        button_is_pressed = cig_focused() && (cig_key(CIG_KEY_BACKSPACE) & CIG_KEY_PRESSED);
         if (icon_button(_W(special_key_w), IMAGE_CROSS) || focused_key_check(CIG_KEY_BACKSPACE)) {
           trim_input(game);
         }

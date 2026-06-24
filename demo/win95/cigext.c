@@ -4,10 +4,6 @@ static cig_draw_style_callback style_callback = NULL;
 static cig_draw_rectangle_callback draw_rectangle = NULL;
 static cig_draw_line_callback draw_line = NULL;
 
-/*  ┌───────────────────┐
-    │ BACKEND CALLBACKS │
-    └───────────────────┘ */
-
 void cig_assign_draw_style(cig_draw_style_callback fp) {
   style_callback = fp;
 }
@@ -19,10 +15,6 @@ void cig_assign_draw_rectangle(cig_draw_rectangle_callback fp) {
 void cig_assign_draw_line(cig_draw_line_callback fp) {
   draw_line = fp;
 }
-
-/*  ┌───────────────────┐
-    │ 2D DRAW FUNCTIONS │
-    └───────────────────┘ */
 
 void cig_fill_style(cig_style_ref style, cig_style_modifiers modifiers) {
   if (!style_callback) { /* Log an error? */ return; }
@@ -42,4 +34,52 @@ void cig_draw_line(cig_v p0, cig_v p1, cig_color_ref color, float thickness) {
 void cig_draw_rect(cig_r rect, cig_color_ref fill_color, cig_color_ref outline_color, float thickness) {
   if (!draw_rectangle) { /* Log an error? */ return; }
   draw_rectangle(fill_color, outline_color, rect, thickness);
+}
+
+bool cig_focused_keys(size_t n, cig_key_code k[], cig_input_key_state state)
+{
+  size_t i;
+
+  if (!cig_focused()) {
+    return false;
+  }
+
+  const bool shift_pressed = cig_key_raw_pressed(CIG_KEY_LSHIFT) || cig_key_raw_pressed(CIG_KEY_RSHIFT);
+  const bool ctrl_pressed = cig_key_raw_pressed(CIG_KEY_LCTRL) || cig_key_raw_pressed(CIG_KEY_RCTRL);
+  const bool alt_pressed = cig_key_raw_pressed(CIG_KEY_LALT) || cig_key_raw_pressed(CIG_KEY_RALT);
+
+  for (i = 0; i < n; ++i) {
+    int ki = (int)k[i];
+
+    if (!ki) {
+      continue;
+    }
+
+    if (ki >= CIG_KEY_MODIFIER_ALT) {
+      if (ki & CIG_KEY_MODIFIER_SHIFT && !shift_pressed) {
+        return false;
+      }
+
+      if (ki & CIG_KEY_MODIFIER_CTRL && !ctrl_pressed) {
+        return false;
+      }
+
+      if (ki & CIG_KEY_MODIFIER_ALT && !alt_pressed) {
+        return false;
+      }
+    } else if (shift_pressed || ctrl_pressed || alt_pressed) {
+      return false;
+    }
+
+    /* Remove application-level bits from the keycode before passing to CIG */
+    ki &= ~CIG_KEY_MODIFIER_SHIFT;
+    ki &= ~CIG_KEY_MODIFIER_CTRL;
+    ki &= ~CIG_KEY_MODIFIER_ALT;
+
+    if (cig_key((cig_key_code)ki) & state) {
+      return true;
+    }
+  }
+
+  return false;
 }
