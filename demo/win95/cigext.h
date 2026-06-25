@@ -68,7 +68,7 @@ void cig_draw_rect(cig_r, cig_color_ref, cig_color_ref, float);
  * └────────────────────────────────────────────────────────────────────────────────┘
  */
 
-#define CIG_KEYS(KEYS...) M_ARRAY(cig_key_code, KEYS)
+#define CIG_KEYS(KEYS...) M_ARRAYC(cig_key_code, KEYS)
 
 typedef enum {
   CIG_KEY_MODIFIER_SHIFT = M_BIT(30),
@@ -76,6 +76,6 @@ typedef enum {
   CIG_KEY_MODIFIER_ALT = M_BIT(28)
 } cig_key_modifier;
 
-bool cig_focused_keys(size_t, cig_key_code[], cig_input_key_state);
+bool cig_focused_keys(cig_key_code[], size_t, cig_input_key_state);
 
 #endif

@@ -36,7 +36,7 @@ void cig_draw_rect(cig_r rect, cig_color_ref fill_color, cig_color_ref outline_c
   draw_rectangle(fill_color, outline_color, rect, thickness);
 }
 
-bool cig_focused_keys(size_t n, cig_key_code k[], cig_input_key_state state)
+bool cig_focused_keys(cig_key_code k[], size_t n, cig_input_key_state state)
 {
   size_t i;
 

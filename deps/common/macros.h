@@ -35,7 +35,8 @@
 #define M__NARG(...) M__EXPAND(M__ARG_N(__VA_ARGS__))
 #define M_NARG(...) M__NARG(__VA_ARGS__, 16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0)
 
-#define M_ARRAY(TYPE, ...) M_NARG(__VA_ARGS__), (TYPE[]) { __VA_ARGS__ } \
+#define M_ARRAY(TYPE, ...) (TYPE[]) { __VA_ARGS__ }
+#define M_ARRAYC(TYPE, ...) (TYPE[]) { __VA_ARGS__ }, M_NARG(__VA_ARGS__)
 
 /* For creating some special floats that looks like NaNs but have some data encoded in the */
 #define M_FLAGGED_NAN(F) ((union { uint32_t i; float f; }){ .i = 0x7FC00000 | ((F) & 0x007FFFFF) }).f
