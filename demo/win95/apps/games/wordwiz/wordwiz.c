@@ -205,12 +205,6 @@ static void game_menu_handler(win95_menu *menu, menu_group *group, menu_item *it
 }
 
 static bool
-focused_key_check(cig_key_code k)
-{
-  return cig_focused() && (cig_key(k) & CIG_KEY_CLICKED);
-}
-
-static bool
 keyboard_button(game_data_st *game, cig_r rect, const char *key, cig_key_code keycode)
 {
   int letter_index = key[0]-65;
@@ -219,11 +213,9 @@ keyboard_button(game_data_st *game, cig_r rect, const char *key, cig_key_code ke
   CIG(rect, cig_i_uniform(4)) {
     cig_enable_interaction();
     
-    const bool key_clicked = focused_key_check(keycode);
-    const bool key_pressed = cig_focused() && (cig_key(keycode) & CIG_KEY_PRESSED);
-    const bool mouse_pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE);
+    const bool show_press = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE) || cig_focused_keys(CIG_KEYS(keycode), CIG_KEY_PRESSED);
     
-    cig_fill_style(get_style(STYLE_BUTTON), (mouse_pressed || key_pressed) ? CIG_STYLE_APPLY_PRESS : 0);
+    cig_fill_style(get_style(STYLE_BUTTON), show_press ? CIG_STYLE_APPLY_PRESS : 0);
 
     if (game->keyboard[letter_index] > 0) {
       CIG(_) {
@@ -231,7 +223,7 @@ keyboard_button(game_data_st *game, cig_r rect, const char *key, cig_key_code ke
       }
     }
     
-    if (cig_push_frame_insets(RECT_AUTO, (mouse_pressed || key_pressed) ? cig_i_make(2, 3, 1, 2) : cig_i_make(1, 1, 2, 2))) {
+    if (cig_push_frame_insets(RECT_AUTO, show_press ? cig_i_make(2, 3, 1, 2) : cig_i_make(1, 1, 2, 2))) {
       cig_draw_label((cig_text_properties) {
         .font = get_font(FONT_BOLD),
         .color = get_color(COLOR_WINDOW_ACTIVE_TITLEBAR)
@@ -239,7 +231,7 @@ keyboard_button(game_data_st *game, cig_r rect, const char *key, cig_key_code ke
       cig_pop_frame();
     }
     
-    if (cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_STARTS_INSIDE | CIG_CLICK_ON_PRESS) || key_clicked) {
+    if (cig_clicked(CIG_INPUT_PRIMARY_ACTION, CIG_CLICK_STARTS_INSIDE | CIG_CLICK_ON_PRESS) || cig_focused_keys(CIG_KEYS(keycode), CIG_KEY_CLICKED)) {
       clicked = true;
     }
   }
@@ -468,8 +460,8 @@ static const cig_key_code keyboard_layout_keycodes[3][10] = {
             append_input(game, keyboard_layout[2][i]);
           }
         }
-        button_is_pressed = cig_focused() && (cig_key(CIG_KEY_BACKSPACE) & CIG_KEY_PRESSED);
-        if (icon_button(_W(special_key_w), IMAGE_CROSS) || focused_key_check(CIG_KEY_BACKSPACE)) {
+        button_is_pressed = cig_focused_keys(CIG_KEYS(CIG_KEY_BACKSPACE), CIG_KEY_PRESSED);
+        if (icon_button(_W(special_key_w), IMAGE_CROSS) || cig_focused_keys(CIG_KEYS(CIG_KEY_BACKSPACE), CIG_KEY_CLICKED)) {
           trim_input(game);
         }
       }
