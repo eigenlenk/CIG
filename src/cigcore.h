@@ -63,6 +63,8 @@ DECLARE_RECT_T  (int32_t, cig_r, cig_v, cig_i)
 
 #define CIG_CLICK_EXPIRE_IN_SECONDS 0.5f
 
+#define CIG_DEFAULT_KEY_REPEAT_RATE 0.25f
+
 /*  All layout element get a unique ID that tries to be unique across frames, but no promises.
     See `cig_next_id` how to definitely keep things consistent */
 typedef uintptr_t cig_id;
@@ -595,8 +597,13 @@ cig_set_pointer_state(cig_input_action_type);
 /* Set key state (pressed or not) */
 void cig_set_key_state(cig_key_code, bool);
 
-/* Sets how often the key is repeated, meaning `CIG_KEY_REPEATED` flag is set. Default: 0.0 seconds */
-void cig_set_key_repeat_rate(float);
+/**
+ * Sets how often the key is repeated, meaning when `CIG_KEY_REPEATED` flag is set.
+ * Default: `CIG_DEFAULT_KEY_REPEAT_RATE`
+ * 
+ * @return: Current repeat rate prior to updating
+ */
+M_DISCARDABLE(float) cig_set_key_repeat_rate(float);
 
 /*  @return Current input state as updated by last `cig_set_input_state` call */
 M_OPTIONAL(cig_input_state_t*) cig_input_state();

@@ -54,7 +54,10 @@ void cig_init_context(cig_context *context) {
 
   context->frame_stack = INIT_STACK(cig_frame_ref);
   context->buffers = INIT_STACK(cig_buffer_element_t);
-  context->input = (cig_input_state_t) { 0 };
+  context->input = (cig_input_state_t) {
+    { 0 },
+    .key_repeat_rate = CIG_DEFAULT_KEY_REPEAT_RATE
+  };
   context->next_id = 0;
   context->tick = 1;
   context->delta_time = 0.f;
@@ -524,9 +527,12 @@ cig_set_key_state(cig_key_code key, bool pressed)
   }
 }
 
-void cig_set_key_repeat_rate(float rate)
+float
+cig_set_key_repeat_rate(float rate)
 {
+  float current_rate = current->input.key_repeat_rate;
   current->input.key_repeat_rate = rate;
+  return current_rate;
 }
 
 cig_input_state_t *cig_input_state() {

@@ -16,6 +16,7 @@ static cig_context ctx = { 0 };
 
 TEST_SETUP(core_input) {
   cig_init_context(&ctx);
+  cig_set_key_repeat_rate(0);
 }
 TEST_TEAR_DOWN(core_input) {}
 
@@ -760,7 +761,10 @@ TEST(core_input, key_read_simple)
 TEST(core_input, key_repeat)
 {
   /* Each iteration is 0.1f seconds, so key is repeated every two frames */
-  cig_set_key_repeat_rate(0.2f);
+  float current_rate = cig_set_key_repeat_rate(0.2f);
+
+  /* Current rate is returned, for easier restoration if needed */
+  TEST_ASSERT_EQUAL_FLOAT(0, current_rate);
 
   /* 0.0s */
   TEST_ITERATE(
