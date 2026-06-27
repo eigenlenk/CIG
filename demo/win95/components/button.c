@@ -13,7 +13,7 @@ standard_button(cig_r rect, const char *title)
   CIG(rect) {
     cig_enable_interaction();
     
-    const bool pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE) | button_is_pressed;
+    const bool pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE) || button_is_pressed;
     
     cig_fill_style(get_style(STYLE_BUTTON), pressed ? CIG_STYLE_APPLY_PRESS : 0);
     
@@ -43,7 +43,7 @@ icon_button(cig_r rect, image_id_t image_id)
   CIG(rect) {
     cig_enable_interaction();
     
-    const bool pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE) | button_is_pressed;
+    const bool pressed = cig_pressed(CIG_INPUT_PRIMARY_ACTION, CIG_PRESS_INSIDE) || button_is_pressed;
     
     cig_fill_style(get_style(STYLE_BUTTON), pressed ? CIG_STYLE_APPLY_PRESS : 0);
     

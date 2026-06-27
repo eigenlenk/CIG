@@ -105,6 +105,7 @@ static const int raylib_key_table[CIG__KEY_COUNT] = {
   [CIG_KEY_MINUS] = KEY_MINUS,
   [CIG_KEY_EQUAL] = KEY_EQUAL,
   [CIG_KEY_PERIOD] = KEY_PERIOD,
+  [CIG_KEY_COMMA] = KEY_COMMA,
 
   /* Function keys */
   [CIG_KEY_F1] = KEY_F1,

@@ -95,6 +95,7 @@ typedef enum M_PACKED {
 	CIG_KEY_MINUS,
 	CIG_KEY_EQUAL,
 	CIG_KEY_PERIOD,
+	CIG_KEY_COMMA,
 
 	/* Function keys */
 	CIG_KEY_F1,

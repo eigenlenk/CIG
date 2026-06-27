@@ -214,7 +214,7 @@ numeric_function_keypad(app_state *state)
     app_state_flip_sign(state);
   }
 
-  STD_BTN(".", CIG_KEY_KP_DECIMAL) {
+  STD_BTN(".", CIG_KEY_KP_DECIMAL, CIG_KEY_PERIOD, CIG_KEY_COMMA) {
     if (!state->in_decimal_entry) {
       state->user_entry = true;
       state->in_decimal_entry = true;
