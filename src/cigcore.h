@@ -2,6 +2,7 @@
 #define CIG_CORE_INCLUDED
 
 #include "ciglimit.h"
+#include "cigkeys.h"
 #include "types/insets.h"
 #include "types/rect.h"
 #include "types/stack.h"
@@ -61,6 +62,8 @@ DECLARE_RECT_T  (int32_t, cig_r, cig_v, cig_i)
 #define NO_INSETS cig_i_zero()
 
 #define CIG_CLICK_EXPIRE_IN_SECONDS 0.5f
+
+#define CIG_DEFAULT_KEY_REPEAT_RATE 0.25f
 
 /*  All layout element get a unique ID that tries to be unique across frames, but no promises.
     See `cig_next_id` how to definitely keep things consistent */
@@ -244,6 +247,24 @@ typedef enum M_PACKED {
   CIG_DRAG_STATE_ENDED
 } cig_input_drag_state;
 
+/* Key state bit flags */
+typedef enum M_PACKED {
+  /* No status to read. Default state. */
+  CIG_KEY_IDLE = 0,
+
+  /* Key was released. Flag is only set for one iteration. */
+  CIG_KEY_RELEASED = M_BIT(1),
+
+  /* Key is pressed. Flag is set the whole duration the key is held down. */
+  CIG_KEY_PRESSED = M_BIT(2),
+
+  /* Key is first clicked. Flag is only set for one iteration. */
+  CIG_KEY_CLICKED = M_BIT(3),
+
+  /* Key is held. Flag is set for one iteration, periodically. */
+  CIG_KEY_REPEATED = M_BIT(4)
+} cig_input_key_state;
+
 typedef struct {
   /**
    * Pointer struct contains pointer position, click and drag state details.
@@ -291,15 +312,21 @@ typedef struct {
     unsigned int _click_count;
   } pointer;
 
+  struct {
+    struct {
+      uint8_t state;
+      cig_id owned_by,
+             listener_prev_tick,
+             listener_this_tick;
+      unsigned int last_update_at;
+      float repeat_timer;
+    } code[CIG__KEY_COUNT];
+  } key;
+
   /*_PRIVATE_*/
-  float _press_start_time,
-        _click_end_time;
-  unsigned int _click_count;
-  cig_id _press_target_id,    /* Element that was hovered when button press began */
-         _hover_prev_tick,
-         _hover_this_tick,
-         _focus_target_this,
+  cig_id _focus_target_this,
          _focus_target;
+  float key_repeat_rate;
 } cig_input_state_t;
 
 typedef enum M_PACKED {
@@ -547,17 +574,17 @@ void cig_push_buffer(cig_buffer_ref);
 void cig_pop_buffer();
 
 /**
- * ┌───────────────────┐
- * │ INPUT INTERACTION │
- * └───────────────────┘
- * 
- * General note about CIG input handling:
- * 
- * It is deferred by one cycle because the element capturing pointer position,
- * click or key press will be determined by the state of the previous iteration,
- * to know which element was the last to requst that. If that element is still
- * present during the next iteration, it will get the events.
- **/
+ * ┌────────────────────────────────────────────────────────────────────────────────┐
+ * │ INPUT INTERACTION                                                              │
+ * │                                                                                │
+ * │ Input is/should be sampled at the start of each iteration.                     │
+ * │                                                                                │
+ * │ Which element may consume that input is based on ownership claims collected    │
+ * │ during the previous iteration. During the current iteration, elements register │
+ * │ claims for the next iteration. If multiple elements claim the same input, the  │
+ * │ last registered claim wins.                                                    │
+ * └────────────────────────────────────────────────────────────────────────────────┘
+ */
 
 /* Update pointer position */
 void
@@ -566,6 +593,17 @@ cig_set_pointer_position(cig_v);
 /* Update pointer state */
 void
 cig_set_pointer_state(cig_input_action_type);
+
+/* Set key state (pressed or not) */
+void cig_set_key_state(cig_key_code, bool);
+
+/**
+ * Sets how often the key is repeated, meaning when `CIG_KEY_REPEATED` flag is set.
+ * Default: `CIG_DEFAULT_KEY_REPEAT_RATE`
+ * 
+ * @return: Current repeat rate prior to updating
+ */
+M_DISCARDABLE(float) cig_set_key_repeat_rate(float);
 
 /*  @return Current input state as updated by last `cig_set_input_state` call */
 M_OPTIONAL(cig_input_state_t*) cig_input_state();
@@ -589,6 +627,40 @@ cig_input_action_type cig_clicked(cig_input_action_type, cig_click_flags);
    and its state be read. This function only returns the state of the drag gesture.
    Details can be read from `cig_input_state().drag` structure */
 cig_input_drag_state cig_dragged(cig_input_action_type);
+
+/**
+ * Checks and consumes given keycode. The last element to register for a key
+ * during the last iteration is the consumer for the current iteration.
+ * 
+ * Key state transition: IDLE > (PRESSED + CLICKED) > (PRESSED + REPEATED)* > RELEASED > IDLE
+ */
+cig_input_key_state cig_key(cig_key_code);
+
+/**
+ * Similar to `cig_key()` but allows consuming all keys at once.
+ *
+ * @key: Key code for the next key in the queue. May be NULL.
+ * @state: Key state for the next key in the queue. May be NULL.
+ * 
+ * @return: Returns FALSE when queue is exhausted
+ */
+bool cig_key_poll(cig_key_code* key, cig_input_key_state* state);
+
+/* Reads raw key state, ignoring ownership and consumption */
+bool cig_key_raw_pressed(cig_key_code);
+bool cig_key_raw_clicked(cig_key_code);
+bool cig_key_raw_repeated(cig_key_code);
+bool cig_key_raw_released(cig_key_code);
+
+/**
+ * Reads next key from the queue, ignoring ownership and consumption.
+ * 
+ * @key: Key code for the next key in the queue. May be NULL.
+ * @state: Key state for the next key in the queue. May be NULL.
+ * 
+ * @return: Returns FALSE when queue is exhausted
+ */
+bool cig_key_raw_poll(cig_key_code* key, cig_input_key_state* state);
 
 
 /**

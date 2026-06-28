@@ -6,6 +6,11 @@
 
 extern cig_font_ref button_font;
 extern cig_text_color_ref button_title_color;
+extern bool button_is_pressed;
+
+#define STD_BTN(TITLE, KEYS...) \
+  button_is_pressed = cig_focused_keys(CIG_KEYS(KEYS), CIG_KEY_PRESSED); \
+  if (standard_button(_, TITLE) || cig_focused_keys(CIG_KEYS(KEYS), CIG_KEY_CLICKED))
 
 bool
 standard_button(cig_r, const char *);

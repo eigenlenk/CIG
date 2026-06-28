@@ -5,7 +5,7 @@
 
 #define FRAME_TIME 0.1f
 
-#define TEST_CYCLE(BODY) \
+#define TEST_ITERATE(BODY) \
   begin(FRAME_TIME); \
   BODY; \
   end();
@@ -16,6 +16,7 @@ static cig_context ctx = { 0 };
 
 TEST_SETUP(core_input) {
   cig_init_context(&ctx);
+  cig_set_key_repeat_rate(0);
 }
 TEST_TEAR_DOWN(core_input) {}
 
@@ -448,7 +449,7 @@ TEST(core_input, focus_external)
 {
   bool is_focused = false;
 
-  TEST_CYCLE(
+  TEST_ITERATE(
     cig_enable_focus(&is_focused);
     TEST_ASSERT_FALSE(cig_focused());
   );
@@ -456,12 +457,12 @@ TEST(core_input, focus_external)
   is_focused = true;
 
   /* Like with internal click-to-focus, the element becomes focused after the next iteration */
-  TEST_CYCLE(
+  TEST_ITERATE(
     cig_enable_focus(&is_focused);
     TEST_ASSERT_FALSE(cig_focused());
   );
 
-  TEST_CYCLE(
+  TEST_ITERATE(
     cig_enable_focus(&is_focused);
     TEST_ASSERT_TRUE(cig_focused());
   );
@@ -469,7 +470,7 @@ TEST(core_input, focus_external)
   is_focused = false;
 
   /* However focus is *lost* immediately */
-  TEST_CYCLE(
+  TEST_ITERATE(
     cig_enable_focus(&is_focused);
     TEST_ASSERT_FALSE(cig_focused());
   );
@@ -684,9 +685,319 @@ TEST(core_input, lost_focus_event)
       TEST_ASSERT_FALSE(cig_lost_focus());
       break;
     }
+    end();
+  }
+}
+
+/* Key state goes from IDLE -> (PRESSED + CLICKED) -> (PRESSED + REPEATED) (repeated) -> RELEASED -> IDLE */
+TEST(core_input, key_internal_state_changes)
+{
+  const cig_key_code k = CIG_KEY_A;
+
+  TEST_ASSERT_EQUAL(CIG_KEY_IDLE, cig_input_state()->key.code[k].state);
+
+  TEST_ITERATE(
+    cig_set_key_state(k, true);
+    TEST_ASSERT_BITS_HIGH(CIG_KEY_PRESSED | CIG_KEY_CLICKED, cig_input_state()->key.code[k].state);
+    TEST_ASSERT_TRUE(cig_key_raw_pressed(k));
+    TEST_ASSERT_TRUE(cig_key_raw_clicked(k));
+    TEST_ASSERT_FALSE(cig_key_raw_repeated(k));
+  )
+
+  TEST_ITERATE(
+    TEST_ASSERT_BITS_LOW(CIG_KEY_CLICKED, cig_input_state()->key.code[k].state);
+    TEST_ASSERT_BITS_HIGH(CIG_KEY_PRESSED | CIG_KEY_REPEATED, cig_input_state()->key.code[k].state);
+    TEST_ASSERT_FALSE(cig_key_raw_clicked(k));
+    TEST_ASSERT_TRUE(cig_key_raw_pressed(k));
+    TEST_ASSERT_TRUE(cig_key_raw_repeated(k));
+  )
+
+  TEST_ITERATE(
+    cig_set_key_state(k, false);
+    TEST_ASSERT_EQUAL(CIG_KEY_RELEASED, cig_input_state()->key.code[k].state);
+    TEST_ASSERT_TRUE(cig_key_raw_released(k));
+    TEST_ASSERT_FALSE(cig_key_raw_pressed(k));
+  )
+
+  TEST_ASSERT_EQUAL(CIG_KEY_IDLE, cig_input_state()->key.code[k].state);
+  TEST_ASSERT_FALSE(cig_key_raw_pressed(k));
+  TEST_ASSERT_EQUAL(0, cig_input_state()->key.code[CIG_KEY_A].owned_by);
+}
+
+TEST(core_input, key_read_simple)
+{
+  int i;
+
+  /* Iterating twice to test that internal ownership is cleared */
+  for (i = 0; i < 2; ++i) {
+    /* Iter 0: Element wants to detect 'A' key. Nothing happens. */
+    TEST_ITERATE(
+      TEST_ASSERT_EQUAL(CIG_KEY_IDLE, cig_key(CIG_KEY_A));
+    );
+
+    /* Iter 1: Key is pressed, current element reads PRESSED state */
+    TEST_ITERATE(
+      cig_set_key_state(CIG_KEY_A, true);
+
+      TEST_ASSERT_BITS_HIGH(CIG_KEY_PRESSED | CIG_KEY_CLICKED, cig_key(CIG_KEY_A));
+    );
+
+    /* Iter 2: Key is released, current element reads RELEASED state */
+    TEST_ITERATE(
+      cig_set_key_state(CIG_KEY_A, false);
+
+      TEST_ASSERT_EQUAL(CIG_KEY_RELEASED, cig_key(CIG_KEY_A));
+    );
+
+    /* Iter 3: Key is back in IDLE state */
+    TEST_ITERATE(
+      TEST_ASSERT_EQUAL(CIG_KEY_IDLE, cig_key(CIG_KEY_A));
+    );
+
+    TEST_ASSERT_EQUAL(0, cig_input_state()->key.code[CIG_KEY_A].owned_by);
+  }
+}
+
+TEST(core_input, key_repeat)
+{
+  /* Each iteration is 0.1f seconds, so key is repeated every two frames */
+  float current_rate = cig_set_key_repeat_rate(0.2f);
+
+  /* Current rate is returned, for easier restoration if needed */
+  TEST_ASSERT_EQUAL_FLOAT(0, current_rate);
+
+  /* 0.0s */
+  TEST_ITERATE(
+    cig_set_key_state(CIG_KEY_A, true);
+    TEST_ASSERT_TRUE(cig_key_raw_pressed(CIG_KEY_A));
+    TEST_ASSERT_FALSE(cig_key_raw_repeated(CIG_KEY_A));
+    /* Key timers are incremented at the end of layout: +0.1s here */
+  );
+
+  /* 0.1s at this point */
+  TEST_ITERATE(
+    TEST_ASSERT_TRUE(cig_key_raw_pressed(CIG_KEY_A));
+    TEST_ASSERT_FALSE(cig_key_raw_repeated(CIG_KEY_A));
+    /* Increment key timer to 0.2s, which >= our repeat rate, so REPEATED flag is set */
+  );
+
+  /* 0.2s */
+  TEST_ITERATE(
+    TEST_ASSERT_TRUE(cig_key_raw_pressed(CIG_KEY_A));
+    TEST_ASSERT_TRUE(cig_key_raw_repeated(CIG_KEY_A));
+    /* REPEATED flag is reset */
+  );
+
+  /* 0.3s */
+  TEST_ITERATE(
+    TEST_ASSERT_TRUE(cig_key_raw_pressed(CIG_KEY_A));
+    TEST_ASSERT_FALSE(cig_key_raw_repeated(CIG_KEY_A));
+  );
+}
+
+/* Tests that only the last registered observer is able to read key input */
+TEST(core_input, key_read_overlapping)
+{
+  int i;
+
+  for (i = 0; i < 5; ++i) {
+    begin(FRAME_TIME);
+
+    if (i == 1) {
+      cig_set_key_state(CIG_KEY_A, true);
+    } else if (i == 4) {
+      cig_set_key_state(CIG_KEY_A, false);
+    }
+
+    /* Outer element */
+    cig_push_frame(cig_r_make(0, 0, 100, 100));
+
+    /* From root element's perspective, the key is never pressed as it's consumed by child. */
+    TEST_ASSERT_EQUAL(CIG_KEY_IDLE, cig_key(CIG_KEY_A));
+
+    /* Inner element. Doesn't matter if it's nested or overlaid. */
+    cig_push_frame(cig_r_make(10, 10, 50, 50));
+
+    const cig_input_key_state inner_key_state = cig_key(CIG_KEY_A);
+
+    switch (i) {
+    case 0:
+      TEST_ASSERT_EQUAL(CIG_KEY_IDLE, inner_key_state);
+      break;
+    default:
+      TEST_ASSERT_NOT_EQUAL(CIG_KEY_IDLE, inner_key_state);
+      break;
+    }
+
+    cig_pop_frame(); /* Pop inner */
+    cig_pop_frame(); /* Pop outer */
 
     end();
   }
+}
+
+TEST(core_input, key_polling)
+{
+  int poll_count, i;
+  cig_key_code kcode;
+  cig_input_key_state kstate;
+
+  for (i = 0; i < 3; ++i) {
+    begin(FRAME_TIME);
+
+    switch (i) {
+    case 0:
+      poll_count = 0;
+
+      while (cig_key_poll(NULL, NULL)) {
+        poll_count ++;
+      }
+
+      TEST_ASSERT_EQUAL(0, poll_count);
+
+      /* Child can still take ownership of keys */
+      cig_push_frame(RECT_AUTO);
+      TEST_ASSERT_EQUAL(CIG_KEY_IDLE, cig_key(CIG_KEY_C));
+      cig_pop_frame();
+
+      break;
+
+    case 1:
+      cig_set_key_state(CIG_KEY_A, true);
+      cig_set_key_state(CIG_KEY_B, true);
+      cig_set_key_state(CIG_KEY_C, true);
+
+      poll_count = 0;
+
+      while (cig_key_poll(&kcode, &kstate)) {
+        TEST_ASSERT_EQUAL(CIG_KEY_PRESSED | CIG_KEY_CLICKED, kstate);
+
+        switch (poll_count ++) {
+        case 0:
+          TEST_ASSERT_EQUAL(CIG_KEY_A, kcode);
+          break;
+        case 1:
+          TEST_ASSERT_EQUAL(CIG_KEY_B, kcode);
+          break;
+        default:
+          TEST_FAIL_MESSAGE("Expected to poll (2) key events");
+          break;
+        }
+      }
+
+      TEST_ASSERT_EQUAL(2, poll_count);
+
+      /* Child can still take ownership of keys. Here it's consuming KEY_C over the parent */
+      cig_push_frame(RECT_AUTO);
+      TEST_ASSERT_EQUAL(CIG_KEY_PRESSED | CIG_KEY_CLICKED, cig_key(CIG_KEY_C));
+      cig_pop_frame();
+
+      break;
+    }
+
+    end();
+  }
+}
+
+TEST(core_input, key_raw_polling)
+{
+  int poll_count;
+  cig_key_code kcode;
+  cig_input_key_state kstate;
+
+  /* Create a queue of key presses and poll them */
+  TEST_ITERATE(
+    cig_set_key_state(CIG_KEY_A, true);
+    cig_set_key_state(CIG_KEY_B, true);
+    cig_set_key_state(CIG_KEY_C, true);
+
+    poll_count = 0;
+
+    while (cig_key_raw_poll(&kcode, &kstate)) {
+      TEST_ASSERT_EQUAL(CIG_KEY_PRESSED | CIG_KEY_CLICKED, kstate);
+
+      switch (poll_count ++) {
+      case 0:
+        TEST_ASSERT_EQUAL(CIG_KEY_A, kcode);
+        break;
+      case 1:
+        TEST_ASSERT_EQUAL(CIG_KEY_B, kcode);
+        break;
+      case 2:
+        TEST_ASSERT_EQUAL(CIG_KEY_C, kcode);
+        break;
+      default:
+        TEST_FAIL_MESSAGE("Expected to poll (3) key events");
+        break;
+      }
+    }
+
+    TEST_ASSERT_EQUAL(3, poll_count);
+
+    /* Push a child - it can read the same queue again */
+    cig_push_frame(RECT_AUTO);
+    poll_count = 0;
+    while (cig_key_raw_poll(&kcode, &kstate)) {
+      poll_count ++;
+    }
+    TEST_ASSERT_EQUAL(3, poll_count);
+    cig_pop_frame();
+  );
+
+  /* Release KEY_A, others are kept pressed and repeated */
+  TEST_ITERATE(
+    cig_set_key_state(CIG_KEY_A, false);
+
+    poll_count = 0;
+
+    while (cig_key_raw_poll(&kcode, &kstate)) {
+      switch (poll_count ++) {
+      case 0:
+        TEST_ASSERT_EQUAL(CIG_KEY_A, kcode);
+        TEST_ASSERT_EQUAL(CIG_KEY_RELEASED, kstate);
+        break;
+      case 1:
+        TEST_ASSERT_EQUAL(CIG_KEY_B, kcode);
+        TEST_ASSERT_EQUAL(CIG_KEY_PRESSED | CIG_KEY_REPEATED, kstate);
+        break;
+      case 2:
+        TEST_ASSERT_EQUAL(CIG_KEY_C, kcode);
+        TEST_ASSERT_EQUAL(CIG_KEY_PRESSED | CIG_KEY_REPEATED, kstate);
+        break;
+      default:
+        TEST_FAIL_MESSAGE("Expected to poll (3) key events");
+        break;
+      }
+    }
+
+    TEST_ASSERT_EQUAL(3, poll_count);
+  );
+
+  /* Release KEY_B and KEY_C as well */
+  TEST_ITERATE(
+    cig_set_key_state(CIG_KEY_B, false);
+    cig_set_key_state(CIG_KEY_C, false);
+
+    poll_count = 0;
+
+    while (cig_key_raw_poll(&kcode, &kstate)) {
+      TEST_ASSERT_EQUAL(CIG_KEY_RELEASED, kstate);
+
+      switch (poll_count ++) {
+      case 0:
+        TEST_ASSERT_EQUAL(CIG_KEY_B, kcode);
+        break;
+      case 1:
+        TEST_ASSERT_EQUAL(CIG_KEY_C, kcode);
+        break;
+      default:
+        TEST_FAIL_MESSAGE("Expected to poll (2) key events");
+        break;
+      }
+    }
+
+    TEST_ASSERT_EQUAL(2, poll_count);
+  );
 }
 
 TEST_GROUP_RUNNER(core_input) {
@@ -709,4 +1020,10 @@ TEST_GROUP_RUNNER(core_input) {
   RUN_TEST_CASE(core_input, child_unfocuses_when_parent_unfocuses);
   RUN_TEST_CASE(core_input, gained_focus_event);
   RUN_TEST_CASE(core_input, lost_focus_event);
+  RUN_TEST_CASE(core_input, key_internal_state_changes);
+  RUN_TEST_CASE(core_input, key_read_simple);
+  RUN_TEST_CASE(core_input, key_repeat);
+  RUN_TEST_CASE(core_input, key_read_overlapping);
+  RUN_TEST_CASE(core_input, key_polling);
+  RUN_TEST_CASE(core_input, key_raw_polling);
 }
